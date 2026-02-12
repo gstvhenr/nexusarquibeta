@@ -19,6 +19,8 @@
 - Decisões da 5.3 fechadas e formalizadas em `docs/adr/0007-agent-first-operating-decisions.md`.
 - Checklist do fluxo crítico publicado em `docs/checklists/e2e-smoke-critical-flow.md`.
 - Remoto configurado e publicação inicial concluída: `origin` apontando para `https://github.com/gstvhenr/nexus_arqui.git`, commit `c0f5110` em `main`.
+- Auditoria de estrutura da raiz concluída em `docs/audits/estrutura-root-auditoria-2026-02-12.md`.
+- Higiene aplicada: remoção de resíduo local `.agent/tmp/dev.log` e atualização de `.husky/pre-commit` para formato não deprecado.
 
 ## Próximo passo exato
 
