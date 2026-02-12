@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .priority-swatch-1 {
+    background-color: #38bdf8;
+  }
+  .priority-swatch-2 {
+    background-color: #34d399;
+  }
+  .priority-swatch-3 {
+    background-color: #facc15;
+  }
+  .priority-swatch-4 {
+    background-color: #fb923c;
+  }
+  .priority-swatch-5 {
+    background-color: #f87171;
+  }
+
+  .progress-bar {
+    width: 100%;
+    appearance: none;
+    border-radius: 9999px;
+    overflow: hidden;
+    background-color: var(--progress-track, hsl(var(--color-background)));
+  }
+
+  .progress-bar::-webkit-progress-bar {
+    background-color: var(--progress-track, hsl(var(--color-background)));
+  }
+
+  .progress-bar::-webkit-progress-value {
+    background: var(--progress-fill, hsl(var(--color-primary)));
+    transition: width 0.7s ease-out;
+    border-radius: inherit;
+    box-shadow: var(--progress-shadow, none);
+  }
+
+  .progress-bar::-moz-progress-bar {
+    background: var(--progress-fill, hsl(var(--color-primary)));
+    transition: width 0.7s ease-out;
+    border-radius: inherit;
+    box-shadow: var(--progress-shadow, none);
+  }
+
+  .progress-track-background {
+    --progress-track: hsl(var(--color-background));
+  }
+
+  .progress-track-surface {
+    --progress-track: hsl(var(--color-surface));
+  }
+
+  .progress-track-border-30 {
+    --progress-track: hsl(var(--color-border-color) / 0.3);
+  }
+
+  .progress-track-border-40 {
+    --progress-track: hsl(var(--color-border-color) / 0.4);
+  }
+
+  .progress-fill-primary {
+    --progress-fill: linear-gradient(to right, hsl(var(--color-primary) / 0.8), hsl(var(--color-primary)));
+  }
+
+  .progress-fill-primary-accent {
+    --progress-fill: linear-gradient(to right, hsl(var(--color-primary)), hsl(var(--color-accent)));
+  }
+
+  .progress-fill-primary-success {
+    --progress-fill: linear-gradient(to right, hsl(var(--color-primary)), hsl(var(--color-success)));
+  }
+
+  .progress-fill-orange-emerald {
+    --progress-fill: linear-gradient(to right, #fb923c, #facc15, #10b981);
+  }
+
+  .progress-fill-primary-70 {
+    --progress-fill: hsl(var(--color-primary) / 0.7);
+  }
+
+  .progress-fill-primary-50 {
+    --progress-fill: linear-gradient(to right, hsl(var(--color-primary) / 0.5), hsl(var(--color-primary)));
+  }
+
+  .progress-fill-secondary-50 {
+    --progress-fill: linear-gradient(to right, hsl(var(--color-secondary) / 0.5), hsl(var(--color-secondary)));
+  }
+
+  .progress-fill-success {
+    --progress-fill: hsl(var(--color-success));
+  }
+
+  .progress-fill-warning {
+    --progress-fill: hsl(var(--color-warning));
+  }
+
+  .progress-fill-error {
+    --progress-fill: hsl(var(--color-error));
+  }
+
+  .progress-shadow-primary {
+    --progress-shadow: 0 0 10px hsl(var(--color-primary) / 0.3);
+  }
+
+  .agenda-scroll {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+}
