@@ -2,9 +2,15 @@
 
 ## P0
 
-- [ ] Configurar remoto oficial no GitHub e ativar branch protection + required checks.
+- [x] Configurar remoto oficial no GitHub e publicar branch `main`.
 
-  - Escopo: conectar remoto e ativar regras mínimas de merge.
+  - Escopo: conectar remoto e publicar baseline validado.
+  - Evidência: `origin=https://github.com/gstvhenr/nexus_arqui.git` + push de `main` concluído.
+  - Risco: baixo (concluído).
+
+- [ ] Ativar branch protection + required checks no GitHub.
+
+  - Escopo: habilitar regras mínimas de merge na `main`.
   - Arquivos-alvo: documentação de processo (se necessário).
   - Risco: médio (governança e CI).
 

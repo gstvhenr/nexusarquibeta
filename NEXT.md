@@ -18,12 +18,13 @@
 - Validações objetivas 5.2: `typecheck`, `lint`, `build` verdes; dev server confirmou fallback para `http://localhost:3001/` (porta 3000 ocupada).
 - Decisões da 5.3 fechadas e formalizadas em `docs/adr/0007-agent-first-operating-decisions.md`.
 - Checklist do fluxo crítico publicado em `docs/checklists/e2e-smoke-critical-flow.md`.
+- Remoto configurado e publicação inicial concluída: `origin` apontando para `https://github.com/gstvhenr/nexus_arqui.git`, commit `c0f5110` em `main`.
 
 ## Próximo passo exato
 
 Executar implementação operacional das decisões 5.3:
 
-1. configurar remoto GitHub e branch protection/checks obrigatórios;
+1. ativar branch protection/checks obrigatórios na `main` do GitHub;
 2. rodar teste A/B de aderência de regras (`AGENTS.md` vs `.cursorrules`) em conversa limpa;
 3. executar o smoke crítico e registrar evidências em `docs/audits/`.
 
@@ -34,7 +35,7 @@ Executar implementação operacional das decisões 5.3:
 
 ## Bloqueios e dúvidas
 
-- Remoto GitHub ainda não configurado neste clone (sem `git remote`).
+- Branch protection e required checks ainda pendentes de configuração no GitHub UI.
 - Suporte automático a `.agent/workflows` e `.cursorrules` ainda não comprovado em sessão limpa do Antigravity.
 
 ## Comandos a rodar
