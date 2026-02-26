@@ -74,8 +74,10 @@ const ThemeStyle = () => {
   return <style>{cssVariables}</style>;
 };
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useLocalStorage<Theme>('theme', 'light');
+export const ThemeProvider: (props: { children: React.ReactNode }) => React.ReactNode = ({
+  children,
+}) => {
+  const [theme, setTheme] = useLocalStorage<Theme>('theme', 'dark');
 
   useEffect(() => {
     const root = window.document.documentElement;

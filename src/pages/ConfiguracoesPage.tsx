@@ -1,63 +1,94 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import { PageHeader } from '../components/layout';
-import { Modal } from '../components/ui';
+import { useSystemData } from '../context/DataContext';
+import { useFinancialSecurity } from '../context/FinancialSecurityContext';
 import { useTheme } from '../context/ThemeContext';
 import { api } from '../services/infrastructure/api';
-import { useData } from '../context/DataContext';
+import {
+  ClearDataModal,
+  ImportDataModal,
+  PasswordResetModal,
+  Section,
+  Toggle,
+} from './configuracoes';
 
-const Section: React.FC<{ title: string; description: string; children: React.ReactNode }> = ({
-  title,
-  description,
-  children,
-}) => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-8 border-b border-border-color">
-    <div className="md:col-span-1">
-      <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
-      <p className="text-sm text-text-secondary mt-1">{description}</p>
-    </div>
-    <div className="md:col-span-2 bg-surface rounded-xl shadow-soft p-6">{children}</div>
-  </div>
-);
-
-const Toggle: React.FC<{
-  enabled: boolean;
-  onChange: (enabled: boolean) => void;
-  label?: string;
-}> = ({ enabled, onChange, label }) => (
-  <button
-    type="button"
-    onClick={() => onChange(!enabled)}
-    className={`${enabled ? 'bg-primary' : 'bg-border-color'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface`}
-    role="switch"
-    aria-checked={enabled ? 'true' : 'false'}
-    aria-label={label || 'Alternar'}
-  >
-    <span
-      className={`${enabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-    />
-  </button>
-);
-
-const ConfiguracoesPage: React.FC = () => {
+function ConfiguracoesPage(): JSX.Element {
   const { theme, toggleTheme } = useTheme();
-  const { contractDeadlines, setContractDeadlines } = useData();
+  const { contractDeadlines, setContractDeadlines } = useSystemData();
+  const { isLockEnabled, toggleLock, changePassword } = useFinancialSecurity();
 
-  // State for modals
   const [isImportModalOpen, setImportModalOpen] = useState(false);
   const [isClearModalOpen, setClearModalOpen] = useState(false);
   const [clearConfirmationText, setClearConfirmationText] = useState('');
+
+  const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
+  const [pwdStep, setPwdStep] = useState<'current' | 'new'>('current');
+  const [currentPwd, setCurrentPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [confirmPwd, setConfirmPwd] = useState('');
+  const [pwdError, setPwdError] = useState('');
+  const [pwdSuccess, setPwdSuccess] = useState(false);
+
+  const resetPasswordModal = useCallback(() => {
+    setPwdStep('current');
+    setCurrentPwd('');
+    setNewPwd('');
+    setConfirmPwd('');
+    setPwdError('');
+    setPwdSuccess(false);
+  }, []);
+
+  const openPasswordModal = useCallback(() => {
+    resetPasswordModal();
+    setPasswordModalOpen(true);
+  }, [resetPasswordModal]);
+
+  const closePasswordModal = useCallback(() => {
+    setPasswordModalOpen(false);
+    resetPasswordModal();
+  }, [resetPasswordModal]);
+
+  const handleValidateCurrentPassword = useCallback(() => {
+    const result = changePassword(currentPwd, currentPwd);
+    if (result.success) {
+      setPwdError('');
+      setPwdStep('new');
+    } else {
+      setPwdError(result.error || 'Senha incorreta.');
+    }
+  }, [currentPwd, changePassword]);
+
+  const handleNewPwdSubmit = useCallback(() => {
+    if (!newPwd || newPwd.length < 4) {
+      setPwdError('A nova senha deve ter pelo menos 4 caracteres.');
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      setPwdError('As senhas não coincidem.');
+      return;
+    }
+
+    const result = changePassword(currentPwd, newPwd);
+    if (result.success) {
+      setPwdSuccess(true);
+      setPwdError('');
+      setTimeout(closePasswordModal, 1500);
+    } else {
+      setPwdError(result.error || 'Erro ao alterar a senha.');
+    }
+  }, [newPwd, confirmPwd, currentPwd, changePassword, closePasswordModal]);
 
   const handleExportData = () => {
     try {
       const jsonString = api.exportData();
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `nexusarqui_backup_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `nexusarqui_backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
     } catch (error) {
       alert('Erro ao exportar dados. Verifique o console para mais detalhes.');
@@ -70,9 +101,9 @@ const ConfiguracoesPage: React.FC = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = (loadEvent) => {
       try {
-        const text = e.target?.result;
+        const text = loadEvent.target?.result;
         if (typeof text !== 'string') throw new Error('File could not be read');
 
         api.importData(text);
@@ -107,7 +138,7 @@ const ConfiguracoesPage: React.FC = () => {
   };
 
   const handleDeadlineChange = (field: keyof typeof contractDeadlines, value: number) => {
-    setContractDeadlines((prev) => ({ ...prev, [field]: value }));
+    setContractDeadlines((previous) => ({ ...previous, [field]: value }));
   };
 
   return (
@@ -132,22 +163,64 @@ const ConfiguracoesPage: React.FC = () => {
         </Section>
 
         <Section
+          title="Segurança Financeira"
+          description="Controle a visibilidade de valores financeiros sensíveis."
+        >
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold text-text-primary">Exigir Senha</h4>
+                <p className="text-sm text-text-secondary">
+                  Quando habilitado, valores financeiros ficam ocultos com *** até que a senha seja
+                  inserida.
+                </p>
+              </div>
+              <Toggle
+                enabled={isLockEnabled}
+                onChange={toggleLock}
+                label="Exigir senha para visualizar valores"
+              />
+            </div>
+
+            <div className="flex items-center justify-between border-t border-border-color/50 pt-5">
+              <div>
+                <h4 className="font-semibold text-text-primary">Redefinir Senha</h4>
+                <p className="text-sm text-text-secondary">
+                  Altere a senha utilizada para desbloquear os valores financeiros.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={openPasswordModal}
+                className="px-4 py-2 rounded-lg font-semibold text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+              >
+                Redefinir
+              </button>
+            </div>
+          </div>
+        </Section>
+
+        <Section
           title="Prazos Padrão de Contrato"
           description="Defina os prazos automáticos aplicados ao converter propostas em projetos."
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="field-prazo-projeto-preliminar-dias"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 Prazo Projeto Preliminar (dias)
               </label>
               <input
+                id="field-prazo-projeto-preliminar-dias"
                 type="number"
                 min="1"
                 value={contractDeadlines.defaultPreliminarDeadlineDays}
-                onChange={(e) =>
+                onChange={(event) =>
                   handleDeadlineChange(
                     'defaultPreliminarDeadlineDays',
-                    parseInt(e.target.value) || 7,
+                    parseInt(event.target.value, 10) || 7,
                   )
                 }
                 className="w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-text-primary"
@@ -156,17 +229,21 @@ const ConfiguracoesPage: React.FC = () => {
               <p className="text-xs text-text-secondary mt-1">Geralmente 7 dias úteis.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="field-prazo-projeto-executivo-dias"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 Prazo Projeto Executivo (dias)
               </label>
               <input
+                id="field-prazo-projeto-executivo-dias"
                 type="number"
                 min="1"
                 value={contractDeadlines.defaultExecutiveDeadlineDays}
-                onChange={(e) =>
+                onChange={(event) =>
                   handleDeadlineChange(
                     'defaultExecutiveDeadlineDays',
-                    parseInt(e.target.value) || 30,
+                    parseInt(event.target.value, 10) || 30,
                   )
                 }
                 className="w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-text-primary"
@@ -259,66 +336,52 @@ const ConfiguracoesPage: React.FC = () => {
         </Section>
       </div>
 
-      <Modal
+      <ImportDataModal
         isOpen={isImportModalOpen}
         onClose={() => setImportModalOpen(false)}
-        title="Importar Dados"
-      >
-        <div className="text-center">
-          <p className="text-text-primary mb-4">
-            Selecione um arquivo de backup (.json) para importar.{' '}
-            <strong className="text-error">
-              Atenção: Isso substituirá todos os dados existentes.
-            </strong>
-          </p>
-          <input
-            type="file"
-            accept=".json"
-            onChange={handleImportData}
-            className="mx-auto text-sm text-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-            aria-label="Selecionar arquivo de backup para importação"
-          />
-        </div>
-      </Modal>
+        onImportData={handleImportData}
+      />
 
-      <Modal
+      <ClearDataModal
         isOpen={isClearModalOpen}
         onClose={() => setClearModalOpen(false)}
-        title="Confirmar Exclusão de Dados"
-      >
-        <div className="space-y-4">
-          <p className="text-text-primary">
-            Esta é uma ação irreversível. Todos os seus projetos, clientes, propostas e
-            configurações (exceto o tema) serão{' '}
-            <strong className="text-error">permanentemente excluídos</strong>.
-          </p>
-          <p className="text-text-primary">
-            Para confirmar, digite <strong className="text-error font-mono">EXCLUIR</strong> no
-            campo abaixo.
-          </p>
-          <div>
-            <input
-              type="text"
-              value={clearConfirmationText}
-              onChange={(e) => setClearConfirmationText(e.target.value)}
-              className="w-full bg-background p-2 rounded-md border border-border-color text-center font-mono"
-              aria-label="Digite EXCLUIR para confirmar"
-            />
-          </div>
-          <div className="flex justify-end pt-4">
-            <button
-              type="button"
-              onClick={handleClearData}
-              disabled={clearConfirmationText !== 'EXCLUIR'}
-              className="w-full px-6 py-2 rounded-lg font-semibold text-white bg-error hover:opacity-90 disabled:bg-text-secondary/50 disabled:cursor-not-allowed"
-            >
-              Eu entendo as consequências, excluir tudo
-            </button>
-          </div>
-        </div>
-      </Modal>
+        clearConfirmationText={clearConfirmationText}
+        onChangeConfirmationText={setClearConfirmationText}
+        onConfirmClear={handleClearData}
+      />
+
+      <PasswordResetModal
+        isOpen={isPasswordModalOpen}
+        onClose={closePasswordModal}
+        pwdSuccess={pwdSuccess}
+        pwdStep={pwdStep}
+        currentPwd={currentPwd}
+        newPwd={newPwd}
+        confirmPwd={confirmPwd}
+        pwdError={pwdError}
+        onCurrentPwdChange={(value) => {
+          setCurrentPwd(value);
+          setPwdError('');
+        }}
+        onNewPwdChange={(value) => {
+          setNewPwd(value);
+          setPwdError('');
+        }}
+        onConfirmPwdChange={(value) => {
+          setConfirmPwd(value);
+          setPwdError('');
+        }}
+        onValidateCurrentPassword={handleValidateCurrentPassword}
+        onNewPwdSubmit={handleNewPwdSubmit}
+        onBackToCurrent={() => {
+          setPwdStep('current');
+          setNewPwd('');
+          setConfirmPwd('');
+          setPwdError('');
+        }}
+      />
     </div>
   );
-};
+}
 
 export default ConfiguracoesPage;

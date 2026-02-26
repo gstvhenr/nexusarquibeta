@@ -1,13 +1,12 @@
-import React, { useState, useMemo, useCallback, useEffect, useId } from 'react';
+import React, { useState, useCallback, useEffect, useId } from 'react';
 import Modal from '../ui/Modal';
-import { useData } from '../../context/DataContext';
+import { useCoreData } from '../../context/DataContext';
 import type {
   AgendaEvent,
   AgendaEventType,
-  Client,
-  Project,
   Subtask,
   AgendaEventRecurrence,
+  KanbanStatus,
 } from '../../types';
 import { agendaEventTypes } from '../../types';
 import { PlusIcon, TrashIcon } from '../ui/icons';
@@ -66,19 +65,35 @@ const getInitialEvent = (date: Date): Omit<AgendaEvent, 'id'> => ({
   subtasks: [],
 });
 
-export const EventFormModal: React.FC<{
+export const EventFormModal: (props: {
   isOpen: boolean;
   onClose: () => void;
   onSave: (event: AgendaEvent) => void;
   onDelete: (id: string) => void;
   event: AgendaEvent | null;
   dateForNewEvent: Date;
-}> = ({ isOpen, onClose, onSave, onDelete, event, dateForNewEvent }) => {
-  const { clients, projects } = useData();
+  initialKanbanStatus?: KanbanStatus;
+}) => React.ReactNode = ({
+  isOpen,
+  onClose,
+  onSave,
+  onDelete,
+  event,
+  dateForNewEvent,
+  initialKanbanStatus,
+}) => {
+  const { clients, projects } = useCoreData();
   const formId = useId();
   const getInitial = useCallback(
-    () => (event ? { ...event } : { ...getInitialEvent(dateForNewEvent), id: '' }),
-    [event, dateForNewEvent],
+    () =>
+      event
+        ? { ...event }
+        : {
+            ...getInitialEvent(dateForNewEvent),
+            id: '',
+            kanbanStatus: initialKanbanStatus || 'todo',
+          },
+    [event, dateForNewEvent, initialKanbanStatus],
   );
 
   const [editedEvent, setEditedEvent] = useState<Partial<AgendaEvent>>(getInitial());
@@ -92,7 +107,7 @@ export const EventFormModal: React.FC<{
     setNoEndTime(false);
   }, [isOpen, getInitial]);
 
-  const handleChange = (field: keyof AgendaEvent, value: any) => {
+  const handleChange = (field: keyof AgendaEvent, value: AgendaEvent[keyof AgendaEvent]) => {
     setEditedEvent((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -237,9 +252,12 @@ export const EventFormModal: React.FC<{
 
         {/* Section 2: Date & Time - Uses Label for alignment consistency */}
         <div>
-          <label className={labelClass}>Horário e Data</label>
+          <label htmlFor="field-horario-e-data" className={labelClass}>
+            Horário e Data
+          </label>
           <div className="p-4 bg-background/50 rounded-lg grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4 items-start border border-border-color/30">
             <input
+              id="field-horario-e-data"
               type="date"
               value={editedEvent.date || ''}
               onChange={(e) => handleChange('date', e.target.value)}
@@ -297,9 +315,12 @@ export const EventFormModal: React.FC<{
 
         {/* Section 3: Links */}
         <div>
-          <label className={labelClass}>Vínculos (Opcional)</label>
+          <label htmlFor="field-vinculos-opcional" className={labelClass}>
+            Vínculos (Opcional)
+          </label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <select
+              id="field-vinculos-opcional"
               value={editedEvent.clientId || ''}
               onChange={(e) => handleClientChange(e.target.value)}
               className={inputClass}
@@ -332,9 +353,12 @@ export const EventFormModal: React.FC<{
 
         {/* Subtasks Section */}
         <div>
-          <label className={labelClass}>Subtarefas</label>
+          <label htmlFor="field-subtarefas" className={labelClass}>
+            Subtarefas
+          </label>
           <div className="flex gap-2 mb-3">
             <input
+              id="field-subtarefas"
               type="text"
               value={newSubtaskTitle}
               onChange={(e) => setNewSubtaskTitle(e.target.value)}
@@ -389,7 +413,7 @@ export const EventFormModal: React.FC<{
         </div>
 
         <div>
-          <label className={labelClass}>Prioridade</label>
+          <span className={labelClass}>Prioridade</span>
           <div className="grid grid-cols-5 gap-2">
             {Object.entries(priorityColors).map(([level, { name, text, swatchClass }]) => (
               <button

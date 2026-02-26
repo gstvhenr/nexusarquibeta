@@ -1,6 +1,24 @@
+/**
+ * DocumentIcons — icon components for the document management module.
+ *
+ * Provides file-type-aware icons (PDF, DOC, XLS, images, links) and
+ * document-action icons (Folder, Trash, Search, Add, Upload, Rename, etc.).
+ *
+ * @example
+ * ```tsx
+ * import { DocumentIcons } from '@/components/ui';
+ *
+ * // Resolve icon by MIME type or file extension
+ * <DocumentIcons.GetIcon type="application/pdf" className="w-6 h-6" />
+ *
+ * // Use action icons directly
+ * <DocumentIcons.Upload className="w-5 h-5" />
+ * ```
+ */
 import React from 'react';
 
-const IconWrapper: React.FC<React.SVGProps<SVGSVGElement>> = ({
+/** Shared SVG wrapper — sets default viewBox, stroke, and className. */
+const IconWrapper: (props: React.SVGProps<SVGSVGElement>) => React.ReactNode = ({
   children,
   className = 'w-full h-full',
   ...props
@@ -82,7 +100,8 @@ const Upload = (props: React.SVGProps<SVGSVGElement>) => (
   </IconWrapper>
 );
 
-const iconMap: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
+/** Extension/type → icon component mapping. Falls back to `File` icon for unknown types. */
+const iconMap: Record<string, (props: React.SVGProps<SVGSVGElement>) => React.ReactNode> = {
   folder: (props: React.SVGProps<SVGSVGElement>) => (
     <IconWrapper {...props}>
       <path
@@ -117,6 +136,12 @@ const iconMap: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
 };
 
 export const DocumentIcons = {
+  /**
+   * Resolve an icon component by MIME type or file extension.
+   * @param type - MIME type string (e.g. 'application/pdf') or extension (e.g. 'pdf')
+   * @param className - optional CSS class for the SVG
+   * @returns the matching icon component, or generic File icon
+   */
   GetIcon: ({ type, className }: { type: string; className?: string }) => {
     const fileType = type.split('/').pop()?.toLowerCase() || 'default';
     const IconComponent = iconMap[fileType] || iconMap.default;

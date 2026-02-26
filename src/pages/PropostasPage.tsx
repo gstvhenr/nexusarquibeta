@@ -1,15 +1,20 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { DeleteConfirmationModal } from '../components/ui';
-import type { Proposal, ProposalStatus } from '../types';
-import { useData } from '../context/DataContext';
+
+import {
+  ArchiveIcon,
+  Button,
+  DeleteConfirmationModal,
+  EmptyState,
+  UnarchiveIcon,
+} from '../components/ui';
+import type { Proposal } from '../types';
+import { useCoreData } from '../context/DataContext';
 import { NAV_LINKS } from '../constants';
 import { PageHeader } from '../components/layout';
 import { ProposalListItem } from '../components/propostas';
-import { ArchiveIcon, UnarchiveIcon } from '../components/ui';
 
-const PropostasPage: React.FC = () => {
-  const { proposals, setProposals, projects } = useData();
+const PropostasPage: () => React.ReactNode = () => {
+  const { proposals, setProposals, projects } = useCoreData();
   const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [proposalToInteract, setProposalToInteract] = useState<Proposal | null>(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -86,18 +91,14 @@ const PropostasPage: React.FC = () => {
           {showArchived ? 'Total Arquivadas:' : 'Total Ativas:'}{' '}
           <span className="text-text-primary font-bold">{proposalsToDisplay.length}</span>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowArchived(!showArchived)}
-          className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-surface border border-border-color hover:bg-background transition-colors text-sm flex items-center gap-2"
-        >
+        <Button variant="secondary" onClick={() => setShowArchived(!showArchived)}>
           {showArchived ? (
             <UnarchiveIcon className="w-4 h-4" />
           ) : (
             <ArchiveIcon className="w-4 h-4" />
           )}
           {showArchived ? 'Ver Ativas' : 'Ver Arquivadas'}
-        </button>
+        </Button>
       </PageHeader>
 
       <div className="space-y-6">
@@ -116,30 +117,15 @@ const PropostasPage: React.FC = () => {
       </div>
 
       {proposalsToDisplay.length === 0 && (
-        <div className="p-10 bg-surface rounded-xl shadow-soft text-center mt-6">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <h3 className="mt-2 text-lg font-medium text-text-primary">
-            {showArchived ? 'Nenhuma proposta arquivada' : 'Nenhuma proposta encontrada'}
-          </h3>
-          <p className="mt-1 text-sm text-text-secondary">
-            {showArchived
+        <EmptyState
+          className="mt-6"
+          title={showArchived ? 'Nenhuma proposta arquivada' : 'Nenhuma proposta encontrada'}
+          description={
+            showArchived
               ? 'Você ainda não arquivou nenhuma proposta.'
-              : 'Vá para a página de Orçamentos para criar uma nova proposta.'}
-          </p>
-        </div>
+              : 'Vá para a página de Orçamentos para criar uma nova proposta.'
+          }
+        />
       )}
 
       <DeleteConfirmationModal

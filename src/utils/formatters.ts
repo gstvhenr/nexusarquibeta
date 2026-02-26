@@ -1,12 +1,3 @@
-import type {
-  Installment,
-  Project,
-  Commission,
-  ProfessionalExpense,
-  MarketingActivity,
-  PriceEntry,
-} from '../types';
-
 export const formatCurrency = (value: number | undefined | null) => {
   if (value === undefined || value === null)
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(0);
@@ -112,22 +103,9 @@ export const formatCEP = (cep: string): string => {
     .substring(0, 9); // Ensure the length does not exceed 9 characters (XXXXX-XXX)
 };
 
-export const getInitials = (name: string): string => {
-  if (!name) return '?';
-  const names = name.trim().split(' ');
-  if (names.length === 1) return names[0].substring(0, 2).toUpperCase();
-  return (names[0][0] + (names[names.length - 1][0] || '')).toUpperCase();
-};
-
-export const getLatestPriceFromHistory = (priceHistory: PriceEntry[]): number | null => {
-  if (!priceHistory || priceHistory.length === 0) return null;
-  return [...priceHistory].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  )[0].price;
-};
-
 export const getDeadlineInfo = (
   deadline: string | null | undefined,
+  isCompleted?: boolean,
 ): {
   text: string;
   className: string;
@@ -151,6 +129,15 @@ export const getDeadlineInfo = (
 
   const diffTime = deadlineDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (isCompleted) {
+    return {
+      text: formatDateDayMonth(deadline),
+      className: 'text-text-secondary',
+      diffDays,
+      status: 'ok',
+    };
+  }
 
   if (diffDays < 0)
     return {

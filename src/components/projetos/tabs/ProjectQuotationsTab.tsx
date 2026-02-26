@@ -10,7 +10,7 @@ interface QuotationsTabProps {
   onUnlink: (quotationId: string) => void;
 }
 
-export const ProjectQuotationsTab: React.FC<QuotationsTabProps> = ({
+export const ProjectQuotationsTab: (props: QuotationsTabProps) => React.ReactNode = ({
   project,
   allQuotations,
   onLink,

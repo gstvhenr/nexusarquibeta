@@ -3,581 +3,23 @@ import { useParams, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { PageHeader } from '../components/layout';
-import { Modal } from '../components/ui';
-import { useData } from '../context/DataContext';
-import type {
-  Proposal,
-  Project,
-  Client,
-  DocumentStorage,
-  DocumentFolder,
-  AgendaEvent,
-  ProposalStatus,
-  ProposalBlock,
-  ProjectAddress,
-  SavedSection,
-} from '../types';
-import { proposalStatuses } from '../types';
-import { formatCurrency, formatCEP } from '../utils/formatters';
+import { useCoreData, useSystemData } from '../context/DataContext';
+import type { ProposalBlock, ProjectAddress } from '../types';
+
 import { proposalService } from '../services/proposalService';
-import { PROPOSAL_STATUS_CLASSES, NAV_LINKS, PROJECT_DOCUMENT_FOLDER_TEMPLATE } from '../constants';
+import { PROPOSAL_STATUS_CLASSES, NAV_LINKS } from '../constants';
 import { addItemToTree } from '../utils/tree';
-import {
-  PlusIcon,
-  TrashIcon,
-  ArrowUpCircleIcon,
-  ArrowDownCircleIcon,
-  AlertIcon,
-} from '../components/ui';
+import { ProposalDocumentEditor, ConversionModal, ValidationModal } from '../components/propostas';
 import { v4 as uuidv4 } from 'uuid';
 import { validateClientForProject } from '../services/clientService';
 
-// --- SUB-COMPONENTS FOR EDITOR ---
-
-interface BudgetTableBlockProps {
-  proposal: Proposal;
-  showItemPrices: boolean;
-  showSectionTotals: boolean;
-  showDiscount: boolean;
-  showGrandTotal: boolean;
-  totalsAlignment: 'right' | 'left';
-}
-
-const computeSectionTotal = (section: SavedSection): number => {
-  return section.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-};
-
-const BudgetTableBlock: React.FC<BudgetTableBlockProps> = ({
-  proposal,
-  showItemPrices,
-  showSectionTotals,
-  showDiscount,
-  showGrandTotal,
-  totalsAlignment,
-}) => {
-  return (
-    <div className="my-6">
-      {/* Render all sections */}
-      {proposal.sections.map((section) => {
-        const sectionTotal = computeSectionTotal(section);
-        return (
-          <div key={section.id} className="mb-8">
-            <h4 className="font-serif text-lg font-bold text-gray-800 mb-2 border-b-2 border-primary/20 pb-1 inline-block">
-              {section.title}
-            </h4>
-
-            {/* Service List (ALWAYS VISIBLE) */}
-            <div className="overflow-x-auto mt-2">
-              <table className="w-full text-sm">
-                <thead className="text-left text-gray-500 border-b border-gray-200">
-                  <tr>
-                    <th className="py-2 pr-4 font-semibold uppercase text-xs tracking-wider">
-                      Descrição
-                    </th>
-                    {showItemPrices && (
-                      <th className="py-2 pl-4 text-right font-semibold uppercase text-xs tracking-wider w-32">
-                        Valor
-                      </th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {section.items.map((item) => (
-                    <tr key={item.id} className="border-b border-gray-100 last:border-0">
-                      <td className="py-3 pr-4 text-gray-700">
-                        {item.description}
-                        {item.quantity > 1 && (
-                          <span className="text-gray-400 text-xs ml-2">
-                            ({item.quantity} {item.unit})
-                          </span>
-                        )}
-                      </td>
-                      {showItemPrices && (
-                        <td className="py-3 pl-4 text-right font-medium text-gray-900">
-                          {formatCurrency(item.quantity * item.unitPrice)}
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Section Total (conditional) */}
-            {showSectionTotals && (
-              <div className="flex justify-end mt-3 pr-2">
-                <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded">
-                  <span className="text-sm text-gray-600 font-medium">Subtotal da Seção:</span>
-                  <span className="text-base text-gray-900 font-semibold">
-                    {formatCurrency(sectionTotal)}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
-
-      {/* Grand Total Section (conditional) */}
-      {showGrandTotal && (
-        <div
-          className={`flex items-end pt-4 mt-4 border-t-2 border-gray-300 ${totalsAlignment === 'left' ? 'justify-start' : 'justify-end'}`}
-        >
-          <div className="w-full max-w-xs space-y-2 text-md">
-            {showDiscount && proposal.discount > 0 && (
-              <>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Subtotal</span>
-                  <span className="font-medium text-gray-900">
-                    {formatCurrency(proposal.subtotal)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Desconto ({proposal.discount}%)</span>
-                  <span className="font-medium text-red-500">
-                    - {formatCurrency(proposal.subtotal - proposal.total)}
-                  </span>
-                </div>
-                <div className="border-t border-gray-200 my-1"></div>
-              </>
-            )}
-            <div className="flex justify-between font-bold text-xl items-center">
-              <span className="text-primary">Total</span>
-              <span className="text-gray-900">{formatCurrency(proposal.total)}</span>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const TextBlockEditor: React.FC<{
-  content: string;
-  onChange: (val: string) => void;
-  onDelete: () => void;
-  isEditing: boolean;
-}> = ({ content, onChange, onDelete, isEditing }) => {
-  return (
-    <div className="relative group mb-4">
-      {isEditing ? (
-        <textarea
-          value={content}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-background p-4 rounded-lg border border-border-color focus:border-accent text-base leading-relaxed min-h-[100px]"
-          placeholder="Escreva seu texto aqui..."
-        />
-      ) : (
-        <div className="prose max-w-none text-text-primary whitespace-pre-wrap p-2">{content}</div>
-      )}
-      {isEditing && (
-        <button
-          onClick={onDelete}
-          className="absolute -right-3 -top-3 bg-surface border border-border-color text-error p-1 rounded-full shadow-sm hover:bg-error/10"
-          aria-label="Excluir bloco"
-        >
-          <TrashIcon className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-  );
-};
-
-// Main Document Editor Component
-const ProposalDocumentEditor: React.FC<{
-  blocks: ProposalBlock[];
-  proposal: Proposal;
-  onUpdateBlocks: (blocks: ProposalBlock[]) => void;
-  readOnly: boolean;
-}> = ({ blocks, proposal, onUpdateBlocks, readOnly }) => {
-  const addTextBlock = (index: number) => {
-    const newBlock: ProposalBlock = { id: uuidv4(), type: 'text', content: '', order: index };
-    const newBlocks = [...blocks];
-    newBlocks.splice(index, 0, newBlock);
-    onUpdateBlocks(newBlocks);
-  };
-
-  const handleContentChange = (id: string, newContent: string) => {
-    onUpdateBlocks(blocks.map((b) => (b.id === id ? { ...b, content: newContent } : b)));
-  };
-
-  const handleDeleteBlock = (id: string) => {
-    onUpdateBlocks(blocks.filter((b) => b.id !== id));
-  };
-
-  const moveBlock = (index: number, direction: -1 | 1) => {
-    if (index + direction < 0 || index + direction >= blocks.length) return;
-    const newBlocks = [...blocks];
-    const temp = newBlocks[index];
-    newBlocks[index] = newBlocks[index + direction];
-    newBlocks[index + direction] = temp;
-    onUpdateBlocks(newBlocks);
-  };
-
-  return (
-    <div className="h-full p-12 relative">
-      {/* Header / Letterhead */}
-      <div className="border-b-2 border-primary pb-6 mb-8 flex justify-between items-start">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-secondary">
-            Rafael Munaro Arquitetura
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">CAU: A231798-2 | (19) 99690-8104</p>
-          <p className="text-sm text-text-secondary">
-            Rua Padre Fabiano, 1072 - Centro, Capivari-SP
-          </p>
-        </div>
-        <div className="text-right">
-          <h2 className="text-xl font-bold text-text-primary">Proposta Comercial</h2>
-          <p className="text-sm text-text-secondary">{proposal.code}</p>
-          {proposal.showProposalDate !== false && (
-            <p className="text-sm text-text-secondary">{proposal.date}</p>
-          )}
-        </div>
-      </div>
-
-      <div className="mb-8">
-        <h3 className="font-serif text-2xl font-bold text-center text-primary mb-2">
-          {proposal.name}
-        </h3>
-        <p className="text-center text-text-secondary">Projeto de Arquitetura & Interiores</p>
-      </div>
-
-      {/* Blocks */}
-      <div className="space-y-6">
-        {blocks.map((block, index) => (
-          <div key={block.id} className="relative group/block">
-            {!readOnly && (
-              <div className="absolute -left-10 top-2 flex flex-col gap-1 opacity-0 group-hover/block:opacity-100 transition-opacity">
-                <button
-                  onClick={() => moveBlock(index, -1)}
-                  className="p-1 text-text-secondary hover:text-primary"
-                  aria-label="Mover bloco para cima"
-                >
-                  <ArrowUpCircleIcon className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => moveBlock(index, 1)}
-                  className="p-1 text-text-secondary hover:text-primary"
-                  aria-label="Mover bloco para baixo"
-                >
-                  <ArrowDownCircleIcon className="w-5 h-5" />
-                </button>
-              </div>
-            )}
-
-            {block.type === 'text' && (
-              <TextBlockEditor
-                content={block.content || ''}
-                onChange={(val) => handleContentChange(block.id, val)}
-                onDelete={() => handleDeleteBlock(block.id)}
-                isEditing={!readOnly}
-              />
-            )}
-
-            {block.type === 'budget_table' && (
-              <div
-                className={`transition-colors ${!readOnly ? 'border-2 border-dashed border-transparent hover:border-primary/20 rounded p-2' : ''}`}
-              >
-                <BudgetTableBlock
-                  proposal={proposal}
-                  showItemPrices={proposal.showItemPrices !== false}
-                  showSectionTotals={proposal.showSectionTotals !== false}
-                  showDiscount={proposal.discount > 0 && proposal.showDiscount !== false}
-                  showGrandTotal={proposal.showGrandTotal !== false}
-                  totalsAlignment={proposal.totalsAlignment === 'left' ? 'left' : 'right'}
-                />
-                {!readOnly && (
-                  <p className="text-center text-xs text-text-secondary mb-2">
-                    Tabela de Orçamento (Gerada Automaticamente)
-                  </p>
-                )}
-              </div>
-            )}
-
-            {!readOnly && (
-              <div
-                className="h-4 group/add flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity my-2 cursor-pointer"
-                onClick={() => addTextBlock(index + 1)}
-              >
-                <div className="h-px bg-primary/30 w-full relative">
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface border border-primary text-primary px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
-                    <PlusIcon className="w-3 h-3" /> Texto
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Initial Add Button if empty */}
-      {!readOnly && blocks.length === 0 && (
-        <button
-          onClick={() => addTextBlock(0)}
-          className="w-full py-8 border-2 border-dashed border-border-color rounded-lg text-text-secondary hover:border-primary hover:text-primary transition-colors flex flex-col items-center justify-center"
-        >
-          <PlusIcon className="w-8 h-8 mb-2" />
-          <span>Começar a escrever a proposta</span>
-        </button>
-      )}
-    </div>
-  );
-};
-
-const ConversionModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: (useDifferentAddress: boolean, address?: ProjectAddress) => void;
-  clientAddress: ProjectAddress;
-}> = ({ isOpen, onClose, onConfirm, clientAddress }) => {
-  const [isStep2, setIsStep2] = useState(false);
-  const [newAddress, setNewAddress] = useState<ProjectAddress>({
-    street: '',
-    number: '',
-    neighborhood: '',
-    city: '',
-    state: 'SP', // Default locked to SP
-    zip: '',
-    complement: '',
-  });
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsStep2(false);
-      setNewAddress({
-        street: '',
-        number: '',
-        neighborhood: '',
-        city: '',
-        state: 'SP',
-        zip: '',
-        complement: '',
-      });
-    }
-  }, [isOpen]);
-
-  const handleAddressChange = (field: keyof ProjectAddress, value: string) => {
-    setNewAddress((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleConfirmStep1 = () => {
-    onConfirm(false);
-  };
-
-  const handleConfirmStep2 = () => {
-    onConfirm(true, newAddress);
-  };
-
-  if (!isOpen) return null;
-  const inputClass =
-    'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm';
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Converter para Projeto">
-      <div className="space-y-6">
-        {!isStep2 ? (
-          // STEP 1: Selection
-          <div className="animate-fade-in-up">
-            <p className="font-semibold text-text-primary mb-2">Endereço da Obra/Serviço</p>
-            <p className="text-sm text-text-secondary mb-4">
-              O local do serviço é o mesmo do endereço cadastrado do cliente?
-            </p>
-            <div className="p-3 bg-surface border border-border-color rounded-lg mb-6 text-sm text-text-secondary">
-              {clientAddress.street}, {clientAddress.number} - {clientAddress.neighborhood},{' '}
-              {clientAddress.city}/{clientAddress.state}
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              <button
-                onClick={handleConfirmStep1}
-                className="flex items-center p-3 border border-border-color rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left group"
-              >
-                <div className="flex-1">
-                  <span className="block font-semibold text-text-primary group-hover:text-primary">
-                    Sim, é o mesmo endereço
-                  </span>
-                  <span className="text-xs text-text-secondary">
-                    O projeto será vinculado ao endereço do cliente acima.
-                  </span>
-                </div>
-                <div className="w-4 h-4 rounded-full border border-border-color group-hover:border-primary"></div>
-              </button>
-
-              <button
-                onClick={() => setIsStep2(true)}
-                className="flex items-center p-3 border border-border-color rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left group"
-              >
-                <div className="flex-1">
-                  <span className="block font-semibold text-text-primary group-hover:text-primary">
-                    Não, é outro local
-                  </span>
-                  <span className="text-xs text-text-secondary">
-                    Cadastrar um endereço específico para a obra.
-                  </span>
-                </div>
-                <div className="w-4 h-4 rounded-full border border-border-color group-hover:border-primary"></div>
-              </button>
-            </div>
-          </div>
-        ) : (
-          // STEP 2: Form
-          <div className="bg-background/50 p-4 rounded-lg border border-border-color animate-fade-in-up">
-            <h4 className="font-semibold text-sm text-text-primary mb-3">Novo Endereço da Obra</h4>
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-              <div className="md:col-span-2">
-                <input
-                  type="text"
-                  placeholder="CEP"
-                  value={newAddress.zip}
-                  onChange={(e) => handleAddressChange('zip', formatCEP(e.target.value))}
-                  className={inputClass}
-                />
-              </div>
-              <div className="md:col-span-4">
-                <input
-                  type="text"
-                  placeholder="Rua"
-                  value={newAddress.street}
-                  onChange={(e) => handleAddressChange('street', e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <input
-                  type="text"
-                  placeholder="Número"
-                  value={newAddress.number}
-                  onChange={(e) => handleAddressChange('number', e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="md:col-span-4">
-                <input
-                  type="text"
-                  placeholder="Bairro"
-                  value={newAddress.neighborhood}
-                  onChange={(e) => handleAddressChange('neighborhood', e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="md:col-span-4">
-                <input
-                  type="text"
-                  placeholder="Cidade"
-                  value={newAddress.city}
-                  onChange={(e) => handleAddressChange('city', e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <input
-                  type="text"
-                  placeholder="UF"
-                  value={newAddress.state}
-                  disabled
-                  className={`${inputClass} opacity-60 cursor-not-allowed`}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-        {isStep2 ? (
-          <>
-            <button
-              onClick={() => setIsStep2(false)}
-              className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-            >
-              Voltar
-            </button>
-            <button
-              onClick={handleConfirmStep2}
-              className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-            >
-              Confirmar Conversão
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={onClose}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-          >
-            Cancelar
-          </button>
-        )}
-      </div>
-    </Modal>
-  );
-};
-
-// --- Validation Modal ---
-const ValidationModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  errors: string[];
-  onRedirect: () => void;
-}> = ({ isOpen, onClose, errors, onRedirect }) => {
-  if (!isOpen) return null;
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Cadastro Incompleto">
-      <div className="space-y-4">
-        <div className="bg-warning/10 border-l-4 border-warning p-4 rounded-r-lg flex items-start gap-3">
-          <AlertIcon className="w-6 h-6 text-warning flex-shrink-0" />
-          <div>
-            <h4 className="font-bold text-text-primary text-sm">Atenção!</h4>
-            <p className="text-sm text-text-secondary mt-1">
-              Para converter esta proposta em projeto, o cliente precisa ter o cadastro completo.
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-background border border-border-color rounded-lg p-4">
-          <p className="font-semibold text-sm mb-2 text-text-primary">Campos faltantes:</p>
-          <ul className="list-disc list-inside text-sm text-error space-y-1">
-            {errors.map((err, i) => (
-              <li key={i}>{err}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-        <button
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={onRedirect}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-        >
-          Corrigir Cadastro
-        </button>
-      </div>
-    </Modal>
-  );
-};
-
 // --- PAGE COMPONENT ---
 
-const PropostaDetalhesPage: React.FC = () => {
+const PropostaDetalhesPage: () => React.ReactNode = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const {
-    proposals,
-    setProposals,
-    projects,
-    setProjects,
-    clients,
-    setClients,
-    documentStorage: docs,
-    setDocumentStorage: setDocs,
-    setAgendaEvents,
-    contractDeadlines,
-  } = useData();
+  const { proposals, setProposals, projects, setProjects, clients, setClients } = useCoreData();
+  const { setDocumentStorage: setDocs, setAgendaEvents, contractDeadlines } = useSystemData();
 
   const proposal = useMemo(() => proposals.find((p) => p.id === id), [id, proposals]);
 
@@ -617,6 +59,12 @@ const PropostaDetalhesPage: React.FC = () => {
   // Validation State
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [isValidationModalOpen, setValidationModalOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   const projectExists = useMemo(() => {
     if (!proposal) return false;
@@ -652,14 +100,14 @@ const PropostaDetalhesPage: React.FC = () => {
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 30;
+      const _imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const _imgY = 30;
 
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, (imgHeight * pdfWidth) / imgWidth);
       pdf.save(`proposta_${proposal?.code}.pdf`);
     } catch (error) {
       console.error('PDF Error', error);
-      alert('Erro ao gerar PDF.');
+      showToast('Erro ao gerar PDF.', 'error');
     } finally {
       setIsExportingPdf(false);
     }
@@ -671,7 +119,7 @@ const PropostaDetalhesPage: React.FC = () => {
     const client = clients.find((c) => c.id === proposal.clientId);
 
     if (!client) {
-      alert('Cliente não encontrado.');
+      showToast('Cliente não encontrado.', 'error');
       return;
     }
 
@@ -690,7 +138,7 @@ const PropostaDetalhesPage: React.FC = () => {
       if (!proposal) return;
       const client = clients.find((c) => c.id === proposal.clientId);
       if (!client) {
-        alert('Cliente não encontrado.');
+        showToast('Cliente não encontrado.', 'error');
         return;
       }
 
@@ -715,12 +163,11 @@ const PropostaDetalhesPage: React.FC = () => {
       setAgendaEvents(result.updatedAgendaEvents);
 
       setConversionModalOpen(false);
-      alert('Projeto criado com sucesso!');
+      showToast('Projeto criado com sucesso!', 'success');
       navigate(`/projetos/${result.newProject.id}`);
     },
     [
       proposal,
-      projects,
       setProjects,
       setProposals,
       clients,
@@ -734,7 +181,7 @@ const PropostaDetalhesPage: React.FC = () => {
 
   if (!proposal) return <div>Proposta não encontrada</div>;
   const client = clients.find((c) => c.id === proposal.clientId);
-  const statusClass = PROPOSAL_STATUS_CLASSES[proposal.status];
+  const _statusClass = PROPOSAL_STATUS_CLASSES[proposal.status];
   const propostasIcon = NAV_LINKS.find((link) => link.path === '/propostas')?.icon;
 
   // Linked project info
@@ -969,6 +416,50 @@ const PropostaDetalhesPage: React.FC = () => {
             onRedirect={() => navigate(`/clientes/${client.id}`)}
           />
         </>
+      )}
+
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
+          <div
+            className={`flex items-center gap-3 px-5 py-3 rounded-xl bg-surface border shadow-lg backdrop-blur-sm ${
+              toast.type === 'success' ? 'border-emerald-500/30' : 'border-error/30'
+            }`}
+          >
+            <span className={toast.type === 'success' ? 'text-emerald-500' : 'text-error'}>
+              {toast.type === 'success' ? (
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                  />
+                </svg>
+              )}
+            </span>
+            <span className="text-sm font-medium text-text-primary">{toast.message}</span>
+          </div>
+        </div>
       )}
     </div>
   );

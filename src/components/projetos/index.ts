@@ -12,5 +12,6 @@ export {
   ProjectChecklistTab,
   ProjectFinanceTab,
   ProjectGanttTab,
+  ProjectNotesTab,
   ProjectQuotationsTab,
 } from './tabs';

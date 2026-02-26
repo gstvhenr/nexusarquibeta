@@ -7,7 +7,7 @@
 3. Planejar escopo em `PLAN.md` (alvo, fora de escopo, riscos, critérios).
 4. Implementar em diffs pequenos.
 5. Rodar gates oficiais de `AGENTS.md` e corrigir antes de abrir PR.
-6. Atualizar `NEXT.md` e decisões/ADR quando aplicável.
+6. Atualizar `NEXT.md` e `DECISIONS-active.md`/ADR quando aplicável.
 
 ## Política de tamanho de PR
 
@@ -22,7 +22,7 @@
 - [ ] Testes atualizados para comportamento alterado
 - [ ] Contratos/tipos/documentação atualizados quando necessário
 - [ ] `NEXT.md` atualizado
-- [ ] `DECISIONS.md`/ADR atualizado se estrutural
+- [ ] `DECISIONS-active.md`/ADR atualizado se estrutural
 - [ ] Evidências anexadas (comandos executados + resultado objetivo)
 
 ## Dependências e segurança

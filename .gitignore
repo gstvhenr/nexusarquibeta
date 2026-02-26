@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+coverage
 *.local
 .agent/tmp/
 
@@ -23,3 +24,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python cache (gerado pelos scripts de .agent/skills/)
+__pycache__/
+*.pyc
+*.pyo

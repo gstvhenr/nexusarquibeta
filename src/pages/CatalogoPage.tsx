@@ -1,13 +1,8 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PageHeader } from '../components/layout';
-import { Modal } from '../components/ui';
-import { useData } from '../context/DataContext';
-import type { Product, Supplier, SupplierProductPrice, PriceEntry, ProductUnit } from '../types';
-import {
-  NAV_LINKS,
-  PRODUCT_UNIT_OPTIONS,
-  SUPPLIER_CATEGORY_OPTIONS as PRODUCT_CATEGORY_OPTIONS,
-} from '../constants';
+import { useSupplyChainData } from '../context/DataContext';
+import type { Product, SupplierProductPrice, PriceEntry } from '../types';
+import { NAV_LINKS } from '../constants';
 import {
   PlusIcon,
   CubeIcon,
@@ -15,343 +10,18 @@ import {
   ListViewIcon,
   CollectionIcon,
   EditIcon,
-  BuildingIcon,
-  AlertIcon,
-  ChevronDownIcon,
-  SearchIcon,
 } from '../components/ui';
+import { ProductFormModal, AddSupplierPriceModal } from '../components/catalogo';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
-const ProductFormModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (product: Product, linkedSupplierIds: string[]) => void;
-  initialProduct: Product | null;
-  suppliers: Supplier[];
-  existingRelations: string[]; // IDs of suppliers already linked to this product
-}> = ({ isOpen, onClose, onSave, initialProduct, suppliers, existingRelations }) => {
-  const getInitial = useCallback(
-    () =>
-      initialProduct || {
-        id: '',
-        name: '',
-        unit: 'un',
-        category: '',
-        description: '',
-        archived: false,
-      },
-    [initialProduct],
-  );
-  const [product, setProduct] = useState<Product>(getInitial());
-  const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>([]);
-
-  // UI States for Supplier Selection
-  const [isSuppliersOpen, setIsSuppliersOpen] = useState(false);
-  const [supplierSearch, setSupplierSearch] = useState('');
-
-  useEffect(() => {
-    if (isOpen) {
-      setProduct(getInitial());
-      setSelectedSupplierIds(initialProduct ? existingRelations : []);
-      setIsSuppliersOpen(false); // Reset expanded state
-      setSupplierSearch(''); // Reset search
-    }
-  }, [isOpen, getInitial, initialProduct, existingRelations]);
-
-  const handleChange = (field: keyof Product, value: any) =>
-    setProduct((p) => ({ ...p, [field]: value }));
-
-  const handleSupplierToggle = (supplierId: string) => {
-    setSelectedSupplierIds((prev) =>
-      prev.includes(supplierId) ? prev.filter((id) => id !== supplierId) : [...prev, supplierId],
-    );
-  };
-
-  const handleSave = () => {
-    if (!product.name.trim() || !product.category) {
-      alert('Nome e Categoria são obrigatórios.');
-      return;
-    }
-    onSave({ ...product, id: product.id || `prod_${Date.now()}` }, selectedSupplierIds);
-  };
-
-  const filteredSuppliers = useMemo(() => {
-    return suppliers
-      .filter((s) => !s.archived)
-      .filter((s) => s.name.toLowerCase().includes(supplierSearch.toLowerCase()))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [suppliers, supplierSearch]);
-
-  if (!isOpen) return null;
-
-  const hasSuppliers = suppliers.length > 0;
-  const inputClass =
-    'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-text-primary transition text-sm';
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={initialProduct ? 'Editar Produto' : 'Adicionar Produto'}
-    >
-      {!hasSuppliers ? (
-        <div className="text-center py-8">
-          <div className="bg-warning/10 text-warning p-4 rounded-xl mb-4 flex items-start gap-3">
-            <AlertIcon className="w-6 h-6 flex-shrink-0" />
-            <div className="text-left">
-              <h4 className="font-bold text-sm">Nenhum fornecedor cadastrado</h4>
-              <p className="text-xs mt-1">
-                Para cadastrar produtos, é necessário ter fornecedores no sistema para criar o
-                vínculo.
-              </p>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-primary text-sm font-semibold hover:underline">
-            Voltar e cadastrar fornecedores
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-            <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">
-                Nome do Produto
-              </label>
-              <input
-                type="text"
-                value={product.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                className={inputClass}
-                aria-label="Nome do Produto"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1">
-                  Unidade
-                </label>
-                <select
-                  value={product.unit}
-                  onChange={(e) => handleChange('unit', e.target.value as ProductUnit)}
-                  className={inputClass}
-                  aria-label="Unidade"
-                >
-                  {PRODUCT_UNIT_OPTIONS.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1">
-                  Categoria
-                </label>
-                <select
-                  value={product.category}
-                  onChange={(e) => handleChange('category', e.target.value)}
-                  className={inputClass}
-                  aria-label="Categoria"
-                >
-                  <option value="">Selecione uma categoria...</option>
-                  {PRODUCT_CATEGORY_OPTIONS.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">
-                Descrição
-              </label>
-              <textarea
-                value={product.description || ''}
-                onChange={(e) => handleChange('description', e.target.value)}
-                rows={2}
-                className={inputClass}
-                aria-label="Descrição do Produto"
-              />
-            </div>
-
-            {/* Collapsible Supplier Selection */}
-            <div className="border border-border-color rounded-xl overflow-hidden bg-background/30 transition-all duration-300">
-              <button
-                type="button"
-                onClick={() => setIsSuppliersOpen(!isSuppliersOpen)}
-                className="w-full flex items-center justify-between p-4 bg-surface hover:bg-background/80 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <BuildingIcon className="w-4 h-4 text-secondary" />
-                  <span className="text-xs font-bold text-text-secondary uppercase">
-                    Vincular Fornecedores
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  {selectedSupplierIds.length > 0 && (
-                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">
-                      {selectedSupplierIds.length} selecionado(s)
-                    </span>
-                  )}
-                  <ChevronDownIcon
-                    className={`w-5 h-5 text-text-secondary transition-transform duration-300 ${isSuppliersOpen ? 'rotate-180' : ''}`}
-                  />
-                </div>
-              </button>
-
-              {isSuppliersOpen && (
-                <div className="p-4 border-t border-border-color animate-fade-in-up">
-                  <div className="relative mb-3">
-                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
-                    <input
-                      type="text"
-                      placeholder="Buscar fornecedor..."
-                      value={supplierSearch}
-                      onChange={(e) => setSupplierSearch(e.target.value)}
-                      className="w-full bg-surface pl-9 pr-3 py-2 rounded-lg border border-border-color text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                    />
-                  </div>
-                  <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-                    {filteredSuppliers.length > 0 ? (
-                      filteredSuppliers.map((supplier) => (
-                        <label
-                          key={supplier.id}
-                          className="flex items-center gap-3 p-2 hover:bg-surface rounded-lg cursor-pointer transition-colors group"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedSupplierIds.includes(supplier.id)}
-                            onChange={() => handleSupplierToggle(supplier.id)}
-                            className="rounded accent-primary w-4 h-4 cursor-pointer"
-                          />
-                          <span className="text-sm text-text-primary group-hover:text-primary transition-colors">
-                            {supplier.name}
-                          </span>
-                        </label>
-                      ))
-                    ) : (
-                      <p className="text-xs text-text-secondary text-center py-4 italic">
-                        Nenhum fornecedor encontrado.
-                      </p>
-                    )}
-                  </div>
-                  <p className="text-[10px] text-text-secondary mt-3 text-center">
-                    * Defina os preços para os selecionados na próxima tela ou na tabela de
-                    produtos.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-            <button
-              onClick={onClose}
-              className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-            >
-              Salvar
-            </button>
-          </div>
-        </>
-      )}
-    </Modal>
-  );
-};
-
-const AddSupplierPriceModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (supplierId: string, price: number, date: string) => void;
-  suppliers: Supplier[];
-  productName: string;
-}> = ({ isOpen, onClose, onSave, suppliers, productName }) => {
-  const [supplierId, setSupplierId] = useState('');
-  const [price, setPrice] = useState(0);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  useEffect(() => {
-    if (isOpen && suppliers.length > 0) setSupplierId(suppliers[0].id);
-  }, [isOpen, suppliers]);
-  const handleSave = () => {
-    if (!supplierId || price <= 0) {
-      alert('Selecione um fornecedor e insira um preço válido.');
-      return;
-    }
-    onSave(supplierId, price, date);
-  };
-  if (!isOpen) return null;
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Adicionar Preço para "${productName}"`}>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">Fornecedor</label>
-          <select
-            value={supplierId}
-            onChange={(e) => setSupplierId(e.target.value)}
-            className="w-full bg-background p-2 rounded-md border border-border-color text-sm"
-            aria-label="Fornecedor"
-          >
-            {suppliers.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Preço (R$)</label>
-            <input
-              type="number"
-              value={price || ''}
-              onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-              className="w-full bg-background p-2 rounded-md border border-border-color text-sm"
-              placeholder="0.00"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Data</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-background p-2 rounded-md border border-border-color text-sm"
-              aria-label="Data do preço"
-            />
-          </div>
-        </div>
-      </div>
-      <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-        <button
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={handleSave}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-        >
-          Salvar Preço
-        </button>
-      </div>
-    </Modal>
-  );
-};
-
-const CatalogoPage: React.FC = () => {
+const CatalogoPage: () => React.ReactNode = () => {
   const {
     products,
     setProducts,
     suppliers,
     supplierProductPrices: prices,
     setSupplierProductPrices: setPrices,
-  } = useData();
+  } = useSupplyChainData();
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [isProductModalOpen, setProductModalOpen] = useState(false);
   const [isPriceModalOpen, setPriceModalOpen] = useState(false);
@@ -372,9 +42,16 @@ const CatalogoPage: React.FC = () => {
     );
   }, [sortedProducts, filter]);
 
+  const effectiveSelectedProductId = useMemo(() => {
+    if (selectedProductId && filteredProducts.some((product) => product.id === selectedProductId)) {
+      return selectedProductId;
+    }
+    return filteredProducts[0]?.id ?? null;
+  }, [filteredProducts, selectedProductId]);
+
   const selectedProduct = useMemo(
-    () => products.find((p) => p.id === selectedProductId),
-    [products, selectedProductId],
+    () => products.find((product) => product.id === effectiveSelectedProductId),
+    [products, effectiveSelectedProductId],
   );
 
   const productRelations = useMemo(() => {
@@ -402,12 +79,15 @@ const CatalogoPage: React.FC = () => {
           (pr) => pr.productId === product.id && pr.supplierId === supplierId,
         );
         if (!exists) {
-          newPrices.push({
-            id: `price_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            productId: product.id,
-            supplierId: supplierId,
-            priceHistory: [], // Start with no price history, user adds later
-          });
+          newPrices = [
+            ...newPrices,
+            {
+              id: `price_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              productId: product.id,
+              supplierId: supplierId,
+              priceHistory: [], // Start with no price history, user adds later
+            },
+          ];
         }
       });
 
@@ -457,12 +137,6 @@ const CatalogoPage: React.FC = () => {
     setProductToEdit(product);
     setProductModalOpen(true);
   };
-
-  useEffect(() => {
-    if (filteredProducts.length > 0 && !selectedProductId) {
-      setSelectedProductId(filteredProducts[0].id);
-    }
-  }, [filteredProducts, selectedProductId]);
 
   const suprimentosLink = NAV_LINKS.find((link) => link.label === 'Suprimentos');
   const pageIcon = suprimentosLink?.children?.find((child) => child.path === '/catalogo')?.icon;
@@ -598,7 +272,15 @@ const CatalogoPage: React.FC = () => {
                 <div
                   key={p.id}
                   onClick={() => setSelectedProductId(p.id)}
-                  className={`p-3 rounded-lg cursor-pointer flex items-center gap-3 transition-all ${selectedProductId === p.id ? 'bg-primary/10 border-l-4 border-primary' : 'hover:bg-background/80 border-l-4 border-transparent'}`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      (() => setSelectedProductId(p.id))();
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  className={`p-3 rounded-lg cursor-pointer flex items-center gap-3 transition-all ${effectiveSelectedProductId === p.id ? 'bg-primary/10 border-l-4 border-primary' : 'hover:bg-background/80 border-l-4 border-transparent'}`}
                 >
                   <div className="w-10 h-10 rounded bg-background flex items-center justify-center text-text-secondary border border-border-color">
                     <CubeIcon className="w-5 h-5" />

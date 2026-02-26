@@ -12,7 +12,10 @@ interface DonutTooltipProps {
   payload?: DonutTooltipPayload[];
 }
 
-export const DonutTooltip: React.FC<DonutTooltipProps> = ({ active, payload }) => {
+export const DonutTooltip: (props: DonutTooltipProps) => React.ReactNode = ({
+  active,
+  payload,
+}) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (

@@ -2,19 +2,19 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../components/layout';
 import { DeleteConfirmationModal } from '../components/ui';
-import { useData } from '../context/DataContext';
+import { useCoreData, useSupplyChainData } from '../context/DataContext';
 import type { Quotation, Project } from '../types';
 import { NAV_LINKS } from '../constants';
 import { PlusIcon, ArchiveIcon, UnarchiveIcon, TrashIcon } from '../components/ui';
-import { formatCurrency, formatDate } from '../utils/formatters';
+
 import { v4 as uuidv4 } from 'uuid';
 
-const QuotationListItem: React.FC<{
+const QuotationListItem: (props: {
   quotation: Quotation;
   project?: Project;
   onArchive: (id: string, archive: boolean) => void;
   onDelete: (id: string) => void;
-}> = React.memo(({ quotation, project, onArchive, onDelete }) => {
+}) => React.ReactNode = React.memo(({ quotation, project, onArchive, onDelete }) => {
   const navigate = useNavigate();
   const statusClass =
     quotation.status === 'Finalizada' ? 'bg-success/20 text-success' : 'bg-info/20 text-info';
@@ -22,6 +22,14 @@ const QuotationListItem: React.FC<{
   return (
     <div
       onClick={() => navigate(`/cotacoes/${quotation.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          navigate(`/cotacoes/${quotation.id}`);
+        }
+      }}
+      role="button"
+      tabIndex={0}
       className={`bg-surface rounded-xl shadow-soft transition-all duration-300 ease-in-out group p-5 flex justify-between items-center cursor-pointer ${quotation.archived ? 'opacity-70' : 'hover:shadow-lg hover:-translate-y-px'}`}
     >
       <div className="flex-1 truncate">
@@ -81,8 +89,9 @@ const QuotationListItem: React.FC<{
   );
 });
 
-const CotacoesPage: React.FC = () => {
-  const { quotations, setQuotations, projects } = useData();
+const CotacoesPage: () => React.ReactNode = () => {
+  const { projects } = useCoreData();
+  const { quotations, setQuotations } = useSupplyChainData();
   const navigate = useNavigate();
   const [showArchived, setShowArchived] = useState(false);
   const [quotationToDelete, setQuotationToDelete] = useState<string | null>(null);

@@ -13,7 +13,11 @@ interface CustomTooltipProps {
   label?: string;
 }
 
-export const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+export const CustomTooltip: (props: CustomTooltipProps) => React.ReactNode = ({
+  active,
+  payload,
+  label,
+}) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-surface/95 backdrop-blur-md p-3 rounded-xl shadow-lifted border border-border-color/50 text-xs">

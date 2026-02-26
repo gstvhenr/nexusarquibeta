@@ -15,7 +15,7 @@ Objetivo: oferecer um modelo de componente de apresentação com Tailwind e padr
 ## Exemplo canônico
 
 ```tsx
-import React, { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, memo } from 'react';
 import type { Client } from '../../types';
 
 type Props = {
@@ -23,7 +23,7 @@ type Props = {
   onView: (id: string) => void;
 };
 
-export const ClientRowModel: React.FC<Props> = React.memo(({ client, onView }) => {
+export const ClientRowModel = memo(function ClientRowModel({ client, onView }: Props) {
   const initials = useMemo(
     () =>
       client.name
@@ -52,4 +52,99 @@ export const ClientRowModel: React.FC<Props> = React.memo(({ client, onView }) =
 
 ## Regra de manutenção
 
-Se o padrão mudar, atualizar este exemplo e registrar em `DECISIONS.md`/ADR quando for mudança estrutural.
+Se o padrão mudar, atualizar este exemplo e registrar em `DECISIONS-active.md`/ADR quando for mudança estrutural.
+
+## Exemplo avançado
+
+Referências reais: `src/components/finance/FinanceLineChart.tsx` e
+`src/pages/FinanceiroRecebiveisPage.tsx`.
+
+```tsx
+import { forwardRef, useMemo, type ReactNode } from 'react';
+import { useCoreData } from '../../context/CoreContext';
+import { useFinanceData } from '../../context/FinanceContext';
+import { CardShell } from '../finance/CardShell';
+import { SectionTitle } from '../finance/SectionTitle';
+
+type FinanceSnapshotCardProps = {
+  title?: string;
+  isLoading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  children?: ReactNode;
+};
+
+const FinanceSnapshotCard = forwardRef<HTMLDivElement, FinanceSnapshotCardProps>(
+  function FinanceSnapshotCard(
+    { title = 'Resumo Financeiro', isLoading = false, error = null, onRetry, children },
+    ref,
+  ) {
+    const { projects } = useCoreData();
+    const { commissions } = useFinanceData();
+
+    const kpi = useMemo(() => {
+      const activeProjects = projects.filter((p) => !p.archived).length;
+      const pendingCommissions = commissions.filter((c) => c.status === 'Pendente').length;
+      return { activeProjects, pendingCommissions };
+    }, [projects, commissions]);
+
+    return (
+      <CardShell ref={ref} className="p-4">
+        <SectionTitle>{title}</SectionTitle>
+
+        {isLoading && (
+          <p className="text-sm text-text-secondary animate-pulse">
+            Carregando visão consolidada...
+          </p>
+        )}
+
+        {!isLoading && error && (
+          <div className="rounded-lg border border-error/30 bg-error/10 p-3">
+            <p className="text-sm text-error">{error}</p>
+            {onRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="mt-2 text-xs font-semibold text-error underline"
+              >
+                Tentar novamente
+              </button>
+            )}
+          </div>
+        )}
+
+        {!isLoading && !error && (
+          <div className="space-y-2">
+            <p className="text-sm text-text-primary">Projetos ativos: {kpi.activeProjects}</p>
+            <p className="text-sm text-text-primary">
+              Comissões pendentes: {kpi.pendingCommissions}
+            </p>
+            {children}
+          </div>
+        )}
+      </CardShell>
+    );
+  },
+);
+```
+
+## Anti-pattern
+
+```tsx
+// ERRADO: componente de UI com regra de negócio pesada acoplada
+export const BadFinanceCard = () => {
+  const [receivables, setReceivables] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const total = complexFinanceProjection(receivables, expenses, 24); // regra de domínio
+  return <div>{total}</div>;
+};
+
+// ERRADO: prop opcional tratada sem fallback explícito
+export const BadHeader = ({ title }: { title?: string }) => <h2>{title.toUpperCase()}</h2>;
+```
+
+## Forwarding refs, children compostos e props opcionais
+
+- `forwardRef` deve existir quando o componente precisa expor foco, medição ou scroll para o pai.
+- `children` deve ser usado como slot opcional para compor conteúdo sem acoplamento.
+- Props opcionais devem ter fallback explícito (`title = '...'`, `error = null`) para evitar estados inválidos.

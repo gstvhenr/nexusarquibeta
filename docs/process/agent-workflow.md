@@ -16,7 +16,7 @@
    - Self-review com checklist do agente.
 6. Documentar estado:
    - Atualizar `NEXT.md`.
-   - Se estrutural, atualizar `DECISIONS.md` e/ou ADR.
+   - Se estrutural, atualizar `DECISIONS-active.md` e/ou ADR.
 7. Entregar:
    - Só marcar como pronto com gates verdes e estado documentado.
    - Anexar evidências objetivas (comandos executados + resultado de gates/testes).

@@ -3,7 +3,6 @@ import type {
   Proposal,
   Client,
   ProjectSection,
-  ProjectTask,
   DocumentFolder,
   AgendaEvent,
   ContractDeadlinesSettings,

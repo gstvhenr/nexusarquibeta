@@ -10,7 +10,7 @@ Agent sessions may not retain reliable conversational memory across runs.
 ## Decision
 
 Adopt mandatory session handoff with `NEXT.md` updates at the end of every session.
-Structural changes must be recorded in `DECISIONS.md` and/or `docs/adr/*`.
+Structural changes must be recorded in `DECISIONS-active.md` and/or `docs/adr/*`.
 
 ## Alternatives
 

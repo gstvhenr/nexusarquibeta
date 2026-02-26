@@ -1,59 +1,148 @@
 import type {
-  Installment,
   Project,
   Commission,
   ProfessionalExpense,
   MarketingActivity,
   Freelancer,
   ManualIncome,
-  FinancialReceivable,
-  FinancialDebit,
-  RecentTransaction,
-  TransactionStatus,
+  CashBoxExpense,
+  CashBoxCredit,
+  Filters,
+  PeriodSelection,
+  SeriesPoint,
+  SeriesFilterOptions,
+  FinancialSeriesSource,
 } from '../types';
-import { parseDateString } from '../utils/formatters';
-import { getProjectLumpSumValue, getProjectTotalContractValue } from '../utils/projectFinancials';
+import {
+  applySeriesFilters,
+  buildFilterOptions,
+  buildSeriesFromRecords,
+  calculateChange,
+  getMonthlyTotals,
+  getReceivableCategory,
+  isInMonth,
+  mapDebitsToSeriesRecords,
+  mapReceivablesToSeriesRecords,
+  toMonthKey,
+} from './finance/financeShared';
+import { buildUnifiedFinancialEntries } from './finance/financeUnifiedEntries';
+import type { UnifiedFinancialEntries } from './finance/financeUnifiedEntries';
 
-// ── Unified date-filtering utility (#6) ─────────────────────────────
-/** Returns true if `dateStr` falls within the same year+month as `targetDate`. */
-const isInMonth = (dateStr: string | null, targetDate: Date): boolean => {
-  const date = parseDateString(dateStr);
-  if (!date) return false;
-  return (
-    date.getFullYear() === targetDate.getFullYear() && date.getMonth() === targetDate.getMonth()
+const buildSourceEntries = (source: FinancialSeriesSource): UnifiedFinancialEntries =>
+  buildUnifiedFinancialEntries(
+    source.projects,
+    source.commissions,
+    source.manualExpenses,
+    source.manualIncomes,
+    source.marketingActivities,
+    source.freelancers,
+    source.cashBoxExpenses ?? [],
+    source.cashBoxCredits ?? [],
   );
-};
 
-// ── Monthly totals helper (#3 — uses Pick for structural clarity) ───
-const getMonthlyTotals = (
-  receivables: Pick<FinancialReceivable, 'dueDate' | 'value'>[],
-  debits: Pick<FinancialDebit, 'dueDate' | 'value'>[],
-  targetDate: Date,
-) => {
-  const receita = receivables
-    .filter((r) => isInMonth(r.dueDate, targetDate))
-    .reduce((sum, r) => sum + r.value, 0);
-  const despesa = debits
-    .filter((d) => isInMonth(d.dueDate, targetDate))
-    .reduce((sum, d) => sum + d.value, 0);
+/**
+ * Input -> Output:
+ * - input: período + filtros + fonte de dados financeiros.
+ * - output: série mensal agregada de recebíveis realizados.
+ */
+export const getReceivablesSeries = (
+  period: PeriodSelection,
+  filters: Filters = {},
+  source?: FinancialSeriesSource,
+  referenceDate: Date = new Date(),
+): SeriesPoint[] => {
+  if (!source) return [];
 
-  return { receita, despesa, saldo: receita - despesa };
-};
+  const { allReceivables, receivableOriginById } = buildSourceEntries(source);
 
-// ── Status normalization helper (#10) ───────────────────────────────
-/** Maps raw domain statuses to the unified TransactionStatus for display. */
-const normalizeStatus = (rawStatus: string): TransactionStatus => {
-  if (rawStatus === 'Pago' || rawStatus === 'Recebido') return 'Liquidado';
-  if (rawStatus === 'Vencido') return 'Vencido';
-  return 'Em Aberto';
+  const records = mapReceivablesToSeriesRecords(allReceivables, receivableOriginById);
+  const filteredRecords = applySeriesFilters(records, filters);
+  return buildSeriesFromRecords(filteredRecords, period, referenceDate);
 };
 
 /**
  * Input -> Output:
- * - input: fontes financeiras (projetos, comissões, despesas/receitas manuais, marketing, freelancers) + mês de visualização.
+ * - input: período + filtros + fonte de dados financeiros.
+ * - output: série mensal agregada de despesas lançadas/pagas.
+ */
+export const getExpensesSeries = (
+  period: PeriodSelection,
+  filters: Filters = {},
+  source?: FinancialSeriesSource,
+  referenceDate: Date = new Date(),
+): SeriesPoint[] => {
+  if (!source) return [];
+
+  const { allDebits, cashBoxOriginById, cashBoxItemById } = buildSourceEntries(source);
+
+  const records = mapDebitsToSeriesRecords(allDebits, cashBoxOriginById, cashBoxItemById);
+  const filteredRecords = applySeriesFilters(records, filters);
+  return buildSeriesFromRecords(filteredRecords, period, referenceDate);
+};
+
+export const getReceivablesFilterOptions = (
+  source: FinancialSeriesSource,
+  filters: Filters = {},
+): SeriesFilterOptions => {
+  const { allReceivables, receivableOriginById } = buildSourceEntries(source);
+
+  const records = mapReceivablesToSeriesRecords(allReceivables, receivableOriginById);
+  return buildFilterOptions(records, filters);
+};
+
+export const getExpensesFilterOptions = (
+  source: FinancialSeriesSource,
+  filters: Filters = {},
+): SeriesFilterOptions => {
+  const { allDebits, cashBoxOriginById, cashBoxItemById } = buildSourceEntries(source);
+
+  const records = mapDebitsToSeriesRecords(allDebits, cashBoxOriginById, cashBoxItemById);
+  return buildFilterOptions(records, filters);
+};
+
+/**
+ * Input -> Output:
+ * - input: fonte de dados financeiros + data de referência.
+ * - output: série de 12 meses a partir de referenceDate com receitas e despesas por mês.
+ * Example:
+ * const forecast = getCashFlowForecastSeries(source, new Date());
+ */
+export type CashFlowForecastPoint = {
+  label: string;
+  month: string;
+  year: string;
+  income: number;
+  expenses: number;
+};
+
+export const getCashFlowForecastSeries = (
+  source: FinancialSeriesSource,
+  referenceDate: Date = new Date(),
+): CashFlowForecastPoint[] => {
+  const { allReceivables, allDebits } = buildSourceEntries(source);
+
+  return Array.from({ length: 12 }, (_, index) => {
+    const forecastDate = new Date(referenceDate);
+    forecastDate.setDate(1);
+    forecastDate.setMonth(referenceDate.getMonth() + index);
+
+    const totals = getMonthlyTotals(allReceivables, allDebits, forecastDate);
+    return {
+      label: toMonthKey(forecastDate),
+      month: forecastDate.toLocaleString('pt-BR', { month: 'short' }),
+      year: forecastDate.getFullYear().toString().slice(-2),
+      income: totals.receita,
+      expenses: totals.despesa,
+    };
+  });
+};
+
+/**
+ * Input -> Output:
+ * - input: fontes financeiras (projetos, comissões, despesas/receitas manuais, marketing, freelancers, gestão de caixa) + mês de visualização.
  * - output: visão financeira consolidada (`overview`, `monthlyReceivables`, `monthlyDebits`).
  * Example:
- * const data = getFinancialPageData(projects, commissions, expenses, incomes, marketing, freelancers, viewDate);
+ * const data = getFinancialPageData(projects, commissions, expenses, incomes, marketing, freelancers, viewDate, new Date(), cashBoxExpenses);
  */
 export const getFinancialPageData = (
   projects: Project[],
@@ -63,273 +152,97 @@ export const getFinancialPageData = (
   marketingActivities: MarketingActivity[],
   freelancers: Freelancer[],
   viewDate: Date,
-  chartReferenceDate: Date = new Date(),
+  _chartReferenceDate: Date = new Date(),
+  cashBoxExpenses: CashBoxExpense[] = [],
+  cashBoxCredits: CashBoxCredit[] = [],
 ) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const { allReceivables, allDebits } = buildUnifiedFinancialEntries(
+    projects,
+    commissions,
+    manualExpenses,
+    manualIncomes,
+    marketingActivities,
+    freelancers,
+    cashBoxExpenses,
+    cashBoxCredits,
+  );
 
-  const allReceivables: FinancialReceivable[] = [];
+  const monthlyReceivables = allReceivables.filter((receivable) =>
+    isInMonth(receivable.dueDate, viewDate),
+  );
+  const monthlyDebits = allDebits.filter((debit) => isInMonth(debit.dueDate, viewDate));
 
-  // 1. Project Incomes
-  projects.forEach((p) => {
-    if (p.status === 'Cancelado') return;
-
-    const totalRemuneration = p.remuneration || 0;
-    const totalBudget = getProjectTotalContractValue(p) || 1;
-
-    if (p.financials) {
-      const processPayment = (basePayment: Omit<Installment, 'remuneration'> & { id: string }) => {
-        const dueDate = parseDateString(basePayment.dueDate);
-        let status: 'Pago' | 'Vencido' | 'Em Aberto' = 'Em Aberto';
-        if (basePayment.paid) {
-          status = 'Pago';
-        } else if (dueDate && dueDate < today) {
-          status = 'Vencido';
-        }
-        const remuneration =
-          totalBudget > 0 ? (basePayment.value / totalBudget) * totalRemuneration : 0;
-        return { ...basePayment, remuneration, status };
-      };
-
-      if (p.financials.paymentType === 'vista' && p.financials.lumpSumDueDate) {
-        allReceivables.push({
-          ...processPayment({
-            id: `lump_${p.id}`,
-            number: 1,
-            value: getProjectLumpSumValue(p),
-            dueDate: p.financials.lumpSumDueDate,
-            paid: p.financials.lumpSumStatus === 'Pago',
-            paymentDate: p.financials.lumpSumPaymentDate || null,
-          }),
-          projectId: p.id,
-          projectCode: p.code,
-          clientName: p.clientName,
-          clientId: p.clientId,
-          description: `Pagamento Único: ${p.name}`,
-          source: 'Project',
-        });
-      } else if (p.financials.paymentType === 'parcelado' && p.financials.installments) {
-        p.financials.installments.forEach((inst) => {
-          allReceivables.push({
-            ...processPayment(inst),
-            projectId: p.id,
-            projectCode: p.code,
-            clientName: p.clientName,
-            clientId: p.clientId,
-            description: `Parcela ${inst.number}/${p.financials.numberOfInstallments}: ${p.name}`,
-            source: 'Project',
-          });
-        });
-      }
-    }
-  });
-
-  // 2. Commissions
-  commissions.forEach((c) => {
-    const expectedDate = c.expectedPaymentDate ?? null;
-    allReceivables.push({
-      id: `comm_${c.id}`,
-      number: 1,
-      value: c.commissionValue,
-      dueDate: expectedDate || c.saleDate,
-      paid: c.status === 'Recebido',
-      paymentDate: c.paymentDate || null,
-      remuneration: c.commissionValue,
-      status:
-        c.status === 'Recebido'
-          ? 'Pago'
-          : parseDateString(expectedDate) && parseDateString(expectedDate)! < today
-            ? 'Vencido'
-            : 'Em Aberto',
-      projectId: '',
-      projectCode: '',
-      clientName: c.clientName,
-      clientId: c.clientId,
-      description: `Comissão: ${c.supplierName}`,
-      source: 'Commission',
-    });
-  });
-
-  // 3. Manual Incomes
-  manualIncomes.forEach((inc) => {
-    allReceivables.push({
-      id: inc.id,
-      number: 1,
-      value: inc.value,
-      dueDate: inc.date,
-      paid: inc.status === 'Recebido',
-      paymentDate: inc.status === 'Recebido' ? inc.date : null,
-      remuneration: inc.value,
-      status:
-        inc.status === 'Recebido'
-          ? 'Pago'
-          : parseDateString(inc.date) && parseDateString(inc.date)! < today
-            ? 'Vencido'
-            : 'Em Aberto',
-      projectId: '',
-      projectCode: '',
-      clientName: 'Avulso',
-      clientId: '',
-      description: inc.description,
-      source: 'Manual',
-      category: inc.category,
-    });
-  });
-
-  const marketingExpenses: ProfessionalExpense[] = marketingActivities
-    .filter((a) => a.cost && a.cost > 0 && a.dueDate)
-    .map((a) => ({
-      id: `mkt_${a.id}`,
-      description: `Marketing: ${a.title}`,
-      category: 'Marketing e Publicidade',
-      value: a.cost!,
-      dueDate: a.dueDate!,
-      status: a.status === 'Concluído' ? 'Pago' : 'Pendente',
-      paymentDate: a.completionDate || null,
-      isRecurring: false,
-      source: 'Marketing',
-      marketingActivityId: a.id,
-    }));
-
-  const freelancerExpenses: ProfessionalExpense[] = [];
-
-  // (#9) allDebits typed explicitly as FinancialDebit[]
-  const allDebits: FinancialDebit[] = [
-    ...manualExpenses,
-    ...marketingExpenses,
-    ...freelancerExpenses,
-  ]
-    .map((d) => {
-      let status: 'Pago' | 'Vencido' | 'Pendente' = d.status;
-      const dueDate = parseDateString(d.dueDate);
-      if (d.status === 'Pendente' && dueDate && dueDate < today) {
-        status = 'Vencido';
-      }
-      return {
-        id: d.id,
-        description: d.description,
-        category: d.category,
-        value: d.value,
-        dueDate: d.dueDate,
-        status,
-        paymentDate: d.paymentDate,
-        isRecurring: d.isRecurring,
-        source: d.source,
-        marketingActivityId: d.marketingActivityId,
-        freelancerActivityId: d.freelancerActivityId,
-      };
-    })
-    .sort(
-      (a, b) =>
-        (parseDateString(a.dueDate)?.getTime() ?? 0) - (parseDateString(b.dueDate)?.getTime() ?? 0),
-    );
-
-  // --- Current Month Calculations (For KPIs) --- (#6: uses unified isInMonth)
-  const monthlyReceivables = allReceivables.filter((r) => isInMonth(r.dueDate, viewDate));
-  const monthlyDebits = allDebits.filter((d) => isInMonth(d.dueDate, viewDate));
-
-  // (#9) Explicit saldo property — no getter
-  const receita = monthlyReceivables.reduce((sum, r) => sum + r.value, 0);
-  const despesa = monthlyDebits.reduce((sum, d) => sum + d.value, 0);
+  const receita = monthlyReceivables.reduce((sum, receivable) => sum + receivable.value, 0);
+  const despesa = monthlyDebits.reduce((sum, debit) => sum + debit.value, 0);
   const currentMonthTotals = { receita, despesa, saldo: receita - despesa };
 
-  // --- Previous Month Calculations for KPI comparison ---
   const prevMonthDate = new Date(viewDate);
   prevMonthDate.setDate(1);
   prevMonthDate.setMonth(viewDate.getMonth() - 1);
-  const prevMonthReceivables = allReceivables.filter((r) => isInMonth(r.dueDate, prevMonthDate));
-  const prevMonthDebits = allDebits.filter((d) => isInMonth(d.dueDate, prevMonthDate));
 
-  // (#9) Explicit saldo property — no getter
-  const prevReceita = prevMonthReceivables.reduce((sum, r) => sum + r.value, 0);
-  const prevDespesa = prevMonthDebits.reduce((sum, d) => sum + d.value, 0);
+  const prevMonthReceivables = allReceivables.filter((receivable) =>
+    isInMonth(receivable.dueDate, prevMonthDate),
+  );
+  const prevMonthDebits = allDebits.filter((debit) => isInMonth(debit.dueDate, prevMonthDate));
+
+  const prevReceita = prevMonthReceivables.reduce((sum, receivable) => sum + receivable.value, 0);
+  const prevDespesa = prevMonthDebits.reduce((sum, debit) => sum + debit.value, 0);
   const prevMonthTotals = {
     receita: prevReceita,
     despesa: prevDespesa,
     saldo: prevReceita - prevDespesa,
   };
 
-  const calculateChange = (current: number, previous: number) => {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return ((current - previous) / previous) * 100;
-  };
+  const totalInadimplencia = monthlyReceivables
+    .filter((receivable) => receivable.status === 'Vencido')
+    .reduce((sum, receivable) => sum + receivable.value, 0);
+  const totalDebitosAtrasados = monthlyDebits
+    .filter((debit) => debit.status === 'Vencido')
+    .reduce((sum, debit) => sum + debit.value, 0);
 
-  // --- Overview Data ---
-  const totalInadimplencia = allReceivables
-    .filter((r) => r.status === 'Vencido')
-    .reduce((sum, r) => sum + r.value, 0);
-  const totalDebitosAtrasados = allDebits
-    .filter((d) => d.status === 'Vencido')
-    .reduce((sum, d) => sum + d.value, 0);
-
-  // --- Cash Flow Forecast (Dynamic based on chartReferenceDate) ---
-  const cashFlowForecast = Array.from({ length: 6 }, (_, i) => {
-    const forecastDate = new Date(chartReferenceDate);
-    forecastDate.setDate(1);
-    forecastDate.setMonth(chartReferenceDate.getMonth() + i);
-
-    const totals = getMonthlyTotals(allReceivables, allDebits, forecastDate);
-    return {
-      month: forecastDate.toLocaleString('pt-BR', { month: 'short' }),
-      year: forecastDate.getFullYear().toString().slice(-2),
-      income: totals.receita,
-      expenses: totals.despesa,
-    };
-  });
-
-  // --- Recent Transactions (#1: Properly typed as RecentTransaction[]) ---
-  const recentTransactions: RecentTransaction[] = [
-    ...allReceivables.map((r) => ({
-      id: r.id,
-      type: 'income' as const,
-      date: r.dueDate as string | null,
-      description: r.description,
-      value: r.value,
-      status: normalizeStatus(r.status),
-    })),
-    ...allDebits.map((d) => ({
-      id: d.id,
-      type: 'expense' as const,
-      date: d.dueDate as string | null,
-      description: d.description,
-      value: d.value,
-      status: normalizeStatus(d.status),
-    })),
-  ]
-    .sort((a, b) => {
-      const dateA = parseDateString(a.date)?.getTime() || 0;
-      const dateB = parseDateString(b.date)?.getTime() || 0;
-      return dateB - dateA;
-    })
-    .slice(0, 8);
-
-  // --- Expenses by Category (#5: returns data only, NO colors; #11: filtered by month) ---
   const categoryMap = new Map<string, number>();
-  monthlyDebits.forEach((d) => {
-    const cat = d.category || 'Outros';
-    categoryMap.set(cat, (categoryMap.get(cat) || 0) + d.value);
+  monthlyDebits.forEach((debit) => {
+    const category = debit.category || 'Outros';
+    categoryMap.set(category, (categoryMap.get(category) || 0) + debit.value);
   });
+
   const expensesByCategory = Array.from(categoryMap.entries())
     .map(([category, value]) => ({ category, value }))
     .sort((a, b) => b.value - a.value);
 
-  // --- Receivables & Debits Health ---
-  // NOTE: Health metrics use LIFETIME data (all months), not just current month.
-  // This is intentional — the UI labels this section as "(Acumulado)".
+  const receivableSourceMap = new Map<string, number>();
+  monthlyReceivables.forEach((receivable) => {
+    const label =
+      receivable.source === 'Project' && receivable.projectCode
+        ? `Projeto: ${receivable.projectCode}`
+        : receivable.category || getReceivableCategory(receivable);
+    receivableSourceMap.set(label, (receivableSourceMap.get(label) || 0) + receivable.value);
+  });
+
+  const receivablesBySource = Array.from(receivableSourceMap.entries())
+    .map(([category, value]) => ({ category, value }))
+    .sort((a, b) => b.value - a.value);
+
   const receivablesHealth = {
-    totalOpen: allReceivables
-      .filter((r) => r.status === 'Em Aberto')
-      .reduce((s, r) => s + r.value, 0),
+    totalOpen: monthlyReceivables
+      .filter((receivable) => receivable.status === 'Em Aberto')
+      .reduce((sum, receivable) => sum + receivable.value, 0),
     totalOverdue: totalInadimplencia,
-    totalPaid: allReceivables.filter((r) => r.status === 'Pago').reduce((s, r) => s + r.value, 0),
-  };
-  const debitsHealth = {
-    totalPending: allDebits.filter((d) => d.status === 'Pendente').reduce((s, d) => s + d.value, 0),
-    totalOverdue: totalDebitosAtrasados,
-    totalPaid: allDebits.filter((d) => d.status === 'Pago').reduce((s, d) => s + d.value, 0),
+    totalPaid: monthlyReceivables
+      .filter((receivable) => receivable.status === 'Pago')
+      .reduce((sum, receivable) => sum + receivable.value, 0),
   };
 
-  // --- Profit Margin ---
+  const debitsHealth = {
+    totalPending: monthlyDebits
+      .filter((debit) => debit.status === 'Pendente')
+      .reduce((sum, debit) => sum + debit.value, 0),
+    totalOverdue: totalDebitosAtrasados,
+    totalPaid: monthlyDebits
+      .filter((debit) => debit.status === 'Pago')
+      .reduce((sum, debit) => sum + debit.value, 0),
+  };
+
   const profitMargin =
     currentMonthTotals.receita > 0
       ? (currentMonthTotals.saldo / currentMonthTotals.receita) * 100
@@ -346,9 +259,8 @@ export const getFinancialPageData = (
       despesaChange: calculateChange(currentMonthTotals.despesa, prevMonthTotals.despesa),
       saldoChange: calculateChange(currentMonthTotals.saldo, prevMonthTotals.saldo),
     },
-    cashFlowForecast,
-    recentTransactions,
     expensesByCategory,
+    receivablesBySource,
     receivablesHealth,
     debitsHealth,
     profitMargin,

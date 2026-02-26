@@ -1,7 +1,26 @@
-import type { AppData } from './infrastructure/api';
-import { projectStatuses, ProfessionalExpense } from '../types';
+import type {
+  Client,
+  Commission,
+  Freelancer,
+  MarketingActivity,
+  ProfessionalExpense,
+  Project,
+  Proposal,
+} from '../types';
+import { projectStatuses } from '../types';
 import { parseDateString } from '../utils/formatters';
 import { getProjectTotalContractValue } from '../utils/projectFinancials';
+
+/** Narrowed input — only the fields generateReport actually reads. */
+export interface ReportDataInput {
+  projects: Project[];
+  clients: Client[];
+  proposals: Proposal[];
+  marketingActivities: MarketingActivity[];
+  commissions: Commission[];
+  manualExpenses: ProfessionalExpense[];
+  freelancers: Freelancer[];
+}
 
 export interface ReportFilter {
   type: 'preset' | 'custom';
@@ -15,9 +34,9 @@ export interface ReportFilter {
  * - input: snapshot de dados da aplicação + filtro temporal.
  * - output: métricas financeiras, de projetos e de aquisição para relatórios.
  * Example:
- * const report = generateReport(allData, filter);
+ * const report = generateReport(data, filter);
  */
-export const generateReport = (allData: AppData, filter: ReportFilter) => {
+export const generateReport = (data: ReportDataInput, filter: ReportFilter) => {
   const {
     projects,
     clients,
@@ -26,7 +45,7 @@ export const generateReport = (allData: AppData, filter: ReportFilter) => {
     commissions,
     manualExpenses,
     freelancers,
-  } = allData;
+  } = data;
 
   // --- Date Filtering Logic ---
   let startDate: Date;
@@ -165,10 +184,8 @@ export const generateReport = (allData: AppData, filter: ReportFilter) => {
   const concludedInPeriod = projects.filter(
     (p) => p.status === 'Concluído' && p.finalizedAt && filterByDate(p.finalizedAt),
   );
-  let totalDays = 0;
-  let projectsWithDuration = 0;
 
-  concludedInPeriod.forEach((p) => {
+  concludedInPeriod.forEach((_p) => {
     // Approximation: We don't have created_at in the base type easily accessible without migration,
     // using last contact date of client or proposal date as proxy if available, or just skip for now if not reliable.
     // Assuming we rely on deadlines logic if we had start date.

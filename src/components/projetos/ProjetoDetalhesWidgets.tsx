@@ -1,28 +1,27 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useData } from '../../context';
-import type { PaymentMethod, Project } from '../../types';
-import { paymentMethods } from '../../types';
-import { AlertIcon, CheckCircleIcon, ClipboardDocumentListIcon, PlusIcon } from '../ui';
+import { useCoreData, useSupplyChainData } from '../../context';
+import { paymentMethods, type PaymentMethod, type Project } from '../../types';
+import { AlertIcon, ClipboardDocumentListIcon, PlusIcon } from '../ui';
 import { Modal } from '../ui';
 
 export type ProjectActionType = 'delete' | 'inactivate' | 'finalize';
 
-export const InfoCard: React.FC<{
+export const InfoCard: (props: {
   label: string;
   children: React.ReactNode;
   className?: string;
-}> = ({ label, children, className }) => (
+}) => React.ReactNode = ({ label, children, className }) => (
   <div className={`bg-surface p-4 rounded-xl shadow-soft ${className}`}>
     <p className="text-sm font-semibold text-text-secondary">{label}</p>
     <div className="mt-1 font-bold text-text-primary text-lg">{children}</div>
   </div>
 );
 
-export const RevisionCounter: React.FC<{
+export const RevisionCounter: (props: {
   count: number;
   limit: number;
   onIncrement: () => void;
-}> = ({ count, limit, onIncrement }) => {
+}) => React.ReactNode = ({ count, limit, onIncrement }) => {
   const isOverLimit = count > limit;
   return (
     <div
@@ -57,13 +56,14 @@ export const RevisionCounter: React.FC<{
   );
 };
 
-export const LinkQuotationModal: React.FC<{
+export const LinkQuotationModal: (props: {
   isOpen: boolean;
   onClose: () => void;
   onSave: (quotationIds: string[]) => void;
   project: Project;
-}> = ({ isOpen, onClose, onSave, project }) => {
-  const { quotations, projects } = useData();
+}) => React.ReactNode = ({ isOpen, onClose, onSave, project }) => {
+  const { quotations } = useSupplyChainData();
+  const { projects } = useCoreData();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -156,11 +156,11 @@ export const LinkQuotationModal: React.FC<{
   );
 };
 
-export const ConfirmPaymentModal: React.FC<{
+export const ConfirmPaymentModal: (props: {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (date: string, method: PaymentMethod) => void;
-}> = ({ isOpen, onClose, onConfirm }) => {
+}) => React.ReactNode = ({ isOpen, onClose, onConfirm }) => {
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(paymentMethods[0]);
 
@@ -180,10 +180,14 @@ export const ConfirmPaymentModal: React.FC<{
       <div className="space-y-4">
         <p className="text-text-primary">Confirme os detalhes do pagamento recebido.</p>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
+          <label
+            htmlFor="field-data-de-recebimento"
+            className="block text-sm font-medium text-text-secondary mb-1"
+          >
             Data de Recebimento
           </label>
           <input
+            id="field-data-de-recebimento"
             type="date"
             value={paymentDate}
             onChange={(e) => setPaymentDate(e.target.value)}
@@ -192,10 +196,14 @@ export const ConfirmPaymentModal: React.FC<{
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
+          <label
+            htmlFor="field-forma-de-pagamento"
+            className="block text-sm font-medium text-text-secondary mb-1"
+          >
             Forma de Pagamento
           </label>
           <select
+            id="field-forma-de-pagamento"
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
             className={commonInputClass}
@@ -229,13 +237,13 @@ export const ConfirmPaymentModal: React.FC<{
   );
 };
 
-export const ProjectActionModal: React.FC<{
+export const ProjectActionModal: (props: {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (refundAmount: number, refundDate: string) => void;
   projectName: string;
   actionType: ProjectActionType;
-}> = ({ isOpen, onClose, onConfirm, projectName, actionType }) => {
+}) => React.ReactNode = ({ isOpen, onClose, onConfirm, projectName, actionType }) => {
   const [hasRefund, setHasRefund] = useState(false);
   const [refundAmount, setRefundAmount] = useState<number>(0);
   const [refundDate, setRefundDate] = useState(new Date().toISOString().split('T')[0]);
@@ -314,10 +322,14 @@ export const ProjectActionModal: React.FC<{
           {hasRefund && (
             <div className="grid grid-cols-2 gap-4 mt-3 animate-fade-in-up">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label
+                  htmlFor="field-valor-do-reembolso-r"
+                  className="block text-sm font-medium text-text-secondary mb-1"
+                >
                   Valor do Reembolso (R$)
                 </label>
                 <input
+                  id="field-valor-do-reembolso-r"
                   type="number"
                   value={refundAmount || ''}
                   onChange={(e) => setRefundAmount(parseFloat(e.target.value) || 0)}
@@ -327,10 +339,14 @@ export const ProjectActionModal: React.FC<{
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label
+                  htmlFor="field-data-do-reembolso"
+                  className="block text-sm font-medium text-text-secondary mb-1"
+                >
                   Data do Reembolso
                 </label>
                 <input
+                  id="field-data-do-reembolso"
                   type="date"
                   value={refundDate}
                   onChange={(e) => setRefundDate(e.target.value)}

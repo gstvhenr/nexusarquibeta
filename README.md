@@ -35,6 +35,7 @@ Documentação de arquitetura:
 ## Regras do agente
 
 - Contrato principal: `AGENTS.md`
+- Contrato complementar de governança: `docs/governance/core-contract.md`
 - Regras locais complementares: `.cursorrules`, `.agent/rules/*`
 - Workflow operacional: `docs/process/agent-workflow.md`
 - Exemplos canônicos: `docs/examples/canonical-service-client.md`, `docs/examples/canonical-component-client-row.md`
@@ -44,4 +45,4 @@ Documentação de arquitetura:
 - Erros de tipos/lint/test/build: execute o gate canônico definido em `AGENTS.md`.
 - Segurança crítica: execute o comando de segurança definido em `AGENTS.md`.
 - Porta de dev divergente: verifique `vite.config.ts` (`server.port`).
-- Mudança estrutural sem registro: atualize `DECISIONS.md`/ADR e `NEXT.md`.
+- Mudança estrutural sem registro: atualize `DECISIONS-active.md`/ADR e `NEXT.md`.

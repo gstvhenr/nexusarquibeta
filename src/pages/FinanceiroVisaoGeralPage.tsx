@@ -1,43 +1,64 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
+import React, { useMemo, useState } from 'react';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { PageHeader } from '../components/layout';
-import { useData } from '../context/DataContext';
-import { formatCurrency, formatDateDayMonth, formatYAxisTick } from '../utils/formatters';
+import {
+  useCoreData,
+  useFinanceData,
+  useMarketingData,
+  useSupplyChainData,
+} from '../context/DataContext';
+import { formatCurrency } from '../utils/formatters';
 import { getFinancialPageData } from '../services/financeService';
-import { NAV_LINKS, EXPENSE_CATEGORY_COLORS } from '../constants';
-import { ArrowUpCircleIcon, ArrowDownCircleIcon, KeyIcon, ChevronDownIcon } from '../components/ui';
+import { NAV_LINKS, EXPENSE_CATEGORY_COLORS, RECEIVABLE_SOURCE_COLORS } from '../constants';
+import { KeyIcon } from '../components/ui';
 import {
   CardShell,
   SectionTitle,
   KPICard,
   MarginBar,
   HealthBar,
-  CustomTooltip,
   DonutTooltip,
 } from '../components/finance';
+import { ArrowUpCircleIcon, ArrowDownCircleIcon } from '../components/ui';
 
 const DEFAULT_CATEGORY_COLOR = 'hsl(0, 0%, 55%)';
+const DEFAULT_RECEIVABLE_COLOR = 'hsl(160, 40%, 50%)';
+
+type DonutView = 'expenses' | 'income';
+
+/** Builds a Date set to the 1st of the month offset from today. */
+const getOffsetDate = (offset: number): Date => {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + offset);
+  return d;
+};
+
+/** Contextual label for the selected month. */
+const getMonthLabel = (offset: number, date: Date): string => {
+  const monthName = date.toLocaleString('pt-BR', { month: 'long' });
+  const year = date.getFullYear();
+  if (offset === 0) return 'Mês Vigente';
+  if (offset < 0) return `Consolidado de ${monthName} de ${year}`;
+  return `Previsão estimada para ${monthName} de ${year}`;
+};
 
 // ═══════════════════════════════════════════════════════════════
 // PAGE COMPONENT
 // ═══════════════════════════════════════════════════════════════
-const FinanceiroVisaoGeralPage: React.FC = () => {
-  const { projects, commissions, manualExpenses, manualIncomes, marketingActivities, freelancers } =
-    useData();
-  const [chartRefDate, setChartRefDate] = useState(new Date());
+const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
+  const { projects } = useCoreData();
+  const { commissions, manualExpenses, manualIncomes, cashBoxExpenses, cashBoxCredits } =
+    useFinanceData();
+  const { marketingActivities } = useMarketingData();
+  const { freelancers } = useSupplyChainData();
 
-  // (#7) Single temporal reference: chartRefDate for chart, same base for viewDate
+  const [donutView, setDonutView] = useState<DonutView>('expenses');
+  const [monthOffset, setMonthOffset] = useState(0);
+
+  const viewDate = useMemo(() => getOffsetDate(monthOffset), [monthOffset]);
+  const monthLabel = useMemo(() => getMonthLabel(monthOffset, viewDate), [monthOffset, viewDate]);
+
   const financialData = useMemo(
     () =>
       getFinancialPageData(
@@ -47,8 +68,10 @@ const FinanceiroVisaoGeralPage: React.FC = () => {
         manualIncomes,
         marketingActivities,
         freelancers,
+        viewDate,
         new Date(),
-        chartRefDate,
+        cashBoxExpenses,
+        cashBoxCredits,
       ),
     [
       projects,
@@ -57,15 +80,16 @@ const FinanceiroVisaoGeralPage: React.FC = () => {
       manualIncomes,
       marketingActivities,
       freelancers,
-      chartRefDate,
+      cashBoxExpenses,
+      cashBoxCredits,
+      viewDate,
     ],
   );
 
   const {
     kpis,
-    cashFlowForecast,
-    recentTransactions,
     expensesByCategory,
+    receivablesBySource,
     receivablesHealth,
     debitsHealth,
     profitMargin,
@@ -73,22 +97,12 @@ const FinanceiroVisaoGeralPage: React.FC = () => {
 
   const financeiroIcon = NAV_LINKS.find((link) => link.label === 'Financeiro')?.icon;
 
-  const navigateChart = useCallback((direction: 'prev' | 'next') => {
-    setChartRefDate((prev) => {
-      const newDate = new Date(prev);
-      newDate.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
-      return newDate;
-    });
-  }, []);
-
-  const resetChart = useCallback(() => setChartRefDate(new Date()), []);
-
   const totalReceivables =
     receivablesHealth.totalOpen + receivablesHealth.totalOverdue + receivablesHealth.totalPaid;
   const totalDebits =
     debitsHealth.totalPending + debitsHealth.totalOverdue + debitsHealth.totalPaid;
 
-  // (#5) Merge colors into data in the PRESENTATION layer
+  // ── Donut data (toggled between expenses and income) ──
   const expensesWithColors = useMemo(
     () =>
       expensesByCategory.map((c) => ({
@@ -97,13 +111,80 @@ const FinanceiroVisaoGeralPage: React.FC = () => {
       })),
     [expensesByCategory],
   );
-  const totalExpenseValue = expensesWithColors.reduce((s, c) => s + c.value, 0);
+
+  const receivablesWithColors = useMemo(
+    () =>
+      receivablesBySource.map((c) => {
+        // Try exact match first, then prefix match for "Projeto: XXX" entries
+        const color =
+          RECEIVABLE_SOURCE_COLORS[c.category] ||
+          (c.category.startsWith('Projeto:') ? RECEIVABLE_SOURCE_COLORS['Projeto'] : null) ||
+          DEFAULT_RECEIVABLE_COLOR;
+        return { ...c, color };
+      }),
+    [receivablesBySource],
+  );
+
+  const activeDonutData = donutView === 'expenses' ? expensesWithColors : receivablesWithColors;
+  const totalDonutValue = activeDonutData.reduce((s, c) => s + c.value, 0);
 
   return (
     <div className="animate-fade-in-up h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto px-6 py-5 min-h-0">
+      <div className="flex-1 overflow-y-auto px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 min-h-0">
         <div className="space-y-5">
-          <PageHeader title="Visão Geral" icon={financeiroIcon} />
+          <PageHeader title="Visão Geral" subtitle={monthLabel} icon={financeiroIcon}>
+            <div className="flex items-center bg-surface border border-border-color/50 rounded-lg p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setMonthOffset((o) => o - 1)}
+                className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-background/80 transition-colors"
+                aria-label="Mês anterior"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+              <div className="w-28 text-center px-2 py-1 text-sm font-semibold capitalize text-text-primary">
+                {viewDate
+                  .toLocaleString('pt-BR', { month: 'short', year: 'numeric' })
+                  .replace(' de ', '/')}
+              </div>
+              <button
+                type="button"
+                onClick={() => setMonthOffset((o) => o + 1)}
+                className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-background/80 transition-colors"
+                aria-label="Próximo mês"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+            <button
+              onClick={() => setMonthOffset(0)}
+              className="px-3 py-1.5 text-xs font-semibold text-text-secondary hover:text-primary transition-colors hover:bg-primary/5 rounded-lg border border-transparent hover:border-primary/20"
+            >
+              Hoje
+            </button>
+          </PageHeader>
 
           {/* ── ROW 1: KPI Cards + Margin Bar ────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -135,215 +216,11 @@ const FinanceiroVisaoGeralPage: React.FC = () => {
             />
           </div>
 
-          {/* ── ROW 2: Cash Flow Chart + Donut ────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            {/* Cash Flow Chart (#14: aria-label for accessibility) */}
-            <CardShell className="lg:col-span-2 p-5 min-h-[380px] flex flex-col">
-              <SectionTitle
-                trailing={
-                  <div className="flex items-center gap-4">
-                    <div className="hidden sm:flex items-center gap-3 text-[11px] text-text-secondary">
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-success inline-block" /> Receitas
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-error inline-block" /> Despesas
-                      </span>
-                    </div>
-                    <div className="flex items-center bg-background/80 rounded-lg border border-border-color/50 p-0.5">
-                      <button
-                        onClick={() => navigateChart('prev')}
-                        className="p-1.5 hover:bg-surface rounded-md text-text-secondary hover:text-primary transition-colors"
-                        aria-label="Mês anterior"
-                      >
-                        <ChevronDownIcon className="w-3.5 h-3.5 rotate-90" />
-                      </button>
-                      <button
-                        onClick={resetChart}
-                        className="px-2.5 py-1 text-[11px] font-semibold text-text-secondary hover:text-primary transition-colors border-x border-border-color/50 mx-0.5"
-                      >
-                        Hoje
-                      </button>
-                      <button
-                        onClick={() => navigateChart('next')}
-                        className="p-1.5 hover:bg-surface rounded-md text-text-secondary hover:text-primary transition-colors"
-                        aria-label="Próximo mês"
-                      >
-                        <ChevronDownIcon className="w-3.5 h-3.5 -rotate-90" />
-                      </button>
-                    </div>
-                  </div>
-                }
-              >
-                Fluxo de Caixa
-              </SectionTitle>
-              <div
-                className="flex-1 -ml-2"
-                role="img"
-                aria-label="Gráfico de fluxo de caixa mostrando receitas e despesas ao longo de 6 meses"
-              >
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart
-                    data={cashFlowForecast}
-                    margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                        <stop
-                          offset="5%"
-                          stopColor="hsl(var(--color-success))"
-                          stopOpacity={0.25}
-                        />
-                        <stop offset="95%" stopColor="hsl(var(--color-success))" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--color-error))" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="hsl(var(--color-error))" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="hsl(var(--color-border-color) / 0.2)"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="month"
-                      stroke="hsl(var(--color-text-secondary))"
-                      fontSize={11}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(val: string, i: number) =>
-                        `${val}/${cashFlowForecast[i]?.year}`
-                      }
-                    />
-                    <YAxis
-                      stroke="hsl(var(--color-text-secondary))"
-                      fontSize={11}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={formatYAxisTick}
-                      width={55}
-                    />
-                    <Tooltip
-                      content={<CustomTooltip />}
-                      cursor={{ fill: 'hsl(var(--color-primary) / 0.04)' }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="income"
-                      name="income"
-                      stroke="hsl(var(--color-success))"
-                      fillOpacity={1}
-                      fill="url(#colorIncome)"
-                      strokeWidth={2.5}
-                      activeDot={{ r: 5, strokeWidth: 2, stroke: 'hsl(var(--color-surface))' }}
-                      dot={false}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="expenses"
-                      name="expenses"
-                      stroke="hsl(var(--color-error))"
-                      fillOpacity={1}
-                      fill="url(#colorExpenses)"
-                      strokeWidth={2.5}
-                      activeDot={{ r: 5, strokeWidth: 2, stroke: 'hsl(var(--color-surface))' }}
-                      dot={false}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardShell>
-
-            {/* Expense Category Donut (#14: aria-label) */}
+          {/* ── ROW 2: Saúde Financeira + Valores Mensais (Donut) ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-[5fr_7fr] gap-5">
+            {/* Saúde Financeira */}
             <CardShell className="p-5 flex flex-col">
-              <SectionTitle>Despesas por Categoria (Mês)</SectionTitle>
-              {expensesWithColors.length > 0 ? (
-                <>
-                  <div
-                    className="flex justify-center relative my-1"
-                    role="img"
-                    aria-label="Gráfico de rosca mostrando a distribuição de despesas por categoria no mês atual"
-                  >
-                    <ResponsiveContainer width={180} height={180}>
-                      <PieChart>
-                        <Pie
-                          data={expensesWithColors}
-                          dataKey="value"
-                          nameKey="category"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={55}
-                          outerRadius={82}
-                          paddingAngle={3}
-                          stroke="none"
-                          cornerRadius={4}
-                        >
-                          {expensesWithColors.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<DonutTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    {/* Center label */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="text-center">
-                        <p className="text-[10px] text-text-secondary font-medium">Total</p>
-                        <p className="text-sm font-bold text-text-primary tabular-nums">
-                          {formatCurrency(totalExpenseValue)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 mt-2">
-                    {expensesWithColors.slice(0, 6).map((cat, i) => {
-                      const pct =
-                        totalExpenseValue > 0
-                          ? ((cat.value / totalExpenseValue) * 100).toFixed(1)
-                          : '0';
-                      return (
-                        <div
-                          key={i}
-                          className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-background/60 transition-colors cursor-default group"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div
-                              className="w-2 h-2 rounded-full shrink-0 ring-2 ring-white/20"
-                              style={{ backgroundColor: cat.color }}
-                            />
-                            <span className="text-text-secondary truncate group-hover:text-text-primary transition-colors">
-                              {cat.category}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-[10px] text-text-secondary tabular-nums bg-background/80 px-1.5 py-0.5 rounded-full">
-                              {pct}%
-                            </span>
-                            <span className="font-semibold text-text-primary tabular-nums">
-                              {formatCurrency(cat.value)}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <p className="text-text-secondary text-xs">
-                    Nenhuma despesa registrada neste mês.
-                  </p>
-                </div>
-              )}
-            </CardShell>
-          </div>
-
-          {/* ── ROW 3: Financial Health + Recent Transactions ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            {/* Financial Health (#12: temporal label) */}
-            <CardShell className="p-5 flex flex-col">
-              <SectionTitle>Saúde Financeira (Acumulado)</SectionTitle>
+              <SectionTitle>Saúde Financeira</SectionTitle>
               <div className="space-y-5 flex-1">
                 <div>
                   <div className="flex items-center gap-2 mb-3">
@@ -400,66 +277,122 @@ const FinanceiroVisaoGeralPage: React.FC = () => {
               </div>
             </CardShell>
 
-            {/* Recent Transactions (#1: no Record<string, unknown>, #10: normalized status, #13: aria-labels) */}
-            <CardShell className="lg:col-span-2 p-5 flex flex-col">
-              <SectionTitle>Últimas Movimentações</SectionTitle>
-              <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
-                <div className="space-y-2">
-                  {recentTransactions.map((tx, idx) => (
-                    <div
-                      key={`${tx.id}_${idx}`}
-                      className="flex items-center justify-between p-3 rounded-xl border border-transparent
-                                                bg-background/40 hover:bg-background/80 hover:border-border-color/40 hover:shadow-sm
-                                                transition-all duration-200 group cursor-default"
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        {/* (#13) aria-label on icon container */}
-                        <div
-                          className={`p-2 rounded-xl shrink-0 transition-transform duration-200 group-hover:scale-110
-                                                        ${tx.type === 'income' ? 'bg-success/10 text-success' : 'bg-error/10 text-error'}`}
-                          role="img"
-                          aria-label={tx.type === 'income' ? 'Receita' : 'Despesa'}
-                        >
-                          {tx.type === 'income' ? (
-                            <ArrowUpCircleIcon className="w-4 h-4" />
-                          ) : (
-                            <ArrowDownCircleIcon className="w-4 h-4" />
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-xs text-text-primary truncate group-hover:text-primary transition-colors">
-                            {tx.description}
-                          </p>
-                          <p className="text-[10px] text-text-secondary mt-0.5">
-                            {formatDateDayMonth(tx.date)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0 ml-4">
-                        <p
-                          className={`font-bold text-sm tabular-nums ${tx.type === 'income' ? 'text-success' : 'text-error'}`}
-                        >
-                          {tx.type === 'income' ? '+' : '−'} {formatCurrency(tx.value)}
-                        </p>
-                        <span
-                          className={`text-[9px] font-medium px-2 py-0.5 rounded-full inline-block mt-0.5
-                                                    ${tx.status === 'Liquidado' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}
-                        >
-                          {tx.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                  {recentTransactions.length === 0 && (
-                    <div className="text-center py-12">
-                      <p className="text-text-secondary text-sm">Nenhuma movimentação recente.</p>
-                      <p className="text-text-secondary/60 text-xs mt-1">
-                        As transações aparecerão aqui assim que forem registradas.
-                      </p>
-                    </div>
-                  )}
+            {/* Valores Mensais Donut */}
+            <CardShell className="p-5 flex flex-col">
+              {/* Header: title + toggle */}
+              <div className="flex items-center justify-between mb-3">
+                <SectionTitle>Valores Mensais</SectionTitle>
+                <div className="flex gap-1 bg-background/60 rounded-lg p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setDonutView('expenses')}
+                    className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all duration-200
+                      ${
+                        donutView === 'expenses'
+                          ? 'bg-error/15 text-error shadow-sm'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-background/80'
+                      }`}
+                  >
+                    Despesas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDonutView('income')}
+                    className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all duration-200
+                      ${
+                        donutView === 'income'
+                          ? 'bg-success/15 text-success shadow-sm'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-background/80'
+                      }`}
+                  >
+                    Recebidos
+                  </button>
                 </div>
               </div>
+              {activeDonutData.length > 0 ? (
+                <>
+                  <div
+                    className="flex justify-center relative my-1"
+                    role="img"
+                    aria-label={
+                      donutView === 'expenses'
+                        ? 'Gráfico de rosca mostrando a distribuição de despesas por categoria no mês atual'
+                        : 'Gráfico de rosca mostrando a distribuição de receitas recebidas por fonte no mês atual'
+                    }
+                  >
+                    <ResponsiveContainer width={180} height={180}>
+                      <PieChart>
+                        <Pie
+                          data={activeDonutData}
+                          dataKey="value"
+                          nameKey="category"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={82}
+                          paddingAngle={3}
+                          stroke="none"
+                          cornerRadius={4}
+                        >
+                          {activeDonutData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<DonutTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {/* Center label */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="text-center">
+                        <p className="text-[10px] text-text-secondary font-medium">Total</p>
+                        <p className="text-sm font-bold text-text-primary tabular-nums">
+                          {formatCurrency(totalDonutValue)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 mt-2">
+                    {activeDonutData.slice(0, 6).map((cat, i) => {
+                      const pct =
+                        totalDonutValue > 0
+                          ? ((cat.value / totalDonutValue) * 100).toFixed(1)
+                          : '0';
+                      return (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-background/60 transition-colors cursor-default group"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                              className="w-2 h-2 rounded-full shrink-0 ring-2 ring-white/20"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            <span className="text-text-secondary truncate group-hover:text-text-primary transition-colors">
+                              {cat.category}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-[10px] text-text-secondary tabular-nums bg-background/80 px-1.5 py-0.5 rounded-full">
+                              {pct}%
+                            </span>
+                            <span className="font-semibold text-text-primary tabular-nums">
+                              {formatCurrency(cat.value)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <p className="text-text-secondary text-xs">
+                    {donutView === 'expenses'
+                      ? 'Nenhuma despesa registrada neste mês.'
+                      : 'Nenhum recebimento registrado neste mês.'}
+                  </p>
+                </div>
+              )}
             </CardShell>
           </div>
         </div>

@@ -20,7 +20,7 @@ const findPageLabel = (links: typeof NAV_LINKS, path: string): string | null => 
   return null;
 };
 
-const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
+const Header: (props: HeaderProps) => React.ReactNode = ({ onMenuClick }) => {
   const location = useLocation();
 
   const pageTitle = findPageLabel(NAV_LINKS, location.pathname) || 'Home';

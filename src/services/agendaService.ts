@@ -1,15 +1,24 @@
 import type {
   AgendaEvent,
-  Project,
-  Purchase,
-  MarketingActivity,
-  Prospect,
-  ProfessionalExpense,
   Commission,
   ManualIncome,
+  MarketingActivity,
+  ProfessionalExpense,
+  Project,
+  Prospect,
 } from '../types';
-import type { AppData } from './infrastructure/api';
 import { formatCurrency, parseDateString } from '../utils/formatters';
+
+/** Narrowed input — only the fields getUnifiedEvents actually reads. */
+export interface UnifiedEventsInput {
+  agendaEvents: AgendaEvent[];
+  projects: Project[];
+  marketingActivities: MarketingActivity[];
+  prospects: Prospect[];
+  manualExpenses: ProfessionalExpense[];
+  commissions: Commission[];
+  manualIncomes: ManualIncome[];
+}
 
 /**
  * Input -> Output:
@@ -20,7 +29,7 @@ import { formatCurrency, parseDateString } from '../utils/formatters';
  */
 export const agendaService = {
   // Helper to merge all disparate data sources into a unified AgendaEvent stream
-  getUnifiedEvents(data: AppData): AgendaEvent[] {
+  getUnifiedEvents(data: UnifiedEventsInput): AgendaEvent[] {
     const toDatePart = (rawDate: string | null | undefined): string | null => {
       if (!rawDate) return null;
       return rawDate.includes('T') ? rawDate.split('T')[0] : rawDate;

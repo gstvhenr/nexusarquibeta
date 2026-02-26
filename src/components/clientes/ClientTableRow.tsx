@@ -6,7 +6,8 @@ import {
   PAYMENT_STATUS_DOT_COLORS,
 } from '../../constants';
 import { SirenIcon, ClockIcon, AlertIcon } from '../ui/icons';
-import { getInitials, formatDateDayMonth } from '../../utils/formatters';
+import { formatDateDayMonth } from '../../utils/formatters';
+import { getInitials } from '../../utils/supplierHelpers';
 
 interface ClientTableRowProps {
   client: Client;
@@ -18,7 +19,7 @@ interface ClientTableRowProps {
   nextDeadline?: Date | null;
 }
 
-export const ClientTableRow: React.FC<ClientTableRowProps> = React.memo(
+export const ClientTableRow: (props: ClientTableRowProps) => React.ReactNode = React.memo(
   ({ client, paymentStatus, isSelected, onSelect, onToggleUrgent, onView, nextDeadline }) => {
     const primaryContact = client.contacts?.find((c) => c.isPrimary) || client.contacts?.[0];
 
@@ -65,8 +66,16 @@ export const ClientTableRow: React.FC<ClientTableRowProps> = React.memo(
         </td>
         <th scope="row" className="px-6 py-4 font-semibold text-text-primary whitespace-nowrap">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-secondary/80 text-secondary-content flex items-center justify-center font-bold text-sm flex-shrink-0">
-              {getInitials(client.name)}
+            <div className="w-10 h-10 rounded-full bg-secondary/80 text-secondary-content flex items-center justify-center font-bold text-sm flex-shrink-0 overflow-hidden">
+              {client.avatarUrl ? (
+                <img
+                  src={client.avatarUrl}
+                  alt={`Avatar de ${client.name}`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                getInitials(client.name)
+              )}
             </div>
             <div>
               <button

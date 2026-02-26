@@ -17,7 +17,7 @@
 - [ ] Validar aderência automática do Antigravity ao `AGENTS.md` em sessão limpa (A/B com `.cursorrules`).
 
   - Escopo: experimento curto com evidência em `docs/audits/`.
-  - Arquivos-alvo: `docs/audits/*`, `DECISIONS.md` (se houver descoberta estrutural).
+  - Arquivos-alvo: `docs/audits/*`, `DECISIONS-active.md` (se houver descoberta estrutural).
   - Risco: médio (impacta previsibilidade do fluxo agent-first).
 
 - [ ] Executar checklist do fluxo crítico E2E smoke.

@@ -12,49 +12,47 @@ Data: 2026-02-12
 - Fonte da configuração:
   - `vite.config.ts` com `server.port = 3000`
 
-### Conclusão
+### Conclusão — Dev server
 
 - No Nexus-Arqui, o valor correto documentável é `3000`.
 - O padrão geral do Vite pode ser outro, mas aqui existe configuração explícita.
 
 ## 2) `src/types` pasta vs `src/types.ts` monolítico
 
-### Evidência local
+### Evidência local (atualizado 2026-02-23)
 
-- `src/types.ts` existe e tem 669 linhas não vazias (`rg -c . src/types.ts`).
-- `src/types/` agora também existe (transição incremental) com:
-  - `src/types/budget.ts`
-  - `src/types/client.ts`
-  - `src/types/finance.ts`
-  - `src/types/project.ts`
-  - `src/types/index.ts`
+- `src/types.ts` é agora um **barrel puro** que re-exporta de `src/types/index.ts`.
+- **Migração completa.** Módulos atuais em `src/types/`:
+  - `agenda.ts`, `cashBox.ts`, `client.ts`, `common.ts`, `document.ts`
+  - `finance.ts`, `financial-series.ts`, `financial-views.ts`, `freelancer.ts`
+  - `index.ts`, `marketing.ts`, `project.ts`, `proposal.ts`, `supply-chain.ts`
 
-### Conclusão
+### Conclusão — Types
 
-- Estado consistente atual: modelo ainda central em `src/types.ts`, com migração iniciada para `src/types/`.
-- Diretriz prática: manter compatibilidade e migrar em pequenos lotes.
+- **Estado atual (2026-02-23):** migração concluída. `src/types.ts` é barrel puro, todos os tipos vivem em `src/types/*`.
+- Verificação detalhada dos contratos em `docs/data-contracts/types-contracts.md`.
 
 ## 3) `.cursorrules` vs AGENTS portable-first
 
-### Evidência local
+### Evidência local — Cursorrules
 
 - `.cursorrules` não existe no repositório.
 - `AGENTS.md` foi criado na raiz como contrato primário.
 - ADR registrado em `docs/adr/0001-agent-source-of-truth.md`.
 
-### Conclusão
+### Conclusão — AGENTS.md
 
 - Decisão adotada: portable-first com `AGENTS.md` como fonte de verdade.
 - Arquivos específicos de ferramenta continuam opcionais/complementares.
 
 ## 4) Workflows via comando `/`
 
-### Evidência local
+### Evidência local — Workflows
 
 - `.agent/workflows/verify-first.md` existe.
 - Não foi encontrada evidência local verificável de binding automático por slash command no ambiente CLI.
 
-### Conclusão
+### Conclusão — Workflows
 
 - Tratar `.agent/workflows` como documentação operacional reutilizável.
 - Só promover para UX obrigatória quando houver prova de suporte no Antigravity.

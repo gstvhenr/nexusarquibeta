@@ -1,12 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import 'gantt-task-react/dist/index.css';
 import './index.css';
 import App from './App';
 import { HashRouter } from 'react-router-dom';
-import ErrorBoundary from './components/layout/ErrorBoundary';
+import { ErrorBoundary } from './components/layout';
 import { DataProvider } from './context/DataContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { FinancialSecurityProvider } from './context/FinancialSecurityContext';
+import { initializeDataStore } from './services/infrastructure/loadData';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -14,16 +15,21 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <HashRouter>
-      <ErrorBoundary>
-        <ThemeProvider>
-          <DataProvider>
-            <App />
-          </DataProvider>
-        </ThemeProvider>
-      </ErrorBoundary>
-    </HashRouter>
-  </React.StrictMode>,
-);
+
+void initializeDataStore().finally(() => {
+  root.render(
+    <React.StrictMode>
+      <HashRouter>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <DataProvider>
+              <FinancialSecurityProvider>
+                <App />
+              </FinancialSecurityProvider>
+            </DataProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
+      </HashRouter>
+    </React.StrictMode>,
+  );
+});

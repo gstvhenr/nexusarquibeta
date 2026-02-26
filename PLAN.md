@@ -1,33 +1,33 @@
-# PLAN.md
+# PLAN.md - Migração Incremental para Primitivos UI (Gestão de Marketing)
 
-## Objetivo do ciclo atual
+## Escopo
 
-Consolidar Etapa 5 com decisões operacionais fechadas (5.3) e transformar pendências em execução objetiva (GitHub remoto, A/B Antigravity e smoke crítico).
-
-## Arquivos-alvo
-
-- Auditoria: `docs/audits/etapa5-verificacao-2026-02-12.md`
-- ADR: `docs/adr/0007-agent-first-operating-decisions.md`
-- Contrato operacional: `AGENTS.md`
-- Checklist de smoke: `docs/checklists/e2e-smoke-critical-flow.md`
-- Handoff: `NEXT.md`
-- Planejamento: `PLAN.md`
-- Backlog: `TASKS.md`
+- Substituir tags nativas (`<button>`, `<input>`, `<select>`) por primitivos UI do nosso Design System (`Button`, `Input`, `Select`, `Badge`, etc.) nos arquivos da feature de **Gestão de Marketing**.
+- Melhorar a consistência visual mantendo a exata mesma regra de negócio e de propriedades.
 
 ## Fora de escopo
 
-- Refator funcional de features.
-- Mudanças arquiteturais grandes.
-- Introdução de novas dependências.
+- Refatorar a lógica de negócios ou os hooks utilizados nas páginas.
+- Migrar outras áreas do sistema (ex: Financeiro, Projetos, Clientes) nesta mesma sessão.
+
+## Arquivos Alvo (Lote 1: Gestão de Marketing)
+
+- [MODIFY] `src/pages/GestaoMarketingPage.tsx`
+- [MODIFY] `src/pages/gestao-marketing/MarketingContentListView.tsx`
+- [MODIFY] `src/pages/gestao-marketing/MarketingIdeasView.tsx`
+
+## Comandos que serão executados
+
+- Edição dos arquivos para importar e utilizar os primitivos da pasta `src/components/ui/`.
+- `npm run verify` como gate final obrigatório.
 
 ## Riscos
 
-- Não conseguir concluir inferências de Antigravity sem sessão limpa dedicada.
-- Diferença entre runtime atual e integração real do editor mascarar comportamento.
+- Quebra de layout caso alguma classe do Tailwind nativo conflite com as props predefinidas dos primitivos (ex: `className` sendo sobrescrito). **Mitigação:** revisar cuidadosamente a conversão de `className` para as props de variantes dos primitivos (`variant`, `size`, etc.), passando margens e espaçamentos no `className` residual quando necessário.
 
-## Critérios binários
+## Critérios Binários (Definition of Done)
 
-- [ ] Checklist 5.1 registrado com evidências e pendências explícitas
-- [ ] Validações 5.2 executadas por comando com resultados objetivos
-- [ ] Perguntas 5.3 convertidas em decisões oficiais
-- [ ] `NEXT.md` atualizado com próximo passo exato
+- 100% das tags alvo nativas nos arquivos selecionados substituídas pelos primitivos adequados.
+- Nenhuma quebra de layout relatada (mitigado pelas tipagens estruturadas).
+- `npm run verify` verde.
+- `NEXT.md` atualizado.

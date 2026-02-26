@@ -8,7 +8,7 @@ import {
   UserCircleIcon,
   PencilIcon,
 } from '../../ui/icons';
-import { ProjectSection, ProjectTask } from '../../../types';
+import { ProjectSection, ProjectTask, TaskStatus } from '../../../types';
 import { getDeadlineInfo } from '../../../utils/formatters';
 
 interface ChecklistTabProps {
@@ -18,7 +18,7 @@ interface ChecklistTabProps {
     sectionId: string,
     taskId: string,
     field: 'name' | 'hours' | 'completed' | 'status',
-    value: any,
+    value: string | number | boolean | TaskStatus,
   ) => void;
   onAddSection: () => void;
   onRemoveSection: (sectionId: string) => void;
@@ -27,7 +27,7 @@ interface ChecklistTabProps {
   onEditTaskDetails: (sectionId: string, task: ProjectTask) => void;
 }
 
-export const ProjectChecklistTab: React.FC<ChecklistTabProps> = ({
+export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode = ({
   sections,
   onSectionChange,
   onTaskChange,
@@ -37,10 +37,8 @@ export const ProjectChecklistTab: React.FC<ChecklistTabProps> = ({
   onRemoveTask,
   onEditTaskDetails,
 }) => {
-  // State to track which sections (phases) are open/expanded
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
-  // Toggle function for sections
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -50,14 +48,16 @@ export const ProjectChecklistTab: React.FC<ChecklistTabProps> = ({
 
   // Open all sections by default on first load if they are few
   useEffect(() => {
-    const initialState: Record<string, boolean> = {};
-    sections.forEach((s, index) => {
-      initialState[s.id] = index === 0 || sections.length <= 2;
+    if (sections.length === 0) return;
+    setExpandedSections((prev) => {
+      if (Object.keys(prev).length > 0) return prev;
+      const initialState: Record<string, boolean> = {};
+      sections.forEach((section, index) => {
+        initialState[section.id] = index === 0 || sections.length <= 2;
+      });
+      return initialState;
     });
-    if (Object.keys(expandedSections).length === 0 && sections.length > 0) {
-      setExpandedSections(initialState);
-    }
-  }, [sections.length]);
+  }, [sections]);
 
   return (
     <div className="space-y-8">
@@ -116,6 +116,14 @@ export const ProjectChecklistTab: React.FC<ChecklistTabProps> = ({
                 <div
                   className="p-4 bg-background/30 flex items-center gap-4 cursor-pointer select-none hover:bg-background/60 transition-colors"
                   onClick={() => toggleSection(section.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleSection(section.id);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                 >
                   <div
                     className={`p-2 rounded-full transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-primary/10 text-primary' : 'bg-surface text-text-secondary'}`}

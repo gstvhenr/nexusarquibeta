@@ -4,15 +4,16 @@ import {
   AgendaIcon,
   BadgeIcon,
   BancoDeIdeiasIcon,
+  BellAlertIcon,
   BriefcaseIcon,
   BuildingIcon,
   CalendarPlusIcon,
   CanceledIcon,
   CashIcon,
   ChartBarIcon,
+  StackedCoinsIcon,
   CheckCircleIcon,
   ClipboardDocumentListIcon,
-  ClockIcon,
   ConteudosIcon,
   CreditCardIcon,
   CubeIcon,
@@ -20,8 +21,10 @@ import {
   DocumentosProjetosIcon,
   FacebookIcon,
   FinanceiroIcon,
+  CashBoxIcon,
   GiftIcon,
   HomeIcon,
+  GoogleIcon,
   InstagramIcon,
   LinkedInIcon,
   MarketingIconNew,
@@ -42,6 +45,7 @@ import {
   UserPlusIcon,
   UsersIcon,
   YouTubeIcon,
+  FileTextIcon,
 } from './components/ui/icons';
 
 export const NAV_LINKS: NavLinkItem[] = [
@@ -62,6 +66,18 @@ export const NAV_LINKS: NavLinkItem[] = [
         label: 'Tarefas',
         icon: <ClipboardDocumentListIcon />,
         iconName: 'ClipboardDocumentListIcon',
+      },
+      {
+        path: '/agenda/lembretes',
+        label: 'Lembretes',
+        icon: <BellAlertIcon />,
+        iconName: 'BellAlertIcon',
+      },
+      {
+        path: '/agenda/bloco-de-notas',
+        label: 'Bloco de Notas',
+        icon: <FileTextIcon />,
+        iconName: 'FileTextIcon',
       },
     ],
   },
@@ -88,8 +104,20 @@ export const NAV_LINKS: NavLinkItem[] = [
     iconName: 'FinanceiroIcon',
     children: [
       {
+        path: '/financeiro/gestao-caixa',
+        label: 'Gestão de Caixa',
+        icon: <CashBoxIcon />,
+        iconName: 'CashBoxIcon',
+      },
+      {
         path: '/financeiro/visao-geral',
         label: 'Visão Geral',
+        icon: <StackedCoinsIcon />,
+        iconName: 'StackedCoinsIcon',
+      },
+      {
+        path: '/financeiro/previsao-caixa',
+        label: 'Previsão de Caixa',
         icon: <ChartBarIcon />,
         iconName: 'ChartBarIcon',
       },
@@ -101,7 +129,7 @@ export const NAV_LINKS: NavLinkItem[] = [
       },
       {
         path: '/financeiro/debitos',
-        label: 'Débitos',
+        label: 'Despesas',
         icon: <CreditCardIcon />,
         iconName: 'CreditCardIcon',
       },
@@ -295,10 +323,18 @@ export const SOCIAL_NETWORKS_SUPPORTED: {
     color: 'bg-red-600',
     placeholder: 'https://youtube.com/c/seu_canal',
   },
+  {
+    id: 'Google',
+    name: 'Google',
+    icon: <GoogleIcon />,
+    color: 'bg-blue-500',
+    placeholder: 'https://g.page/sua_empresa',
+  },
 ];
 
 // --- Finance Presentation Constants (#5 — moved from financeService.ts) ---
 export const EXPENSE_CATEGORY_COLORS: Record<string, string> = {
+  // Professional (legacy)
   'Software e Assinaturas': 'hsl(210, 70%, 55%)',
   'Impostos (DAS, INSS)': 'hsl(0, 60%, 55%)',
   'Anuidade de Conselho (CAU/CREA)': 'hsl(30, 70%, 55%)',
@@ -310,5 +346,42 @@ export const EXPENSE_CATEGORY_COLORS: Record<string, string> = {
   'Aluguel de Escritório': 'hsl(240, 50%, 55%)',
   'Serviços Terceirizados': 'hsl(100, 45%, 50%)',
   'Reembolso a Cliente': 'hsl(350, 45%, 55%)',
+  Outros: 'hsl(0, 0%, 55%)',
+  // CashBox — Professional
+  Escritório: 'hsl(215, 60%, 50%)',
+  Ferramentas: 'hsl(195, 55%, 48%)',
+  Marketing: 'hsl(275, 55%, 55%)',
+  Impostos: 'hsl(5, 60%, 52%)',
+  'Serviços Profissionais': 'hsl(160, 50%, 48%)',
+  Equipamentos: 'hsl(35, 65%, 50%)',
+  'Taxas e Licenças': 'hsl(55, 55%, 48%)',
+  'Seguro Profissional': 'hsl(300, 40%, 50%)',
+  Comunicação: 'hsl(190, 55%, 50%)',
+  'Capacitação e Educação': 'hsl(45, 70%, 48%)',
+  'Veículo Profissional': 'hsl(340, 50%, 50%)',
+  // CashBox — Personal
+  Alimentação: 'hsl(15, 70%, 52%)',
+  Desenvolvimento: 'hsl(260, 50%, 55%)',
+  Educação: 'hsl(48, 65%, 48%)',
+  Estabelecimento: 'hsl(220, 50%, 50%)',
+  Família: 'hsl(320, 45%, 52%)',
+  Lazer: 'hsl(170, 55%, 48%)',
+  Moradia: 'hsl(200, 55%, 50%)',
+  Roupas: 'hsl(290, 45%, 52%)',
+  Saúde: 'hsl(140, 60%, 45%)',
+  Seguros: 'hsl(25, 55%, 48%)',
+  Streaming: 'hsl(265, 55%, 55%)',
+  'Cuidados Pessoais': 'hsl(345, 50%, 52%)',
+  Transporte: 'hsl(330, 50%, 50%)',
+  'Pets e Animais': 'hsl(80, 50%, 48%)',
+};
+
+/** Colors for receivable-by-source donut slices (income toggle). */
+export const RECEIVABLE_SOURCE_COLORS: Record<string, string> = {
+  Projeto: 'hsl(160, 60%, 45%)',
+  Comissão: 'hsl(200, 55%, 50%)',
+  Consultoria: 'hsl(140, 50%, 48%)',
+  Reembolso: 'hsl(45, 65%, 50%)',
+  Rendimento: 'hsl(270, 50%, 55%)',
   Outros: 'hsl(0, 0%, 55%)',
 };

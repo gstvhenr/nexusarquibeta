@@ -2,7 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import type { RollupLog } from 'vite';
+import type { RollupLog } from 'rollup';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,6 +33,10 @@ export default defineConfig({
   server: {
     port: 3000,
     host: '0.0.0.0',
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
   },
   plugins: [react()],
   resolve: {
@@ -91,6 +95,10 @@ export default defineConfig({
 
           if (normalizedId.includes('/file-saver/')) {
             return 'file-saver';
+          }
+
+          if (normalizedId.includes('/wa-sqlite/')) {
+            return 'wa-sqlite';
           }
 
           return 'vendor';

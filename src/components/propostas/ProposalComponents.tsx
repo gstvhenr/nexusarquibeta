@@ -5,7 +5,7 @@ import { formatCurrency } from '../../utils/formatters';
 import { TrashIcon, ArchiveIcon, UnarchiveIcon } from '../ui/icons';
 import { PROPOSAL_STATUS_CLASSES } from '../../constants';
 
-export const ProposalListItem: React.FC<{
+export const ProposalListItem: (props: {
   proposal: Proposal;
   onDelete: (proposal: Proposal) => void;
   onArchive: (proposal: Proposal) => void;
@@ -13,7 +13,7 @@ export const ProposalListItem: React.FC<{
   isArchived?: boolean;
   hasProject: boolean;
   linkedProjectCode?: string;
-}> = React.memo(
+}) => React.ReactNode = React.memo(
   ({ proposal, onDelete, onArchive, onUnarchive, isArchived, hasProject, linkedProjectCode }) => {
     const navigate = useNavigate();
     const statusClass = PROPOSAL_STATUS_CLASSES[proposal.status];
@@ -25,6 +25,14 @@ export const ProposalListItem: React.FC<{
     return (
       <div
         onClick={handleNavigate}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleNavigate();
+          }
+        }}
+        role="button"
+        tabIndex={0}
         className={`bg-surface rounded-xl shadow-soft transition-all duration-300 ease-in-out group ${isArchived ? 'opacity-70 bg-background dark:bg-surface/50' : ''} hover:shadow-lg hover:-translate-y-px cursor-pointer`}
       >
         <div className="p-5 flex justify-between items-center">

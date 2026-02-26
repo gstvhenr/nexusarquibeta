@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 interface ModalProps {
@@ -9,9 +9,22 @@ interface ModalProps {
   size?: 'lg' | '2xl' | '4xl' | '5xl' | '6xl';
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 'lg' }) => {
+const Modal: (props: ModalProps) => React.ReactNode = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = 'lg',
+}) => {
   const [isClosing, setIsClosing] = useState(false);
   const modalRoot = typeof window !== 'undefined' ? document.getElementById('modal-root') : null;
+  const handleClose = useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 300); // match animation duration
+  }, [onClose]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -32,15 +45,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [isOpen]);
-
-  const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-      setIsClosing(false);
-    }, 300); // match animation duration
-  };
+  }, [isOpen, handleClose]);
 
   if ((!isOpen && !isClosing) || !modalRoot) {
     return null;
@@ -57,16 +62,22 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
   const animationClass = isClosing ? 'animate-fade-out-down' : 'animate-fade-in-up';
 
   const modalContent = (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <div
       className="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 flex justify-center items-center p-4"
       onClick={handleClose}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') handleClose();
+      }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
       <div
         className={`bg-surface rounded-xl shadow-lifted w-full p-6 sm:p-8 relative transform transition-all ${sizeClasses[size] || sizeClasses['lg']} ${animationClass}`}
         onClick={(e) => e.stopPropagation()}
+        role="document"
       >
         <header className="mb-6 pb-4 border-b border-border-color">
           <h2 id="modal-title" className="font-serif text-3xl font-bold text-secondary">

@@ -1,14 +1,16 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PageHeader } from '../components/layout';
 import { Modal } from '../components/ui';
-import { useData } from '../context/DataContext';
+import {
+  useCoreData,
+  useFinanceData,
+  useSupplyChainData,
+  useSystemData,
+} from '../context/DataContext';
 import { NAV_LINKS } from '../constants';
-import type { Project, Freelancer, HiredService, ProfessionalExpense, AgendaEvent } from '../types';
+import type { HiredService, ProfessionalExpense, AgendaEvent } from '../types';
 import {
   ClipboardDocumentListIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  XCircleIcon,
   TrashIcon,
   PlusIcon,
   UserCircleIcon,
@@ -18,16 +20,11 @@ import {
 import { formatCurrency, formatDate, getDeadlineInfo } from '../utils/formatters';
 import { v4 as uuidv4 } from 'uuid';
 
-const ServicosContratadosPage: React.FC = () => {
-  const {
-    projects,
-    freelancers,
-    hiredServices,
-    setHiredServices,
-    setManualExpenses,
-    setAgendaEvents,
-    setProjects,
-  } = useData();
+const ServicosContratadosPage: () => React.ReactNode = () => {
+  const { projects, setProjects } = useCoreData();
+  const { setManualExpenses } = useFinanceData();
+  const { freelancers } = useSupplyChainData();
+  const { hiredServices, setHiredServices, setAgendaEvents } = useSystemData();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
@@ -192,7 +189,7 @@ const ServicosContratadosPage: React.FC = () => {
     'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-text-primary transition';
 
   return (
-    <div className="animate-fade-in-up h-full flex flex-col p-6">
+    <div className="animate-fade-in-up h-full flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6">
       <PageHeader title="Serviços Contratados" icon={pageIcon}>
         <button
           type="button"
@@ -324,8 +321,14 @@ const ServicosContratadosPage: React.FC = () => {
         <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Projeto</label>
+              <label
+                htmlFor="field-projeto"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
+                Projeto
+              </label>
               <select
+                id="field-projeto"
                 value={selectedProjectId}
                 onChange={(e) => setSelectedProjectId(e.target.value)}
                 className={commonInputClass}
@@ -340,10 +343,14 @@ const ServicosContratadosPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="field-freelancer"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 Freelancer
               </label>
               <select
+                id="field-freelancer"
                 value={selectedFreelancerId}
                 onChange={(e) => setSelectedFreelancerId(e.target.value)}
                 className={commonInputClass}
@@ -361,10 +368,14 @@ const ServicosContratadosPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="field-custo-total-r"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 Custo Total (R$)
               </label>
               <input
+                id="field-custo-total-r"
                 type="number"
                 value={cost || ''}
                 onChange={(e) => setCost(parseFloat(e.target.value) || 0)}
@@ -374,10 +385,14 @@ const ServicosContratadosPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="field-prazo-de-entrega"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 Prazo de Entrega
               </label>
               <input
+                id="field-prazo-de-entrega"
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
@@ -389,9 +404,9 @@ const ServicosContratadosPage: React.FC = () => {
 
           {selectedProject ? (
             <div className="bg-background/50 p-4 rounded-xl border border-border-color/50">
-              <label className="block text-sm font-bold text-text-primary mb-3">
+              <span className="block text-sm font-bold text-text-primary mb-3">
                 Selecione as Tarefas para Delegar
-              </label>
+              </span>
               <div className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar pr-2">
                 {selectedProject.sections
                   .flatMap((s) => s.tasks)

@@ -1,2 +1,11 @@
-npx lint-staged
+#!/usr/bin/env sh
+set -eu
+
+npm run lint:staged
 npm run typecheck
+
+staged_files="$(git diff --cached --name-only --diff-filter=ACMR)"
+
+if printf '%s\n' "$staged_files" | grep -Eq '^(docs/|\.github/|AGENTS\.md$|ARCHITECTURE\.md$|CONTEXT\.md$|CONTRIBUTING\.md$|DECISIONS-active\.md$|NEXT\.md$|PLAN\.md$|README\.md$|SECURITY\.md$|TASKS\.md$|TESTING\.md$)'; then
+  npm run check:docs:governance
+fi

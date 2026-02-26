@@ -1,38 +1,33 @@
-import React from 'react';
-import type { Project, Proposal, MarketingActivity, AgendaEvent, Installment } from '../types';
-import {
-  formatCurrency,
-  formatDateDayMonth,
-  parseDateString,
-  getDeadlineInfo,
-} from '../utils/formatters';
+import type { Project, Proposal, MarketingActivity, AgendaEvent } from '../types';
+import { formatCurrency, parseDateString, getDeadlineInfo } from '../utils/formatters';
 import { getProjectLumpSumValue } from '../utils/projectFinancials';
-import { CashIcon, AgendaIcon, MailIcon, BullhornIcon } from '../components/ui/icons';
+
+// --- DASHBOARD SERVICE DTOs ---
+
+/** Return type for calculateProjectProgress. */
+export interface ProjectProgressSummary {
+  progress: number;
+  completedCount: number;
+  totalCount: number;
+}
+
+/** Return type for getDashboardKPIs. */
+export interface DashboardKPIs {
+  activeProjects: number;
+  pendingProposals: number;
+  receivables: string;
+  pendingMarketing: number;
+}
+
+/** Return type for getFinancialOverview. */
+export interface FinancialOverviewResult {
+  overdue: number;
+  upcoming: number;
+}
 
 // --- DASHBOARD SERVICE FUNCTIONS ---
 
-type OverduePayment = {
-  type: 'lump' | 'installment';
-  project: Project;
-  payment: Project['financials'] | Installment;
-};
-
-const getOverduePaymentDate = (payment: OverduePayment['payment']): string | null => {
-  if ('number' in payment) {
-    return payment.dueDate;
-  }
-  return payment.lumpSumDueDate || null;
-};
-
-type FocusItem = {
-  id: string; // The unique ID for dismissal
-  type: string;
-  tag: string;
-  icon: React.ReactElement<{ className?: string }>;
-  title: string;
-  description: string;
-  path: string;
-};
+export * from './dashboardFocusItems';
 
 /**
  * Input -> Output:
@@ -41,9 +36,7 @@ type FocusItem = {
  * Example:
  * const summary = calculateProjectProgress(project);
  */
-export const calculateProjectProgress = (
-  project: Project,
-): { progress: number; completedCount: number; totalCount: number } => {
+export const calculateProjectProgress = (project: Project): ProjectProgressSummary => {
   if (!project || !project.sections) return { progress: 0, completedCount: 0, totalCount: 0 };
 
   const allTasks = project.sections.flatMap((section) => section.tasks);
@@ -70,7 +63,7 @@ export const getDashboardKPIs = (
   projects: Project[],
   proposals: Proposal[],
   marketingActivities: MarketingActivity[],
-) => {
+): DashboardKPIs => {
   const today = new Date();
   const thirtyDaysFromNow = new Date();
   thirtyDaysFromNow.setDate(today.getDate() + 30);
@@ -145,7 +138,11 @@ export const getActiveProjects = (projects: Project[]) => {
     .filter((p) => p.status === 'Em Andamento' && !p.archived)
     .map((p) => {
       const { progress } = calculateProjectProgress(p);
-      return { ...p, progress, deadlineInfo: getDeadlineInfo(p.deadline) };
+      return {
+        ...p,
+        progress,
+        deadlineInfo: getDeadlineInfo(p.deadline, p.status === 'Concluído'),
+      };
     })
     .sort((a, b) => (a.deadlineInfo.diffDays ?? Infinity) - (b.deadlineInfo.diffDays ?? Infinity))
     .slice(0, 4);
@@ -158,7 +155,7 @@ export const getActiveProjects = (projects: Project[]) => {
  * Example:
  * const overview = getFinancialOverview(projects);
  */
-export const getFinancialOverview = (projects: Project[]) => {
+export const getFinancialOverview = (projects: Project[]): FinancialOverviewResult => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const sevenDaysFromNow = new Date();
@@ -209,186 +206,4 @@ export const getPendingMarketingTasks = (marketingActivities: MarketingActivity[
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     })
     .slice(0, 5);
-};
-
-/**
- * Input -> Output:
- * - input: projetos, propostas, atividades de marketing e eventos.
- * - output: lista priorizada de itens de foco com tag, descrição e rota de ação.
- * Example:
- * const focusItems = determineFocusItems(projects, proposals, marketingActivities, agendaEvents);
- */
-export const determineFocusItems = (
-  projects: Project[],
-  proposals: Proposal[],
-  marketingActivities: MarketingActivity[],
-  agendaEvents: AgendaEvent[],
-): FocusItem[] => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const allItems: FocusItem[] = [];
-
-  // 1. Overdue Payments (Highest Priority)
-  const overduePayments: OverduePayment[] = [];
-  for (const project of projects) {
-    if (project.financials) {
-      if (
-        project.financials.paymentType === 'vista' &&
-        project.financials.lumpSumStatus === 'Em aberto' &&
-        project.financials.lumpSumDueDate
-      ) {
-        const dueDate = parseDateString(project.financials.lumpSumDueDate);
-        if (dueDate && dueDate < today) {
-          overduePayments.push({ type: 'lump' as const, project, payment: project.financials });
-        }
-      } else if (
-        project.financials.paymentType === 'parcelado' &&
-        project.financials.installments
-      ) {
-        project.financials.installments.forEach((inst) => {
-          const dueDate = parseDateString(inst.dueDate);
-          if (!inst.paid && dueDate && dueDate < today) {
-            overduePayments.push({ type: 'installment' as const, project, payment: inst });
-          }
-        });
-      }
-    }
-  }
-  overduePayments
-    .sort((a, b) => {
-      const dateA =
-        parseDateString(getOverduePaymentDate(a.payment))?.getTime() ?? Number.MAX_SAFE_INTEGER;
-      const dateB =
-        parseDateString(getOverduePaymentDate(b.payment))?.getTime() ?? Number.MAX_SAFE_INTEGER;
-      return dateA - dateB;
-    })
-    .forEach((payment) => {
-      if (payment.type === 'lump') {
-        const financials = payment.payment as Project['financials'];
-        allItems.push({
-          id: `payment_overdue_lump_${payment.project.id}`,
-          type: 'payment_overdue',
-          tag: 'FINANCEIRO URGENTE',
-          icon: React.createElement(CashIcon),
-          title: `Pagamento do projeto "${payment.project.name}" está atrasado.`,
-          description: `Valor de ${formatCurrency(getProjectLumpSumValue(payment.project))} venceu em ${formatDateDayMonth(financials.lumpSumDueDate)}.`,
-          path: '/financeiro/recebiveis',
-        });
-      } else {
-        const installment = payment.payment as Installment;
-        allItems.push({
-          id: `payment_overdue_inst_${payment.project.id}_${installment.id}`,
-          type: 'payment_overdue',
-          tag: 'FINANCEIRO URGENTE',
-          icon: React.createElement(CashIcon),
-          title: `Parcela do projeto "${payment.project.name}" está atrasada.`,
-          description: `Parcela ${installment.number} de ${formatCurrency(installment.value)} venceu em ${formatDateDayMonth(installment.dueDate)}.`,
-          path: '/financeiro/recebiveis',
-        });
-      }
-    });
-
-  // 2. Critical Project Deadlines
-  projects
-    .filter((p) => p.status === 'Em Andamento' && p.deadline)
-    .map((p) => ({ ...p, deadlineInfo: getDeadlineInfo(p.deadline) }))
-    .filter((p) => p.deadlineInfo.diffDays >= 0 && p.deadlineInfo.diffDays <= 3)
-    .sort((a, b) => a.deadlineInfo.diffDays - b.deadlineInfo.diffDays)
-    .forEach((project) => {
-      allItems.push({
-        id: `deadline_${project.id}`,
-        type: 'deadline',
-        tag: 'PRAZO DE PROJETO',
-        icon: React.createElement(AgendaIcon),
-        title: `Prazo do projeto "${project.name}" se aproxima.`,
-        description: `A entrega está marcada para ${project.deadlineInfo.text}. Faltam ${project.deadlineInfo.diffDays} dia(s).`,
-        path: `/projetos/${project.id}`,
-      });
-    });
-
-  // 3. Overdue/Upcoming Marketing
-  const pendingMarketingData = marketingActivities.filter(
-    (a) => a.status === 'Pendente' || a.status === 'Em Andamento',
-  );
-  const overdueMarketingTask = pendingMarketingData.find((a) => {
-    const dueDate = parseDateString(a.dueDate);
-    return dueDate && dueDate < today;
-  });
-  if (overdueMarketingTask) {
-    allItems.push({
-      id: `marketing_overdue_${overdueMarketingTask.id}`,
-      type: 'marketing_overdue',
-      tag: 'MARKETING ATRASADO',
-      icon: React.createElement(BullhornIcon),
-      title: `Tarefa de marketing "${overdueMarketingTask.title}" está atrasada.`,
-      description: `O prazo era para ${formatDateDayMonth(overdueMarketingTask.dueDate)}.`,
-      path: '/gestao-marketing/conteudos',
-    });
-  } else {
-    pendingMarketingData
-      .map((a) => ({ ...a, deadlineInfo: getDeadlineInfo(a.dueDate) }))
-      .filter((a) => a.deadlineInfo.diffDays >= 0 && a.deadlineInfo.diffDays <= 3)
-      .sort((a, b) => a.deadlineInfo.diffDays - b.deadlineInfo.diffDays)
-      .forEach((task) => {
-        allItems.push({
-          id: `marketing_deadline_${task.id}`,
-          type: 'marketing_deadline',
-          tag: 'PRAZO DE MARKETING',
-          icon: React.createElement(BullhornIcon),
-          title: `Prazo da tarefa "${task.title}" se aproxima.`,
-          description: `O prazo é em ${task.deadlineInfo.diffDays} dia(s).`,
-          path: '/gestao-marketing/conteudos',
-        });
-      });
-  }
-
-  // 4. Old Pending Proposals
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(new Date().getDate() - 7);
-  proposals
-    .filter((p) => {
-      const proposalDate = parseDateString(p.date);
-      return p.status === 'Pendente' && !p.archived && proposalDate && proposalDate < sevenDaysAgo;
-    })
-    .sort(
-      (a, b) =>
-        (parseDateString(a.date)?.getTime() || 0) - (parseDateString(b.date)?.getTime() || 0),
-    )
-    .forEach((proposal) => {
-      allItems.push({
-        id: `proposal_followup_${proposal.id}`,
-        type: 'proposal_followup',
-        tag: 'ACOMPANHAMENTO',
-        icon: React.createElement(MailIcon),
-        title: `Fazer follow-up da proposta "${proposal.name}".`,
-        description: `Proposta pendente há mais de 7 dias, enviada em ${formatDateDayMonth(proposal.date)}.`,
-        path: `/propostas/${proposal.id}`,
-      });
-    });
-
-  // 5. Upcoming Events Today
-  const todayStr = new Date().toISOString().split('T')[0];
-  const now = new Date();
-  agendaEvents
-    .filter(
-      (e) =>
-        e.date === todayStr &&
-        new Date(`${e.date}T${e.time}`) >= now &&
-        !e.isDeadlineEvent &&
-        !e.isFinancialEvent,
-    )
-    .sort((a, b) => a.time.localeCompare(b.time))
-    .forEach((event) => {
-      allItems.push({
-        id: `event_today_${event.id}`,
-        type: 'event_today',
-        tag: 'COMPROMISSO HOJE',
-        icon: React.createElement(AgendaIcon),
-        title: `Hoje às ${event.time}: ${event.title}`,
-        description: `Não se esqueça do seu compromisso. ${event.projectName ? `Relacionado ao projeto ${event.projectName}.` : ''}`,
-        path: '/agenda',
-      });
-    });
-
-  return allItems;
 };

@@ -6,11 +6,11 @@ import { ChevronDownIcon, ICON_MAP } from '../ui/icons';
 /**
  * A reusable component for a standard navigation link in the sidebar.
  */
-export const SidebarNavLink: React.FC<{
+export const SidebarNavLink: (props: {
   item: NavLinkItem;
   isChild?: boolean;
   onClick?: () => void;
-}> = ({ item, isChild = false, onClick }) => {
+}) => React.ReactNode = ({ item, isChild = false, onClick }) => {
   const commonClasses = `flex items-center w-full rounded-lg font-medium transition-colors duration-200 group relative ${isChild ? 'py-2.5 text-xs' : 'py-3 text-sm'}`;
   const padding = isChild ? 'pl-6' : 'px-6';
   const activeClass = 'bg-primary/10 text-primary font-semibold';
@@ -52,12 +52,12 @@ export const SidebarNavLink: React.FC<{
 /**
  * A reusable component for a parent navigation link that expands to show child links.
  */
-export const SidebarParentLink: React.FC<{
+export const SidebarParentLink: (props: {
   item: NavLinkItem;
   onChildClick?: () => void;
   isOpen: boolean;
   onToggle: () => void;
-}> = ({ item, onChildClick, isOpen, onToggle }) => {
+}) => React.ReactNode = ({ item, onChildClick, isOpen, onToggle }) => {
   const commonClasses =
     'flex items-center w-full px-6 py-3 rounded-lg font-medium transition-colors duration-200 group relative';
   const parentClass = 'text-text-secondary hover:bg-primary/5 hover:text-text-primary';

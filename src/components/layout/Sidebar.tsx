@@ -9,7 +9,7 @@ interface SidebarProps {
   setOpen: (isOpen: boolean) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, setOpen }) => {
+const Sidebar: (props: SidebarProps) => React.ReactNode = ({ isOpen, setOpen }) => {
   const { openParent, toggleParent } = useNavigation();
   const closeSidebar = () => setOpen(false);
 
@@ -78,10 +78,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setOpen }) => {
         </nav>
 
         <div className="mt-auto p-6">
-          <div className="text-center text-xs text-text-secondary/80 mb-4">
-            <p className="font-medium">© 2026</p>
-            <p className="font-mono">@gstvhenr</p>
-          </div>
           <div className="pt-4 border-t border-border-color">
             <nav className="px-0">
               <ul>

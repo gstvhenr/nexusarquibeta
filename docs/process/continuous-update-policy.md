@@ -9,8 +9,9 @@
 ## Onde atualizar
 
 - Regras operacionais: `AGENTS.md`
+- Contrato de governança ativa: `docs/governance/core-contract.md`
 - Arquitetura vigente: `docs/architecture.md`
-- Decisões: `DECISIONS.md` e `docs/adr/*`
+- Decisões: `DECISIONS-active.md` e `docs/adr/*`
 - Handoff entre sessões: `NEXT.md`
 - Execução repetível: `docs/checklists/*`
 - Auditoria de consistência: `docs/audits/*`

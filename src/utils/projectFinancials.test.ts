@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { ContractAddendum, Project } from '../types';
+import type { ContractAddendum } from '../types';
+import { createTestProject } from '../test/factories';
 import {
   getApprovedAddendumTotal,
   getProjectBaseContractValue,
@@ -22,25 +23,27 @@ describe('projectFinancials', () => {
   });
 
   it('calculates base and total values', () => {
-    const project = {
+    const project = createTestProject({
       budget: 10000,
       financials: {
+        paymentType: 'vista',
         totalValue: 12000,
         addendums: [addendum('Aprovado', 2000)],
       },
-    } as unknown as Pick<Project, 'budget' | 'financials'>;
+    });
 
     expect(getProjectBaseContractValue(project)).toBe(10000);
     expect(getProjectTotalContractValue(project)).toBe(12000);
   });
 
   it('prefers explicit lump sum value when present', () => {
-    const project = {
+    const project = createTestProject({
       budget: 5000,
       financials: {
+        paymentType: 'vista',
         lumpSumValue: 7500,
       },
-    } as unknown as Pick<Project, 'budget' | 'financials'>;
+    });
 
     expect(getProjectLumpSumValue(project)).toBe(7500);
   });

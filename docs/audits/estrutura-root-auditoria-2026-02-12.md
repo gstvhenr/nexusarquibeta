@@ -23,7 +23,7 @@ Confirmar se os arquivos na raiz estão na localização adequada, sem resíduos
 
 A raiz contém três grupos coerentes:
 
-- Contrato/governança: `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `TESTING.md`, `DECISIONS.md`, `PLAN.md`, `NEXT.md`, `TASKS.md`.
+- Contrato/governança: `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `TESTING.md`, `DECISIONS-active.md`, `PLAN.md`, `NEXT.md`, `TASKS.md`.
 - Configuração do projeto: `package.json`, `tsconfig.json`, `vite.config.ts`, `vitest.config.ts`, `eslint.config.mjs`, `tailwind.config.cjs`, etc.
 - Estrutura operacional: `.github/`, `.husky/`, `docs/`, `scripts/`, `src/`, `public/`.
 

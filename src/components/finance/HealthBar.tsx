@@ -16,7 +16,12 @@ const barColors = {
 const textColors = { success: 'text-success', warning: 'text-warning', error: 'text-error' };
 const dotColors = { success: 'bg-success', warning: 'bg-warning', error: 'bg-error' };
 
-export const HealthBar: React.FC<HealthBarProps> = ({ label, value, total, variant }) => {
+export const HealthBar: (props: HealthBarProps) => React.ReactNode = ({
+  label,
+  value,
+  total,
+  variant,
+}) => {
   const pct = total > 0 ? Math.min((value / total) * 100, 100) : 0;
 
   return (

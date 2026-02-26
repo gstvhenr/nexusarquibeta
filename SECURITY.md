@@ -24,4 +24,4 @@
 1. Identificar pacote e severidade.
 2. Definir mitigação (upgrade, patch, workaround).
 3. Rodar os gates oficiais definidos em `AGENTS.md`.
-4. Registrar decisão em `DECISIONS.md`/ADR se houver impacto estrutural.
+4. Registrar decisão em `DECISIONS-active.md`/ADR se houver impacto estrutural.

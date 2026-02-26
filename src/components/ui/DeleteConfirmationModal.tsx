@@ -9,7 +9,7 @@ interface DeleteConfirmationModalProps {
   itemType: string;
 }
 
-export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
+export const DeleteConfirmationModal: (props: DeleteConfirmationModalProps) => React.ReactNode = ({
   isOpen,
   onClose,
   onConfirm,

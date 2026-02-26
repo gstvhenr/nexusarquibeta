@@ -124,7 +124,7 @@ const generateAuditLog = (
     const oldStr = stableStringify(oldVal) || 'Vazio';
     const newStr = stableStringify(newVal) || 'Vazio';
     if (oldStr !== newStr) {
-      logs.push({ timestamp, field: label, oldValue: oldVal, newValue: newVal });
+      logs.push({ timestamp, field: label, oldValue: oldStr, newValue: newStr });
     }
   };
 
@@ -168,7 +168,7 @@ export const saveClientAndUpdateState = (
     return { updatedClients: allClients, error: 'duplicate_cpf_cnpj' };
   }
 
-  let finalClient = { ...clientToSave };
+  const finalClient = { ...clientToSave };
 
   if (finalClient.id && originalClient) {
     // Existing client

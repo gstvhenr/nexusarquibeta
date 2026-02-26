@@ -16,7 +16,11 @@ interface MarginBarProps {
  * - `margin` (prop): The profit margin = (saldo / receita) * 100.
  *    This is the percentage displayed in the top-right corner.
  */
-export const MarginBar: React.FC<MarginBarProps> = ({ receita, despesa, margin }) => {
+export const MarginBar: (props: MarginBarProps) => React.ReactNode = ({
+  receita,
+  despesa,
+  margin,
+}) => {
   const total = receita + despesa || 1;
   const incomeShare = (receita / total) * 100; // (#8) Renamed from receitaPct for clarity
   const isPositive = margin >= 0;

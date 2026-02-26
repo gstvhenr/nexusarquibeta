@@ -2,6 +2,10 @@
 trigger: always_on
 ---
 
+<!-- SOURCE OF TRUTH: este arquivo é a versão canônica das regras negativas.
+     O MEMORY[nexusarqui.md] nas user rules do Antigravity deve conter apenas
+     um ponteiro para este arquivo, nunca uma cópia do conteúdo completo. -->
+
 # NEXUS-ARQUI AGENT RULES (aligned with AGENTS.md)
 
 ## 1. Mission
@@ -18,7 +22,7 @@ Maintain architectural integrity and delivery safety for Nexus-Arqui (React + Ty
 
 ## 3. Execution protocol
 
-1. Read context: `AGENTS.md`, `NEXT.md`, `ARCHITECTURE.md`.
+1. Read context: `AGENTS.md`, `CONTEXT.md`, `NEXT.md`, `.agent/lessons-learned.md`, `ARCHITECTURE.md`.
 2. Define explicit short plan with scope, risks, and binary criteria.
 3. Implement small, reversible diffs.
 4. Run canonical gates from `AGENTS.md`.
@@ -35,3 +39,93 @@ Maintain architectural integrity and delivery safety for Nexus-Arqui (React + Ty
 
 - Never claim completion without gate evidence.
 - Keep responses objective and implementation-focused.
+
+## 6. Anti-patterns (DO NOT / DO INSTEAD)
+
+### 6.1 Comportamento do Agente (PRIORIDADE MAXIMA)
+
+❌ NAO: Expandir escopo alem do solicitado (scope creep).  
+✅ FACA: Implemente APENAS o pedido. Registre extras em NEXT.md.  
+📎 Causa #1 de regressoes em vibe coding (Regra F.1).
+
+❌ NAO: Deletar ou reescrever codigo funcional sem justificativa.  
+✅ FACA: Preserve codigo existente. Modifique APENAS o necessario.  
+📎 "File deletion hallucination" documentado (Regra F.2).
+
+❌ NAO: Assumir contexto que nao foi fornecido.  
+✅ FACA: Pergunte quando informacao critica estiver ausente.  
+📎 LLMs forcam solucoes em vez de pedir info faltante (Regra F.3).
+
+❌ NAO: Inventar APIs, metodos ou props que nao existem.  
+✅ FACA: Verifique no codebase e docs antes de usar. Valide imports.  
+📎 "Hallucinated APIs" e erro documentado (Regra F.4).
+
+❌ NAO: Afirmar tarefa completa sem npm run verify verde.  
+✅ FACA: Execute gates. Sem verde, NAO esta pronta.  
+📎 Ja no AGENTS.md - reforco explicito (Regra F.5).
+
+### 6.2 TypeScript Safety
+
+❌ NAO: Usar React.FC ou React.FunctionComponent.  
+✅ FACA: Declaracao de funcao normal com props tipadas.  
+📎 Legacy/deprecated. Dificulta generics (Regra A.3).
+
+❌ NAO: Tipar useState de forma generica para objetos complexos.  
+✅ FACA: useState<MinhaInterface | null>(null).  
+📎 Inferencia falha em union types (Regra A.4).
+
+❌ NAO: Acessar propriedades sem verificar null/undefined.  
+✅ FACA: Use ?. ou ?? ou type guards.  
+📎 Erro de runtime #1 em React+TS (Regra A.5).
+
+### 6.3 React Hooks
+
+❌ NAO: Mutar state diretamente (.push, alterar propriedade).  
+✅ FACA: Novo objeto/array com spread ou metodos imutaveis.  
+📎 Mutacao direta nao triggera re-render (Regra D.1).
+
+❌ NAO: Dependencias incorretas/ausentes em useEffect.  
+✅ FACA: TODAS as variaveis do efeito nas dependencias.  
+📎 Stale closures sao bugs dificeis de diagnosticar (Regra D.2).
+
+❌ NAO: Usar index como key em listas que reordenam.  
+✅ FACA: Use ID estavel e unico do dado.  
+📎 Index como key causa bugs visuais (Regra D.3).
+
+❌ NAO: useEffect para derivar estado de outro estado.  
+✅ FACA: Derive com useMemo ou calculo direto no render.  
+📎 Conceito oficial "You Might Not Need an Effect" (Regra D.4).
+
+### 6.4 Higiene de Codigo
+
+❌ NAO: Nomear variaveis de forma generica (data, result, value).  
+✅ FACA: Nomes que revelam intencao (clientProposals, monthlyRevenue).  
+📎 Dificultam grep/busca (Regra E.5).
+
+❌ NAO: Magic numbers/strings no codigo.  
+✅ FACA: Constantes nomeadas ou enum.  
+📎 Ilegiveis e impossiveis de manter (Regra E.6).
+
+❌ NAO: Funcoes vazias com placeholder (// TODO).  
+✅ FACA: Implemente ou throw new Error('Not implemented') + NEXT.md.  
+📎 "Laziness" e anti-pattern #1 de LLMs (Regra E.4).
+
+### 6.5 Estilizacao
+
+❌ NAO: Usar cores hardcoded (hex/rgb) fora de tokens.  
+✅ FACA: Tokens do design system (variaveis CSS ou Tailwind).  
+📎 Impedem theming e consistencia (Regra C.1).
+
+❌ NAO: Espacamento arbitrario (margin: 13px).  
+✅ FACA: Escala do design system (4, 8, 12, 16, 24, 32...).  
+📎 Inconsistencia visualmente perceptivel (Regra C.2).
+
+### 6.6 Testes
+
+❌ NAO: Gerar testes sem rodar para confirmar que passam.  
+✅ FACA: npm run test apos criar/modificar.  
+📎 Testes red dao falsa sensacao de cobertura (Regra G.1).
+
+❌ NAO: Snapshot tests para validar logica de negocio.  
+✅ FACA: Assertions explicitas (expect(result).toBe(expected)).  
+📎 AGENTS.md recomenda "evitar snapshots frageis" (Regra G.3).

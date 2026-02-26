@@ -1,20 +1,13 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '../components/layout';
 import { Modal } from '../components/ui';
-import { useData } from '../context/DataContext';
-import type {
-  Quotation,
-  Project,
-  Product,
-  Supplier,
-  SupplierProductPrice,
-  QuotationItem,
-} from '../types';
-import { formatCurrency, getLatestPriceFromHistory } from '../utils/formatters';
-import { NAV_LINKS, PRODUCT_UNIT_OPTIONS, SUPPLIER_CATEGORY_OPTIONS } from '../constants';
-import { PlusIcon, TrashIcon, CheckCircleIcon, GiftIcon } from '../components/ui';
-import { v4 as uuidv4 } from 'uuid';
+import { useCoreData, useSupplyChainData } from '../context/DataContext';
+import type { Quotation, Product, QuotationItem } from '../types';
+import { formatCurrency } from '../utils/formatters';
+import { getLatestPriceFromHistory } from '../utils/supplierHelpers';
+import { NAV_LINKS, SUPPLIER_CATEGORY_OPTIONS } from '../constants';
+import { PlusIcon, TrashIcon, GiftIcon } from '../components/ui';
 
 const getInitialQuotation = (id: string): Quotation => ({
   id,
@@ -26,13 +19,13 @@ const getInitialQuotation = (id: string): Quotation => ({
   archived: false,
 });
 
-const AddProductModal: React.FC<{
+const AddProductModal: (props: {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (products: Product[]) => void;
   existingIds: Set<string>;
-}> = ({ isOpen, onClose, onAdd, existingIds }) => {
-  const { products } = useData();
+}) => React.ReactNode = ({ isOpen, onClose, onAdd, existingIds }) => {
+  const { products } = useSupplyChainData();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState({ search: '', category: 'Todos' });
 
@@ -129,15 +122,22 @@ const AddProductModal: React.FC<{
   );
 };
 
-const QuotationItemRow: React.FC<{
+const QuotationItemRow: (props: {
   item: QuotationItem;
   product: Product;
   onItemChange: (productId: string, field: 'quantity', value: number) => void;
   onRemove: (productId: string) => void;
   onSelectSupplier: (productId: string, supplierId: string) => void;
   selectedSupplierId?: string;
-}> = ({ item, product, onItemChange, onRemove, onSelectSupplier, selectedSupplierId }) => {
-  const { suppliers, supplierProductPrices } = useData();
+}) => React.ReactNode = ({
+  item,
+  product,
+  onItemChange,
+  onRemove,
+  onSelectSupplier,
+  selectedSupplierId,
+}) => {
+  const { suppliers, supplierProductPrices } = useSupplyChainData();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const availablePrices = useMemo(() => {
@@ -160,6 +160,14 @@ const QuotationItemRow: React.FC<{
       <div
         className="p-4 flex items-center gap-4 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            (() => setIsExpanded(!isExpanded))();
+          }
+        }}
+        role="button"
+        tabIndex={0}
       >
         <div className="flex-1">
           <p className="font-bold text-lg text-text-primary">{product.name}</p>
@@ -198,6 +206,14 @@ const QuotationItemRow: React.FC<{
                   e.stopPropagation();
                   onSelectSupplier(product.id, supplier.id);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectSupplier(product.id, supplier.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
                 className={`p-3 rounded-lg border-2 grid grid-cols-4 items-center gap-4 transition-colors ${selectedSupplierId === supplier.id ? 'bg-primary/10 border-primary' : 'bg-background hover:bg-border-color/30 border-transparent'}`}
               >
                 <div className="font-semibold">{supplier.name}</div>
@@ -225,11 +241,12 @@ const QuotationItemRow: React.FC<{
   );
 };
 
-const CotacaoDetalhesPage: React.FC = () => {
+const CotacaoDetalhesPage: () => React.ReactNode = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { quotations, setQuotations, projects, products, suppliers, supplierProductPrices } =
-    useData();
+  const { projects } = useCoreData();
+  const { quotations, setQuotations, products, suppliers, supplierProductPrices } =
+    useSupplyChainData();
   const [isProductModalOpen, setProductModalOpen] = useState(false);
 
   const [quotation, setQuotation] = useState<Quotation | null>(() => {
@@ -279,7 +296,7 @@ const CotacaoDetalhesPage: React.FC = () => {
     navigate('/cotacoes');
   };
 
-  const handleUpdate = (field: keyof Quotation, value: any) =>
+  const handleUpdate = (field: keyof Quotation, value: Quotation[keyof Quotation]) =>
     setQuotation((q) => (q ? { ...q, [field]: value } : null));
 
   const handleAddProducts = (newProducts: Product[]) => {
@@ -330,10 +347,14 @@ const CotacaoDetalhesPage: React.FC = () => {
       <div className="bg-surface rounded-xl shadow-soft p-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label
+              htmlFor="field-nome-da-cotacao"
+              className="block text-sm font-medium text-text-secondary mb-1"
+            >
               Nome da Cotação
             </label>
             <input
+              id="field-nome-da-cotacao"
               type="text"
               value={quotation.name}
               onChange={(e) => handleUpdate('name', e.target.value)}
@@ -342,10 +363,14 @@ const CotacaoDetalhesPage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label
+              htmlFor="field-vincular-ao-projeto"
+              className="block text-sm font-medium text-text-secondary mb-1"
+            >
               Vincular ao Projeto
             </label>
             <select
+              id="field-vincular-ao-projeto"
               value={quotation.projectId || ''}
               onChange={(e) => handleUpdate('projectId', e.target.value || undefined)}
               className="w-full bg-background p-2 rounded-md border border-border-color"

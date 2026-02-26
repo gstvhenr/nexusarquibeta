@@ -1,6 +1,10 @@
 # Canonical Service Example: clientService
 
-Objetivo: fornecer um modelo para services públicos com contrato claro, função pura e tratamento explícito de erro.
+Objetivo: manter um resumo rápido para services públicos com contrato claro, função
+pura e tratamento explícito de erro.
+
+> Status: referência simplificada (deprecada para implementação completa).
+> Fonte primária atual: `docs/examples/service-with-tests.md`.
 
 ## Arquivo de referência
 
@@ -28,10 +32,15 @@ export const saveClientAndUpdateState = (
   originalClient: Client | null,
   allClients: Client[],
 ): { updatedClients: Client[]; error?: 'duplicate_cpf_cnpj' | 'invalid_cpf_cnpj' } => {
-  // ...
+  // Exemplo resumido: ver implementação completa e testes GWT em
+  // docs/examples/service-with-tests.md.
+  return { updatedClients: allClients };
 };
 ```
 
 ## Regra de manutenção
 
-Mudou contrato de input/output: atualizar JSDoc + testes + `docs/data-contracts/types-contracts.md` + fixtures canônicas.
+Mudou contrato de input/output: atualizar JSDoc + testes +
+`docs/data-contracts/types-contracts.md` + fixtures canônicas.
+Mudou regra de implementação de service: atualizar primeiro
+`docs/examples/service-with-tests.md` e depois este resumo.

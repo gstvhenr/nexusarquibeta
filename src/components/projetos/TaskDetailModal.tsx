@@ -11,7 +11,7 @@ interface TaskDetailModalProps {
   onSave: (updatedTask: ProjectTask) => void;
 }
 
-export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
+export const TaskDetailModal: (props: TaskDetailModalProps) => React.ReactNode = ({
   isOpen,
   onClose,
   task,
@@ -78,10 +78,14 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         {/* Header Inputs */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="col-span-1 md:col-span-2">
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label
+              htmlFor="field-nome-da-tarefa"
+              className="block text-sm font-medium text-text-secondary mb-1"
+            >
               Nome da Tarefa
             </label>
             <input
+              id="field-nome-da-tarefa"
               type="text"
               value={editedTask.name}
               onChange={(e) => setEditedTask({ ...editedTask, name: e.target.value })}
@@ -90,8 +94,14 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Prazo</label>
+            <label
+              htmlFor="field-prazo"
+              className="block text-sm font-medium text-text-secondary mb-1"
+            >
+              Prazo
+            </label>
             <input
+              id="field-prazo"
               type="date"
               value={editedTask.dueDate || ''}
               onChange={(e) => setEditedTask({ ...editedTask, dueDate: e.target.value })}
@@ -100,10 +110,14 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label
+              htmlFor="field-horas-estimadas"
+              className="block text-sm font-medium text-text-secondary mb-1"
+            >
               Horas Estimadas
             </label>
             <input
+              id="field-horas-estimadas"
               type="number"
               value={editedTask.hours}
               onChange={(e) =>
@@ -114,8 +128,14 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Prioridade</label>
+            <label
+              htmlFor="field-prioridade"
+              className="block text-sm font-medium text-text-secondary mb-1"
+            >
+              Prioridade
+            </label>
             <select
+              id="field-prioridade"
               value={editedTask.priority || 'Média'}
               onChange={(e) =>
                 setEditedTask({ ...editedTask, priority: e.target.value as TaskPriority })
@@ -131,10 +151,14 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label
+              htmlFor="field-responsavel"
+              className="block text-sm font-medium text-text-secondary mb-1"
+            >
               Responsável
             </label>
             <input
+              id="field-responsavel"
               type="text"
               placeholder="Nome do responsável"
               value={editedTask.assignee || ''}
@@ -147,10 +171,14 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
+          <label
+            htmlFor="field-descricao-detalhada"
+            className="block text-sm font-medium text-text-secondary mb-1"
+          >
             Descrição Detalhada
           </label>
           <textarea
+            id="field-descricao-detalhada"
             rows={4}
             value={editedTask.description || ''}
             onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
@@ -162,10 +190,16 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
         {/* Subtasks */}
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-2">Subtarefas</label>
+          <label
+            htmlFor="field-subtarefas"
+            className="block text-sm font-medium text-text-secondary mb-2"
+          >
+            Subtarefas
+          </label>
 
           <div className="flex gap-2 mb-3">
             <input
+              id="field-subtarefas"
               type="text"
               value={newSubtaskTitle}
               onChange={(e) => setNewSubtaskTitle(e.target.value)}

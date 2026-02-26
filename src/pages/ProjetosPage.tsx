@@ -1,16 +1,17 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { PageHeader } from '../components/layout';
 import { Modal } from '../components/ui';
-import type { Project, ProjectStatus } from '../types';
+import type { Project, ProjectStatus, ProjectSection, ProjectTask, Installment } from '../types';
 import { projectStatuses } from '../types';
 import { NAV_LINKS } from '../constants';
-import { useData } from '../context/DataContext';
+import { useCoreData, useSystemData } from '../context/DataContext';
 import { agendaService } from '../services/agendaService';
 import { ProjectStatusSummaryPanel, ProjectListItem } from '../components/projetos';
 import { ArchiveIcon, UnarchiveIcon } from '../components/ui';
 
-const ProjetosPage: React.FC = () => {
-  const { projects, setProjects, setAgendaEvents } = useData();
+const ProjetosPage: () => React.ReactNode = () => {
+  const { projects, setProjects } = useCoreData();
+  const { setAgendaEvents } = useSystemData();
   const [showArchived, setShowArchived] = useState(false);
   const [isFinalizeConfirmOpen, setFinalizeConfirmOpen] = useState(false);
   const [projectToFinalize, setProjectToFinalize] = useState<Project | null>(null);
@@ -72,8 +73,8 @@ const ProjetosPage: React.FC = () => {
     finalizedProject.finalizedAt = new Date().toISOString();
     finalizedProject.inactivatedAt = null;
 
-    finalizedProject.sections.forEach((section: any) => {
-      section.tasks.forEach((task: any) => {
+    finalizedProject.sections.forEach((section: ProjectSection) => {
+      section.tasks.forEach((task: ProjectTask) => {
         task.completed = true;
       });
     });
@@ -87,7 +88,7 @@ const ProjetosPage: React.FC = () => {
         finalizedProject.financials.paymentType === 'parcelado' &&
         finalizedProject.financials.installments
       ) {
-        finalizedProject.financials.installments.forEach((inst: any) => {
+        finalizedProject.financials.installments.forEach((inst: Installment) => {
           if (!inst.paid) {
             inst.paid = true;
             inst.paymentDate = now;

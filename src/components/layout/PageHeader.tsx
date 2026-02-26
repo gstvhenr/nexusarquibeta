@@ -2,14 +2,14 @@ import React from 'react';
 import { PAGE_HEADER_CONTENT_GAP, type PageHeaderContentGap } from '../../constants.layout';
 
 interface PageHeaderProps {
-  title: string;
+  title: string | React.ReactNode;
   subtitle?: string;
   icon?: React.ReactElement<{ className?: string }>;
   children?: React.ReactNode;
   contentGap?: PageHeaderContentGap;
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({
+const PageHeader: (props: PageHeaderProps) => React.ReactNode = ({
   title,
   subtitle,
   icon,

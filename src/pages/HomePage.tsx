@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useData } from '../context/DataContext';
+import { useCoreData, useMarketingData, useSystemData } from '../context/DataContext';
 import {
   ProposalIcon,
   BullhornIcon,
@@ -18,20 +18,28 @@ import {
   getFinancialOverview,
   getPendingMarketingTasks,
 } from '../services/dashboardService';
-import { formatDateDayMonth, formatCurrency } from '../utils/formatters';
-import { PageHeader } from '../components/layout';
-import { agendaService } from '../services/agendaService';
+import { formatCurrency } from '../utils/formatters';
 
-const KPIBigCard: React.FC<{
+import { useUnifiedEvents } from '../hooks/useUnifiedEvents';
+
+const KPIBigCard: (props: {
   label: string;
   value: string | number;
   icon: React.ReactNode;
   color: string;
   subtext?: string;
   onClick: () => void;
-}> = ({ label, value, icon, color, subtext, onClick }) => (
+}) => React.ReactNode = ({ label, value, icon, color, subtext, onClick }) => (
   <div
     onClick={onClick}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick();
+      }
+    }}
+    role="button"
+    tabIndex={0}
     className="bg-surface rounded-2xl shadow-soft p-5 border border-border-color/50 flex flex-col justify-between h-32 cursor-pointer hover:shadow-lifted hover:-translate-y-1 transition-all group relative overflow-hidden"
   >
     <div
@@ -48,20 +56,18 @@ const KPIBigCard: React.FC<{
   </div>
 );
 
-const HomePage: React.FC = () => {
+const HomePage: () => React.ReactNode = () => {
   const navigate = useNavigate();
-  const allData = useData();
-  const {
-    projects,
-    proposals,
-    marketingActivities,
-    agendaEvents,
-    dismissedFocusItems,
-    setDismissedFocusItems,
-  } = allData;
+  const coreData = useCoreData();
+  const marketingData = useMarketingData();
+  const systemData = useSystemData();
+
+  const { projects, proposals } = coreData;
+  const { marketingActivities } = marketingData;
+  const { dismissedFocusItems, setDismissedFocusItems } = systemData;
 
   // Get unified events including Marketing, Finance, etc. for the dashboard agenda
-  const unifiedEvents = useMemo(() => agendaService.getUnifiedEvents(allData), [allData]);
+  const unifiedEvents = useUnifiedEvents();
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -114,6 +120,14 @@ const HomePage: React.FC = () => {
       {activeFocusItem ? (
         <div
           onClick={() => navigate(activeFocusItem.path)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate(activeFocusItem.path);
+            }
+          }}
+          role="button"
+          tabIndex={0}
           className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-l-4 border-error p-6 rounded-r-xl shadow-sm flex items-start gap-5 cursor-pointer transition-all hover:shadow-md group relative overflow-hidden"
         >
           <div className="p-3 bg-white dark:bg-black/30 rounded-full text-error shadow-sm z-10 group-hover:scale-110 transition-transform">
@@ -219,6 +233,14 @@ const HomePage: React.FC = () => {
                 <div
                   key={p.id}
                   onClick={() => navigate(`/projetos/${p.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/projetos/${p.id}`);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   className="bg-surface p-5 rounded-xl shadow-soft border border-border-color hover:border-primary/30 transition-all cursor-pointer group"
                 >
                   <div className="flex justify-between items-start mb-3">

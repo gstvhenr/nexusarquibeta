@@ -62,7 +62,11 @@
   }
 
   .progress-fill-primary {
-    --progress-fill: linear-gradient(to right, hsl(var(--color-primary) / 0.8), hsl(var(--color-primary)));
+    --progress-fill: linear-gradient(
+      to right,
+      hsl(var(--color-primary) / 0.8),
+      hsl(var(--color-primary))
+    );
   }
 
   .progress-fill-primary-accent {
@@ -70,7 +74,11 @@
   }
 
   .progress-fill-primary-success {
-    --progress-fill: linear-gradient(to right, hsl(var(--color-primary)), hsl(var(--color-success)));
+    --progress-fill: linear-gradient(
+      to right,
+      hsl(var(--color-primary)),
+      hsl(var(--color-success))
+    );
   }
 
   .progress-fill-orange-emerald {
@@ -82,11 +90,19 @@
   }
 
   .progress-fill-primary-50 {
-    --progress-fill: linear-gradient(to right, hsl(var(--color-primary) / 0.5), hsl(var(--color-primary)));
+    --progress-fill: linear-gradient(
+      to right,
+      hsl(var(--color-primary) / 0.5),
+      hsl(var(--color-primary))
+    );
   }
 
   .progress-fill-secondary-50 {
-    --progress-fill: linear-gradient(to right, hsl(var(--color-secondary) / 0.5), hsl(var(--color-secondary)));
+    --progress-fill: linear-gradient(
+      to right,
+      hsl(var(--color-secondary) / 0.5),
+      hsl(var(--color-secondary))
+    );
   }
 
   .progress-fill-success {

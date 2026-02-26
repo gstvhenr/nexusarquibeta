@@ -36,7 +36,13 @@ const variantStyles = {
   },
 };
 
-export const KPICard: React.FC<KPICardProps> = ({ title, value, icon, change, variant }) => {
+export const KPICard: (props: KPICardProps) => React.ReactNode = ({
+  title,
+  value,
+  icon,
+  change,
+  variant,
+}) => {
   const s = variantStyles[variant];
   const changeIsPositive = change !== undefined && change >= 0;
 

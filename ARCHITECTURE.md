@@ -12,7 +12,7 @@
 ## Regra de boundary
 
 - Regra de negócio não deve viver em `pages/components`.
-- Mudanças de boundary devem ser registradas em `DECISIONS.md` e/ou `docs/adr/*`.
+- Mudanças de boundary devem ser registradas em `DECISIONS-active.md` e/ou `docs/adr/*`.
 
 ## Referências detalhadas
 

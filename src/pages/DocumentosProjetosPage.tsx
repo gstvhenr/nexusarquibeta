@@ -1,7 +1,11 @@
 import React from 'react';
 import DocumentosPage from './DocumentosPage';
 
-const DocumentosProjetosPage: React.FC = () => {
+/**
+ * Route wrapper for `/documentos/projetos`.
+ * Keeps a stable route entry while the real implementation lives in `DocumentosPage`.
+ */
+const DocumentosProjetosPage: () => React.ReactNode = () => {
   return <DocumentosPage />;
 };
 
