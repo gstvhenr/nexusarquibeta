@@ -389,3 +389,21 @@ export interface CashBoxCredit {
   confirmed: boolean;
   createdAt: string; // ISO datetime string
 }
+
+// ── Unified Entry (aggregated view) ─────────────────────────────────
+
+/** A unified cash-box entry combining expenses and credits for display. */
+export type UnifiedEntry = {
+  id: string;
+  type: 'debit' | 'credit';
+  date: string;
+  origin: CashBoxExpense['origin'];
+  description: string;
+  value: number;
+  confirmed: boolean;
+  recurrence?: CashBoxExpense['recurrence'];
+  installmentNumber?: number | null;
+  installmentTotal?: number | null;
+  paymentDate?: string | null;
+  raw: CashBoxExpense | CashBoxCredit;
+};

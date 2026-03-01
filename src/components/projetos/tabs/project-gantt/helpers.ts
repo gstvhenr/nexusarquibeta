@@ -8,17 +8,17 @@ import type {
   ViewMode,
 } from './types';
 
-export const DAY_MS = 86_400_000;
+const DAY_MS = 86_400_000;
 export const ROW_H = 42;
 export const SECTION_ROW_H = 38;
 export const NAME_COL_W = 240;
-export const MONTH_COL_PX = 130;
+const MONTH_COL_PX = 130;
 
-export function startOfDay(date: Date) {
+function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-export function addDays(date: Date, days: number) {
+function addDays(date: Date, days: number) {
   const result = new Date(date);
   result.setDate(result.getDate() + days);
   return result;
@@ -50,7 +50,7 @@ export function dateToPixel(date: Date, columns: TimeColumn[], colWidth: number)
   return columns.length * colWidth;
 }
 
-export function fmtDate(date: Date) {
+function fmtDate(date: Date) {
   return date.toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',

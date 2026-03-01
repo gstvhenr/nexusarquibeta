@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import type { BudgetSection, BudgetItem, BillingMethod } from '../../types';
 import { formatCurrency } from '../../utils/formatters';
-import { ChevronDownIcon, TrashIcon } from '../ui';
+import { ChevronDownIcon } from '../ui';
+import { BudgetItemRow } from './BudgetItemRow';
 
 type BudgetSectionProps = {
   section: BudgetSection;
@@ -126,7 +127,19 @@ export const BudgetSectionComponent = React.memo<BudgetSectionProps>(
                 className="text-gray-400 hover:text-error p-2 rounded-full transition-colors self-center"
                 aria-label="Remover seção"
               >
-                <TrashIcon />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
               </button>
             </div>
           </div>
@@ -217,92 +230,19 @@ export const BudgetSectionComponent = React.memo<BudgetSectionProps>(
                   </tr>
                 </thead>
                 <tbody>
-                  {section.items.map((item, index) => {
-                    const quantityForTotal =
-                      section.unit === 'h' ? item.estimatedHours || 0 : item.quantity;
-                    const itemTotal = useProfitPercentage
-                      ? quantityForTotal * (section.billing.value * (1 + item.unitPrice / 100))
-                      : quantityForTotal * item.unitPrice;
-                    const rowClass = item.included
-                      ? index % 2 === 0
-                        ? 'bg-surface/50'
-                        : 'bg-background/30'
-                      : 'bg-background text-text-secondary opacity-75';
-
-                    return (
-                      <tr
-                        key={item.id}
-                        className={`${rowClass} border-b border-border-color last:border-b-0 hover:bg-accent/10 transition-colors`}
-                      >
-                        <td className="p-4 text-center">
-                          <input
-                            type="checkbox"
-                            checked={item.included}
-                            onChange={handleItemFieldChange(item.id, 'included')}
-                            className="w-5 h-5 rounded focus:ring-2 cursor-pointer transition-colors accent-primary/70"
-                            aria-label={`Incluir ${item.description}`}
-                          />
-                        </td>
-                        <td className="px-6 py-4">
-                          <input
-                            type="text"
-                            value={item.description}
-                            onChange={handleItemFieldChange(item.id, 'description')}
-                            className="w-full bg-transparent p-1 rounded border border-transparent hover:border-border-color/50 focus:border-accent focus:ring-0 transition font-medium"
-                            disabled={!item.included}
-                            aria-label="Descrição do item"
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <input
-                            type="number"
-                            min="0"
-                            value={item.quantity}
-                            onChange={handleItemFieldChange(item.id, 'quantity')}
-                            className="w-20 bg-transparent text-right p-1 rounded border border-transparent hover:border-border-color/50 focus:border-accent focus:ring-0 transition"
-                            disabled={!item.included}
-                            aria-label={`Quantidade para ${item.description}`}
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={item.unitPrice.toFixed(2)}
-                            onChange={handleItemFieldChange(item.id, 'unitPrice')}
-                            className="w-24 bg-transparent text-right p-1 rounded border border-transparent hover:border-border-color/50 focus:border-accent focus:ring-0 transition"
-                            disabled={!item.included}
-                            aria-label={`Preço unitário para ${item.description}`}
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <input
-                            type="number"
-                            min="0"
-                            value={item.estimatedHours || ''}
-                            placeholder="0"
-                            onChange={handleItemFieldChange(item.id, 'estimatedHours')}
-                            className="w-20 bg-transparent text-right p-1 rounded border border-transparent hover:border-border-color/50 focus:border-accent focus:ring-0 transition"
-                            disabled={!item.included}
-                            aria-label={`Horas estimadas para ${item.description}`}
-                          />
-                        </td>
-                        <td className="px-6 py-4 font-semibold text-right">
-                          {formatCurrency(itemTotal)}
-                        </td>
-                        <td className="p-4 text-center">
-                          <button
-                            onClick={() => onRemoveItem(section.id, item.id)}
-                            className="text-gray-400 hover:text-error p-1 rounded-full opacity-50 hover:opacity-100 transition-opacity"
-                            aria-label={`Remover ${item.description}`}
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {section.items.map((item, index) => (
+                    <BudgetItemRow
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      sectionId={section.id}
+                      sectionUnit={section.unit}
+                      useProfitPercentage={useProfitPercentage}
+                      billingValue={section.billing.value}
+                      onFieldChange={handleItemFieldChange}
+                      onRemoveItem={onRemoveItem}
+                    />
+                  ))}
                 </tbody>
               </table>
               <div className="p-3 border-t border-border-color">

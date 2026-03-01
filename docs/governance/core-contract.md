@@ -30,6 +30,7 @@ Definir governança ativa mínima para operação agent-first com baixo custo de
 - `.agent/lessons-learned.md`
 - `.agent/checklists/self-review-checklist.md`
 - `.agent/checklists/domain-refactor-checklist.md`
+- `.agent/memory/project-inventory.md`
 - `.agent/workflows/default-task-flow.md`
 - `.agent/workflows/verify-first.md`
 
@@ -44,6 +45,7 @@ Definir governança ativa mínima para operação agent-first com baixo custo de
 - O arquivo legado de decisões é proibido fora de histórico arquivado.
 - Lista de comandos oficiais não deve ser duplicada fora de `AGENTS.md`.
 - Mudança estrutural exige atualização de `DECISIONS-active.md` e/ou ADR.
+- Checklist canônico de self-review é único: `.agent/checklists/self-review-checklist.md`.
 
 ## Ownership e atualização
 

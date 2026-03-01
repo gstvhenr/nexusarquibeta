@@ -20,6 +20,9 @@ export interface UnifiedEventsInput {
   manualIncomes: ManualIncome[];
 }
 
+/** Pre-computed date-key → events lookup. Built once per unifiedEvents change. */
+export type EventIndex = Map<string, AgendaEvent[]>;
+
 /**
  * Input -> Output:
  * - input: dados da aplicação e listas de eventos/projetos/financeiro.
@@ -260,6 +263,82 @@ export const agendaService = {
     return eventsForDay;
   },
 
+  /**
+   * Builds a date-keyed index (YYYY-MM-DD → AgendaEvent[]) in a single O(E) pass.
+   * Recurring events are expanded into all matching dates within [rangeStart, rangeEnd].
+   * @param allEvents - unified event list
+   * @param rangeStart - visible range start (inclusive)
+   * @param rangeEnd - visible range end (inclusive)
+   * @returns EventIndex — Map<string, AgendaEvent[]>
+   */
+  buildEventIndex(allEvents: AgendaEvent[], rangeStart: Date, rangeEnd: Date): EventIndex {
+    const index: EventIndex = new Map();
+
+    const toKey = (d: Date): string => {
+      const y = d.getFullYear();
+      const m = (d.getMonth() + 1).toString().padStart(2, '0');
+      const dd = d.getDate().toString().padStart(2, '0');
+      return `${y}-${m}-${dd}`;
+    };
+
+    const addToIndex = (key: string, event: AgendaEvent): void => {
+      const bucket = index.get(key);
+      if (bucket) {
+        bucket.push(event);
+      } else {
+        index.set(key, [event]);
+      }
+    };
+
+    for (const event of allEvents) {
+      if (!event.date) continue;
+
+      const dateStr = event.date.includes('T') ? event.date.split('T')[0] : event.date;
+      const eventStartDate = parseDateString(dateStr);
+      if (!eventStartDate) continue;
+
+      if (event.recurrence === 'none' || !event.recurrence) {
+        addToIndex(dateStr, event);
+        continue;
+      }
+
+      // Expand recurring events into visible range
+      const cursor = new Date(rangeStart);
+      cursor.setHours(0, 0, 0, 0);
+      const endTime = rangeEnd.getTime();
+
+      while (cursor.getTime() <= endTime) {
+        // Event start must not be after cursor
+        if (cursor >= eventStartDate) {
+          if (event.recurrence === 'weekly' && cursor.getDay() === eventStartDate.getDay()) {
+            addToIndex(toKey(cursor), event);
+          } else if (
+            event.recurrence === 'monthly' &&
+            cursor.getDate() === eventStartDate.getDate()
+          ) {
+            addToIndex(toKey(cursor), event);
+          }
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    return index;
+  },
+
+  /**
+   * O(1) lookup from a pre-built EventIndex.
+   * @param targetDate - the date to look up
+   * @param index - pre-built EventIndex from buildEventIndex
+   * @returns AgendaEvent[] (never undefined)
+   */
+  getEventsFromIndex(targetDate: Date, index: EventIndex): AgendaEvent[] {
+    const y = targetDate.getFullYear();
+    const m = (targetDate.getMonth() + 1).toString().padStart(2, '0');
+    const d = targetDate.getDate().toString().padStart(2, '0');
+    return index.get(`${y}-${m}-${d}`) ?? [];
+  },
+
   isEventInPast(event: AgendaEvent): boolean {
     const now = new Date();
     const dateStr = event.date.includes('T') ? event.date.split('T')[0] : event.date;
@@ -282,5 +361,52 @@ export const agendaService = {
         e.projectId !== projectId ||
         (e.projectId === projectId && !e.isDeadlineEvent && !e.isFinancialEvent),
     );
+  },
+
+  /**
+   * Upserts an event into the list (pure — returns a new array).
+   * If an event with the same id exists, replaces it; otherwise appends.
+   * @param events - current events list
+   * @param event - event to save
+   * @returns AgendaEvent[]
+   * @example agendaService.saveEvent(events, newEvent) → [...]
+   */
+  saveEvent(events: AgendaEvent[], event: AgendaEvent): AgendaEvent[] {
+    const exists = events.some((e) => e.id === event.id);
+    if (exists) return events.map((e) => (e.id === event.id ? event : e));
+    return [...events, event];
+  },
+
+  /**
+   * Removes an event by ID (pure — returns a new array).
+   * @param events - current events list
+   * @param eventId - ID to remove
+   * @returns AgendaEvent[]
+   * @example agendaService.deleteEvent(events, 'evt_1') → [...]
+   */
+  deleteEvent(events: AgendaEvent[], eventId: string): AgendaEvent[] {
+    return events.filter((e) => e.id !== eventId);
+  },
+
+  /**
+   * Toggles the completed flag on a specific event (pure — returns a new array).
+   * @param events - current events list
+   * @param eventId - ID of the event to toggle
+   * @returns AgendaEvent[]
+   * @example agendaService.toggleEventCompleted(events, 'evt_1') → [...]
+   */
+  toggleEventCompleted(events: AgendaEvent[], eventId: string): AgendaEvent[] {
+    return events.map((e) => (e.id === eventId ? { ...e, completed: !e.completed } : e));
+  },
+
+  /**
+   * Updates an event by ID (pure — returns a new array). Alias for saveEvent.
+   * @param events - current events list
+   * @param updatedEvent - event with updated fields
+   * @returns AgendaEvent[]
+   * @example agendaService.updateEvent(events, updatedEvent) → [...]
+   */
+  updateEvent(events: AgendaEvent[], updatedEvent: AgendaEvent): AgendaEvent[] {
+    return this.saveEvent(events, updatedEvent);
   },
 };

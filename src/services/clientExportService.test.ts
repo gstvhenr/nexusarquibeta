@@ -5,6 +5,29 @@ import { exportClients } from './clientExportService';
 
 const createObjectUrlMock = vi.fn(() => 'blob:mock-url');
 const revokeObjectUrlMock = vi.fn();
+const { pdfSaveMock } = vi.hoisted(() => ({
+  pdfSaveMock: vi.fn(),
+}));
+
+vi.mock('jspdf', () => {
+  class JsPdfMock {
+    addPage = vi.fn();
+    setFontSize = vi.fn();
+    setFont = vi.fn();
+    splitTextToSize = (text: string) => [text];
+    text = vi.fn();
+    setFillColor = vi.fn();
+    rect = vi.fn();
+    setTextColor = vi.fn();
+    setDrawColor = vi.fn();
+    line = vi.fn();
+    save = pdfSaveMock;
+  }
+
+  return {
+    default: JsPdfMock,
+  };
+});
 
 const buildClient = (id: string, type: 'PF' | 'PJ'): Client =>
   ({
@@ -105,6 +128,7 @@ describe('clientExportService.exportClients', () => {
   beforeEach(() => {
     createObjectUrlMock.mockClear();
     revokeObjectUrlMock.mockClear();
+    pdfSaveMock.mockClear();
     vi.stubGlobal('alert', vi.fn());
   });
 

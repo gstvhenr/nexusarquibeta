@@ -1,5 +1,7 @@
 # Self-review Checklist (Agent)
 
+## Core
+
 - [ ] Self-review automático executado (comando oficial em `AGENTS.md`).
 - [ ] Scope stayed inside planned files.
 - [ ] No big-bang refactor.
@@ -17,3 +19,12 @@
 - [ ] `NEXT.md` updated.
 - [ ] Structural decisions recorded in `DECISIONS-active.md`/ADR.
 - [ ] Evidence attached (commands executed + objective results).
+
+## Anti-Poluição (Binário)
+
+- [ ] Inventory do projeto existe em `.agent/memory/project-inventory.md`.
+- [ ] Gate de poluição sem regressão foi executado e aprovado.
+- [ ] Ratchet de poluição está atualizado.
+- [ ] Nenhum `console.log` novo foi adicionado em `src/**`.
+- [ ] Nenhum marcador `TODO`/`FIXME`/`HACK`/`XXX` novo foi adicionado em `src/**`.
+- [ ] Nenhum export novo ficou sem consumidor fora do baseline de poluição.

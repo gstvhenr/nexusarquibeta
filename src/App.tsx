@@ -4,45 +4,59 @@ import { Header, Sidebar } from './components/layout';
 import LoadingFallback from './components/ui/LoadingFallback';
 
 // Critical-path page: loaded eagerly for instant first paint.
-import HomePage from './pages/HomePage';
+import HomePage from './pages/home/HomePage';
 
 // All other pages: lazy-loaded on navigation for smaller initial bundle.
-const AgendaPage = lazy(() => import('./pages/AgendaPage'));
-const BlocoDeNotasPage = lazy(() => import('./pages/BlocoDeNotasPage'));
-const CatalogoPage = lazy(() => import('./pages/CatalogoPage'));
-const ClienteDetalhesPage = lazy(() => import('./pages/ClienteDetalhesPage'));
-const ClientesPage = lazy(() => import('./pages/ClientesPage'));
-const ComissoesPage = lazy(() => import('./pages/ComissoesPage'));
-const ConfiguracoesPage = lazy(() => import('./pages/ConfiguracoesPage'));
-const CotacaoDetalhesPage = lazy(() => import('./pages/CotacaoDetalhesPage'));
-const CotacoesPage = lazy(() => import('./pages/CotacoesPage'));
-const DocumentosPessoalPage = lazy(() => import('./pages/DocumentosPessoalPage'));
-const DocumentosProjetosPage = lazy(() => import('./pages/DocumentosProjetosPage'));
-const FinanceiroDebitosPage = lazy(() => import('./pages/FinanceiroDebitosPage'));
-const FinanceiroGestaoCaixaPage = lazy(() => import('./pages/FinanceiroGestaoCaixaPage'));
-const FinanceiroPrevisaoCaixaPage = lazy(() => import('./pages/FinanceiroPrevisaoCaixaPage'));
-const FinanceiroRecebiveisPage = lazy(() => import('./pages/FinanceiroRecebiveisPage'));
-const FinanceiroVisaoGeralPage = lazy(() => import('./pages/FinanceiroVisaoGeralPage'));
-const FornecedoresPage = lazy(() => import('./pages/FornecedoresPage'));
-const GestaoMarketingPainelPage = lazy(() => import('./pages/GestaoMarketingPainelPage'));
-const GestaoMarketingConteudosPage = lazy(() => import('./pages/GestaoMarketingConteudosPage'));
-const GestaoMarketingBancoIdeiasPage = lazy(() => import('./pages/GestaoMarketingBancoIdeiasPage'));
-const InstagramDetailPage = lazy(() => import('./pages/InstagramDetailPage'));
-const LembretesPage = lazy(() => import('./pages/LembretesPage'));
-const OrcamentosPage = lazy(() => import('./pages/OrcamentosPage'));
-const PrestadoresFreelancersPage = lazy(() => import('./pages/PrestadoresFreelancersPage'));
-const ProjetoDetalhesPage = lazy(() => import('./pages/ProjetoDetalhesPage'));
-const ProjetosPage = lazy(() => import('./pages/ProjetosPage'));
-const PropostaDetalhesPage = lazy(() => import('./pages/PropostaDetalhesPage'));
-const PropostasPage = lazy(() => import('./pages/PropostasPage'));
-const ProspectsPage = lazy(() => import('./pages/ProspectsPage'));
-const RedesSociaisPage = lazy(() => import('./pages/RedesSociaisPage'));
-const RelatoriosLayout = lazy(() => import('./pages/RelatoriosLayout'));
-const RelatorioFinanceiroPage = lazy(() => import('./pages/RelatorioFinanceiroPage'));
-const RelatorioProjetosPage = lazy(() => import('./pages/RelatorioProjetosPage'));
-const RelatorioAquisicaoPage = lazy(() => import('./pages/RelatorioAquisicaoPage'));
-const ServicosContratadosPage = lazy(() => import('./pages/ServicosContratadosPage'));
-const TarefasPage = lazy(() => import('./pages/TarefasPage'));
+const AgendaPage = lazy(() => import('./pages/agenda/AgendaPage'));
+const BlocoDeNotasPage = lazy(() => import('./pages/bloco-de-notas/BlocoDeNotasPage'));
+const CatalogoPage = lazy(() => import('./pages/catalogo/CatalogoPage'));
+const ClienteDetalhesPage = lazy(() => import('./pages/cliente-detalhes/ClienteDetalhesPage'));
+const ClientesPage = lazy(() => import('./pages/clientes/ClientesPage'));
+const ComissoesPage = lazy(() => import('./pages/comissoes/ComissoesPage'));
+const ConfiguracoesPage = lazy(() => import('./pages/configuracoes/ConfiguracoesPage'));
+const CotacaoDetalhesPage = lazy(() => import('./pages/cotacoes/CotacaoDetalhesPage'));
+const CotacoesPage = lazy(() => import('./pages/cotacoes/CotacoesPage'));
+const DocumentosPessoalPage = lazy(() => import('./pages/documentos/DocumentosPessoalPage'));
+const DocumentosProjetosPage = lazy(() => import('./pages/documentos/DocumentosProjetosPage'));
+const FinanceiroDebitosPage = lazy(() => import('./pages/financeiro/FinanceiroDebitosPage'));
+const FinanceiroGestaoCaixaPage = lazy(
+  () => import('./pages/financeiro-gestao-caixa/FinanceiroGestaoCaixaPage'),
+);
+const FinanceiroPrevisaoCaixaPage = lazy(
+  () => import('./pages/financeiro/FinanceiroPrevisaoCaixaPage'),
+);
+const FinanceiroRecebiveisPage = lazy(() => import('./pages/financeiro/FinanceiroRecebiveisPage'));
+const FinanceiroVisaoGeralPage = lazy(() => import('./pages/financeiro/FinanceiroVisaoGeralPage'));
+const FornecedoresPage = lazy(() => import('./pages/fornecedores/FornecedoresPage'));
+const GestaoMarketingPainelPage = lazy(
+  () => import('./pages/gestao-marketing/GestaoMarketingPainelPage'),
+);
+const GestaoMarketingConteudosPage = lazy(
+  () => import('./pages/gestao-marketing/GestaoMarketingConteudosPage'),
+);
+const GestaoMarketingBancoIdeiasPage = lazy(
+  () => import('./pages/gestao-marketing/GestaoMarketingBancoIdeiasPage'),
+);
+const InstagramDetailPage = lazy(() => import('./pages/redes-sociais/InstagramDetailPage'));
+const LembretesPage = lazy(() => import('./pages/lembretes/LembretesPage'));
+const OrcamentosPage = lazy(() => import('./pages/orcamentos/OrcamentosPage'));
+const PrestadoresFreelancersPage = lazy(
+  () => import('./pages/prestadores-freelancers/PrestadoresFreelancersPage'),
+);
+const ProjetoDetalhesPage = lazy(() => import('./pages/projeto-detalhes/ProjetoDetalhesPage'));
+const ProjetosPage = lazy(() => import('./pages/projetos/ProjetosPage'));
+const PropostaDetalhesPage = lazy(() => import('./pages/propostas/PropostaDetalhesPage'));
+const PropostasPage = lazy(() => import('./pages/propostas/PropostasPage'));
+const ProspectsPage = lazy(() => import('./pages/prospects/ProspectsPage'));
+const RedesSociaisPage = lazy(() => import('./pages/redes-sociais/RedesSociaisPage'));
+const RelatoriosLayout = lazy(() => import('./pages/relatorios/RelatoriosLayout'));
+const RelatorioFinanceiroPage = lazy(() => import('./pages/relatorios/RelatorioFinanceiroPage'));
+const RelatorioProjetosPage = lazy(() => import('./pages/relatorios/RelatorioProjetosPage'));
+const RelatorioAquisicaoPage = lazy(() => import('./pages/relatorios/RelatorioAquisicaoPage'));
+const ServicosContratadosPage = lazy(
+  () => import('./pages/servicos-contratados/ServicosContratadosPage'),
+);
+const TarefasPage = lazy(() => import('./pages/tarefas/TarefasPage'));
 
 const App: () => React.ReactNode = () => {
   const location = useLocation();

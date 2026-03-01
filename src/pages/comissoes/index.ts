@@ -1,3 +1,4 @@
+export { default as ComissoesPage } from './ComissoesPage';
 export * from './CommissionFormModal';
 export * from './ConfirmPaymentModal';
 export * from './CommissionsSummaryCards';

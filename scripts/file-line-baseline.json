@@ -1,14 +1,3 @@
 {
-  "src/components/agenda/EventFormModal.tsx": 468,
-  "src/components/agenda/SubtaskDetailModal.tsx": 382,
-  "src/components/clientes/ClientFormModal.tsx": 381,
-  "src/components/finance/CashBoxExpenseFormModal.tsx": 329,
-  "src/components/marketing/ActivityFormModal.tsx": 350,
-  "src/components/orcamentos/BudgetSectionComponent.tsx": 323,
-  "src/components/projetos/ProjetoDetalhesWidgets.tsx": 384,
-  "src/components/projetos/tabs/project-gantt/GanttTimeline.tsx": 307,
-  "src/components/projetos/tabs/ProjectChecklistTab.tsx": 345,
-  "src/components/supply-chain/SupplierFormModal.tsx": 400,
-  "src/components/ui/icons.tsx": 572,
-  "src/pages/AgendaPage.tsx": 854
+  "src/services/agendaService.ts": 413
 }

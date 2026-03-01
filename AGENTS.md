@@ -29,6 +29,10 @@ Nexus-Arqui é um ERP web para escritório de arquitetura (clientes, propostas, 
 - Complexidade por linhas: `npm run check:lines`
 - Complexidade por linhas (ratchet): `npm run check:lines:ratchet`
 - Validação de ratchet de linhas: `npm run check:lines:ratchet:check`
+- Inventário do projeto (agente): `npm run inventory:generate`
+- Poluição (regressão): `npm run check:pollution`
+- Poluição (ratchet): `npm run check:pollution:ratchet`
+- Poluição (validação de ratchet): `npm run check:pollution:ratchet:check`
 - Duplicação de código: `npm run check:duplication`
 - Testes: `npm run test`
 - Testes com cobertura: `npm run test:coverage`
@@ -100,5 +104,5 @@ Ordem oficial do `npm run verify:ci`:
 - Contexto operacional: `CONTEXT.md`
 - Contrato de governança enxuta: `docs/governance/core-contract.md`
 - Workflow ativo do agente: `.agent/workflows/default-task-flow.md`
-- Self-review checklist: `.agent/checklists/self-review-agent.md`
+- Self-review checklist: `.agent/checklists/self-review-checklist.md`
 - Histórico de decisões: `DECISIONS-active.md` e `docs/changelog/decisions-archive.md`

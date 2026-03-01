@@ -31,9 +31,7 @@ const cloneDataSnapshot = (snapshot: AppData): AppData => {
 };
 
 const persistDataSnapshot = (snapshot: AppData): void => {
-  (Object.keys(snapshot) as (keyof AppData)[]).forEach((key) => {
-    api.updateData(key, snapshot[key]);
-  });
+  api.replaceData(snapshot);
 };
 
 // ---------------------------------------------------------------------------
@@ -367,14 +365,3 @@ export { useFinanceData } from './FinanceContext';
 export { useSupplyChainData } from './SupplyChainContext';
 export { useMarketingData } from './MarketingContext';
 export { useSystemData } from './SystemContext';
-export { useDataHistory } from './DataHistoryContext';
-
-// Re-export domain types for consumers that switch to domain hooks
-export type {
-  CoreDataType,
-  FinanceDataType,
-  SupplyChainDataType,
-  MarketingDataType,
-  SystemDataType,
-  DataHistoryContextType,
-} from './types';

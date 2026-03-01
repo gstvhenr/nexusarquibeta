@@ -1,5 +1,6 @@
 import type { Client, ContractDeadlinesSettings } from '../../types';
-import { loadData, invalidateCacheAndNotify, updateData, type AppData } from './loadData';
+import { loadData, invalidateCacheAndNotify, updateData } from './loadData';
+import type { AppData } from '../../types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);

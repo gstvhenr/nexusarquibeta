@@ -4,6 +4,8 @@ import type {
   CashBoxCategory,
   CashBoxRecurrence,
   CashBoxCreditCategory,
+  CashBoxCredit,
+  UnifiedEntry,
 } from '../types';
 import {
   cashBoxProfessionalCategories,
@@ -119,7 +121,7 @@ export interface CreateExpenseInput {
   installments?: number;
 }
 
-export interface CreateExpenseValidation {
+interface CreateExpenseValidation {
   valid: boolean;
   errors: string[];
 }
@@ -216,3 +218,99 @@ export const generateExpenses = (input: CreateExpenseInput): CashBoxExpense[] =>
 
   return entries;
 };
+
+// ── Month Aggregation & Confirmation ────────────────────────────────
+
+/** Result of aggregating expenses and credits for a given month. */
+interface MonthEntriesResult {
+  entries: UnifiedEntry[];
+  totalExpenses: number;
+  totalCredits: number;
+  netBalance: number;
+}
+
+/**
+ * Builds a unified, sorted list of entries for a given month and computes totals.
+ * @param expenses - all persisted expenses
+ * @param credits - all persisted credits
+ * @param year - target year
+ * @param month - target month (0-indexed)
+ * @param sortAsc - sort by date ascending when true, descending when false
+ * @returns { entries, totalExpenses, totalCredits, netBalance }
+ * @example buildMonthEntries(expenses, credits, 2026, 1, false) → { entries: [...], ... }
+ */
+export const buildMonthEntries = (
+  expenses: CashBoxExpense[],
+  credits: CashBoxCredit[],
+  year: number,
+  month: number,
+  sortAsc: boolean,
+): MonthEntriesResult => {
+  const matchMonth = (dateStr: string) => {
+    const parts = dateStr.split('-');
+    return Number.parseInt(parts[0], 10) === year && Number.parseInt(parts[1], 10) - 1 === month;
+  };
+
+  const monthExpenses = expenses.filter((expense) => matchMonth(expense.dueDate));
+  const monthCredits = credits.filter((credit) => matchMonth(credit.date));
+
+  const totalExpenses = monthExpenses.reduce((sum, expense) => sum + expense.value, 0);
+  const totalCredits = monthCredits.reduce((sum, credit) => sum + credit.value, 0);
+
+  const expenseEntries: UnifiedEntry[] = monthExpenses.map((expense) => ({
+    id: expense.id,
+    type: 'debit',
+    date: expense.dueDate,
+    origin: expense.origin,
+    description: expense.category,
+    value: expense.value,
+    confirmed: Boolean(expense.paymentDate),
+    recurrence: expense.recurrence,
+    installmentNumber: expense.installmentNumber,
+    installmentTotal: expense.installmentTotal,
+    paymentDate: expense.paymentDate,
+    raw: expense,
+  }));
+
+  const creditEntries: UnifiedEntry[] = monthCredits.map((credit) => ({
+    id: credit.id,
+    type: 'credit',
+    date: credit.date,
+    origin: credit.origin,
+    description: credit.description,
+    value: credit.value,
+    confirmed: credit.confirmed ?? false,
+    raw: credit,
+  }));
+
+  const entries = [...expenseEntries, ...creditEntries].sort((a, b) =>
+    sortAsc ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date),
+  );
+
+  return { entries, totalExpenses, totalCredits, netBalance: totalCredits - totalExpenses };
+};
+
+/**
+ * Stamps a payment date on the target expense (pure — returns a new array).
+ * @param expenses - current expenses list
+ * @param id - expense ID to confirm
+ * @param paymentDate - ISO date string (YYYY-MM-DD) to stamp
+ * @returns CashBoxExpense[] with the target expense confirmed
+ * @example confirmExpense(expenses, 'cbx_1', '2026-02-28') → [...]
+ */
+export const confirmExpense = (
+  expenses: CashBoxExpense[],
+  id: string,
+  paymentDate: string,
+): CashBoxExpense[] =>
+  expenses.map((expense) => (expense.id === id ? { ...expense, paymentDate } : expense));
+
+/**
+ * Marks a credit as confirmed (pure — returns a new array).
+ * @param credits - current credits list
+ * @param id - credit ID to confirm
+ * @returns CashBoxCredit[] with the target credit confirmed
+ * @example confirmCredit(credits, 'crd_1') → [...]
+ */
+export const confirmCredit = (credits: CashBoxCredit[], id: string): CashBoxCredit[] =>
+  credits.map((credit) => (credit.id === id ? { ...credit, confirmed: true } : credit));

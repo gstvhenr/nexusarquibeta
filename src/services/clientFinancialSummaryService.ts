@@ -2,7 +2,7 @@ import type { Project } from '../types';
 import { parseDateString } from '../utils/formatters';
 import { getProjectLumpSumValue, getProjectTotalContractValue } from '../utils/projectFinancials';
 
-export interface ProjectFinancialSummary {
+interface ProjectFinancialSummary {
   totalValue: number;
   paid: number;
   pending: number;

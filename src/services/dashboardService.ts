@@ -5,14 +5,14 @@ import { getProjectLumpSumValue } from '../utils/projectFinancials';
 // --- DASHBOARD SERVICE DTOs ---
 
 /** Return type for calculateProjectProgress. */
-export interface ProjectProgressSummary {
+interface ProjectProgressSummary {
   progress: number;
   completedCount: number;
   totalCount: number;
 }
 
 /** Return type for getDashboardKPIs. */
-export interface DashboardKPIs {
+interface DashboardKPIs {
   activeProjects: number;
   pendingProposals: number;
   receivables: string;
@@ -20,7 +20,7 @@ export interface DashboardKPIs {
 }
 
 /** Return type for getFinancialOverview. */
-export interface FinancialOverviewResult {
+interface FinancialOverviewResult {
   overdue: number;
   upcoming: number;
 }

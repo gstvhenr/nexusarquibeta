@@ -11,10 +11,14 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "inventory:generate": "node scripts/generate-inventory.mjs",
     "check:docs:governance": "node scripts/check-governance-docs.mjs",
     "check:lines": "node scripts/check-file-lines.mjs",
     "check:lines:ratchet": "node scripts/check-file-lines.mjs --ratchet-baseline",
     "check:lines:ratchet:check": "node scripts/check-file-lines.mjs --check-ratchet",
+    "check:pollution": "node scripts/check-pollution-ratchet.mjs",
+    "check:pollution:ratchet": "node scripts/check-pollution-ratchet.mjs --ratchet-baseline",
+    "check:pollution:ratchet:check": "node scripts/check-pollution-ratchet.mjs --check-ratchet",
     "check:duplication": "jscpd src --config .jscpd.json",
     "self-review:auto": "node scripts/run-self-review.mjs",
     "verify:raw": "npm run typecheck && npm run lint && npm run format:check && npm run check:docs:governance && npm run check:lines && npm run check:duplication && npm run test:coverage && npm run build",
@@ -35,7 +39,7 @@
     "docx": "8.5.0",
     "file-saver": "2.0.5",
     "html2canvas": "1.4.1",
-    "jspdf": "^4.1.0",
+    "jspdf": "^4.2.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-router-dom": "^6.30.3",
@@ -47,7 +51,6 @@
     "@eslint/js": "^9.0.0",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^16.0.0",
-    "@testing-library/user-event": "^14.5.0",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^22.14.0",
     "@types/react": "^18.2.0",
@@ -67,6 +70,7 @@
     "lint-staged": "^16.2.7",
     "postcss": "^8.4.41",
     "prettier": "^3.3.3",
+    "rollup": "^4.57.1",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.8.2",
     "typescript-eslint": "^8.0.0",
@@ -81,5 +85,8 @@
       "prettier --write",
       "eslint --fix --max-warnings=0"
     ]
+  },
+  "overrides": {
+    "ajv": "^6.14.0"
   }
 }

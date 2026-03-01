@@ -9,7 +9,7 @@ import type {
 } from '../../types';
 import { parseDateString } from '../../utils/formatters';
 
-export const DEFAULT_ORIGINS: CashBoxOrigin[] = ['Profissional', 'Pessoal'];
+const DEFAULT_ORIGINS: CashBoxOrigin[] = ['Profissional', 'Pessoal'];
 
 export type SeriesRecord = {
   date: string | null | undefined;

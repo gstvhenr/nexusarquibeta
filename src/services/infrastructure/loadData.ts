@@ -1,15 +1,13 @@
 import { createPersistenceAdapter } from './persistence';
-
-const persistence = createPersistenceAdapter();
 import { autoBackupService } from './autoBackupService';
 import { migrateClients, type LegacyClientRecord } from './migrations';
 import { applySeedReminders } from './seedReminders';
 import { applySeedAgendaEvents } from './seedAgendaEvents';
 import { applySeedProspects } from './seedProspects';
 import type {
+  AppData,
   Project,
   Proposal,
-  Client,
   DocumentStorage,
   Supplier,
   Product,
@@ -34,6 +32,10 @@ import type {
   Reminder,
 } from '../../types';
 import { initialDocumentStorage, PAYMENT_METHODS } from '../../constants';
+
+const persistence = createPersistenceAdapter();
+
+export type { AppData };
 
 // Keys retained for event compatibility and import/export contracts.
 export const KEYS = {
@@ -72,37 +74,6 @@ const DEFAULT_CONTRACT_DEADLINES: ContractDeadlinesSettings = {
   defaultPreliminarDeadlineDays: 7,
   defaultExecutiveDeadlineDays: 30,
 };
-
-// Type for the entire application state
-export interface AppData {
-  projects: Project[];
-  proposals: Proposal[];
-  clients: Client[];
-  documentStorage: DocumentStorage;
-  suppliers: Supplier[];
-  products: Product[];
-  supplierProductPrices: SupplierProductPrice[];
-  quotations: Quotation[];
-  commissions: Commission[];
-  marketingProfessionals: MarketingProfessional[];
-  marketingActivities: MarketingActivity[];
-  marketingIdeas: MarketingIdea[];
-  socialNetworks: SocialNetwork[];
-  freelancers: Freelancer[];
-  agendaEvents: AgendaEvent[];
-  manualExpenses: ProfessionalExpense[];
-  manualIncomes: ManualIncome[];
-  customBudgetTemplate: BudgetTemplateSection[] | null;
-  globalIdentifierCounter: number;
-  dismissedFocusItems: string[];
-  acceptedPaymentMethods: PaymentMethod[];
-  hiredServices: HiredService[];
-  prospects: Prospect[];
-  contractDeadlines: ContractDeadlinesSettings;
-  cashBoxExpenses: CashBoxExpense[];
-  cashBoxCredits: CashBoxCredit[];
-  reminders: Reminder[];
-}
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -237,6 +208,10 @@ let appData: AppData | null = null;
 let initializationPromise: Promise<void> | null = null;
 let persistenceQueue: Promise<void> = Promise.resolve();
 
+const PERSIST_DEBOUNCE_MS = 300;
+let pendingSnapshot: AppData | null = null;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 const canUseWindow = typeof window !== 'undefined';
 const dataSyncChannel: BroadcastChannel | null =
   canUseWindow && typeof BroadcastChannel !== 'undefined'
@@ -249,8 +224,14 @@ const notifySyncListeners = (key: string | null): void => {
   window.dispatchEvent(new StorageEvent('storage', { key }));
 };
 
-const queuePersistSnapshot = (snapshot: AppData): void => {
-  const snapshotClone = cloneSnapshot(snapshot);
+const flushDebouncedPersist = (): void => {
+  if (debounceTimer !== null) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+  if (pendingSnapshot === null) return;
+  const snapshotClone = cloneSnapshot(pendingSnapshot);
+  pendingSnapshot = null;
   persistenceQueue = persistenceQueue
     .then(async () => {
       await persistence.writeSnapshot(snapshotClone);
@@ -262,6 +243,14 @@ const queuePersistSnapshot = (snapshot: AppData): void => {
     .catch((error) => {
       console.error('Failed to persist AppData snapshot:', error);
     });
+};
+
+const queuePersistSnapshot = (snapshot: AppData): void => {
+  pendingSnapshot = snapshot;
+  if (debounceTimer !== null) {
+    clearTimeout(debounceTimer);
+  }
+  debounceTimer = setTimeout(flushDebouncedPersist, PERSIST_DEBOUNCE_MS);
 };
 
 const refreshFromPersistentSnapshot = async (): Promise<void> => {
@@ -379,22 +368,33 @@ export function loadData(): AppData {
   bindSyncChannelIfNeeded();
 
   if (appData) {
-    return appData;
+    return cloneSnapshot(appData);
   }
 
   // Synchronous fallback path for tests and non-awaited call sites.
   appData = createDefaultAppData();
   queuePersistSnapshot(appData);
-  return appData;
+  return cloneSnapshot(appData);
 }
 
 /**
  * Writes an AppData field to in-memory state and queues transactional snapshot persist.
  */
 export function updateData<K extends keyof AppData>(key: K, data: AppData[K]): void {
-  const memoryData = loadData();
-  memoryData[key] = data;
-  queuePersistSnapshot(memoryData);
+  if (!appData) {
+    appData = createDefaultAppData();
+  }
+  appData = { ...appData, [key]: data };
+  queuePersistSnapshot(appData);
+}
+
+/**
+ * Atomically replaces the entire in-memory AppData and queues a single snapshot persist.
+ * Used by undo/redo to avoid per-key fan-out of persistence writes.
+ */
+export function replaceData(snapshot: AppData): void {
+  appData = cloneSnapshot(snapshot);
+  queuePersistSnapshot(appData);
 }
 
 /**
@@ -431,6 +431,13 @@ export async function reserveGlobalIdentifierCounter(): Promise<number> {
  * Clears persistent snapshot state and notifies subscribers.
  */
 export function resetPersistentDataAndNotify(): void {
+  // Discard any pending debounced write before clearing storage.
+  if (debounceTimer !== null) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+  pendingSnapshot = null;
+
   appData = null;
   persistenceQueue = persistenceQueue
     .then(() => persistence.clearSnapshot())
@@ -444,6 +451,14 @@ export function resetPersistentDataAndNotify(): void {
       console.error('Failed to reset persistent data snapshot:', error);
       notifySyncListeners(null);
     });
+}
+
+/**
+ * Force-flushes any pending debounced persistence write.
+ * Useful for test teardown and pre-navigation guards.
+ */
+export function flushPersistence(): void {
+  flushDebouncedPersist();
 }
 
 /**

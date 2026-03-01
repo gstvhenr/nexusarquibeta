@@ -107,7 +107,7 @@ export const getExpensesFilterOptions = (
  * Example:
  * const forecast = getCashFlowForecastSeries(source, new Date());
  */
-export type CashFlowForecastPoint = {
+type CashFlowForecastPoint = {
   label: string;
   month: string;
   year: string;

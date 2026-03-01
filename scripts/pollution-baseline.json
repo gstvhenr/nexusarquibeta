@@ -1,0 +1,37 @@
+{
+  "files": [
+    ".agent/schemas/agent-task.schema.ts",
+    ".agent/schemas/skill-input.schema.ts",
+    ".agent/schemas/validator.ts",
+    "scripts/check-file-lines.mjs",
+    "scripts/check-governance-docs.mjs",
+    "scripts/check-pollution-ratchet.mjs",
+    "scripts/generate-inventory.mjs",
+    "scripts/run-self-review.mjs",
+    "scripts/verify-loop.mjs",
+    "src/services/infrastructure/persistence/sqlite/sqliteMigrations.ts",
+    "src/services/infrastructure/seedData.ts",
+    "src/services/infrastructure/storageService.ts"
+  ],
+  "unlistedBinaries": [
+    "package.json:dot"
+  ],
+  "unusedExports": [
+    "src/services/infrastructure/importExport.ts:canAcceptImportedValue",
+    "src/services/infrastructure/loadData.ts:KEYS",
+    "src/services/infrastructure/loadData.ts:storageKeyMap",
+    "src/services/infrastructure/migrations.ts:createSeedClient",
+    "src/services/infrastructure/migrations.ts:runStorageSchemaMigrations",
+    "src/services/infrastructure/persistence/index.ts:IndexedDbPersistenceAdapter",
+    "src/services/infrastructure/persistence/index.ts:SqlitePersistenceAdapter",
+    "src/services/infrastructure/persistence/sqlite/sqliteSchema.ts:SCHEMA_VERSION"
+  ],
+  "unusedTypes": [
+    "src/services/infrastructure/indexedDbService.ts:AutomaticBackupMetadata",
+    "src/services/infrastructure/migrations.ts:SeedClientData",
+    "src/services/infrastructure/persistence/index.ts:BackupRecord",
+    "src/services/infrastructure/persistence/index.ts:CounterReservationResult",
+    "src/services/infrastructure/persistence/index.ts:WriteBackupOptions",
+    "src/services/infrastructure/storageQuotaService.ts:StorageUsageInfo"
+  ]
+}

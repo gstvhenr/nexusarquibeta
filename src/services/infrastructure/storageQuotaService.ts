@@ -10,7 +10,7 @@
 import { exportData, importData } from './importExport';
 import { createPersistenceAdapter, type BackupMetadata } from './persistence';
 import { autoBackupService } from './autoBackupService';
-import type { AppData } from './loadData';
+import type { AppData } from '../../types';
 
 const persistence = createPersistenceAdapter();
 

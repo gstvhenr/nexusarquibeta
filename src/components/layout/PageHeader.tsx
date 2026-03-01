@@ -1,5 +1,5 @@
 import React from 'react';
-import { PAGE_HEADER_CONTENT_GAP, type PageHeaderContentGap } from '../../constants.layout';
+import { PAGE_HEADER_CONTENT_GAP, type PageHeaderContentGap } from '../../constants/layout';
 
 interface PageHeaderProps {
   title: string | React.ReactNode;

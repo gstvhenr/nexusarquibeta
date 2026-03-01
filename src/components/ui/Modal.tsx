@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 interface ModalProps {
@@ -18,13 +18,26 @@ const Modal: (props: ModalProps) => React.ReactNode = ({
 }) => {
   const [isClosing, setIsClosing] = useState(false);
   const modalRoot = typeof window !== 'undefined' ? document.getElementById('modal-root') : null;
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleClose = useCallback(() => {
     setIsClosing(true);
-    setTimeout(() => {
+    if (closeTimerRef.current !== null) {
+      clearTimeout(closeTimerRef.current);
+    }
+    closeTimerRef.current = setTimeout(() => {
       onClose();
       setIsClosing(false);
+      closeTimerRef.current = null;
     }, 300); // match animation duration
   }, [onClose]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current !== null) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

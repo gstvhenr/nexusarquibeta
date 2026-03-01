@@ -23,7 +23,6 @@ export type CommissionStatus = 'Pendente' | 'Recebido';
 export const commissionStatuses: CommissionStatus[] = ['Pendente', 'Recebido'];
 
 export type ProfessionalExpenseStatus = 'Pendente' | 'Pago';
-export const professionalExpenseStatuses: ProfessionalExpenseStatus[] = ['Pendente', 'Pago'];
 
 export type ProfessionalExpenseCategory =
   | 'Software e Assinaturas'
@@ -38,21 +37,6 @@ export type ProfessionalExpenseCategory =
   | 'Serviços Terceirizados'
   | 'Reembolso a Cliente'
   | 'Outros';
-
-export const professionalExpenseCategories: ProfessionalExpenseCategory[] = [
-  'Software e Assinaturas',
-  'Impostos (DAS, INSS)',
-  'Anuidade de Conselho (CAU/CREA)',
-  'Marketing e Publicidade',
-  'Material de Escritório',
-  'Contabilidade',
-  'Cursos e Especializações',
-  'Transporte e Viagens',
-  'Aluguel de Escritório',
-  'Serviços Terceirizados',
-  'Reembolso a Cliente',
-  'Outros',
-];
 
 export interface Commission {
   id: string;

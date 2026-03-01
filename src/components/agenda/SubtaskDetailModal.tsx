@@ -1,36 +1,10 @@
 import React, { useState, useRef } from 'react';
 import Modal from '../ui/Modal';
 import type { AgendaEvent, Subtask } from '../../types';
-import { PlusIcon, TrashIcon, ClockIcon, EditIcon } from '../ui/icons';
+import { PlusIcon, ClockIcon } from '../ui/icons';
 import { v4 as uuidv4 } from 'uuid';
-
-const priorityLabels: Record<number, { label: string; color: string }> = {
-  1: { label: 'Opcional', color: 'text-sky-600 dark:text-sky-400' },
-  2: { label: 'Baixa', color: 'text-emerald-600 dark:text-emerald-400' },
-  3: { label: 'Média', color: 'text-yellow-600 dark:text-yellow-400' },
-  4: { label: 'Alta', color: 'text-orange-600 dark:text-orange-400' },
-  5: { label: 'Crítica', color: 'text-red-600 dark:text-red-400' },
-};
-
-/** Format ISO date -> "20/02/2026 às 14:30" */
-const formatDateTime = (iso: string): string => {
-  const d = new Date(iso);
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = d.getFullYear();
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  return `${day}/${month}/${year} às ${hours}:${minutes}`;
-};
-
-/** Format ISO date -> "20/02/2026" */
-const formatDateBR = (iso: string): string => {
-  const d = new Date(iso);
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-};
+import { priorityLabels, formatDateBR } from './agendaFormHelpers';
+import SubtaskList from './SubtaskList';
 
 /**
  * Modal for viewing and managing subtasks of a Kanban task.
@@ -106,7 +80,6 @@ export const SubtaskDetailModal: (props: {
     setEditingId(null);
   };
 
-  // --- Reschedule ---
   const openReschedule = () => {
     setNewDate(task.date?.split('T')[0] || '');
     setNewTime(task.time || '');
@@ -119,7 +92,6 @@ export const SubtaskDetailModal: (props: {
     setIsRescheduling(false);
   };
 
-  // --- Drag to reorder ---
   const handleDragStart = (idx: number) => {
     dragItem.current = idx;
   };
@@ -131,14 +103,11 @@ export const SubtaskDetailModal: (props: {
   const handleDragEnd = () => {
     if (dragItem.current === null || dragOverItem.current === null) return;
     if (dragItem.current === dragOverItem.current) return;
-
     const reordered = [...subtasks];
     const [removed] = reordered.splice(dragItem.current, 1);
     reordered.splice(dragOverItem.current, 0, removed);
-
     dragItem.current = null;
     dragOverItem.current = null;
-
     onUpdate({ ...task, subtasks: reordered });
   };
 
@@ -235,125 +204,20 @@ export const SubtaskDetailModal: (props: {
           </div>
         )}
 
-        {/* Subtask List */}
-        <div className="space-y-2 max-h-[45vh] overflow-y-auto pr-1 custom-scrollbar">
-          {subtasks.map((sub, idx) => (
-            <div
-              key={sub.id}
-              draggable
-              onDragStart={() => handleDragStart(idx)}
-              onDragEnter={() => handleDragEnter(idx)}
-              onDragEnd={handleDragEnd}
-              onDragOver={(e) => e.preventDefault()}
-              className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
-                sub.completed
-                  ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-200/60 dark:border-emerald-800/40'
-                  : 'bg-surface/50 border-border-color/40 hover:border-border-color'
-              }`}
-            >
-              {/* Drag handle */}
-              <span
-                className="cursor-grab active:cursor-grabbing text-text-secondary/40 hover:text-text-secondary shrink-0 select-none"
-                title="Arrastar para reordenar"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <circle cx="9" cy="6" r="1.5" />
-                  <circle cx="15" cy="6" r="1.5" />
-                  <circle cx="9" cy="12" r="1.5" />
-                  <circle cx="15" cy="12" r="1.5" />
-                  <circle cx="9" cy="18" r="1.5" />
-                  <circle cx="15" cy="18" r="1.5" />
-                </svg>
-              </span>
-
-              {/* Checkbox */}
-              <button
-                type="button"
-                onClick={() => toggleSubtask(sub.id)}
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-                  sub.completed
-                    ? 'bg-emerald-500 border-emerald-500 text-white'
-                    : 'border-border-color hover:border-primary'
-                }`}
-                aria-label={sub.completed ? `Desmarcar "${sub.title}"` : `Concluir "${sub.title}"`}
-              >
-                {sub.completed && (
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={3}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </button>
-
-              {/* Title + completion date */}
-              <div className="flex-1 min-w-0">
-                {editingId === sub.id ? (
-                  <input
-                    type="text"
-                    value={editingTitle}
-                    onChange={(e) => setEditingTitle(e.target.value)}
-                    onBlur={saveEditing}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') saveEditing();
-                      if (e.key === 'Escape') setEditingId(null);
-                    }}
-                    // eslint-disable-next-line jsx-a11y/no-autofocus
-                    autoFocus
-                    className="w-full bg-background p-1 rounded border border-border-color text-sm text-text-primary"
-                  />
-                ) : (
-                  <>
-                    <span
-                      className={`text-sm leading-snug block ${
-                        sub.completed ? 'line-through text-text-secondary' : 'text-text-primary'
-                      }`}
-                    >
-                      {sub.title}
-                    </span>
-                    {sub.completed && sub.completedAt && (
-                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5 block">
-                        Concluída em {formatDateTime(sub.completedAt)}
-                      </span>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Edit */}
-              <button
-                type="button"
-                onClick={() => startEditing(sub)}
-                className="p-1.5 text-text-secondary/60 hover:text-primary hover:bg-primary/10 rounded-full transition-all shrink-0"
-                title="Editar subtarefa"
-                aria-label={`Editar subtarefa "${sub.title}"`}
-              >
-                <EditIcon className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Delete */}
-              <button
-                type="button"
-                onClick={() => removeSubtask(sub.id)}
-                className="p-1.5 text-text-secondary/60 hover:text-error hover:bg-error/10 rounded-full transition-all shrink-0"
-                title="Excluir subtarefa"
-                aria-label={`Excluir subtarefa "${sub.title}"`}
-              >
-                <TrashIcon className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
-
-          {subtasks.length === 0 && (
-            <div className="py-8 text-center">
-              <p className="text-sm text-text-secondary/60 italic">Nenhuma subtarefa adicionada.</p>
-            </div>
-          )}
-        </div>
+        <SubtaskList
+          subtasks={subtasks}
+          editingId={editingId}
+          editingTitle={editingTitle}
+          onToggle={toggleSubtask}
+          onStartEditing={startEditing}
+          onEditingTitleChange={setEditingTitle}
+          onSaveEditing={saveEditing}
+          onCancelEditing={() => setEditingId(null)}
+          onRemove={removeSubtask}
+          onDragStart={handleDragStart}
+          onDragEnter={handleDragEnter}
+          onDragEnd={handleDragEnd}
+        />
 
         {/* Add Subtask */}
         <div className="flex gap-2 pt-2 border-t border-border-color/30">

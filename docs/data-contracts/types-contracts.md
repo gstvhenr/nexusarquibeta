@@ -45,6 +45,17 @@
 - Usada em `AgendaEvent.subtasks` e `ProjectTask.subtasks`
 - `completedAt` é gravado automaticamente ao marcar como concluída e limpo ao desmarcar.
 
+## Contrato de navegação (UI-agnostic)
+
+- Arquivo: `src/types/common.ts`
+- Tipo: `NavLinkItem`
+- Campos canônicos:
+  - `icon: JSX.Element`
+  - `iconName: NavIconName`
+- `NavIconName` é definido como union por template literal:
+  - `` `${string}Icon` | `${string}IconNew` ``
+- Objetivo: manter o contrato de tipos desacoplado de `src/components/ui/icons.tsx` para evitar dependência de camada de implementação em `src/types/*`.
+
 ## Contratos de séries financeiras (Financeiro)
 
 - Arquivo: `src/types/financial-series.ts`

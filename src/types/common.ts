@@ -1,12 +1,11 @@
-import type { ReactElement } from 'react';
-import type { IconName } from '../components/ui/icons';
+export type NavIconName = `${string}Icon` | `${string}IconNew`;
 
 // --- Common & Navigation ---
 export interface NavLinkItem {
   path?: string;
   label: string;
-  icon: ReactElement<{ className?: string }>;
+  icon: JSX.Element;
   className?: string;
-  iconName: IconName;
+  iconName: NavIconName;
   children?: NavLinkItem[];
 }

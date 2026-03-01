@@ -1,11 +1,11 @@
 import { useId, type SelectHTMLAttributes } from 'react';
 
-export interface SelectOption {
+interface SelectOption {
   value: string;
   label: string;
 }
 
-export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
+interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
   /** Field label displayed above the select */
   label?: string;
   options: SelectOption[];

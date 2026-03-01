@@ -1,10 +1,4 @@
-import type {
-  ContractAddendum,
-  ContractAddendumStatus,
-  Installment,
-  Project,
-  ProjectFinancials,
-} from '../../../../types';
+import type { ContractAddendum, Installment, Project, ProjectFinancials } from '../../../../types';
 
 export type BudgetServiceOption = {
   id: string;
@@ -42,8 +36,3 @@ export interface InstallmentStatusMeta {
 }
 
 export type AddendumAuditEntry = NonNullable<Project['financials']['addendumAuditTrail']>[number];
-export type AddendumStatusOption = {
-  value: ContractAddendumStatus;
-  label: string;
-  disabled?: boolean;
-};

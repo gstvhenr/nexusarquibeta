@@ -51,6 +51,14 @@
 **Correcao aplicada:** Simplificacao para `fireEvent` + cleanup deterministico do `modal-root` e timeout explicito do caso (`15000ms`); rerun de `npm run verify` ate `[VERIFY][LOOP][PASS]`.
 **Regra negativa derivada:** Para testes unitarios de modal via portal em pipeline compartilhado, definir cleanup explicito e timeout local quando houver historico de flake por latencia.
 
+### [2026-02-28] - [ARCHITECTURE] - Estado global mutável em singleton quebra isolamento read/write
+
+**Erro encontrado:** `loadData()` retornava referência viva ao singleton `appData` e `updateData()` fazia mutação in-place (`memoryData[key] = data`). Chamadas "de leitura" observavam efeitos colaterais sem transação explícita. `replaceData()` aceitava referência externa sem clone.
+**Arquivo(s) afetado(s):** `src/services/infrastructure/loadData.ts`.
+**Causa raiz:** Otimização prematura — evitar custo de clone em leitura — sacrificou isolamento semântico entre operações de leitura e escrita no singleton.
+**Correção aplicada:** (1) `loadData()` retorna `cloneSnapshot(appData)` (clone-on-read); (2) `updateData()` cria novo snapshot via spread `{ ...appData, [key]: data }` (immutable-update); (3) `replaceData()` clona entrada via `cloneSnapshot(snapshot)` (clone-on-write). 8/8 gates verdes.
+**Regra negativa derivada:** Nunca expor referência viva a estado singleton mutável. Toda leitura deve retornar clone defensivo; toda escrita deve criar novo objeto em vez de mutar in-place.
+
 ### [2026-02-16] - [TYPECHECK] - Type assertion direta em fixture parcial de dominio
 
 **Erro encontrado:** `npm run typecheck` falhou com `TS2352` ao converter objeto parcial diretamente para `Project` em `agendaService.test.ts`.
@@ -61,16 +69,17 @@
 
 ### [2026-02-16] - [SELF-REVIEW] - Ratchet de linhas pendente bloqueando `verify:ci`
 
-**Erro encontrado:** `npm run verify:ci` falhou no `self-review:auto` com baseline de linhas desatualizado (`Line-baseline ratchet is stale`).  
-**Arquivo(s) afetado(s):** `scripts/file-line-baseline.json`.  
-**Causa raiz:** Decomposições concluídas reduziram diversos hotspots, mas o baseline versionado ainda não tinha sido apertado.  
-**Correcao aplicada:** Execução de `npm run check:lines:ratchet` para atualizar 18 entradas e rerun de `npm run verify:ci` até verde.  
+**Erro encontrado:** `npm run verify:ci` falhou no `self-review:auto` com baseline de linhas desatualizado (`Line-baseline ratchet is stale`).
+**Arquivo(s) afetado(s):** `scripts/file-line-baseline.json`.
+**Causa raiz:** Decomposições concluídas reduziram diversos hotspots, mas o baseline versionado ainda não tinha sido apertado.
+**Correcao aplicada:** Execução de `npm run check:lines:ratchet` para atualizar 18 entradas e rerun de `npm run verify:ci` até verde.
 **Regra negativa derivada:** Ao concluir lotes de decomposição que reduzem linhas em arquivos monitorados, executar `check:lines:ratchet` antes do fechamento em `verify:ci`.
 
 ---
 
 ## Archived (SUPERSEDED — enforced by gates)
 
+<!-- markdownlint-disable MD033 -->
 <details>
 <summary>3 entradas superseded (2026-02-16)</summary>
 

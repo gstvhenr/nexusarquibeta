@@ -1,6 +1,5 @@
 import type { Commission, Project, ProjectFinancials } from '../types';
 import type { FinancialReceivable, FinancialDebit } from '../types/financial-views';
-import type { Supplier } from '../types/supply-chain';
 import type { DocumentFolder, DocumentFile } from '../types/document';
 import type { CashBoxExpense } from '../types/cashBox';
 
@@ -58,30 +57,6 @@ export const createTestCommission = (overrides: Partial<Commission> = {}): Commi
   commissionPercentage: 10,
   commissionValue: 100,
   status: 'Pendente',
-  ...overrides,
-});
-
-/**
- * Input -> Output:
- * - input: partial overrides for Supplier fields.
- * - output: a fully typed Supplier with sensible test defaults.
- * Example:
- * const supplier = createTestSupplier({ name: 'Acme' });
- */
-export const createTestSupplier = (overrides: Partial<Supplier> = {}): Supplier => ({
-  id: 'test-supplier-1',
-  name: 'Fornecedor Teste',
-  logo: '',
-  categories: ['Materiais'],
-  cnpj: '12345678000100',
-  address: 'Rua Teste, 100',
-  site: 'https://fornecedor.test',
-  mainContact: { name: 'Contato Teste', phone: '11999999999', hasWhatsApp: true },
-  paymentTerms: '30 dias',
-  shippingPolicy: 'CIF',
-  commissionPercentage: 10,
-  notes: '',
-  archived: false,
   ...overrides,
 });
 

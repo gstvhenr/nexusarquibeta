@@ -57,6 +57,13 @@ const cloneValue = <T>(value: T): T => {
   return JSON.parse(JSON.stringify(value)) as T;
 };
 
+const awaitTransaction = (tx: IDBTransaction): Promise<void> =>
+  new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+
 const serializePayload = (payload: unknown): string => {
   try {
     return JSON.stringify(payload) ?? '';
@@ -198,11 +205,7 @@ const runReadSnapshotTransaction = async <T>(): Promise<T | null> => {
       request.onsuccess = () => resolve(request.result as SnapshotRecord<T> | undefined);
       request.onerror = () => reject(request.error);
     });
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
     return record?.payload ?? null;
   } finally {
     db.close();
@@ -231,11 +234,7 @@ const runWriteSnapshotTransaction = async <T>(snapshot: T): Promise<void> => {
       });
     }
 
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
   } finally {
     db.close();
   }
@@ -247,11 +246,7 @@ const runClearSnapshotTransaction = async (): Promise<void> => {
     const tx = db.transaction([SNAPSHOT_STORE, ENTITY_STATE_STORE], 'readwrite');
     tx.objectStore(SNAPSHOT_STORE).delete(SNAPSHOT_KEY);
     tx.objectStore(ENTITY_STATE_STORE).clear();
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
   } finally {
     db.close();
   }
@@ -271,11 +266,7 @@ const runReadEntityStateTransaction = async <T>(
       request.onerror = () => reject(request.error);
     });
 
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
 
     const filteredRecords = Array.isArray(entities)
       ? records.filter((record) => entities.includes(record.entity))
@@ -312,11 +303,7 @@ const runWriteEntityStateTransaction = async (state: Record<string, unknown>): P
       } satisfies EntityStateRecord);
     });
 
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
   } finally {
     db.close();
   }
@@ -333,11 +320,7 @@ const runReadPreferenceTransaction = async <T>(key: string): Promise<T | null> =
       request.onerror = () => reject(request.error);
     });
 
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
 
     return (record?.value as T | undefined) ?? null;
   } finally {
@@ -352,11 +335,7 @@ const runWritePreferenceTransaction = async <T>(key: string, value: T): Promise<
     const store = tx.objectStore(PREFERENCES_STORE);
     store.put({ key, value, updatedAt: Date.now() } satisfies PreferenceRecord);
 
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
   } finally {
     db.close();
   }
@@ -368,11 +347,7 @@ const runRemovePreferenceTransaction = async (key: string): Promise<void> => {
     const tx = db.transaction(PREFERENCES_STORE, 'readwrite');
     tx.objectStore(PREFERENCES_STORE).delete(key);
 
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
   } finally {
     db.close();
   }
@@ -390,11 +365,7 @@ const runListAutomaticBackupsTransaction = async (): Promise<AutomaticBackupReco
       request.onerror = () => reject(request.error);
     });
 
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
 
     return records.sort((a, b) => b.createdAt - a.createdAt);
   } finally {
@@ -416,11 +387,7 @@ const runReadAutomaticBackupTransaction = async <T>(
       request.onerror = () => reject(request.error);
     });
 
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
 
     return record ?? null;
   } finally {
@@ -452,11 +419,7 @@ const runWriteAutomaticBackupTransaction = async <T>(
         store.delete(record.id);
       });
 
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
   } finally {
     db.close();
   }
@@ -468,11 +431,7 @@ const runClearAutomaticBackupsTransaction = async (): Promise<void> => {
     const tx = db.transaction(AUTOMATIC_BACKUPS_STORE, 'readwrite');
     tx.objectStore(AUTOMATIC_BACKUPS_STORE).clear();
 
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
   } finally {
     db.close();
   }
@@ -534,11 +493,7 @@ const runReserveGlobalIdentifierTransaction = async (
       } satisfies SnapshotRecord<Record<string, unknown>>);
     }
 
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    await awaitTransaction(tx);
 
     return { reservedValue, nextValue };
   } finally {

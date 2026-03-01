@@ -19,6 +19,10 @@ describe('useLocalStorage', () => {
   it('persists updates to IndexedDB-backed UI preferences', async () => {
     const { result } = renderHook(() => useLocalStorage<string>('test_key', 'initial'));
 
+    await waitFor(() => {
+      expect(result.current[0]).toBe('initial');
+    });
+
     act(() => {
       result.current[1]('updated');
     });

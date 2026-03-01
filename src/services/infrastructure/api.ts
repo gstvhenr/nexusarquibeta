@@ -9,6 +9,7 @@
 import {
   loadData,
   updateData,
+  replaceData,
   reserveGlobalIdentifierCounter,
   resetPersistentDataAndNotify,
   type AppData,
@@ -21,6 +22,7 @@ export const api = {
   getData: (): AppData => loadData(),
 
   updateData,
+  replaceData,
 
   exportData,
   importData,

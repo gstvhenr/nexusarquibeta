@@ -8,6 +8,11 @@
 - `checklists/domain-refactor-checklist.md`
 - `lessons-learned.md`
 
+## Prompts — Missões Operacionais
+
+- `prompts/deep-clean.md` — Análise forense e faxina segura do codebase (código morto, arquivos órfãos, exports fantasma)
+- `prompts/clean-dna.md` — Engenharia estrutural anti-poluição (modificar governança para prevenir sujeira futura)
+
 ## Slash-command workflows
 
 - `workflows/brainstorm.md` — Exploração estruturada de ideias

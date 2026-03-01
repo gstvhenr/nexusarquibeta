@@ -1,3 +1,4 @@
+export { default as ConfiguracoesPage } from './ConfiguracoesPage';
 export * from './ClearDataModal';
 export * from './ImportDataModal';
 export * from './PasswordInput';

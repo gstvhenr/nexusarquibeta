@@ -1,4 +1,4 @@
-import type { AppData } from './loadData';
+import type { AppData } from '../../types';
 import { createPersistenceAdapter, type BackupMetadata } from './persistence';
 
 const persistence = createPersistenceAdapter();

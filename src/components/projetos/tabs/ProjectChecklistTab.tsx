@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {
-  ChevronDownIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  TrashIcon,
-  PlusIcon,
-  UserCircleIcon,
-  PencilIcon,
-} from '../../ui/icons';
+import { ChevronDownIcon, CheckCircleIcon, ClockIcon, TrashIcon, PlusIcon } from '../../ui/icons';
 import { ProjectSection, ProjectTask, TaskStatus } from '../../../types';
-import { getDeadlineInfo } from '../../../utils/formatters';
+import { ChecklistTaskRow } from './ChecklistTaskRow';
 
 interface ChecklistTabProps {
   sections: ProjectSection[];
@@ -46,7 +38,6 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
     }));
   };
 
-  // Open all sections by default on first load if they are few
   useEffect(() => {
     if (sections.length === 0) return;
     setExpandedSections((prev) => {
@@ -112,7 +103,6 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
                 key={section.id}
                 className="bg-surface rounded-xl shadow-soft border border-border-color/50 overflow-hidden transition-all duration-300"
               >
-                {/* Section Header */}
                 <div
                   className="p-4 bg-background/30 flex items-center gap-4 cursor-pointer select-none hover:bg-background/60 transition-colors"
                   onClick={() => toggleSection(section.id)}
@@ -153,7 +143,6 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
                         )}
                       </div>
                     </div>
-                    {/* Gradient Progress Bar for Section */}
                     <progress
                       className="progress-bar progress-track-border-30 progress-fill-orange-emerald h-2 w-full rounded-full mt-1 shadow-inner"
                       value={progress}
@@ -174,7 +163,6 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
                   </button>
                 </div>
 
-                {/* Section Content */}
                 {isExpanded && (
                   <div className="p-4 bg-surface border-t border-border-color/50 animate-fade-in-up">
                     <div className="space-y-1 mb-4">
@@ -183,147 +171,16 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
                           Nenhuma tarefa nesta etapa ainda.
                         </p>
                       )}
-                      {section.tasks.map((task) => {
-                        // Calculate subtask progress
-                        const totalSubtasks = task.subtasks?.length || 0;
-                        const completedSubtasks =
-                          task.subtasks?.filter((s) => s.completed).length || 0;
-                        const subtaskProgress =
-                          totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
-
-                        return (
-                          <div
-                            key={task.id}
-                            className="flex items-start gap-3 p-2 rounded-lg hover:bg-background transition-colors group border border-transparent hover:border-border-color/50"
-                          >
-                            <div className="pt-1 relative flex items-center">
-                              <input
-                                type="checkbox"
-                                checked={task.completed}
-                                onChange={(e) =>
-                                  onTaskChange(section.id, task.id, 'completed', e.target.checked)
-                                }
-                                className={`
-                                                                    appearance-none w-5 h-5 border-2 rounded-md cursor-pointer transition-all duration-200
-                                                                    ${task.completed ? 'bg-success border-success' : 'border-text-secondary/40 hover:border-primary'}
-                                                                `}
-                                title={`Marcar tarefa ${task.name} como ${task.completed ? 'pendente' : 'concluída'}`}
-                                aria-label={`Marcar tarefa ${task.name} como ${task.completed ? 'pendente' : 'concluída'}`}
-                              />
-                              {task.completed && (
-                                <svg
-                                  className="w-3.5 h-3.5 text-white absolute left-0.5 top-1.5 pointer-events-none"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth="3"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                              )}
-                            </div>
-
-                            <div className="flex-1 min-w-0 pt-0.5">
-                              <input
-                                value={task.name}
-                                onChange={(e) =>
-                                  onTaskChange(section.id, task.id, 'name', e.target.value)
-                                }
-                                className={`w-full bg-transparent border-none p-0 focus:ring-0 text-sm ${task.completed ? 'line-through text-text-secondary' : 'text-text-primary font-medium'}`}
-                                placeholder="Descreva a tarefa..."
-                                aria-label="Nome da tarefa"
-                              />
-
-                              {/* Subtask Progress Bar - Only visible if there are subtasks and task is not completed */}
-                              {totalSubtasks > 0 && !task.completed && (
-                                <progress
-                                  className="progress-bar progress-track-border-40 progress-fill-primary-70 h-1.5 w-full max-w-xs rounded-full mt-1.5"
-                                  value={subtaskProgress}
-                                  max={100}
-                                />
-                              )}
-
-                              {/* Task Metadata Chips */}
-                              <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                                {task.priority && task.priority !== 'Média' && (
-                                  <span
-                                    className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${task.priority === 'Alta' ? 'bg-error/10 text-error' : 'bg-info/10 text-info'}`}
-                                  >
-                                    {task.priority}
-                                  </span>
-                                )}
-                                {task.dueDate && (
-                                  <span
-                                    className={`text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 font-medium ${getDeadlineInfo(task.dueDate).status === 'overdue' && !task.completed ? 'bg-error/10 text-error' : 'bg-background text-text-secondary'}`}
-                                  >
-                                    <ClockIcon className="w-3 h-3" />
-                                    {new Date(task.dueDate).toLocaleDateString('pt-BR', {
-                                      day: '2-digit',
-                                      month: '2-digit',
-                                    })}
-                                  </span>
-                                )}
-                                {task.assignee && (
-                                  <span
-                                    className="text-[10px] px-1.5 py-0.5 rounded bg-background text-text-secondary flex items-center gap-1 border border-border-color"
-                                    title="Responsável"
-                                  >
-                                    <UserCircleIcon className="w-3 h-3" /> {task.assignee}
-                                  </span>
-                                )}
-                                {totalSubtasks > 0 && (
-                                  <span
-                                    className={`text-[10px] px-1.5 py-0.5 rounded border border-border-color ${completedSubtasks === totalSubtasks ? 'bg-success/10 text-success border-success/20' : 'bg-background text-text-secondary'}`}
-                                  >
-                                    {completedSubtasks}/{totalSubtasks} subs
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="relative group/tooltip">
-                                <input
-                                  type="number"
-                                  value={task.hours}
-                                  onChange={(e) =>
-                                    onTaskChange(section.id, task.id, 'hours', e.target.value)
-                                  }
-                                  className="w-12 text-right text-xs bg-background border border-border-color rounded p-1 focus:border-accent focus:ring-0"
-                                  placeholder="h"
-                                  aria-label="Horas estimadas"
-                                />
-                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-[10px] text-white bg-black/80 rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                                  Horas estimadas
-                                </span>
-                              </div>
-
-                              <button
-                                type="button"
-                                onClick={() => onEditTaskDetails(section.id, task)}
-                                className="p-1.5 bg-background border border-border-color rounded-md text-text-secondary hover:text-primary hover:border-primary transition-colors"
-                                title="Detalhes da Tarefa"
-                                aria-label="Detalhes da Tarefa"
-                              >
-                                <PencilIcon className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => onRemoveTask(section.id, task.id)}
-                                className="p-1.5 bg-background border border-border-color rounded-md text-text-secondary hover:text-error hover:border-error transition-colors"
-                                title="Remover Tarefa"
-                                aria-label="Remover Tarefa"
-                              >
-                                <TrashIcon className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                      {section.tasks.map((task) => (
+                        <ChecklistTaskRow
+                          key={task.id}
+                          sectionId={section.id}
+                          task={task}
+                          onTaskChange={onTaskChange}
+                          onEditTaskDetails={onEditTaskDetails}
+                          onRemoveTask={onRemoveTask}
+                        />
+                      ))}
                     </div>
                     <button
                       type="button"

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import type { Client, ClientLink } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
-export interface UseClienteLinksArgs {
+interface UseClienteLinksArgs {
   client: Client | null;
   setClient: React.Dispatch<React.SetStateAction<Client | null>>;
 }

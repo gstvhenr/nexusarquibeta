@@ -3,6 +3,14 @@ import { NavLink } from 'react-router-dom';
 import type { NavLinkItem } from '../../types';
 import { ChevronDownIcon, ICON_MAP } from '../ui/icons';
 
+const resolveIconComponent = (
+  iconName: NavLinkItem['iconName'],
+  fallbackIcon: JSX.Element,
+): ((props: { className?: string }) => React.ReactNode) => {
+  const typedIconName = iconName as keyof typeof ICON_MAP;
+  return ICON_MAP[typedIconName] || (() => fallbackIcon);
+};
+
 /**
  * A reusable component for a standard navigation link in the sidebar.
  */
@@ -18,8 +26,7 @@ export const SidebarNavLink: (props: {
 
   if (!item.path) return null;
 
-  const iconName = item.iconName;
-  const IconComponent = ICON_MAP[iconName] || (() => item.icon);
+  const IconComponent = resolveIconComponent(item.iconName, item.icon);
 
   return (
     <NavLink
@@ -62,8 +69,7 @@ export const SidebarParentLink: (props: {
     'flex items-center w-full px-6 py-3 rounded-lg font-medium transition-colors duration-200 group relative';
   const parentClass = 'text-text-secondary hover:bg-primary/5 hover:text-text-primary';
 
-  const iconName = item.iconName;
-  const IconComponent = ICON_MAP[iconName] || (() => item.icon);
+  const IconComponent = resolveIconComponent(item.iconName, item.icon);
   const buttonContent = (
     <>
       <div className="w-6 h-6 mr-4 transition-transform duration-300 group-hover:scale-110">

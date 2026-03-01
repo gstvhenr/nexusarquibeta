@@ -129,3 +129,14 @@ Maintain architectural integrity and delivery safety for Nexus-Arqui (React + Ty
 ❌ NAO: Snapshot tests para validar logica de negocio.  
 ✅ FACA: Assertions explicitas (expect(result).toBe(expected)).  
 📎 AGENTS.md recomenda "evitar snapshots frageis" (Regra G.3).
+
+### 6.7 Divida-Primeiro + Prova de Higiene
+
+❌ NAO: Iniciar feature nova ignorando divida tecnica pendente marcada em NEXT.  
+✅ FACA: Priorize itens de divida classificados como prioritarios antes de expandir escopo funcional.
+
+❌ NAO: Encerrar sessao sem prova objetiva de higiene do diff.  
+✅ FACA: Fechar sessao apenas com verificacao automatica de poluicao (exports mortos, logs de debug e marcadores TODO/FIXME/HACK/XXX) sem regressao.
+
+❌ NAO: Criar hook/service/util/type novo sem verificar inventario ativo do projeto.  
+✅ FACA: Consulte `.agent/memory/project-inventory.md` antes de criar novos artefatos reutilizaveis.

@@ -11,3 +11,4 @@ export * from './marketing';
 export * from './freelancer';
 export * from './agenda';
 export * from './cashBox';
+export * from './appData';

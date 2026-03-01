@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Client, ProjectMeeting, AgendaEvent, Project } from '../types';
 import { saveClientAndUpdateState } from '../services/clientService';
 import { v4 as uuidv4 } from 'uuid';
 
-export interface UseClienteMeetingsArgs {
+interface UseClienteMeetingsArgs {
   client: Client | null;
   setClient: React.Dispatch<React.SetStateAction<Client | null>>;
   originalClient: Client | undefined;
@@ -39,6 +39,16 @@ export function useClienteMeetings({
   const [isMeetingModalOpen, setMeetingModalOpen] = useState(false);
   const [preFilledEvent, setPreFilledEvent] = useState<AgendaEvent | null>(null);
 
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current !== null) {
+        clearTimeout(successTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleAddMeeting = useCallback(() => {
     if (!newMeeting.reason?.trim() && !newMeeting.notes?.trim()) return;
     if (!client) return;
@@ -71,7 +81,13 @@ export function useClienteMeetings({
       }
       setClients(result.updatedClients);
       setShowSaveSuccess(true);
-      setTimeout(() => setShowSaveSuccess(false), 3000);
+      if (successTimerRef.current !== null) {
+        clearTimeout(successTimerRef.current);
+      }
+      successTimerRef.current = setTimeout(() => {
+        setShowSaveSuccess(false);
+        successTimerRef.current = null;
+      }, 3000);
     }
   }, [
     newMeeting,

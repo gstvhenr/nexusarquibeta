@@ -319,4 +319,234 @@ describe('agendaService', () => {
     expect(synced).toHaveLength(1);
     expect(synced[0].id).toBe('manual_proj');
   });
+
+  it('saveEvent appends a new event when ID does not exist', () => {
+    // Given
+    const events: AgendaEvent[] = [
+      {
+        id: 'existing_1',
+        title: 'Existing',
+        date: '2026-02-10',
+        time: '09:00',
+        type: 'Outro',
+        priority: 1,
+        recurrence: 'none',
+      },
+    ];
+    const newEvent: AgendaEvent = {
+      id: 'new_1',
+      title: 'New Event',
+      date: '2026-02-15',
+      time: '14:00',
+      type: 'Reunião com Cliente',
+      priority: 3,
+      recurrence: 'none',
+    };
+
+    // When
+    const result = agendaService.saveEvent(events, newEvent);
+
+    // Then
+    expect(result).toHaveLength(2);
+    expect(result[1].id).toBe('new_1');
+  });
+
+  it('saveEvent replaces an existing event when ID matches', () => {
+    // Given
+    const events: AgendaEvent[] = [
+      {
+        id: 'evt_1',
+        title: 'Original',
+        date: '2026-02-10',
+        time: '09:00',
+        type: 'Outro',
+        priority: 1,
+        recurrence: 'none',
+      },
+    ];
+    const updated: AgendaEvent = { ...events[0], title: 'Updated Title' };
+
+    // When
+    const result = agendaService.saveEvent(events, updated);
+
+    // Then
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe('Updated Title');
+  });
+
+  it('deleteEvent removes only the targeted event', () => {
+    // Given
+    const events: AgendaEvent[] = [
+      {
+        id: 'keep_1',
+        title: 'Keep',
+        date: '2026-02-10',
+        time: '09:00',
+        type: 'Outro',
+        priority: 1,
+        recurrence: 'none',
+      },
+      {
+        id: 'remove_1',
+        title: 'Remove',
+        date: '2026-02-11',
+        time: '10:00',
+        type: 'Outro',
+        priority: 2,
+        recurrence: 'none',
+      },
+    ];
+
+    // When
+    const result = agendaService.deleteEvent(events, 'remove_1');
+
+    // Then
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('keep_1');
+  });
+
+  it('toggleEventCompleted flips the completed flag', () => {
+    // Given
+    const events: AgendaEvent[] = [
+      {
+        id: 'toggle_1',
+        title: 'Toggle me',
+        date: '2026-02-10',
+        time: '09:00',
+        type: 'Outro',
+        priority: 1,
+        recurrence: 'none',
+        completed: false,
+      },
+    ];
+
+    // When
+    const toggled = agendaService.toggleEventCompleted(events, 'toggle_1');
+
+    // Then
+    expect(toggled[0].completed).toBe(true);
+
+    // When toggled again
+    const toggledBack = agendaService.toggleEventCompleted(toggled, 'toggle_1');
+
+    // Then
+    expect(toggledBack[0].completed).toBe(false);
+  });
+
+  describe('buildEventIndex', () => {
+    const rangeStart = new Date('2026-02-01T00:00:00');
+    const rangeEnd = new Date('2026-02-28T23:59:59');
+
+    it('indexes non-recurring events under their date key', () => {
+      const events: AgendaEvent[] = [
+        {
+          id: 'evt_a',
+          title: 'A',
+          date: '2026-02-10',
+          time: '09:00',
+          type: 'Outro',
+          priority: 1,
+          recurrence: 'none',
+        },
+        {
+          id: 'evt_b',
+          title: 'B',
+          date: '2026-02-10',
+          time: '14:00',
+          type: 'Outro',
+          priority: 2,
+          recurrence: 'none',
+        },
+        {
+          id: 'evt_c',
+          title: 'C',
+          date: '2026-02-15',
+          time: '10:00',
+          type: 'Outro',
+          priority: 1,
+          recurrence: 'none',
+        },
+      ];
+
+      const index = agendaService.buildEventIndex(events, rangeStart, rangeEnd);
+
+      expect(index.get('2026-02-10')?.map((e) => e.id)).toEqual(['evt_a', 'evt_b']);
+      expect(index.get('2026-02-15')?.map((e) => e.id)).toEqual(['evt_c']);
+      expect(index.get('2026-02-11')).toBeUndefined();
+    });
+
+    it('expands weekly recurring events across the visible range', () => {
+      // 2026-02-06 is a Friday
+      const events: AgendaEvent[] = [
+        {
+          id: 'weekly_evt',
+          title: 'Weekly',
+          date: '2026-02-06',
+          time: '10:00',
+          type: 'Outro',
+          priority: 1,
+          recurrence: 'weekly',
+        },
+      ];
+
+      const index = agendaService.buildEventIndex(events, rangeStart, rangeEnd);
+
+      // Should appear on all Fridays in Feb 2026: 6, 13, 20, 27
+      expect(index.get('2026-02-06')?.map((e) => e.id)).toEqual(['weekly_evt']);
+      expect(index.get('2026-02-13')?.map((e) => e.id)).toEqual(['weekly_evt']);
+      expect(index.get('2026-02-20')?.map((e) => e.id)).toEqual(['weekly_evt']);
+      expect(index.get('2026-02-27')?.map((e) => e.id)).toEqual(['weekly_evt']);
+
+      // Should NOT appear on a Thursday
+      expect(index.get('2026-02-05')).toBeUndefined();
+    });
+
+    it('expands monthly recurring events across the visible range', () => {
+      const events: AgendaEvent[] = [
+        {
+          id: 'monthly_evt',
+          title: 'Monthly',
+          date: '2026-01-15',
+          time: '11:00',
+          type: 'Outro',
+          priority: 1,
+          recurrence: 'monthly',
+        },
+      ];
+
+      const index = agendaService.buildEventIndex(events, rangeStart, rangeEnd);
+
+      expect(index.get('2026-02-15')?.map((e) => e.id)).toEqual(['monthly_evt']);
+      // Should not appear on day 14
+      expect(index.get('2026-02-14')).toBeUndefined();
+    });
+
+    it('excludes recurring events that start after the cursor date', () => {
+      const events: AgendaEvent[] = [
+        {
+          id: 'future_weekly',
+          title: 'Future Weekly',
+          date: '2026-02-20',
+          time: '10:00',
+          type: 'Outro',
+          priority: 1,
+          recurrence: 'weekly',
+        },
+      ];
+
+      const index = agendaService.buildEventIndex(events, rangeStart, rangeEnd);
+
+      // Feb 20 is a Friday. Feb 13 is also Friday but before the event start date.
+      expect(index.get('2026-02-13')).toBeUndefined();
+      // Feb 20 and 27 should have it
+      expect(index.get('2026-02-20')?.map((e) => e.id)).toEqual(['future_weekly']);
+      expect(index.get('2026-02-27')?.map((e) => e.id)).toEqual(['future_weekly']);
+    });
+
+    it('getEventsFromIndex returns empty array for missing date keys', () => {
+      const index = agendaService.buildEventIndex([], rangeStart, rangeEnd);
+      const result = agendaService.getEventsFromIndex(new Date('2026-02-10'), index);
+      expect(result).toEqual([]);
+    });
+  });
 });

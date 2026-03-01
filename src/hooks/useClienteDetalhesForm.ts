@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { Client, ClientContact } from '../types';
 import { saveClientAndUpdateState } from '../services/clientService';
 import { v4 as uuidv4 } from 'uuid';
 
-export interface UseClienteDetalhesFormArgs {
+interface UseClienteDetalhesFormArgs {
   client: Client | null;
   setClient: React.Dispatch<React.SetStateAction<Client | null>>;
   originalClient: Client | undefined;
@@ -102,6 +102,16 @@ export function useClienteDetalhesForm({
     [client, handleChange],
   );
 
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current !== null) {
+        clearTimeout(successTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleSave = useCallback(() => {
     if (!client) return;
     const result = saveClientAndUpdateState(client, originalClient || null, clients);
@@ -116,7 +126,13 @@ export function useClienteDetalhesForm({
     setClients(result.updatedClients);
     setIsEditing(false);
     setShowSaveSuccess(true);
-    setTimeout(() => setShowSaveSuccess(false), 3000);
+    if (successTimerRef.current !== null) {
+      clearTimeout(successTimerRef.current);
+    }
+    successTimerRef.current = setTimeout(() => {
+      setShowSaveSuccess(false);
+      successTimerRef.current = null;
+    }, 3000);
   }, [client, originalClient, clients, setClients, setIsEditing, setShowSaveSuccess]);
 
   const handleCancel = useCallback(() => {

@@ -1,14 +1,14 @@
 import type { BudgetSection, BudgetTemplateSection } from '../../types';
-import { DEFAULT_BUDGET_TEMPLATE_SECTIONS } from '../../constants.budget';
+import { DEFAULT_BUDGET_TEMPLATE_SECTIONS } from '../../constants/budget';
 
-export type BudgetSectionCalculation = {
+type BudgetSectionCalculation = {
   id: number;
   cost: number;
   profit: number;
   total: number;
 };
 
-export type BudgetCalculations = {
+type BudgetCalculations = {
   sectionDetails: BudgetSectionCalculation[];
   grandCost: number;
   grandProfit: number;

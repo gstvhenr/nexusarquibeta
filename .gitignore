@@ -13,6 +13,9 @@ dist-ssr
 coverage
 *.local
 .agent/tmp/
+.lsp/.cache/
+.clj-kondo/.cache/
+Ficha_Cadastral_Completa_*.pdf
 
 # Editor directories and files
 .vscode/*

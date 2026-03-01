@@ -3,7 +3,7 @@ import type { AgendaEvent } from '../../types';
 import { formatDateDayMonth } from '../../utils/formatters';
 import { priorityConfig } from './taskUtils';
 
-export type TaskCardProps = {
+type TaskCardProps = {
   task: AgendaEvent;
   isArchivedView?: boolean;
   showArchiveButton?: boolean;

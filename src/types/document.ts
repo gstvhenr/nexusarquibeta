@@ -1,12 +1,6 @@
 // --- Document Types ---
 type DocumentSourceType = 'upload' | 'link';
 export type DocumentStatus = 'Em Revisão' | 'Aprovado' | 'Versão Final' | 'Obsoleto';
-export const documentStatuses: DocumentStatus[] = [
-  'Em Revisão',
-  'Aprovado',
-  'Versão Final',
-  'Obsoleto',
-];
 
 export interface DocumentSource {
   id: string;

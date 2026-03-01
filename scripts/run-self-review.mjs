@@ -14,9 +14,12 @@ const REQUIRED_VERIFY_STEPS = [
 const EXPECTED_VERIFY_LOOP_SCRIPT = 'node scripts/verify-loop.mjs';
 const VERIFY_RAW_SCRIPT_KEY = 'verify:raw';
 
-const CHECKLIST_PATH = '.agent/checklists/self-review-agent.md';
+const CHECKLIST_PATH = '.agent/checklists/self-review-checklist.md';
+const INVENTORY_PATH = '.agent/memory/project-inventory.md';
 const COVERAGE_SUMMARY_PATH = 'coverage/coverage-summary.json';
 const LINE_RATCHET_ARGS = ['scripts/check-file-lines.mjs', '--check-ratchet'];
+const POLLUTION_CHECK_COMMAND = 'npm run check:pollution';
+const POLLUTION_RATCHET_CHECK_COMMAND = 'npm run check:pollution:ratchet:check';
 
 function pass(message) {
   console.log(`[PASS] ${message}`);
@@ -26,7 +29,7 @@ function fail(message) {
   console.error(`[FAIL] ${message}`);
 }
 
-function collectNewAnyUsages() {
+function getAddedSrcLines() {
   const diffResult = spawnSync('git', ['diff', '--unified=0', '--', 'src'], {
     encoding: 'utf8',
   });
@@ -35,20 +38,21 @@ function collectNewAnyUsages() {
     return {
       status: 'error',
       details: (diffResult.stderr || '').trim() || 'Unable to inspect git diff.',
+      lines: [],
     };
   }
 
-  const addedLines = diffResult.stdout
-    .split(/\r?\n/)
-    .filter((line) => line.startsWith('+') && !line.startsWith('+++'));
-
-  const flagged = addedLines.filter((line) => /\bas any\b/.test(line));
-
   return {
     status: 'ok',
-    count: flagged.length,
-    examples: flagged.slice(0, 3),
+    details: '',
+    lines: diffResult.stdout
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith('+') && !line.startsWith('+++')),
   };
+}
+
+function collectPatternMatches(lines, pattern) {
+  return lines.filter((line) => pattern.test(line));
 }
 
 function validateVerifyOrder(verifyScript) {
@@ -100,6 +104,39 @@ function validateLineBaselineRatchet() {
   };
 }
 
+function runCommandCheck(command) {
+  const result = spawnSync(command, {
+    encoding: 'utf8',
+    shell: true,
+  });
+
+  if (result.stdout) {
+    process.stdout.write(result.stdout);
+  }
+  if (result.stderr) {
+    process.stderr.write(result.stderr);
+  }
+
+  if (result.error) {
+    return {
+      status: 'error',
+      details: result.error.message || `Unable to execute "${command}".`,
+    };
+  }
+
+  if (result.status !== 0) {
+    return {
+      status: 'failed',
+      details: `Command failed: "${command}"`,
+    };
+  }
+
+  return {
+    status: 'ok',
+    details: '',
+  };
+}
+
 let failures = 0;
 
 if (!existsSync('package.json')) {
@@ -143,6 +180,15 @@ if (!existsSync(CHECKLIST_PATH)) {
   pass('Self-review checklist file exists.');
 }
 
+if (!existsSync(INVENTORY_PATH)) {
+  fail(
+    `${INVENTORY_PATH} not found. Generate inventory before self-review using the official command in AGENTS.md.`,
+  );
+  failures++;
+} else {
+  pass('Project inventory file exists.');
+}
+
 if (!existsSync(COVERAGE_SUMMARY_PATH)) {
   fail(
     `Coverage summary not found at ${COVERAGE_SUMMARY_PATH}. Run "npm run test:coverage" before self-review.`,
@@ -157,26 +203,66 @@ if (lineRatchetCheck.status === 'error') {
   fail(`Unable to validate line-baseline ratchet: ${lineRatchetCheck.details}`);
   failures++;
 } else if (lineRatchetCheck.status === 'stale') {
-  fail(
-    `Line-baseline ratchet is stale. Run "npm run check:lines:ratchet".\n${lineRatchetCheck.details}`,
-  );
+  fail(`Line-baseline ratchet is stale. Run "npm run check:lines:ratchet".\n${lineRatchetCheck.details}`);
   failures++;
 } else {
   pass('Line-baseline ratchet check passed.');
 }
 
-const anyCheck = collectNewAnyUsages();
-if (anyCheck.status === 'error') {
-  fail(`Unable to detect newly added "as any": ${anyCheck.details}`);
-  failures++;
-} else if (anyCheck.count > 0) {
-  fail(`Detected ${anyCheck.count} new "as any" usage(s) in src diff.`);
-  for (const example of anyCheck.examples) {
-    console.error(`  ${example}`);
-  }
+const pollutionCheck = runCommandCheck(POLLUTION_CHECK_COMMAND);
+if (pollutionCheck.status !== 'ok') {
+  fail(`Pollution regression gate failed. ${pollutionCheck.details}`);
   failures++;
 } else {
-  pass('No new "as any" usages detected in src diff.');
+  pass('Pollution regression gate passed.');
+}
+
+const pollutionRatchetCheck = runCommandCheck(POLLUTION_RATCHET_CHECK_COMMAND);
+if (pollutionRatchetCheck.status !== 'ok') {
+  fail(`Pollution ratchet check failed. ${pollutionRatchetCheck.details}`);
+  failures++;
+} else {
+  pass('Pollution ratchet check passed.');
+}
+
+const addedLinesResult = getAddedSrcLines();
+if (addedLinesResult.status === 'error') {
+  fail(`Unable to inspect added lines in src diff: ${addedLinesResult.details}`);
+  failures++;
+} else {
+  const anyMatches = collectPatternMatches(addedLinesResult.lines, /\bas any\b/);
+  const consoleMatches = collectPatternMatches(addedLinesResult.lines, /\bconsole\.log\s*\(/);
+  const todoMatches = collectPatternMatches(addedLinesResult.lines, /\b(?:TODO|FIXME|HACK|XXX)\b/);
+
+  if (anyMatches.length > 0) {
+    fail(`Detected ${anyMatches.length} new "as any" usage(s) in src diff.`);
+    for (const example of anyMatches.slice(0, 3)) {
+      console.error(`  ${example}`);
+    }
+    failures++;
+  } else {
+    pass('No new "as any" usages detected in src diff.');
+  }
+
+  if (consoleMatches.length > 0) {
+    fail(`Detected ${consoleMatches.length} new "console.log" usage(s) in src diff.`);
+    for (const example of consoleMatches.slice(0, 3)) {
+      console.error(`  ${example}`);
+    }
+    failures++;
+  } else {
+    pass('No new "console.log" usages detected in src diff.');
+  }
+
+  if (todoMatches.length > 0) {
+    fail(`Detected ${todoMatches.length} new TODO/FIXME/HACK/XXX marker(s) in src diff.`);
+    for (const example of todoMatches.slice(0, 3)) {
+      console.error(`  ${example}`);
+    }
+    failures++;
+  } else {
+    pass('No new TODO/FIXME/HACK/XXX markers detected in src diff.');
+  }
 }
 
 if (failures > 0) {

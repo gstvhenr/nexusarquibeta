@@ -7,12 +7,6 @@ export type BillingMethod =
   | 'per_sqm'
   | 'per_hour';
 export type ProposalStatus = 'Pendente' | 'Em Análise' | 'Concluído' | 'Rejeitado';
-export const proposalStatuses: ProposalStatus[] = [
-  'Pendente',
-  'Em Análise',
-  'Concluído',
-  'Rejeitado',
-];
 
 export interface BudgetItem {
   id: number;

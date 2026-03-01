@@ -1,0 +1,404 @@
+import React, { useMemo, useState } from 'react';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { PageHeader } from '../../components/layout';
+import {
+  useCoreData,
+  useFinanceData,
+  useMarketingData,
+  useSupplyChainData,
+} from '../../context/DataContext';
+import { formatCurrency } from '../../utils/formatters';
+import { getFinancialPageData } from '../../services/financeService';
+import { NAV_LINKS, EXPENSE_CATEGORY_COLORS, RECEIVABLE_SOURCE_COLORS } from '../../constants';
+import { KeyIcon } from '../../components/ui';
+import {
+  CardShell,
+  SectionTitle,
+  KPICard,
+  MarginBar,
+  HealthBar,
+  DonutTooltip,
+} from '../../components/finance';
+import { ArrowUpCircleIcon, ArrowDownCircleIcon } from '../../components/ui';
+
+const DEFAULT_CATEGORY_COLOR = 'hsl(0, 0%, 55%)';
+const DEFAULT_RECEIVABLE_COLOR = 'hsl(160, 40%, 50%)';
+
+type DonutView = 'expenses' | 'income';
+
+/** Builds a Date set to the 1st of the month offset from today. */
+const getOffsetDate = (offset: number): Date => {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + offset);
+  return d;
+};
+
+/** Contextual label for the selected month. */
+const getMonthLabel = (offset: number, date: Date): string => {
+  const monthName = date.toLocaleString('pt-BR', { month: 'long' });
+  const year = date.getFullYear();
+  if (offset === 0) return 'Mês Vigente';
+  if (offset < 0) return `Consolidado de ${monthName} de ${year}`;
+  return `Previsão estimada para ${monthName} de ${year}`;
+};
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE COMPONENT
+// ═══════════════════════════════════════════════════════════════
+const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
+  const { projects } = useCoreData();
+  const { commissions, manualExpenses, manualIncomes, cashBoxExpenses, cashBoxCredits } =
+    useFinanceData();
+  const { marketingActivities } = useMarketingData();
+  const { freelancers } = useSupplyChainData();
+
+  const [donutView, setDonutView] = useState<DonutView>('expenses');
+  const [monthOffset, setMonthOffset] = useState(0);
+
+  const viewDate = useMemo(() => getOffsetDate(monthOffset), [monthOffset]);
+  const monthLabel = useMemo(() => getMonthLabel(monthOffset, viewDate), [monthOffset, viewDate]);
+
+  const financialData = useMemo(
+    () =>
+      getFinancialPageData(
+        projects,
+        commissions,
+        manualExpenses,
+        manualIncomes,
+        marketingActivities,
+        freelancers,
+        viewDate,
+        new Date(),
+        cashBoxExpenses,
+        cashBoxCredits,
+      ),
+    [
+      projects,
+      commissions,
+      manualExpenses,
+      manualIncomes,
+      marketingActivities,
+      freelancers,
+      cashBoxExpenses,
+      cashBoxCredits,
+      viewDate,
+    ],
+  );
+
+  const {
+    kpis,
+    expensesByCategory,
+    receivablesBySource,
+    receivablesHealth,
+    debitsHealth,
+    profitMargin,
+  } = financialData.overview;
+
+  const financeiroIcon = NAV_LINKS.find((link) => link.label === 'Financeiro')?.icon;
+
+  const totalReceivables =
+    receivablesHealth.totalOpen + receivablesHealth.totalOverdue + receivablesHealth.totalPaid;
+  const totalDebits =
+    debitsHealth.totalPending + debitsHealth.totalOverdue + debitsHealth.totalPaid;
+
+  // ── Donut data (toggled between expenses and income) ──
+  const expensesWithColors = useMemo(
+    () =>
+      expensesByCategory.map((c) => ({
+        ...c,
+        color: EXPENSE_CATEGORY_COLORS[c.category] || DEFAULT_CATEGORY_COLOR,
+      })),
+    [expensesByCategory],
+  );
+
+  const receivablesWithColors = useMemo(
+    () =>
+      receivablesBySource.map((c) => {
+        // Try exact match first, then prefix match for "Projeto: XXX" entries
+        const color =
+          RECEIVABLE_SOURCE_COLORS[c.category] ||
+          (c.category.startsWith('Projeto:') ? RECEIVABLE_SOURCE_COLORS['Projeto'] : null) ||
+          DEFAULT_RECEIVABLE_COLOR;
+        return { ...c, color };
+      }),
+    [receivablesBySource],
+  );
+
+  const activeDonutData = donutView === 'expenses' ? expensesWithColors : receivablesWithColors;
+  const totalDonutValue = activeDonutData.reduce((s, c) => s + c.value, 0);
+
+  return (
+    <div className="animate-fade-in-up h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 min-h-0">
+        <div className="space-y-5">
+          <PageHeader title="Visão Geral" subtitle={monthLabel} icon={financeiroIcon}>
+            <div className="flex items-center bg-surface border border-border-color/50 rounded-lg p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setMonthOffset((o) => o - 1)}
+                className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-background/80 transition-colors"
+                aria-label="Mês anterior"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+              <div className="w-28 text-center px-2 py-1 text-sm font-semibold capitalize text-text-primary">
+                {viewDate
+                  .toLocaleString('pt-BR', { month: 'short', year: 'numeric' })
+                  .replace(' de ', '/')}
+              </div>
+              <button
+                type="button"
+                onClick={() => setMonthOffset((o) => o + 1)}
+                className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-background/80 transition-colors"
+                aria-label="Próximo mês"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+            <button
+              onClick={() => setMonthOffset(0)}
+              className="px-3 py-1.5 text-xs font-semibold text-text-secondary hover:text-primary transition-colors hover:bg-primary/5 rounded-lg border border-transparent hover:border-primary/20"
+            >
+              Hoje
+            </button>
+          </PageHeader>
+
+          {/* ── ROW 1: KPI Cards + Margin Bar ────────────────── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPICard
+              title="Receita (Mês)"
+              value={formatCurrency(kpis.receitaMensal)}
+              icon={<ArrowUpCircleIcon />}
+              change={kpis.receitaChange}
+              variant="success"
+            />
+            <KPICard
+              title="Despesas (Mês)"
+              value={formatCurrency(kpis.despesaMensal)}
+              icon={<ArrowDownCircleIcon />}
+              change={kpis.despesaChange}
+              variant="warning"
+            />
+            <KPICard
+              title="Saldo (Mês)"
+              value={formatCurrency(kpis.saldoMensal)}
+              icon={<KeyIcon />}
+              change={kpis.saldoChange}
+              variant="default"
+            />
+            <MarginBar
+              receita={kpis.receitaMensal}
+              despesa={kpis.despesaMensal}
+              margin={profitMargin}
+            />
+          </div>
+
+          {/* ── ROW 2: Saúde Financeira + Valores Mensais (Donut) ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-[5fr_7fr] gap-5">
+            {/* Saúde Financeira */}
+            <CardShell className="p-5 flex flex-col">
+              <SectionTitle>Saúde Financeira</SectionTitle>
+              <div className="space-y-5 flex-1">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1 h-4 rounded-full bg-gradient-to-b from-success to-emerald-400" />
+                    <p className="text-xs font-semibold text-text-primary">Recebíveis</p>
+                  </div>
+                  <div className="space-y-3 pl-3">
+                    <HealthBar
+                      label="Recebidos"
+                      value={receivablesHealth.totalPaid}
+                      total={totalReceivables}
+                      variant="success"
+                    />
+                    <HealthBar
+                      label="Em Aberto"
+                      value={receivablesHealth.totalOpen}
+                      total={totalReceivables}
+                      variant="warning"
+                    />
+                    <HealthBar
+                      label="Inadimplentes"
+                      value={receivablesHealth.totalOverdue}
+                      total={totalReceivables}
+                      variant="error"
+                    />
+                  </div>
+                </div>
+                <div className="border-t border-border-color/30 pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1 h-4 rounded-full bg-gradient-to-b from-error to-rose-400" />
+                    <p className="text-xs font-semibold text-text-primary">Débitos</p>
+                  </div>
+                  <div className="space-y-3 pl-3">
+                    <HealthBar
+                      label="Pagos"
+                      value={debitsHealth.totalPaid}
+                      total={totalDebits}
+                      variant="success"
+                    />
+                    <HealthBar
+                      label="Pendentes"
+                      value={debitsHealth.totalPending}
+                      total={totalDebits}
+                      variant="warning"
+                    />
+                    <HealthBar
+                      label="Atrasados"
+                      value={debitsHealth.totalOverdue}
+                      total={totalDebits}
+                      variant="error"
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardShell>
+
+            {/* Valores Mensais Donut */}
+            <CardShell className="p-5 flex flex-col">
+              {/* Header: title + toggle */}
+              <div className="flex items-center justify-between mb-3">
+                <SectionTitle>Valores Mensais</SectionTitle>
+                <div className="flex gap-1 bg-background/60 rounded-lg p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setDonutView('expenses')}
+                    className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all duration-200
+                      ${
+                        donutView === 'expenses'
+                          ? 'bg-error/15 text-error shadow-sm'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-background/80'
+                      }`}
+                  >
+                    Despesas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDonutView('income')}
+                    className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all duration-200
+                      ${
+                        donutView === 'income'
+                          ? 'bg-success/15 text-success shadow-sm'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-background/80'
+                      }`}
+                  >
+                    Recebidos
+                  </button>
+                </div>
+              </div>
+              {activeDonutData.length > 0 ? (
+                <>
+                  <div
+                    className="flex justify-center relative my-1"
+                    role="img"
+                    aria-label={
+                      donutView === 'expenses'
+                        ? 'Gráfico de rosca mostrando a distribuição de despesas por categoria no mês atual'
+                        : 'Gráfico de rosca mostrando a distribuição de receitas recebidas por fonte no mês atual'
+                    }
+                  >
+                    <ResponsiveContainer width={180} height={180}>
+                      <PieChart>
+                        <Pie
+                          data={activeDonutData}
+                          dataKey="value"
+                          nameKey="category"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={82}
+                          paddingAngle={3}
+                          stroke="none"
+                          cornerRadius={4}
+                        >
+                          {activeDonutData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<DonutTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {/* Center label */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="text-center">
+                        <p className="text-[10px] text-text-secondary font-medium">Total</p>
+                        <p className="text-sm font-bold text-text-primary tabular-nums">
+                          {formatCurrency(totalDonutValue)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 mt-2">
+                    {activeDonutData.slice(0, 6).map((cat, i) => {
+                      const pct =
+                        totalDonutValue > 0
+                          ? ((cat.value / totalDonutValue) * 100).toFixed(1)
+                          : '0';
+                      return (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-background/60 transition-colors cursor-default group"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                              className="w-2 h-2 rounded-full shrink-0 ring-2 ring-white/20"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            <span className="text-text-secondary truncate group-hover:text-text-primary transition-colors">
+                              {cat.category}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-[10px] text-text-secondary tabular-nums bg-background/80 px-1.5 py-0.5 rounded-full">
+                              {pct}%
+                            </span>
+                            <span className="font-semibold text-text-primary tabular-nums">
+                              {formatCurrency(cat.value)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <p className="text-text-secondary text-xs">
+                    {donutView === 'expenses'
+                      ? 'Nenhuma despesa registrada neste mês.'
+                      : 'Nenhum recebimento registrado neste mês.'}
+                  </p>
+                </div>
+              )}
+            </CardShell>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FinanceiroVisaoGeralPage;

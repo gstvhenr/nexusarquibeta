@@ -7,22 +7,22 @@ import {
 } from '../utils/formatters';
 import { getProjectLumpSumValue } from '../utils/projectFinancials';
 
-export type OverduePayment = {
+type OverduePayment = {
   type: 'lump' | 'installment';
   project: Project;
   payment: Project['financials'] | Installment;
 };
 
-export const getOverduePaymentDate = (payment: OverduePayment['payment']): string | null => {
+const getOverduePaymentDate = (payment: OverduePayment['payment']): string | null => {
   if ('number' in payment) {
     return payment.dueDate;
   }
   return payment.lumpSumDueDate || null;
 };
 
-export type FocusItemIconKey = 'cash' | 'agenda' | 'bullhorn' | 'mail';
+type FocusItemIconKey = 'cash' | 'agenda' | 'bullhorn' | 'mail';
 
-export type FocusItem = {
+type FocusItem = {
   id: string; // The unique ID for dismissal
   type: string;
   tag: string;

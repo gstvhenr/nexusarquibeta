@@ -19,14 +19,22 @@ module.exports = {
       name: 'no-orphans',
       comment: 'This is an orphan module - it is likely not used.',
       severity: 'warn',
-      from: { orphan: true, pathNot: ['\\.d\\.ts$', '\\.test\\.(ts|tsx)$', 'setup\\.ts$'] },
+      from: {
+        orphan: true,
+        pathNot: [
+          '\\.d\\.ts$',
+          '\\.test\\.(ts|tsx)$',
+          'setup\\.ts$',
+          'src/services/infrastructure/storageService\\.ts$',
+        ],
+      },
       to: {},
     },
     {
       name: 'not-to-unresolvable',
       comment: 'This module depends on a module that cannot be found.',
       severity: 'error',
-      from: {},
+      from: { pathNot: '^src/vite-env\\.d\\.ts$' },
       to: { couldNotResolve: true },
     },
     {
