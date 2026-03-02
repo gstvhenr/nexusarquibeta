@@ -13,22 +13,25 @@
     "test:watch": "vitest",
     "inventory:generate": "node scripts/generate-inventory.mjs",
     "check:docs:governance": "node scripts/check-governance-docs.mjs",
+    "validate:structure": "node scripts/validate-structure.mjs",
+    "validate:structure:ratchet": "node scripts/validate-structure.mjs --ratchet-baseline",
+    "validate:structure:ratchet:check": "node scripts/validate-structure.mjs --check-ratchet",
     "check:lines": "node scripts/check-file-lines.mjs",
     "check:lines:ratchet": "node scripts/check-file-lines.mjs --ratchet-baseline",
     "check:lines:ratchet:check": "node scripts/check-file-lines.mjs --check-ratchet",
     "check:pollution": "node scripts/check-pollution-ratchet.mjs",
     "check:pollution:ratchet": "node scripts/check-pollution-ratchet.mjs --ratchet-baseline",
     "check:pollution:ratchet:check": "node scripts/check-pollution-ratchet.mjs --check-ratchet",
-    "check:duplication": "jscpd src --config .jscpd.json",
+    "check:duplication": "jscpd src/frontend --config .jscpd.json",
     "self-review:auto": "node scripts/run-self-review.mjs",
-    "verify:raw": "npm run typecheck && npm run lint && npm run format:check && npm run check:docs:governance && npm run check:lines && npm run check:duplication && npm run test:coverage && npm run build",
+    "verify:raw": "npm run typecheck && npm run lint && npm run format:check && npm run check:docs:governance && npm run validate:structure && npm run check:lines && npm run check:duplication && npm run test:coverage && npm run build",
     "verify:quick": "npm run typecheck && npm run lint && npm run format:check && npm run check:docs:governance",
     "format": "prettier --write .",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"{AGENTS.md,README.md,CONTRIBUTING.md,ARCHITECTURE.md,CONTEXT.md,DECISIONS-active.md,PLAN.md,NEXT.md,TASKS.md,TESTING.md,SECURITY.md,package.json,eslint.config.mjs,vitest.config.ts}\" \"docs/**/*.md\" \".github/**/*.{md,yml}\"",
-    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"src/frontend/**/*.{ts,tsx}\" \"{AGENTS.md,README.md,CONTRIBUTING.md,ARCHITECTURE.md,CONTEXT.md,DECISIONS-active.md,PLAN.md,NEXT.md,TASKS.md,TESTING.md,SECURITY.md,package.json,eslint.config.mjs,vitest.config.ts}\" \"docs/**/*.md\" \".github/**/*.{md,yml}\"",
+    "lint": "eslint \"src/frontend/**/*.{ts,tsx}\"",
     "lint:staged": "lint-staged",
-    "depcruise": "depcruise src",
-    "depcruise:graph": "depcruise src --include-only \"^src/\" --output-type dot | dot -T svg > dependency-graph.svg",
+    "depcruise": "depcruise src/frontend",
+    "depcruise:graph": "depcruise src/frontend --include-only \"^src/frontend/\" --output-type dot | dot -T svg > dependency-graph.svg",
     "verify": "node scripts/verify-loop.mjs",
     "security:check": "npm audit --audit-level=critical",
     "verify:ci": "npm run verify && npm run self-review:auto && npm run security:check",
@@ -81,7 +84,7 @@
     "*.{md,json,yml,yaml}": [
       "prettier --write"
     ],
-    "src/**/*.{ts,tsx}": [
+    "src/frontend/**/*.{ts,tsx}": [
       "prettier --write",
       "eslint --fix --max-warnings=0"
     ]

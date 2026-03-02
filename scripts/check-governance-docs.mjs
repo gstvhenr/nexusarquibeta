@@ -14,6 +14,7 @@ const ACTIVE_FILES = [
   'TESTING.md',
   'SECURITY.md',
   'TASKS.md',
+  'docs/PLACEMENT_RULES.md',
   'docs/data-contracts/types-contracts.md',
   'docs/governance/core-contract.md',
   '.agent/README.md',

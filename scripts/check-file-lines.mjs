@@ -2,9 +2,9 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const RULES = [
-  { dir: 'src/pages', exts: ['.tsx'], max: 500, label: 'Page' },
-  { dir: 'src/components', exts: ['.tsx'], max: 300, label: 'Component' },
-  { dir: 'src/services', exts: ['.ts'], max: 400, label: 'Service' },
+  { dir: 'src/frontend/pages', exts: ['.tsx'], max: 500, label: 'Page' },
+  { dir: 'src/frontend/components', exts: ['.tsx'], max: 300, label: 'Component' },
+  { dir: 'src/frontend/services', exts: ['.ts'], max: 400, label: 'Service' },
 ];
 
 const BASELINE_PATH = 'scripts/file-line-baseline.json';

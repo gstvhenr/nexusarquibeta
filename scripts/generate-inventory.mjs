@@ -5,27 +5,27 @@ const OUTPUT_PATH = '.agent/memory/project-inventory.md';
 const SECTIONS = [
   {
     title: 'Hooks',
-    root: 'src/hooks',
+    root: 'src/frontend/hooks',
     extensions: ['.ts', '.tsx'],
   },
   {
     title: 'Services',
-    root: 'src/services',
+    root: 'src/frontend/services',
     extensions: ['.ts'],
   },
   {
     title: 'UI Components',
-    root: 'src/components/ui',
+    root: 'src/frontend/components/ui',
     extensions: ['.ts', '.tsx'],
   },
   {
     title: 'Utils',
-    root: 'src/utils',
+    root: 'src/frontend/utils',
     extensions: ['.ts'],
   },
   {
     title: 'Types',
-    root: 'src/types',
+    root: 'src/frontend/types',
     extensions: ['.ts'],
   },
 ];

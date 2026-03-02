@@ -75,6 +75,46 @@
 **Correcao aplicada:** Execução de `npm run check:lines:ratchet` para atualizar 18 entradas e rerun de `npm run verify:ci` até verde.
 **Regra negativa derivada:** Ao concluir lotes de decomposição que reduzem linhas em arquivos monitorados, executar `check:lines:ratchet` antes do fechamento em `verify:ci`.
 
+### [2026-03-01] - [TYPECHECK] - Paths relativos quebrados apos move de utilitario
+
+**Erro encontrado:** No micro-batch P7.1, `npm run verify` falhou no `typecheck` com `TS2307` em `src/utils/budgetHelpers.ts` (`Cannot find module '../../types'` e `../../constants/budget`) logo após mover o arquivo de `pages` para `utils`.
+**Arquivo(s) afetado(s):** `src/utils/budgetHelpers.ts`.
+**Causa raiz:** O move preservou imports relativos do diretório antigo (`src/pages/orcamentos`), que ficaram um nível acima no novo destino (`src/utils`).
+**Correcao aplicada:** Ajuste imediato dos imports para `../types` e `../constants/budget`, seguido de novo `npm run verify` até `[VERIFY][LOOP][PASS]`.
+**Regra negativa derivada:** Em qualquer move de arquivo `.ts/.tsx`, validar primeiro os imports internos do próprio arquivo movido (antes do gate) para garantir correção do nível relativo.
+
+### [2026-03-01] - [FORMAT] - Arquivo movido sem formatacao final do Prettier
+
+**Erro encontrado:** No micro-batch P8, `npm run verify` falhou no gate `format:check` com warning em `src/utils/addendumUtils.ts`.
+**Arquivo(s) afetado(s):** `src/utils/addendumUtils.ts`.
+**Causa raiz:** Ajustes de imports após move deixaram o arquivo fora do estilo final esperado, sem rodar formatador local antes do gate.
+**Correcao aplicada:** Execução de `npx prettier --write src/utils/addendumUtils.ts` e rerun de `npm run verify` até `[VERIFY][LOOP][PASS]`.
+**Regra negativa derivada:** Após mover e editar utilitários, rodar formatação local no arquivo alterado antes do `verify` para evitar falha desnecessária no gate `format:check`.
+
+### [2026-03-01] - [POLLUTION] - Barrels de pages sem consumidor bloqueiam `self-review:auto`
+
+**Erro encontrado:** `npm run verify:ci` falhou no `self-review:auto` com regressao de poluicao (`check:pollution`) apontando `src/pages/*/index.ts` nao usados e exports sem consumidor.
+**Arquivo(s) afetado(s):** `src/App.tsx`, `src/pages/*/index.ts`, `src/constants/index.ts`, `src/pages/gestao-marketing/GestaoMarketingPage.tsx`.
+**Causa raiz:** Após movimentos estruturais, rotas continuaram importando arquivos de page diretamente (`./pages/<dominio>/<Page>.tsx`), deixando os barrels de dominio órfãos; alguns re-exports legados continuaram sem uso.
+**Correcao aplicada:** Padronizacao de entrypoints de page (`index.ts` com `export default`), ajuste dos lazy imports da `App.tsx` para `./pages/<dominio>`, remoção de re-exports sem consumidor e imports diretos de views no marketing.
+**Regra negativa derivada:** Ao concluir move de pages por dominio, validar imediatamente `check:pollution` e alinhar consumo dos `index.ts` (ou remover exports legados) antes do fechamento em `verify:ci`.
+
+### [2026-03-01] - [SECURITY] - `verify:ci` falha por lockfile desatualizado em dependencias transitivas
+
+**Erro encontrado:** Gate `security:check` falhou em `verify:ci` com vulnerabilidades high em `minimatch` e `rollup`.
+**Arquivo(s) afetado(s):** `package-lock.json` (dependencias transitivas).
+**Causa raiz:** Lockfile com versoes transitivas vulneraveis, apesar do codigo-fonte da feature estar correto.
+**Correcao aplicada:** Execucao de `npm audit fix` e rerun de `npm run security:check` / `npm run verify:ci` até verde.
+**Regra negativa derivada:** Em trilhas longas de refatoracao estrutural, rodar `npm run security:check` antes do fechamento final para evitar falha tardia por lockfile desatualizado.
+
+### [2026-03-01] - [FORMAT] - Novo artefato de governanca sem prettier antes do gate canônico
+
+**Erro encontrado:** `npm run verify` falhou em `format:check` apontando `docs/PLACEMENT_RULES.md`.
+**Arquivo(s) afetado(s):** `docs/PLACEMENT_RULES.md`.
+**Causa raiz:** Criação de artefato novo de governança sem rodar formatação local antes da primeira execução do verify loop.
+**Correcao aplicada:** Execução de `npx prettier --write docs/PLACEMENT_RULES.md` e rerun de `npm run verify` até `[VERIFY][LOOP][PASS]`.
+**Regra negativa derivada:** Após criar documentos novos em `docs/`, aplicar formatação local antes do primeiro `verify` para evitar falha desnecessária em `format:check`.
+
 ---
 
 ## Archived (SUPERSEDED — enforced by gates)

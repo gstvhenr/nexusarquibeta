@@ -26,6 +26,9 @@ Nexus-Arqui é um ERP web para escritório de arquitetura (clientes, propostas, 
 - Lint: `npm run lint`
 - Formatação (check): `npm run format:check`
 - Governança documental: `npm run check:docs:governance`
+- Validação estrutural: `npm run validate:structure`
+- Validação estrutural (ratchet): `npm run validate:structure:ratchet`
+- Validação estrutural (check ratchet): `npm run validate:structure:ratchet:check`
 - Complexidade por linhas: `npm run check:lines`
 - Complexidade por linhas (ratchet): `npm run check:lines:ratchet`
 - Validação de ratchet de linhas: `npm run check:lines:ratchet:check`
@@ -52,10 +55,11 @@ Ordem oficial do `npm run verify`:
 2. `npm run lint`
 3. `npm run format:check`
 4. `npm run check:docs:governance`
-5. `npm run check:lines`
-6. `npm run check:duplication`
-7. `npm run test:coverage`
-8. `npm run build`
+5. `npm run validate:structure`
+6. `npm run check:lines`
+7. `npm run check:duplication`
+8. `npm run test:coverage`
+9. `npm run build`
 
 `npm run self-review:auto` é complementar e não bloqueia o gate canônico.
 
@@ -79,16 +83,18 @@ Ordem oficial do `npm run verify:ci`:
 - Não fazer refactor transversal big-bang.
 - Não adicionar dependência sem aprovação explícita.
 - UI não deve conter regra de negócio complexa.
+- Antes de criar qualquer arquivo em `src/frontend`, consultar `docs/PLACEMENT_RULES.md`.
 - Mudança estrutural exige ADR/decisão separada de feature funcional.
 - Não alterar configs sensíveis (`tsconfig*`, `vite.config.ts`, `eslint.config.*`) sem justificativa e gate verde.
-- Não mexer em persistência (`src/services/infrastructure/*`) sem validar leitura/escrita básica.
+- Não mexer em persistência (`src/frontend/services/infrastructure/*`) sem validar leitura/escrita básica.
 - Não introduzir `as any` em produção; se inevitável, justificar e registrar dívida técnica.
+- Criar arquivo sem consultar `docs/PLACEMENT_RULES.md` é violação de protocolo.
 
 ## Don’t touch list (sensível)
 
-- `src/services/infrastructure/api.ts`
-- `src/services/infrastructure/storageService.ts`
-- `src/types.ts` (manter compatibilidade durante migração para `src/types/*`)
+- `src/frontend/services/infrastructure/api.ts`
+- `src/frontend/services/infrastructure/storageService.ts`
+- `src/frontend/types.ts` (manter compatibilidade durante migração para `src/frontend/types/*`)
 
 ## Definition of Done do agente
 
@@ -103,6 +109,7 @@ Ordem oficial do `npm run verify:ci`:
 
 - Contexto operacional: `CONTEXT.md`
 - Contrato de governança enxuta: `docs/governance/core-contract.md`
+- Regras de criação de arquivos: `docs/PLACEMENT_RULES.md`
 - Workflow ativo do agente: `.agent/workflows/default-task-flow.md`
 - Self-review checklist: `.agent/checklists/self-review-checklist.md`
 - Histórico de decisões: `DECISIONS-active.md` e `docs/changelog/decisions-archive.md`

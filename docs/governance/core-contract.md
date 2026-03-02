@@ -19,6 +19,7 @@ Definir governança ativa mínima para operação agent-first com baixo custo de
 - `NEXT.md`
 - `DECISIONS-active.md`
 - `ARCHITECTURE.md`
+- `docs/PLACEMENT_RULES.md`
 - `README.md`
 - `CONTRIBUTING.md`
 - `TESTING.md`

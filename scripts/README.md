@@ -10,7 +10,7 @@ Ambos chamam `npm run verify`.
 ## verify loop runner
 
 - `scripts/verify-loop.mjs`:
-  - executa os 8 gates canônicos em ordem fixa com `fail-fast`;
+  - executa os 9 gates canônicos em ordem fixa com `fail-fast`;
   - emite status estruturado por etapa (`[VERIFY][GATE][START|PASS|FAIL]`);
   - gera relatório em `.agent/tmp/verify-loop-report.json`;
   - quando falha, imprime hint interpretável e próximo passo do loop iterativo.
@@ -54,3 +54,10 @@ Ambos executam `git status --short` + `npm run typecheck`.
   - valida anti-drift de governança ativa (`DECISIONS-active.md` como referência vigente);
   - bloqueia duplicação de comandos oficiais fora de `AGENTS.md` em documentos ativos;
   - mede bytes de governança ativa e aplica budget máximo.
+- `scripts/validate-structure.mjs`:
+  - valida invariantes estruturais em `src/frontend` (S01-S07) com regras bloqueantes e faseadas;
+  - usa baseline versionado em `scripts/structure-baseline.json` para controlar dívida legada;
+  - comandos:
+    - `npm run validate:structure` (bloqueia violações hard e regressão fora do baseline);
+    - `npm run validate:structure:ratchet` (atualiza baseline para o estado atual);
+    - `npm run validate:structure:ratchet:check` (falha se baseline puder ser apertado).

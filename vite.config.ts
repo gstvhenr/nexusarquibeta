@@ -23,9 +23,9 @@ const isReactRouterModule = (id: string): boolean =>
 
 const isProjectDetailsModule = (id: string): boolean =>
   [
-    '/src/pages/ProjetoDetalhesPageContent',
-    '/src/components/projetos/ProjetoDetalhesWidgets',
-    '/src/components/projetos/',
+    '/src/frontend/pages/ProjetoDetalhesPageContent',
+    '/src/frontend/components/projetos/ProjetoDetalhesWidgets',
+    '/src/frontend/components/projetos/',
   ].some((modulePath) => id.includes(modulePath));
 
 export default defineConfig({
@@ -41,7 +41,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src/frontend'),
     },
   },
   build: {

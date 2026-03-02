@@ -1,6 +1,6 @@
 # Project Inventory
 
-Generated at: 2026-03-01T13:19:55.037Z
+Generated at: 2026-03-01T14:42:00.378Z
 
 Auto-generated manifest for anti-duplication checks in agent workflows.
 
@@ -70,11 +70,15 @@ Auto-generated manifest for anti-duplication checks in agent workflows.
 - `src/components/ui/Select.tsx`: `Select`
 
 ## Utils (src/utils)
+- `src/utils/addendumUtils.ts`: `appendAddendumAuditEntry`, `recalculateProjectTotals`
 - `src/utils/addendumWorkflow.ts`: `canTransitionAddendumStatus`, `getAllowedAddendumStatusTransitions`, `getStatusSelectionOptions`
+- `src/utils/budgetHelpers.ts`: `calculateBudgetTotals`, `initializeSections`
 - `src/utils/documents.ts`: `fileToB64`, `openDocument`
 - `src/utils/formatters.ts`: `formatBytes`, `formatCEP`, `formatCpfCnpj`, `formatCurrency`, `formatDate`, `formatDateDayMonth`, `formatDateWithTime`, `formatPhone`, `formatYAxisTick`, `getDeadlineInfo`, `parseDateString`
 - `src/utils/projectFinancials.ts`: `getApprovedAddendumTotal`, `getProjectBaseContractValue`, `getProjectLumpSumValue`, `getProjectTotalContractValue`
+- `src/utils/prospectUtils.ts`: `getDaysRemaining`, `getPriorityColor`, `getProgressGradient`, `getStatusColor`, `sortProspectsForRadar`
 - `src/utils/supplierHelpers.ts`: `getInitials`, `getInitialSupplier`, `getLatestPriceFromHistory`
+- `src/utils/taskUtils.ts`: `allSubtasksDone`, `KANBAN_COLUMNS`, `priorityConfig`
 - `src/utils/tree.ts`: `addItemToTree`, `deleteRecursive`, `traverseAndCollect`, `traverseAndModify`
 
 ## Types (src/types)

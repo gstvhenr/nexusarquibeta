@@ -10,6 +10,84 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-03-01 — Imunização estrutural do DNA: placement rules + validate-structure phaseado
+
+- Contexto: após a migração para envelope `src/frontend/`, o repositório não tinha mecanismo dedicado para prevenir drift estrutural na criação/movimentação de arquivos. A governança existente era reativa (correções pós-falha) e o gate canônico ainda não validava placement estrutural.
+- Decisão:
+  1. Criar `docs/PLACEMENT_RULES.md` como fonte prescritiva única para decidir path de novos arquivos por tipo/escopo/domínio.
+  2. Introduzir `scripts/validate-structure.mjs` com regras bloqueantes (`S01`, `S02`, `S03`, `S05`) e regras phaseadas por baseline/ratchet (`S04`, `S06`, `S07`), com baseline versionado em `scripts/structure-baseline.json`.
+  3. Integrar `validate:structure` ao gate canônico (`verify-loop`) após `check:docs:governance` e antes de `check:lines`, além de incluir o comando em `verify:raw`.
+  4. Atualizar governança ativa (`AGENTS.md`, `ARCHITECTURE.md`, `.agent/rules/nexusarqui.md`, `docs/governance/core-contract.md`, `scripts/check-governance-docs.mjs`, `scripts/README.md`) para refletir protocolo pré-criação e pós-criação.
+- Consequência: o projeto passa a ter imunização estrutural proativa com enforcement automático sem exigir refactor big-bang do legado; violações novas bloqueiam o fluxo, e dívida existente fica controlada por baseline ratchetável.
+- Reversão:
+  1. Remover `docs/PLACEMENT_RULES.md`, `scripts/validate-structure.mjs` e `scripts/structure-baseline.json`.
+  2. Remover scripts `validate:structure*` de `package.json`.
+  3. Retirar gate `validate:structure` de `scripts/verify-loop.mjs` e de `verify:raw`.
+  4. Reverter ajustes documentais/agent rules relacionados ao protocolo de placement.
+- Referências: `docs/PLACEMENT_RULES.md`, `scripts/validate-structure.mjs`, `scripts/structure-baseline.json`, `package.json`, `scripts/verify-loop.mjs`, `scripts/check-governance-docs.mjs`, `AGENTS.md`, `ARCHITECTURE.md`, `.agent/rules/nexusarqui.md`, `docs/governance/core-contract.md`, `scripts/README.md`, `NEXT.md`.
+
+### 2026-03-01 — Reorganização estrutural executada (sessão 18): pages co-localizadas por menu/submenu
+
+- Contexto: a sessão 17 definiu a convenção de organização `src/pages` por menu/submenu. Esta sessão executou o plano em 4 micro-batches com gate canônico entre cada.
+- Decisão:
+  1. Corrigir imports quebrados de `redes-sociais` no `App.tsx` e remover pasta stale `instagram-detail/`.
+  2. Consolidar `financeiro-gestao-caixa/` como subpasta de `financeiro/` → `financeiro/gestao-caixa/`.
+  3. Co-localizar `cliente-detalhes/` sob `clientes/detalhes/` e `projeto-detalhes/` sob `projetos/detalhes/`.
+  4. Atualizar todos os imports relativos afetados (~70 paths `../../` → `../../../`).
+- Consequência: `src/pages/` agora tem 12 diretórios raiz, todos alinhados com `NAV_LINKS`. Zero pastas órfãs. `npm run verify` verde em todos os 4 batches.
+- Reversão: git revert dos commits desta sessão; restaurar pastas anteriores e re-apontar `App.tsx` lazy imports.
+- Referências: `src/App.tsx`, `src/pages/financeiro/gestao-caixa/`, `src/pages/clientes/detalhes/`, `src/pages/projetos/detalhes/`, `src/pages/gestao-marketing/redes-sociais/`, `NEXT.md`.
+
+### 2026-03-01 — Reorganização estrutural cautelosa (P9 + P10): `agendaConstants` local e estabilização de barrels de pages
+
+- Contexto: o próximo item da trilha estrutural era decidir o destino de `src/pages/agenda/agendaConstants.ts`. Em paralelo, o fechamento em `verify:ci` falhou por regressão de poluição com múltiplos `src/pages/*/index.ts` órfãos e exports não consumidos.
+- Decisão:
+  1. Concluir P9 mantendo `src/pages/agenda/agendaConstants.ts` no domínio `agenda`, após confirmação de uso exclusivamente local (`AgendaPage`, `WeeklyTimeGrid`, `MonthlyCalendarGrid`, `DayDetailSidebar`).
+  2. Estabilizar os barrels afetados em `src/pages/*/index.ts` como entrypoints mínimos (`export default`) e alinhar `src/App.tsx` para lazy imports por domínio (`./pages/<domínio>`), removendo orfandade estrutural sem deletar arquivos.
+  3. Ajustar `src/pages/gestao-marketing/GestaoMarketingPage.tsx` para imports diretos de `Marketing*View` após redução do barrel do domínio.
+  4. Remover re-exports não consumidos de `src/constants/index.ts` (`PAGE_HEADER_CONTENT_GAP`, `PageHeaderContentGap`, `DEFAULT_BUDGET_TEMPLATE_SECTIONS`, `tokens`).
+  5. Corrigir vulnerabilidades reportadas no gate de segurança com `npm audit fix` (atualização de lockfile), seguido de validação completa.
+- Consequência: regressões de poluição foram eliminadas, `npm run verify` e `npm run verify:ci` fecharam em verde, e `npm audit --audit-level=critical` passou sem vulnerabilidades.
+- Reversão:
+  1. Restaurar exports anteriores dos barrels em `src/pages/*/index.ts` e voltar lazy imports de `src/App.tsx` para caminhos diretos por arquivo.
+  2. Reverter imports diretos de views em `src/pages/gestao-marketing/GestaoMarketingPage.tsx` para uso via barrel.
+  3. Restaurar re-exports removidos de `src/constants/index.ts`.
+  4. Reverter `package-lock.json` para o snapshot anterior ao `npm audit fix`.
+- Referências: `src/pages/agenda/agendaConstants.ts`, `src/App.tsx`, `src/pages/agenda/index.ts`, `src/pages/cliente-detalhes/index.ts`, `src/pages/clientes/index.ts`, `src/pages/comissoes/index.ts`, `src/pages/configuracoes/index.ts`, `src/pages/documentos/index.ts`, `src/pages/financeiro/index.ts`, `src/pages/financeiro-gestao-caixa/index.ts`, `src/pages/gestao-marketing/index.ts`, `src/pages/gestao-marketing/GestaoMarketingPage.tsx`, `src/pages/orcamentos/index.ts`, `src/pages/prestadores-freelancers/index.ts`, `src/pages/projeto-detalhes/index.ts`, `src/pages/projetos/index.ts`, `src/pages/propostas/index.ts`, `src/pages/prospects/index.ts`, `src/pages/redes-sociais/index.ts`, `src/pages/relatorios/index.ts`, `src/pages/tarefas/index.ts`, `src/constants/index.ts`, `package-lock.json`, `NEXT.md`.
+
+### 2026-03-01 — Reorganização estrutural cautelosa (P8): `addendumUtils` promovido para `src/utils`
+
+- Contexto: após conclusão do P7, permanecia `src/pages/projeto-detalhes/addendumUtils.ts` com regras de domínio financeiro de projeto (auditoria de aditivos e recálculo de totais), ainda co-localizado em page.
+- Decisão:
+  1. Executar micro-batch `P8`: mover `src/pages/projeto-detalhes/addendumUtils.ts` para `src/utils/addendumUtils.ts`.
+  2. Atualizar consumidor direto em `src/pages/projeto-detalhes/ProjetoDetalhesPageContent.tsx` para importar de `../../utils/addendumUtils`.
+  3. Remover re-export legado de `addendumUtils` no barrel de origem `src/pages/projeto-detalhes/index.ts`.
+  4. Ajustar imports internos do arquivo movido para o novo nível relativo.
+  5. Validar com `npm run verify` até `[VERIFY][LOOP][PASS]` e executar pós-voo com `npm run inventory:generate`.
+- Consequência: lógica de domínio de aditivos deixou a camada de page e foi consolidada em `src/utils`, com delta funcional zero e gate canônico verde (8/8).
+- Reversão:
+  1. Mover `src/utils/addendumUtils.ts` de volta para `src/pages/projeto-detalhes/addendumUtils.ts`.
+  2. Restaurar import original em `ProjetoDetalhesPageContent.tsx`.
+  3. Restaurar re-export removido em `src/pages/projeto-detalhes/index.ts`.
+  4. Regenerar inventário com `npm run inventory:generate`.
+- Referências: `src/utils/addendumUtils.ts`, `src/pages/projeto-detalhes/ProjetoDetalhesPageContent.tsx`, `src/pages/projeto-detalhes/index.ts`, `.agent/memory/project-inventory.md`, `NEXT.md`.
+
+### 2026-03-01 — Reorganização estrutural cautelosa (P7): utilitários de pages promovidos para `src/utils`
+
+- Contexto: após conclusão do P6, permanecia pendente a decisão sobre utilitários co-localizados em pages (`budgetHelpers`, `prospectUtils`, `taskUtils`). Todos eram funções puras sem dependência de React runtime e com potencial de reuso cross-domain.
+- Decisão:
+  1. Executar micro-batch `P7.1`: mover `src/pages/orcamentos/budgetHelpers.ts` para `src/utils/budgetHelpers.ts`, ajustar import consumidor em `OrcamentosPage.tsx` e remover re-export legado do barrel de `pages/orcamentos`.
+  2. Executar micro-batch `P7.2`: mover `src/pages/prospects/prospectUtils.ts` para `src/utils/prospectUtils.ts`, ajustar imports consumidores (`ProspectsPage.tsx`, `ProspectCard.tsx`) e remover re-export legado do barrel de `pages/prospects`.
+  3. Executar micro-batch `P7.3`: mover `src/pages/tarefas/taskUtils.ts` para `src/utils/taskUtils.ts`, ajustar imports consumidores (`TarefasPage.tsx`, `TaskCard.tsx`) e remover re-export legado do barrel de `pages/tarefas`.
+  4. Corrigir paths relativos internos dos arquivos movidos para manter resolução de módulos em `src/utils`.
+  5. Validar cada micro-batch com `npm run verify` até `[VERIFY][LOOP][PASS]` e executar pós-voo com `npm run inventory:generate`.
+- Consequência: utilitários puros saíram da camada de page e passaram a residir em `src/utils`, reduzindo acoplamento estrutural e mantendo delta funcional zero (3 verificações canônicas verdes, 8/8 gates em cada ciclo).
+- Reversão:
+  1. Mover `src/utils/budgetHelpers.ts`, `src/utils/prospectUtils.ts` e `src/utils/taskUtils.ts` de volta para seus diretórios originais em `src/pages/*`.
+  2. Restaurar imports anteriores nos consumidores e re-exports removidos dos barrels de `pages/orcamentos`, `pages/prospects` e `pages/tarefas`.
+  3. Regenerar inventário com `npm run inventory:generate`.
+- Referências: `src/utils/budgetHelpers.ts`, `src/utils/prospectUtils.ts`, `src/utils/taskUtils.ts`, `src/pages/orcamentos/OrcamentosPage.tsx`, `src/pages/prospects/ProspectsPage.tsx`, `src/pages/prospects/ProspectCard.tsx`, `src/pages/tarefas/TarefasPage.tsx`, `src/pages/tarefas/TaskCard.tsx`, `src/pages/orcamentos/index.ts`, `src/pages/prospects/index.ts`, `src/pages/tarefas/index.ts`, `.agent/memory/project-inventory.md`, `NEXT.md`.
+
 ### 2026-03-01 — Reorganização estrutural cautelosa (P5): Relatórios e Propostas consolidados por domínio
 
 - Contexto: após P4.3c, ainda restavam páginas de `Relatórios` e `Propostas` na raiz de `src/pages/`, mantendo acoplamento estrutural e dispersão de domínio.

@@ -5,21 +5,21 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    setupFiles: ['./src/frontend/test/setup.ts'],
+    include: ['src/frontend/**/*.{test,spec}.{ts,tsx}'],
     css: true,
     coverage: {
       provider: 'v8',
-      include: ['src/**/*.{ts,tsx}'],
+      include: ['src/frontend/**/*.{ts,tsx}'],
       exclude: [
-        'src/services/infrastructure/**',
-        'src/**/*.test.ts',
-        'src/**/*.test.tsx',
-        'src/**/*.spec.ts',
-        'src/**/*.spec.tsx',
-        'src/test/**',
-        'src/main.tsx',
-        'src/vite-env.d.ts',
+        'src/frontend/services/infrastructure/**',
+        'src/frontend/**/*.test.ts',
+        'src/frontend/**/*.test.tsx',
+        'src/frontend/**/*.spec.ts',
+        'src/frontend/**/*.spec.tsx',
+        'src/frontend/test/**',
+        'src/frontend/main.tsx',
+        'src/frontend/vite-env.d.ts',
       ],
       reporter: ['text', 'json-summary'],
       thresholds: {
@@ -27,7 +27,7 @@ export default defineConfig({
         branches: 58,
         functions: 24,
         statements: 10,
-        'src/services/**/*.ts': {
+        'src/frontend/services/**/*.ts': {
           lines: 70,
           branches: 60,
           functions: 70,

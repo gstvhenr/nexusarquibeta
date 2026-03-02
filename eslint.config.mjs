@@ -13,22 +13,22 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   jsxA11y.flatConfigs.recommended,
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['src/frontend/**/*.{ts,tsx}'],
     plugins: {
       'react-hooks': reactHooks,
       boundaries: boundaries,
     },
     settings: {
       'boundaries/elements': [
-        { type: 'infrastructure', pattern: 'src/services/infrastructure/**/*' },
-        { type: 'services', pattern: 'src/services/**/*' },
-        { type: 'types', pattern: 'src/types/**/*' },
-        { type: 'utils', pattern: 'src/utils/**/*' },
-        { type: 'context', pattern: 'src/context/**/*' },
-        { type: 'hooks', pattern: 'src/hooks/**/*' },
-        { type: 'components', pattern: 'src/components/**/*' },
-        { type: 'pages', pattern: 'src/pages/**/*' },
-        { type: 'test', pattern: 'src/test/**/*' },
+        { type: 'infrastructure', pattern: 'src/frontend/services/infrastructure/**/*' },
+        { type: 'services', pattern: 'src/frontend/services/**/*' },
+        { type: 'types', pattern: 'src/frontend/types/**/*' },
+        { type: 'utils', pattern: 'src/frontend/utils/**/*' },
+        { type: 'context', pattern: 'src/frontend/context/**/*' },
+        { type: 'hooks', pattern: 'src/frontend/hooks/**/*' },
+        { type: 'components', pattern: 'src/frontend/components/**/*' },
+        { type: 'pages', pattern: 'src/frontend/pages/**/*' },
+        { type: 'test', pattern: 'src/frontend/test/**/*' },
       ],
     },
     rules: {

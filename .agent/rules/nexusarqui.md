@@ -15,7 +15,7 @@ Maintain architectural integrity and delivery safety for Nexus-Arqui (React + Ty
 ## 2. Non-negotiables
 
 - Follow `AGENTS.md` as primary contract.
-- Keep business logic in `src/services`/`src/utils`, not UI.
+- Keep business logic in `src/frontend/services`/`src/frontend/utils`, not UI.
 - Do not add dependencies without explicit approval.
 - Do not perform big-bang refactors.
 - Structural changes require ADR/decision and isolated scope.
@@ -23,9 +23,11 @@ Maintain architectural integrity and delivery safety for Nexus-Arqui (React + Ty
 ## 3. Execution protocol
 
 1. Read context: `AGENTS.md`, `CONTEXT.md`, `NEXT.md`, `.agent/lessons-learned.md`, `ARCHITECTURE.md`.
+1.1. Before creating any file in `src/frontend`, read `docs/PLACEMENT_RULES.md` and resolve target path first.
 2. Define explicit short plan with scope, risks, and binary criteria.
 3. Implement small, reversible diffs.
 4. Run canonical gates from `AGENTS.md`.
+4.1. After creating/moving files, run `validate:structure` and fix violations before proceeding.
 5. Provide evidence: executed commands and objective results.
 6. Update `NEXT.md` and decisions/ADR when structural.
 
@@ -134,6 +136,12 @@ Maintain architectural integrity and delivery safety for Nexus-Arqui (React + Ty
 
 ❌ NAO: Iniciar feature nova ignorando divida tecnica pendente marcada em NEXT.  
 ✅ FACA: Priorize itens de divida classificados como prioritarios antes de expandir escopo funcional.
+
+❌ NAO: Criar arquivo em `src/frontend` sem consultar `docs/PLACEMENT_RULES.md`.  
+✅ FACA: Determine path exato pela arvore de decisao antes da primeira linha de codigo.
+
+❌ NAO: Encerrar alteracao estrutural sem validar invariantes de placement.  
+✅ FACA: Execute `validate:structure` e trate violacoes como bloqueantes.
 
 ❌ NAO: Encerrar sessao sem prova objetiva de higiene do diff.  
 ✅ FACA: Fechar sessao apenas com verificacao automatica de poluicao (exports mortos, logs de debug e marcadores TODO/FIXME/HACK/XXX) sem regressao.

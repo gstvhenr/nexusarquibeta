@@ -6,6 +6,7 @@ const GATES = [
   { id: 'lint', command: 'npm run lint' },
   { id: 'format:check', command: 'npm run format:check' },
   { id: 'check:docs:governance', command: 'npm run check:docs:governance' },
+  { id: 'validate:structure', command: 'npm run validate:structure' },
   { id: 'check:lines', command: 'npm run check:lines' },
   { id: 'check:duplication', command: 'npm run check:duplication' },
   { id: 'test:coverage', command: 'npm run test:coverage' },
@@ -76,6 +77,15 @@ function extractHint(gateId, output) {
         (line) => /DECISIONS\.md/i.test(line),
         (line) => /governance bytes exceed budget/i.test(line),
       ]) || 'Governance docs gate failed; inspect [DOCS][FAIL] lines above.'
+    );
+  }
+
+  if (gateId === 'validate:structure') {
+    return (
+      findFirstMatch(lines, [
+        (line) => /\[STRUCTURE\]\[FAIL\]/i.test(line),
+        (line) => /\[S\d{2}\]\[ERROR\]/i.test(line),
+      ]) || 'Structural validation failed; inspect the first [Sxx][ERROR] above.'
     );
   }
 
