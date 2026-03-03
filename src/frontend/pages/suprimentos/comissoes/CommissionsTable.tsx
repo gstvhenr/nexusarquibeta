@@ -1,5 +1,12 @@
 import React from 'react';
-import { ArchiveIcon, EditIcon, IconButton, TrashIcon, UnarchiveIcon } from '@/components/ui';
+import {
+  ArchiveIcon,
+  Badge,
+  EditIcon,
+  IconButton,
+  TrashIcon,
+  UnarchiveIcon,
+} from '@/components/ui';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import type { Commission } from '@/types';
 
@@ -70,11 +77,9 @@ export const CommissionsTable: (props: CommissionsTableProps) => React.ReactNode
                 {commission.notes || '-'}
               </td>
               <td className="px-6 py-4 text-center">
-                <span
-                  className={`px-2 py-1 text-xs font-bold rounded-full ${commission.status === 'Recebido' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}
-                >
+                <Badge variant={commission.status === 'Recebido' ? 'success' : 'warning'}>
                   {commission.status}
-                </span>
+                </Badge>
               </td>
               <td className="px-6 py-4 text-right">
                 <div className="flex items-center justify-end gap-2">

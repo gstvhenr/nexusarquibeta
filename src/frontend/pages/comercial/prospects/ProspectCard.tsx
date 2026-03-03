@@ -1,33 +1,46 @@
 import { useState } from 'react';
 import {
   ArchiveIcon,
+  Badge,
   CheckCircleIcon,
   ClockIcon,
   EditIcon,
   EyeIcon,
+  IconButton,
   MailIcon,
   PhoneIcon,
+  RadarIcon,
   TagIcon,
   TrashIcon,
   UnarchiveIcon,
   XCircleIcon,
-  RadarIcon,
 } from '@/components/ui';
-import { IconButton } from '@/components/ui';
 import type { Prospect, ProspectPriority, ProspectStatus } from '@/types';
 import { getDaysRemaining } from '@/utils/prospectUtils';
 import type { ProspectAction } from './types';
 
-const PRIORITY_COLOR: Record<ProspectPriority, string> = {
-  Alta: 'bg-error/10 text-error ring-1 ring-error/20',
-  Média: 'bg-warning/10 text-warning ring-1 ring-warning/20',
-  Baixa: 'bg-info/10 text-info ring-1 ring-info/20',
+const PRIORITY_BADGE_VARIANT: Record<ProspectPriority, 'danger' | 'warning' | 'info'> = {
+  Alta: 'danger',
+  Média: 'warning',
+  Baixa: 'info',
 };
 
-const STATUS_COLOR: Record<ProspectStatus, string> = {
-  'Em Aberto': 'bg-info/10 text-info ring-1 ring-info/20',
-  Convertido: 'bg-success/10 text-success ring-1 ring-success/20',
-  Perdido: 'bg-surface text-text-secondary ring-1 ring-border-color',
+const PRIORITY_BADGE_CLASS: Record<ProspectPriority, string> = {
+  Alta: 'ring-1 ring-error/20',
+  Média: 'ring-1 ring-warning/20',
+  Baixa: 'ring-1 ring-info/20',
+};
+
+const STATUS_BADGE_VARIANT: Record<ProspectStatus, 'info' | 'success' | 'default'> = {
+  'Em Aberto': 'info',
+  Convertido: 'success',
+  Perdido: 'default',
+};
+
+const STATUS_BADGE_CLASS: Record<ProspectStatus, string> = {
+  'Em Aberto': 'ring-1 ring-info/20',
+  Convertido: 'ring-1 ring-success/20',
+  Perdido: 'ring-1 ring-border-color',
 };
 
 const PROGRESS_GRADIENT: Record<'critical' | 'warning' | 'healthy', string> = {
@@ -108,28 +121,30 @@ export function ProspectCard({
                   {prospect.name}
                 </h3>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                  <span
-                    className={`text-xs font-bold px-2 py-0.5 rounded-full ${STATUS_COLOR[prospect.status]}`}
+                  <Badge
+                    variant={STATUS_BADGE_VARIANT[prospect.status]}
+                    className={STATUS_BADGE_CLASS[prospect.status]}
                   >
                     {prospect.status}
-                  </span>
-                  <span
-                    className={`text-xs font-bold px-2 py-0.5 rounded-full ${PRIORITY_COLOR[prospect.priority]}`}
+                  </Badge>
+                  <Badge
+                    variant={PRIORITY_BADGE_VARIANT[prospect.priority]}
+                    className={PRIORITY_BADGE_CLASS[prospect.priority]}
                   >
                     {prospect.priority}
-                  </span>
+                  </Badge>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap md:w-[180px] md:shrink-0">
-              <span className="inline-flex items-center gap-1 text-xs text-text-secondary bg-background px-2 py-1 rounded-md">
+              <Badge variant="default" className="font-medium">
                 <TagIcon className="w-3 h-3 opacity-50" />
                 {prospect.origin}
-              </span>
-              <span className="inline-flex items-center gap-1 text-xs text-text-secondary bg-background px-2 py-1 rounded-md">
+              </Badge>
+              <Badge variant="default" className="font-medium">
                 {prospect.interest}
-              </span>
+              </Badge>
             </div>
 
             {/* Right-aligned group: Radar + Visualizar dados + Actions */}

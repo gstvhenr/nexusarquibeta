@@ -1,4 +1,4 @@
-import { CubeIcon, PlusIcon } from '../ui';
+import { Badge, CubeIcon, PlusIcon } from '../ui';
 import type { Supplier } from '../../types';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import type { SupplierProductSnapshot } from './supplierViewTypes';
@@ -54,9 +54,7 @@ export function SupplierProductsTab({
                   {product.name}
                 </td>
                 <td className="px-6 py-4">
-                  <span className="px-2 py-1 bg-background rounded-md text-xs font-medium border border-border-color text-text-secondary">
-                    {product.category}
-                  </span>
+                  <Badge variant="default">{product.category}</Badge>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <span className="font-bold text-text-primary">{formatCurrency(latestPrice)}</span>

@@ -1,10 +1,7 @@
 import React from 'react';
 import type { Client, PaymentStatus } from '../../types';
-import {
-  CLIENT_STATUS_COLORS,
-  PAYMENT_STATUS_COLORS,
-  PAYMENT_STATUS_DOT_COLORS,
-} from '../../constants';
+import { PAYMENT_STATUS_DOT_COLORS } from '../../constants';
+import { Badge } from '../ui';
 import { SirenIcon, ClockIcon, AlertIcon } from '../ui/icons';
 import { formatDateDayMonth } from '../../utils/formatters';
 import { getInitials } from '../../utils/supplierHelpers';
@@ -18,6 +15,18 @@ interface ClientTableRowProps {
   onView: (client: Client) => void;
   nextDeadline?: Date | null;
 }
+
+const CLIENT_STATUS_VARIANT: Record<Client['status'], 'warning' | 'info' | 'default'> = {
+  'Potencial Cliente': 'warning',
+  'Cliente Ativo': 'info',
+  'Cliente Desabilitado': 'default',
+};
+
+const PAYMENT_STATUS_VARIANT: Record<PaymentStatus, 'success' | 'warning' | 'danger'> = {
+  'Em dia': 'success',
+  Pendente: 'warning',
+  'Em Atraso': 'danger',
+};
 
 export const ClientTableRow: (props: ClientTableRowProps) => React.ReactNode = React.memo(
   ({ client, paymentStatus, isSelected, onSelect, onToggleUrgent, onView, nextDeadline }) => {
@@ -87,29 +96,28 @@ export const ClientTableRow: (props: ClientTableRowProps) => React.ReactNode = R
               </button>
               <div className="text-xs text-text-secondary font-normal">{client.cpfCnpj || ''}</div>
               {isUrgent && (
-                <span className="text-[10px] font-bold text-error bg-white px-1.5 py-0.5 rounded border border-error/30 mt-1 inline-block">
+                <Badge variant="danger" size="sm" className="mt-1">
                   {isDeadlineUrgent ? 'PRAZO VENCIDO/HOJE' : 'PRIORIDADE'}
-                </span>
+                </Badge>
               )}
             </div>
           </div>
         </th>
         <td className="px-6 py-4">
-          <span
-            className={`px-2 py-1 text-xs font-bold rounded-full whitespace-nowrap ${CLIENT_STATUS_COLORS[client.status]}`}
-          >
+          <Badge variant={CLIENT_STATUS_VARIANT[client.status]} className="whitespace-nowrap">
             {client.status}
-          </span>
+          </Badge>
         </td>
         <td className="px-6 py-4">
-          <span
-            className={`inline-flex items-center gap-2 px-3 py-1 text-xs font-bold rounded-full whitespace-nowrap ${PAYMENT_STATUS_COLORS[paymentStatus]}`}
+          <Badge
+            variant={PAYMENT_STATUS_VARIANT[paymentStatus]}
+            className="whitespace-nowrap font-bold"
           >
             <span
               className={`h-2 w-2 rounded-full ${PAYMENT_STATUS_DOT_COLORS[paymentStatus]}`}
             ></span>
             {paymentStatus}
-          </span>
+          </Badge>
         </td>
         <td className="px-6 py-4">
           <div className="font-medium text-text-primary">{primaryContact?.phone || 'N/A'}</div>

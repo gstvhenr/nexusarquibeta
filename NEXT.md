@@ -11,36 +11,36 @@
 - Manter aqui apenas: última sessão + próximo passo + bloqueios.
 - Histórico completo até 2026-02-16: `docs/changelog/session-log-2026-02.md`.
 
-## Último estado conhecido (2026-03-02, sessão 24)
+## Último estado conhecido (2026-03-03, sessão 28)
 
-Fechamento total das pendências da trilha estrutural concluído no mesmo ciclo: `S06` + `S07` zerados, baseline estrutural e baseline de poluição ratchetados, com `verify:ci` totalmente verde.
+Continuação adaptada ao novo baseline estrutural: padronização visual avançou com `Tabs` em 2 consumidores e migração cirúrgica de status/tags para `Badge` em 5 consumidores, sem regressões nos gates canônicos/CI.
 
 ### O que mudou
 
-- [x] Converteu em lote as pendências de `S06` (imports profundos) para alias `@/...` com base no baseline ativo.
-- [x] Criou barrels `index.ts` para todos os 7 diretórios pendentes de `S07`.
-- [x] Ajustou ambiente de testes para alias `@/...` via `vitest.config.ts`.
-- [x] Removeu re-export de `storageService` em `src/frontend/services/infrastructure/index.ts` para manter o guard de legado verde.
-- [x] Ratchet estrutural completo aplicado: `baseline_removals=231` em `scripts/structure-baseline.json`.
-- [x] Ratchet de poluição aplicado após varredura estrutural: `baseline_additions=12` e `baseline_removals=5` em `scripts/pollution-baseline.json`.
-- [x] Regenerou inventário ativo: `.agent/memory/project-inventory.md`.
-- [x] Registrou decisão desta sessão em `DECISIONS-active.md`.
+- [x] Auditou alterações paralelas da branch e confirmou novo baseline estrutural ativo:
+  - `src/frontend/context/DataContext.tsx` recomposto como orquestrador fino;
+  - novos módulos `src/frontend/hooks/useLegacyCleanup.ts`, `src/frontend/hooks/useUndoRedo.ts` e `src/frontend/context/createDomainSetter.ts`.
+- [x] Consolidou o átomo `Tabs`:
+  - `src/frontend/components/ui/Tabs.tsx` + `src/frontend/components/ui/Tabs.test.tsx`;
+  - migração de `src/frontend/pages/projetos/detalhes/ProjetoDetalhesTabs.tsx`;
+  - migração adicional de `src/frontend/components/supply-chain/SupplierDetailsPanel.tsx`.
+- [x] Executou micro-batch de `Badge` em 5 consumidores com tags/status inline:
+  - `src/frontend/components/clientes/ClientTableRow.tsx`
+  - `src/frontend/components/supply-chain/SupplierProductsTab.tsx`
+  - `src/frontend/components/supply-chain/SupplierDetailsPanel.tsx`
+  - `src/frontend/pages/comercial/prospects/ProspectCard.tsx`
+  - `src/frontend/pages/suprimentos/comissoes/CommissionsTable.tsx`
 
 ### Validação executada
 
 - [x] `npm run verify` com `[VERIFY][LOOP][PASS]` (9 gates)
-- [x] `npm run validate:structure:ratchet`
-- [x] `npm run validate:structure:ratchet:check`
-- [x] `npm run validate:structure`
-- [x] `npm run inventory:generate`
-- [x] `npm run verify:quick`
-- [x] `npm run verify:ci` (incluindo `self-review:auto` e `security:check`)
+- [x] `npm run verify:ci` com pass completo (`verify` + `self-review:auto` + `security:check`)
 
 ## Próximo passo exato
 
-1. Consolidar commit(s) atômico(s) do lote estrutural (imports, barrels, baselines e documentação).
-2. Avaliar, em sessão dedicada, curadoria de exports dos novos barrels para reduzir superfície pública sem quebrar consumidores.
-3. Manter `npm run verify:ci` como gate obrigatório para próximos lotes funcionais.
+1. Fechar commits atômicos separados por trilha (`DataContext` estrutural vs. padronização visual `Tabs/Badge`), preservando rastreabilidade.
+2. Executar próximo micro-batch de padronização visual para reduzir remanescentes de status/tag inline (priorizar domínio `clientes` e `financeiro`).
+3. Reexecutar `npm run verify:ci` no fechamento do próximo lote.
 
 ## Bloqueios e dúvidas
 
