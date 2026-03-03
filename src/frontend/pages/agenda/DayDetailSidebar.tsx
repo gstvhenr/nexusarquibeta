@@ -1,6 +1,6 @@
 import React from 'react';
 import type { AgendaEvent } from '../../types';
-import { ClockIcon, EditIcon, TrashIcon } from '../../components/ui';
+import { ClockIcon, EditIcon, IconButton, TrashIcon } from '../../components/ui';
 import { MONTHS, priorityColors } from './agendaConstants';
 
 interface DayDetailSidebarProps {
@@ -67,26 +67,28 @@ function DayDetailSidebar({
                   </span>
                   {isEditableEvent && (
                     <div className="flex gap-1 transition-opacity">
-                      <button
+                      <IconButton
+                        variant="primary"
+                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           onEventEdit(event);
                         }}
-                        className="p-1 text-text-secondary hover:text-primary"
                         aria-label="Editar evento"
                       >
                         <EditIcon className="w-3.5 h-3.5" />
-                      </button>
-                      <button
+                      </IconButton>
+                      <IconButton
+                        variant="danger"
+                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           onEventDelete(event);
                         }}
-                        className="p-1 text-text-secondary hover:text-error"
                         aria-label="Excluir evento"
                       >
                         <TrashIcon className="w-3.5 h-3.5" />
-                      </button>
+                      </IconButton>
                     </div>
                   )}
                   {event.isDeadlineEvent && (

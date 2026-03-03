@@ -1,5 +1,5 @@
 import { ClientTableRow } from '../../components/clientes';
-import { ArchiveIcon, TrashIcon, UnarchiveIcon } from '../../components/ui';
+import { ArchiveIcon, IconButton, Input, TrashIcon, UnarchiveIcon } from '../../components/ui';
 import { clientStatuses, paymentStatuses } from '../../types';
 import type { Client, PaymentStatus } from '../../types';
 import type { ClientesFilterState } from './types';
@@ -54,12 +54,12 @@ export const ClientesTablePanel = ({
   <>
     <div className="mb-6 p-4 bg-surface rounded-xl shadow-soft flex flex-wrap items-center gap-4">
       <div className="flex items-center gap-4 flex-grow max-w-4xl">
-        <input
+        <Input
           type="text"
           placeholder="Busca por nome ou CPF/CNPJ"
           value={filter.search}
           onChange={(e) => onFilterChange((prev) => ({ ...prev, search: e.target.value }))}
-          className="w-full sm:w-64 bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm"
+          className="w-full sm:w-64"
           aria-label="Buscar cliente"
         />
 
@@ -106,30 +106,30 @@ export const ClientesTablePanel = ({
             <span className="text-sm font-bold text-primary px-3 py-1.5 bg-primary/10 rounded-md">
               {selectedClientIds.size} selecionado(s)
             </span>
-            <button
+            <IconButton
+              variant="primary"
               onClick={onBulkArchive}
-              className="p-1.5 text-text-secondary hover:text-primary hover:bg-surface rounded-md transition-colors"
-              title={showArchived ? 'Desarquivar Selecionados' : 'Arquivar Selecionados'}
               aria-label={
                 showArchived
                   ? 'Desarquivar clientes selecionados'
                   : 'Arquivar clientes selecionados'
               }
+              title={showArchived ? 'Desarquivar Selecionados' : 'Arquivar Selecionados'}
             >
               {showArchived ? (
                 <UnarchiveIcon className="w-5 h-5" />
               ) : (
                 <ArchiveIcon className="w-5 h-5" />
               )}
-            </button>
-            <button
+            </IconButton>
+            <IconButton
+              variant="danger"
               onClick={onBulkDelete}
-              className="p-1.5 text-text-secondary hover:text-error hover:bg-surface rounded-md transition-colors"
-              title="Excluir Selecionados"
               aria-label="Excluir clientes selecionados"
+              title="Excluir Selecionados"
             >
               <TrashIcon className="w-5 h-5" />
-            </button>
+            </IconButton>
           </div>
         )}
 

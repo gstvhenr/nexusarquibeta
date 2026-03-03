@@ -1,13 +1,12 @@
 import { ChevronDownIcon } from '../../ui/icons';
-import { clientStatuses } from '../../../types';
+import { clientStatuses, type Client } from '@/types';
 import {
   LEAD_SOURCE_OPTIONS,
   PIPELINE_STATUS_OPTIONS,
   SERVICE_INTEREST_OPTIONS,
-} from '../../../constants';
-import { formatCEP, formatDate } from '../../../utils/formatters';
+} from '@/constants';
+import { formatCEP, formatDate } from '@/utils/formatters';
 import type { ClientAddressChangeHandler, ClientChangeHandler, FieldId } from './types';
-import type { Client } from '../../../types';
 import type React from 'react';
 
 interface ClientFormInfoAddressStatusProps {

@@ -3,7 +3,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useSystemData } from '../../context/DataContext';
 import { PageHeader } from '../../components/layout';
 import { NAV_LINKS } from '../../constants';
-import { PlusIcon, ChevronDownIcon } from '../../components/ui';
+import { Button, PlusIcon, ChevronDownIcon } from '../../components/ui';
 import { agendaService } from '../../services/agendaService';
 import type { EventIndex } from '../../services/agendaService';
 import { AgendaEvent } from '../../types';
@@ -200,15 +200,16 @@ const AgendaPage: () => React.ReactNode = () => {
             </span>
           </div>
         )}
-        <button
+        <Button
+          variant="primary"
           onClick={() => {
             setEventToEdit(null);
             setEventModalOpen(true);
           }}
-          className="px-5 h-9 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft flex items-center gap-2 transition-colors text-sm"
+          className="h-9 shadow-soft flex items-center gap-2 text-sm"
         >
           <PlusIcon className="w-5 h-5" /> Novo Evento
-        </button>
+        </Button>
       </PageHeader>
 
       {/* Main Layout Container */}

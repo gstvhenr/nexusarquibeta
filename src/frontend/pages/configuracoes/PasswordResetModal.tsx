@@ -1,4 +1,4 @@
-import { Modal } from '../../components/ui';
+import { Button, Modal } from '../../components/ui';
 import { PasswordInput } from './PasswordInput';
 
 type PasswordResetModalProps = {
@@ -76,21 +76,17 @@ export function PasswordResetModal({
             </p>
           )}
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg font-semibold text-sm text-text-secondary hover:text-text-primary transition-colors"
-            >
+            <Button variant="secondary" onClick={onClose} size="sm">
               Cancelar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="primary"
               onClick={onValidateCurrentPassword}
               disabled={!currentPwd}
-              className="px-5 py-2 rounded-lg font-semibold text-sm text-primary-content bg-primary hover:bg-primary-focus disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              size="sm"
             >
               Continuar
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
@@ -122,21 +118,17 @@ export function PasswordResetModal({
             </p>
           )}
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onBackToCurrent}
-              className="px-4 py-2 rounded-lg font-semibold text-sm text-text-secondary hover:text-text-primary transition-colors"
-            >
+            <Button variant="secondary" onClick={onBackToCurrent} size="sm">
               Voltar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="primary"
               onClick={onNewPwdSubmit}
               disabled={!newPwd || !confirmPwd}
-              className="px-5 py-2 rounded-lg font-semibold text-sm text-primary-content bg-primary hover:bg-primary-focus disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              size="sm"
             >
               Alterar Senha
-            </button>
+            </Button>
           </div>
         </div>
       )}

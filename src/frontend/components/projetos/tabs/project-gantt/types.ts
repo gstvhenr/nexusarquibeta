@@ -1,4 +1,4 @@
-import type { ProjectSection, ProjectTask } from '../../../../types';
+import type { ProjectSection, ProjectTask } from '@/types';
 
 export type ViewMode = 'day' | 'week' | 'month';
 

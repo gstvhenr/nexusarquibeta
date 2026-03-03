@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Proposal } from '../../types';
 import { formatCurrency } from '../../utils/formatters';
-import { TrashIcon, ArchiveIcon, UnarchiveIcon } from '../ui/icons';
+import { IconButton, TrashIcon, ArchiveIcon, UnarchiveIcon } from '../ui';
 import { PROPOSAL_STATUS_CLASSES } from '../../constants';
 
 export const ProposalListItem: (props: {
@@ -80,42 +80,42 @@ export const ProposalListItem: (props: {
             </span>
             <div className="flex items-center gap-1 transition-opacity">
               {isArchived ? (
-                <button
-                  type="button"
+                <IconButton
+                  variant="secondary"
                   onClick={(e) => {
                     e.stopPropagation();
                     onUnarchive(proposal);
                   }}
-                  className="p-2 text-text-secondary/70 hover:text-secondary rounded-full hover:bg-secondary/10 transition-colors"
+                  aria-label="Desarquivar"
                   title="Desarquivar"
                 >
                   <UnarchiveIcon className="w-5 h-5" />
-                </button>
+                </IconButton>
               ) : (
-                <button
-                  type="button"
+                <IconButton
+                  variant="secondary"
                   onClick={(e) => {
                     e.stopPropagation();
                     onArchive(proposal);
                   }}
-                  className="p-2 text-text-secondary/70 hover:text-secondary rounded-full hover:bg-secondary/10 transition-colors"
+                  aria-label="Arquivar"
                   title="Arquivar"
                 >
                   <ArchiveIcon className="w-5 h-5" />
-                </button>
+                </IconButton>
               )}
               {!hasProject && (
-                <button
-                  type="button"
+                <IconButton
+                  variant="danger"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(proposal);
                   }}
-                  className="p-2 text-text-secondary/70 hover:text-error rounded-full hover:bg-error/10 transition-colors"
+                  aria-label="Excluir"
                   title="Excluir"
                 >
                   <TrashIcon className="w-5 h-5" />
-                </button>
+                </IconButton>
               )}
             </div>
           </div>

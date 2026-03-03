@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import Modal from '../ui/Modal';
+import { Button, Input, Modal } from '../ui';
 import type { AgendaEvent, Subtask } from '../../types';
 import { PlusIcon, ClockIcon } from '../ui/icons';
 import { v4 as uuidv4 } from 'uuid';
@@ -143,13 +143,7 @@ export const SubtaskDetailModal: (props: {
               >
                 Nova data
               </label>
-              <input
-                id="field-nova-data"
-                type="date"
-                value={newDate}
-                onChange={(e) => setNewDate(e.target.value)}
-                className="w-full bg-background p-2 rounded-lg border border-border-color text-sm text-text-primary"
-              />
+              <Input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
             </div>
             <div className="w-28">
               <label
@@ -158,28 +152,14 @@ export const SubtaskDetailModal: (props: {
               >
                 Horário
               </label>
-              <input
-                id="field-horario"
-                type="time"
-                value={newTime}
-                onChange={(e) => setNewTime(e.target.value)}
-                className="w-full bg-background p-2 rounded-lg border border-border-color text-sm text-text-primary"
-              />
+              <Input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} />
             </div>
-            <button
-              type="button"
-              onClick={confirmReschedule}
-              className="px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-            >
+            <Button variant="primary" onClick={confirmReschedule} size="sm">
               Confirmar
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsRescheduling(false)}
-              className="px-3 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
-            >
+            </Button>
+            <Button variant="secondary" onClick={() => setIsRescheduling(false)} size="sm">
               Cancelar
-            </button>
+            </Button>
           </div>
         ) : (
           <button

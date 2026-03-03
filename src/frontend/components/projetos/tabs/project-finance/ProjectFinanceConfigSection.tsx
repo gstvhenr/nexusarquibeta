@@ -1,4 +1,4 @@
-import type { ProjectFinancials } from '../../../../types';
+import type { ProjectFinancials } from '@/types';
 
 interface ProjectFinanceConfigSectionProps {
   financials: ProjectFinancials;

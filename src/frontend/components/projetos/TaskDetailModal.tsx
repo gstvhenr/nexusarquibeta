@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Modal from '../ui/Modal';
+import { Button, FormField, Input, Modal, Textarea } from '../ui';
 import { ProjectTask, Subtask, TaskPriority } from '../../types';
 import { PlusIcon, TrashIcon } from '../ui/icons';
 import { v4 as uuidv4 } from 'uuid';
@@ -69,64 +69,38 @@ export const TaskDetailModal: (props: TaskDetailModalProps) => React.ReactNode =
 
   const priorities: TaskPriority[] = ['Baixa', 'Média', 'Alta'];
 
-  const inputClass =
-    'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm';
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Detalhes da Tarefa" size="2xl">
       <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 -mr-2">
         {/* Header Inputs */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="col-span-1 md:col-span-2">
-            <label
-              htmlFor="field-nome-da-tarefa"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Nome da Tarefa
-            </label>
-            <input
-              id="field-nome-da-tarefa"
+          <FormField label="Nome da Tarefa" className="col-span-1 md:col-span-2">
+            <Input
               type="text"
               value={editedTask.name}
               onChange={(e) => setEditedTask({ ...editedTask, name: e.target.value })}
-              className={`${inputClass} font-semibold`}
+              className="font-semibold"
               aria-label="Nome da Tarefa"
             />
-          </div>
-          <div>
-            <label
-              htmlFor="field-prazo"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Prazo
-            </label>
-            <input
-              id="field-prazo"
+          </FormField>
+          <FormField label="Prazo">
+            <Input
               type="date"
               value={editedTask.dueDate || ''}
               onChange={(e) => setEditedTask({ ...editedTask, dueDate: e.target.value })}
-              className={inputClass}
               aria-label="Prazo"
             />
-          </div>
-          <div>
-            <label
-              htmlFor="field-horas-estimadas"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Horas Estimadas
-            </label>
-            <input
-              id="field-horas-estimadas"
+          </FormField>
+          <FormField label="Horas Estimadas">
+            <Input
               type="number"
               value={editedTask.hours}
               onChange={(e) =>
                 setEditedTask({ ...editedTask, hours: parseFloat(e.target.value) || 0 })
               }
-              className={inputClass}
               aria-label="Horas Estimadas"
             />
-          </div>
+          </FormField>
           <div>
             <label
               htmlFor="field-prioridade"
@@ -140,7 +114,7 @@ export const TaskDetailModal: (props: TaskDetailModalProps) => React.ReactNode =
               onChange={(e) =>
                 setEditedTask({ ...editedTask, priority: e.target.value as TaskPriority })
               }
-              className={inputClass}
+              className="w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm"
               aria-label="Prioridade"
             >
               {priorities.map((p) => (
@@ -150,43 +124,27 @@ export const TaskDetailModal: (props: TaskDetailModalProps) => React.ReactNode =
               ))}
             </select>
           </div>
-          <div>
-            <label
-              htmlFor="field-responsavel"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Responsável
-            </label>
-            <input
-              id="field-responsavel"
+          <FormField label="Responsável">
+            <Input
               type="text"
               placeholder="Nome do responsável"
               value={editedTask.assignee || ''}
               onChange={(e) => setEditedTask({ ...editedTask, assignee: e.target.value })}
-              className={inputClass}
               aria-label="Responsável"
             />
-          </div>
+          </FormField>
         </div>
 
         {/* Description */}
-        <div>
-          <label
-            htmlFor="field-descricao-detalhada"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Descrição Detalhada
-          </label>
-          <textarea
-            id="field-descricao-detalhada"
+        <FormField label="Descrição Detalhada">
+          <Textarea
             rows={4}
             value={editedTask.description || ''}
             onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
-            className={inputClass}
             placeholder="Adicione detalhes, links, especificações ou instruções..."
             aria-label="Descrição Detalhada"
           />
-        </div>
+        </FormField>
 
         {/* Subtasks */}
         <div>
@@ -253,18 +211,12 @@ export const TaskDetailModal: (props: TaskDetailModalProps) => React.ReactNode =
         </div>
       </div>
       <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-        <button
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color transition-colors"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          onClick={handleSave}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus transition-colors"
-        >
+        </Button>
+        <Button variant="primary" onClick={handleSave}>
           Salvar
-        </button>
+        </Button>
       </div>
     </Modal>
   );

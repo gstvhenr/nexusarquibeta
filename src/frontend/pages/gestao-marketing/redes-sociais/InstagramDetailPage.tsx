@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { InstagramCredentialModal } from '../../../components/marketing';
-import { ArrowLeftIcon } from '../../../components/ui/icons';
-import { SOCIAL_NETWORKS_SUPPORTED } from '../../../constants';
-import { useMarketingData } from '../../../context/DataContext';
-import type { InstagramSnapshot, SocialNetwork, SocialNetworkName } from '../../../types';
+import { InstagramCredentialModal } from '@/components/marketing';
+import { ArrowLeftIcon } from '@/components/ui/icons';
+import { SOCIAL_NETWORKS_SUPPORTED } from '@/constants';
+import { useMarketingData } from '@/context/DataContext';
+import type { InstagramSnapshot, SocialNetwork, SocialNetworkName } from '@/types';
 import {
   INSTAGRAM_DEFAULT_HANDLE,
   INSTAGRAM_DEFAULT_URL,

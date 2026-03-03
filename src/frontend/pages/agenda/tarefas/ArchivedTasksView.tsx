@@ -1,5 +1,5 @@
-import { ArchiveIcon } from '../../../components/ui';
-import type { AgendaEvent } from '../../../types';
+import { ArchiveIcon } from '@/components/ui';
+import type { AgendaEvent } from '@/types';
 import { TaskCard } from './TaskCard';
 
 type ArchivedTasksViewProps = {

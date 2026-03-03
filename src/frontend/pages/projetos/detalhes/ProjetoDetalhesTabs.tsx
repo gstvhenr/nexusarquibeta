@@ -6,25 +6,27 @@ import type {
   ProjectAddress,
   ProjectFinancials,
   Quotation,
-} from '../../../types';
+} from '@/types';
 import {
+  Button,
   CalendarPlusIcon,
   CashIcon,
   CheckCircleIcon,
   ClipboardDocumentListIcon,
   ClockIcon,
+  IconButton,
   PencilIcon,
   PlusIcon,
   TrashIcon,
-} from '../../../components/ui';
+} from '@/components/ui';
 import {
   ProjectChecklistTab,
   ProjectFinanceTab,
   ProjectGanttTab,
   ProjectNotesTab,
   ProjectQuotationsTab,
-} from '../../../components/projetos';
-import type { ProjectActionType } from '../../../components/projetos';
+} from '@/components/projetos';
+import type { ProjectActionType } from '@/components/projetos';
 import type { BudgetServiceOption, ProjectDetailTabId } from './types';
 import { ProjetoDetalhesOverviewTab } from './ProjetoDetalhesOverviewTab';
 
@@ -232,13 +234,14 @@ export function ProjetoDetalhesTabs({
                 <h3 className="font-serif text-xl font-bold text-secondary flex items-center gap-2">
                   <ClockIcon className="w-6 h-6 text-warning" /> Adição de Prazos (Marcos)
                 </h3>
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={handleAddDeadline}
-                  className="px-4 py-2 rounded-lg font-semibold text-sm text-primary-content bg-primary hover:bg-primary-focus flex items-center gap-2"
+                  className="flex items-center gap-2"
                 >
                   <PlusIcon className="w-4 h-4" /> Adicionar Prazo
-                </button>
+                </Button>
               </div>
 
               <div className="space-y-3">
@@ -286,14 +289,14 @@ export function ProjetoDetalhesTabs({
                         aria-label="Data do marco"
                       />
                     </div>
-                    <button
-                      type="button"
+                    <IconButton
+                      variant="danger"
                       onClick={() => handleRemoveDeadline(deadline.id)}
-                      className="p-2 text-text-secondary hover:text-error hover:bg-error/10 rounded-full transition-colors opacity-0 group-hover:opacity-100 ml-2"
                       aria-label={`Remover prazo ${deadline.title}`}
+                      className="opacity-0 group-hover:opacity-100 ml-2"
                     >
                       <TrashIcon className="w-5 h-5" />
-                    </button>
+                    </IconButton>
                   </div>
                 ))}
               </div>

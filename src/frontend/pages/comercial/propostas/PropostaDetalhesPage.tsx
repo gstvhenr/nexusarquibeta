@@ -1,22 +1,18 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { useAutoReset } from '../../../hooks/useAutoReset';
+import { useAutoReset } from '@/hooks/useAutoReset';
 import { useParams, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { PageHeader } from '../../../components/layout';
-import { useCoreData, useSystemData } from '../../../context/DataContext';
-import type { ProposalBlock, ProjectAddress } from '../../../types';
+import { PageHeader } from '@/components/layout';
+import { useCoreData, useSystemData } from '@/context/DataContext';
+import type { ProposalBlock, ProjectAddress } from '@/types';
 
-import { proposalService } from '../../../services/proposalService';
-import { NAV_LINKS } from '../../../constants';
-import { addItemToTree } from '../../../utils/tree';
-import {
-  ProposalDocumentEditor,
-  ConversionModal,
-  ValidationModal,
-} from '../../../components/propostas';
+import { proposalService } from '@/services/proposalService';
+import { NAV_LINKS } from '@/constants';
+import { addItemToTree } from '@/utils/tree';
+import { ProposalDocumentEditor, ConversionModal, ValidationModal } from '@/components/propostas';
 import { v4 as uuidv4 } from 'uuid';
-import { validateClientForProject } from '../../../services/clientService';
+import { validateClientForProject } from '@/services/clientService';
 
 // --- PAGE COMPONENT ---
 

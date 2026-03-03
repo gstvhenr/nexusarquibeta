@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal } from '../../../components/ui';
-import type { Client } from '../../../types';
+import { Button, FormField, Input, Modal } from '@/components/ui';
+import type { Client } from '@/types';
 
 type SaveProposalModalProps = {
   isOpen: boolean;
@@ -65,6 +65,8 @@ export function SaveProposalModal({
     onSave({ name: client.name, id: client.id });
   };
 
+  const selectClass = 'w-full bg-background p-3 rounded-md border border-border-color';
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Salvar como Proposta">
       <div className="space-y-4">
@@ -85,22 +87,14 @@ export function SaveProposalModal({
         </div>
 
         {isUnlinked ? (
-          <div>
-            <label
-              htmlFor="manualClientName"
-              className="block text-sm font-medium text-text-secondary mb-2"
-            >
-              Nome do Cliente
-            </label>
-            <input
-              id="manualClientName"
+          <FormField label="Nome do Cliente">
+            <Input
               type="text"
               value={manualClientName}
               onChange={(event) => setManualClientName(event.target.value)}
               placeholder="Ex: Cotação para Obra XYZ"
-              className="w-full bg-background p-3 rounded-md border border-border-color"
             />
-          </div>
+          </FormField>
         ) : (
           <div>
             <label
@@ -113,7 +107,7 @@ export function SaveProposalModal({
               id="clientSelect"
               value={selectedClientId}
               onChange={(event) => setSelectedClientId(event.target.value)}
-              className="w-full bg-background p-3 rounded-md border border-border-color"
+              className={selectClass}
               disabled={eligibleClients.length === 0}
               aria-label="Selecione o cliente"
             >
@@ -134,19 +128,12 @@ export function SaveProposalModal({
       </div>
 
       <div className="flex justify-end space-x-4 mt-8">
-        <button
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus disabled:opacity-60 disabled:cursor-not-allowed"
-        >
+        </Button>
+        <Button variant="primary" onClick={handleSave} disabled={isSaving} loading={isSaving}>
           {isSaving ? 'Salvando...' : 'Salvar Proposta'}
-        </button>
+        </Button>
       </div>
     </Modal>
   );

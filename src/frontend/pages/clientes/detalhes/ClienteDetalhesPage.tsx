@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { PageHeader } from '../../../components/layout';
-import { EventFormModal } from '../../../components/agenda';
+import { PageHeader } from '@/components/layout';
+import { EventFormModal } from '@/components/agenda';
 import {
   ArrowLeftIcon,
+  Button,
   CalendarPlusIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -14,16 +15,16 @@ import {
   ProjetosIcon,
   TagIcon,
   UsersIcon,
-} from '../../../components/ui';
+} from '@/components/ui';
 import { ClienteDetalhesInfoTab } from './ClienteDetalhesInfoTab';
 import { ClienteDetalhesSecondaryTabs } from './ClienteDetalhesSecondaryTabs';
-import { NAV_LINKS } from '../../../constants';
-import { useCoreData, useSystemData } from '../../../context/DataContext';
-import { useClienteDetalhesForm } from '../../../hooks/useClienteDetalhesForm';
-import { useClienteLinks } from '../../../hooks/useClienteLinks';
-import { useClienteMeetings } from '../../../hooks/useClienteMeetings';
-import { calculateProjectFinancialSummary } from '../../../services/clientFinancialSummaryService';
-import type { Client } from '../../../types';
+import { NAV_LINKS } from '@/constants';
+import { useCoreData, useSystemData } from '@/context/DataContext';
+import { useClienteDetalhesForm } from '@/hooks/useClienteDetalhesForm';
+import { useClienteLinks } from '@/hooks/useClienteLinks';
+import { useClienteMeetings } from '@/hooks/useClienteMeetings';
+import { calculateProjectFinancialSummary } from '@/services/clientFinancialSummaryService';
+import type { Client } from '@/types';
 
 const ClienteDetalhesPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -133,8 +134,6 @@ const ClienteDetalhesPage = () => {
     return <div className="p-10 text-center">Carregando ou cliente não encontrado...</div>;
   }
 
-  const commonInputClass =
-    'w-full bg-background p-2 rounded-md border focus:border-accent text-text-primary transition disabled:opacity-100 disabled:cursor-default disabled:bg-background/50';
   const tabButtonClass = (tabId: string) =>
     `flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === tabId ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`;
   const clientesIcon = NAV_LINKS.find((link) => link.path === '/clientes')?.icon;
@@ -157,44 +156,41 @@ const ClienteDetalhesPage = () => {
         icon={!client.avatarUrl ? clientesIcon : undefined}
       >
         <div className="flex gap-3">
-          <button
+          <Button
+            variant="secondary"
             onClick={() => navigate('/clientes')}
-            className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-surface border border-border-color hover:bg-background transition-colors text-sm flex items-center gap-2"
+            className="flex items-center gap-2"
           >
             <ArrowLeftIcon className="w-4 h-4" />
             Retornar
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
             onClick={handleScheduleMeeting}
-            className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-surface border border-border-color hover:bg-background transition-colors text-sm flex items-center gap-2"
+            className="flex items-center gap-2"
           >
             <CalendarPlusIcon className="w-4 h-4 text-primary" />
             Agendar Reunião
-          </button>
+          </Button>
 
           {isEditing ? (
             <>
-              <button
-                onClick={handleCancel}
-                className="px-4 py-2 rounded-lg font-semibold text-text-secondary bg-surface border border-border-color hover:bg-background transition-colors text-sm"
-              >
+              <Button variant="secondary" onClick={handleCancel}>
                 Cancelar
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus transition-colors text-sm shadow-soft"
-              >
+              </Button>
+              <Button variant="primary" onClick={handleSave}>
                 Salvar Alterações
-              </button>
+              </Button>
             </>
           ) : (
-            <button
+            <Button
+              variant="secondary"
               onClick={() => setIsEditing(true)}
-              className="px-6 py-2 rounded-lg font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors text-sm"
+              className="text-primary bg-primary/10 hover:bg-primary/20"
             >
               Editar Cliente
-            </button>
+            </Button>
           )}
         </div>
       </PageHeader>
@@ -235,7 +231,6 @@ const ClienteDetalhesPage = () => {
             client={client}
             isPJ={client.clientType === 'PJ'}
             isEditing={isEditing}
-            commonInputClass={commonInputClass}
             originalClient={originalClient}
             dropdownRef={dropdownRef}
             isInterestsDropdownOpen={isInterestsDropdownOpen}
@@ -255,7 +250,6 @@ const ClienteDetalhesPage = () => {
             client={client}
             clientProjects={clientProjects}
             financialSummaries={financialSummaries}
-            commonInputClass={commonInputClass}
             isEditing={isEditing}
             newMeeting={newMeeting}
             setNewMeeting={setNewMeeting}

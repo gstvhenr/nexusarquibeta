@@ -4,6 +4,7 @@ import type { Project, ProjectStatus, TaskPriority } from '../../types';
 import { projectStatuses } from '../../types';
 import { PROJECT_STATUS_COLORS } from '../../constants';
 import { ArchiveIcon, UnarchiveIcon, CheckCircleIcon } from '../ui/icons';
+import { IconButton } from '../ui';
 import { getDeadlineInfo } from '../../utils/formatters';
 import { calculateProjectProgress } from '../../services/dashboardService';
 
@@ -154,39 +155,47 @@ export const ProjectListItem: (props: {
             {project.archived ? (
               !project.inactivatedAt &&
               !project.finalizedAt && (
-                <button
+                <IconButton
+                  variant="secondary"
+                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     onArchive(project, false);
                   }}
-                  className="p-1.5 bg-background rounded-full text-text-secondary hover:text-secondary hover:bg-secondary/10 shadow-sm transition-colors"
                   aria-label="Desarquivar projeto"
+                  className="bg-background shadow-sm"
                 >
                   <UnarchiveIcon className="w-4 h-4" />
-                </button>
+                </IconButton>
               )
             ) : (
               <>
-                <button
+                <IconButton
+                  variant="default"
+                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     onFinalize(project);
                   }}
-                  className="p-1.5 bg-background rounded-full text-text-secondary hover:text-success hover:bg-success/10 shadow-sm transition-colors"
+                  aria-label="Finalizar Projeto"
                   title="Finalizar Projeto"
+                  className="bg-background shadow-sm hover:text-success hover:bg-success/10"
                 >
                   <CheckCircleIcon className="w-4 h-4" />
-                </button>
-                <button
+                </IconButton>
+                <IconButton
+                  variant="secondary"
+                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     onArchive(project, true);
                   }}
-                  className="p-1.5 bg-background rounded-full text-text-secondary hover:text-secondary hover:bg-secondary/10 shadow-sm transition-colors"
+                  aria-label="Inativar Projeto"
                   title="Inativar Projeto"
+                  className="bg-background shadow-sm"
                 >
                   <ArchiveIcon className="w-4 h-4" />
-                </button>
+                </IconButton>
               </>
             )}
           </div>

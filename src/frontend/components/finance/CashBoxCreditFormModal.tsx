@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Button, FormField, Input } from '../ui';
 import type { CashBoxOrigin, CashBoxCredit, CashBoxCreditCategory } from '../../types';
 import {
   getCreditCategoriesForOrigin,
@@ -191,70 +192,60 @@ const CashBoxCreditFormModal: (props: Props) => React.ReactNode = ({ isOpen, onC
           )}
 
           {/* Descrição */}
-          <div>
-            <label htmlFor="cbc-description" className={labelClass}>
-              Descrição
-            </label>
-            <input
-              id="cbc-description"
+          <FormField label="Descrição">
+            <Input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className={inputClass}
               placeholder="Observação adicional (opcional)"
               aria-label="Descrição"
             />
-          </div>
+          </FormField>
 
           {/* Data */}
-          <div>
-            <label htmlFor="cbc-date" className={labelClass}>
-              Data do Crédito <span className="text-error">*</span>
-            </label>
-            <input
-              id="cbc-date"
+          <FormField
+            label={
+              <>
+                Data do Crédito <span className="text-error">*</span>
+              </>
+            }
+          >
+            <Input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className={inputClass}
               aria-label="Data do crédito"
             />
-          </div>
+          </FormField>
 
           {/* Valor */}
-          <div>
-            <label htmlFor="cbc-value" className={labelClass}>
-              Valor (R$) <span className="text-error">*</span>
-            </label>
-            <input
-              id="cbc-value"
+          <FormField
+            label={
+              <>
+                Valor (R$) <span className="text-error">*</span>
+              </>
+            }
+          >
+            <Input
               type="number"
               min="0.01"
               step="0.01"
               value={value || ''}
               onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
-              className={inputClass}
               placeholder="0,00"
               aria-label="Valor"
             />
-          </div>
+          </FormField>
         </div>
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 p-6 border-t border-border-color shrink-0">
-          <button
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl font-semibold text-sm text-text-secondary hover:bg-background transition-colors"
-          >
+          <Button variant="secondary" onClick={onClose}>
             Cancelar
-          </button>
-          <button
-            onClick={handleSave}
-            className="px-5 py-2.5 rounded-xl font-semibold text-sm text-primary-content bg-primary hover:bg-primary-focus transition-colors"
-            id="btn-save-credit"
-          >
+          </Button>
+          <Button variant="primary" onClick={handleSave} id="btn-save-credit">
             Salvar Crédito
-          </button>
+          </Button>
         </div>
       </div>
     </div>

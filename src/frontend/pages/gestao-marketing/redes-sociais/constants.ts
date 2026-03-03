@@ -1,4 +1,4 @@
-import type { InstagramSnapshot } from '../../../types';
+import type { InstagramSnapshot } from '@/types';
 
 export const INSTAGRAM_DEFAULT_URL = 'https://www.instagram.com/rafaelmunaro.arq/';
 export const INSTAGRAM_DEFAULT_HANDLE = '@rafaelmunaro.arq';

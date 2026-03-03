@@ -1,7 +1,8 @@
 import React from 'react';
 import { ClockIcon, TrashIcon, UserCircleIcon, PencilIcon } from '../../ui/icons';
-import type { ProjectTask, TaskStatus } from '../../../types';
-import { getDeadlineInfo } from '../../../utils/formatters';
+import { IconButton } from '../../ui';
+import type { ProjectTask, TaskStatus } from '@/types';
+import { getDeadlineInfo } from '@/utils/formatters';
 
 interface ChecklistTaskRowProps {
   sectionId: string;
@@ -123,24 +124,26 @@ export const ChecklistTaskRow: (props: ChecklistTaskRowProps) => React.ReactNode
           </span>
         </div>
 
-        <button
-          type="button"
+        <IconButton
+          variant="primary"
+          size="sm"
           onClick={() => onEditTaskDetails(sectionId, task)}
-          className="p-1.5 bg-background border border-border-color rounded-md text-text-secondary hover:text-primary hover:border-primary transition-colors"
-          title="Detalhes da Tarefa"
           aria-label="Detalhes da Tarefa"
+          title="Detalhes da Tarefa"
+          className="bg-background border border-border-color"
         >
           <PencilIcon className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
+        </IconButton>
+        <IconButton
+          variant="danger"
+          size="sm"
           onClick={() => onRemoveTask(sectionId, task.id)}
-          className="p-1.5 bg-background border border-border-color rounded-md text-text-secondary hover:text-error hover:border-error transition-colors"
-          title="Remover Tarefa"
           aria-label="Remover Tarefa"
+          title="Remover Tarefa"
+          className="bg-background border border-border-color"
         >
           <TrashIcon className="w-3.5 h-3.5" />
-        </button>
+        </IconButton>
       </div>
     </div>
   );

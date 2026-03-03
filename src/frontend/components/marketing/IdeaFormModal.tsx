@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal } from '../ui';
+import { Button, FormField, Input, Modal, Textarea } from '../ui';
 import { IDEA_COLORS } from '../../constants';
 import type { MarketingIdea } from '../../types';
 
@@ -44,38 +44,22 @@ const IdeaFormModal: (props: IdeaFormModalProps) => React.ReactNode = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={initialIdea ? 'Editar Ideia' : 'Nova Ideia'}>
       <div className="space-y-4">
-        <div>
-          <label
-            htmlFor="field-titulo-opcional"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Título (Opcional)
-          </label>
-          <input
-            id="field-titulo-opcional"
+        <FormField label="Título (Opcional)">
+          <Input
             type="text"
             value={idea.title || ''}
             onChange={(e) => setIdea((i) => ({ ...i, title: e.target.value }))}
-            className="w-full bg-background p-2 rounded-md border border-border-color"
             aria-label="Título da ideia"
           />
-        </div>
-        <div>
-          <label
-            htmlFor="field-ideia"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Ideia
-          </label>
-          <textarea
-            id="field-ideia"
+        </FormField>
+        <FormField label="Ideia">
+          <Textarea
             value={idea.content || ''}
             onChange={(e) => setIdea((i) => ({ ...i, content: e.target.value }))}
             rows={5}
-            className="w-full bg-background p-2 rounded-md border border-border-color"
             aria-label="Conteúdo da ideia"
-          ></textarea>
-        </div>
+          />
+        </FormField>
         <div>
           <span className="block text-sm font-medium text-text-secondary mb-2">Cor da Nota</span>
           <div className="flex items-center gap-3">
@@ -94,30 +78,22 @@ const IdeaFormModal: (props: IdeaFormModalProps) => React.ReactNode = ({
       <div className="flex justify-between items-center mt-6 pt-4 border-t border-border-color">
         <div>
           {initialIdea && (
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={() => onDelete(initialIdea.id)}
-              className="px-4 py-2 rounded-lg font-semibold text-error hover:bg-error/10 transition-colors"
+              className="text-error hover:bg-error/10"
             >
               Excluir
-            </button>
+            </Button>
           )}
         </div>
         <div className="flex space-x-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-          >
+          <Button variant="secondary" onClick={onClose}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-          >
+          </Button>
+          <Button variant="primary" onClick={handleSave}>
             Salvar
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

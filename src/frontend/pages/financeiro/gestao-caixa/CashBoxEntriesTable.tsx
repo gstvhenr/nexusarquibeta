@@ -1,6 +1,7 @@
 import React from 'react';
-import { CheckCircleIcon, PlusIcon, TrashIcon } from '../../../components/ui/icons';
-import { formatCurrency } from '../../../utils/formatters';
+import { CheckCircleIcon, PlusIcon, TrashIcon } from '@/components/ui/icons';
+import { IconButton } from '@/components/ui';
+import { formatCurrency } from '@/utils/formatters';
 import { OriginBadge } from './OriginBadge';
 import { RecurrenceBadge } from './RecurrenceBadge';
 import type { UnifiedEntry } from './types';
@@ -106,24 +107,24 @@ export const CashBoxEntriesTable: (props: CashBoxEntriesTableProps) => React.Rea
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1">
                       {!entry.confirmed && (
-                        <button
-                          type="button"
+                        <IconButton
+                          variant="default"
                           onClick={() => onConfirmEntry(entry)}
-                          className="p-2 text-success hover:text-success/80 transition-colors"
                           aria-label={isCredit ? 'Confirmar recebimento' : 'Confirmar pagamento'}
                           title={isCredit ? 'Confirmar recebimento' : 'Confirmar pagamento'}
+                          className="text-success hover:text-success/80"
                         >
                           <CheckCircleIcon className="w-4 h-4" />
-                        </button>
+                        </IconButton>
                       )}
-                      <button
-                        type="button"
+                      <IconButton
+                        variant="danger"
                         onClick={() => onDeleteEntry(entry)}
-                        className="p-2 text-text-secondary hover:text-error opacity-0 group-hover:opacity-100 transition-all"
                         aria-label={isCredit ? 'Excluir crédito' : 'Excluir despesa'}
+                        className="opacity-0 group-hover:opacity-100"
                       >
                         <TrashIcon className="w-4 h-4" />
-                      </button>
+                      </IconButton>
                     </div>
                   </td>
                 </tr>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LinkIcon } from '../../../components/ui/icons';
+import { LinkIcon } from '@/components/ui/icons';
 
 type InstagramProfileInfoCardProps = {
   profileUrl: string;

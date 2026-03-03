@@ -6,12 +6,12 @@ import {
   DeleteConfirmationModal,
   EmptyState,
   UnarchiveIcon,
-} from '../../../components/ui';
-import type { Proposal } from '../../../types';
-import { useCoreData } from '../../../context/DataContext';
-import { NAV_LINKS } from '../../../constants';
-import { PageHeader } from '../../../components/layout';
-import { ProposalListItem } from '../../../components/propostas';
+} from '@/components/ui';
+import type { Proposal } from '@/types';
+import { useCoreData } from '@/context/DataContext';
+import { NAV_LINKS } from '@/constants';
+import { PageHeader } from '@/components/layout';
+import { ProposalListItem } from '@/components/propostas';
 
 const PropostasPage: () => React.ReactNode = () => {
   const { proposals, setProposals, projects } = useCoreData();

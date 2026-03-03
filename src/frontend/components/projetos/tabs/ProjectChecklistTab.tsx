@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDownIcon, CheckCircleIcon, ClockIcon, TrashIcon, PlusIcon } from '../../ui/icons';
-import { ProjectSection, ProjectTask, TaskStatus } from '../../../types';
+import { Button, IconButton } from '../../ui';
+import { ProjectSection, ProjectTask, TaskStatus } from '@/types';
 import { ChecklistTaskRow } from './ChecklistTaskRow';
 
 interface ChecklistTabProps {
@@ -59,13 +60,14 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
             Organize seu projeto em fases (ex: Preliminar, Executivo) para manter o controle.
           </p>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          size="sm"
           onClick={onAddSection}
-          className="px-4 py-2 text-sm font-semibold bg-primary text-primary-content rounded-lg hover:bg-primary-focus shadow-soft transition-colors flex items-center gap-2"
+          className="flex items-center gap-2"
         >
           <PlusIcon className="w-4 h-4" /> Nova Etapa
-        </button>
+        </Button>
       </div>
 
       {sections.length === 0 ? (
@@ -78,13 +80,9 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
             Comece adicionando a primeira fase do seu projeto (ex: "Levantamento" ou "Estudo
             Preliminar").
           </p>
-          <button
-            type="button"
-            onClick={onAddSection}
-            className="px-6 py-2 bg-secondary text-secondary-content rounded-lg font-semibold hover:bg-secondary-focus transition-colors"
-          >
+          <Button variant="secondary" onClick={onAddSection}>
             Criar Primeira Etapa
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="space-y-6">
@@ -150,17 +148,17 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
                     />
                   </div>
 
-                  <button
-                    type="button"
+                  <IconButton
+                    variant="danger"
                     onClick={(e) => {
                       e.stopPropagation();
                       onRemoveSection(section.id);
                     }}
-                    className="p-2 text-text-secondary/40 hover:text-error hover:bg-error/10 rounded-full transition-colors"
+                    aria-label="Excluir Etapa"
                     title="Excluir Etapa"
                   >
                     <TrashIcon className="w-5 h-5" />
-                  </button>
+                  </IconButton>
                 </div>
 
                 {isExpanded && (

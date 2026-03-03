@@ -1,5 +1,5 @@
 import type React from 'react';
-import type { Client, ClientContact, Project, ProjectMeeting } from '../../../types';
+import type { Client, ClientContact, Project, ProjectMeeting } from '@/types';
 
 export type FieldId = (name: string) => string;
 

@@ -1,7 +1,8 @@
 import React from 'react';
-import { PlusIcon, TrashIcon } from '../../../components/ui/icons';
-import type { InstagramSnapshot } from '../../../types';
-import { formatDateWithTime } from '../../../utils/formatters';
+import { PlusIcon, TrashIcon } from '@/components/ui/icons';
+import { IconButton } from '@/components/ui';
+import type { InstagramSnapshot } from '@/types';
+import { formatDateWithTime } from '@/utils/formatters';
 
 type InstagramSnapshotHistoryTableProps = {
   snapshots: InstagramSnapshot[];
@@ -71,14 +72,15 @@ export const InstagramSnapshotHistoryTable: (
                     {snapshot.following.toLocaleString('pt-BR')}
                   </td>
                   <td className="py-3 pl-4 text-center">
-                    <button
-                      type="button"
+                    <IconButton
+                      variant="danger"
+                      size="sm"
                       onClick={() => onDeleteSnapshot(snapshot.id)}
-                      className="p-1.5 text-text-secondary hover:text-error rounded-md hover:bg-error/10 transition-colors"
+                      aria-label="Excluir registro"
                       title="Excluir registro"
                     >
                       <TrashIcon className="w-4 h-4" />
-                    </button>
+                    </IconButton>
                   </td>
                 </tr>
               ))}

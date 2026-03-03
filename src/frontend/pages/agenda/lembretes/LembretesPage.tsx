@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useSystemData } from '../../../context/DataContext';
-import { PageHeader } from '../../../components/layout';
+import { useSystemData } from '@/context/DataContext';
+import { PageHeader } from '@/components/layout';
 import {
   CalendarIcon,
   ClockIcon,
@@ -11,16 +11,18 @@ import {
   ReminderEmptyState,
   ReminderFormModal,
   getReminderColorStyle,
-} from '../../../components/agenda';
-import { NAV_LINKS } from '../../../constants';
+} from '@/components/agenda';
+import { NAV_LINKS } from '@/constants';
 import {
+  Button,
   DeleteConfirmationModal,
+  IconButton,
   PlusIcon,
   TrashIcon,
   CheckCircleIcon,
   ArchiveIcon,
-} from '../../../components/ui';
-import type { Reminder } from '../../../types';
+} from '@/components/ui';
+import type { Reminder } from '@/types';
 
 // ─── MAIN PAGE ───────────────────────────────────────────────
 const LembretesPage: () => React.ReactNode = () => {
@@ -149,12 +151,13 @@ const LembretesPage: () => React.ReactNode = () => {
               Concluídos ({completedReminders.length})
             </button>
           )}
-          <button
+          <Button
+            variant="primary"
             onClick={openAdd}
-            className="px-5 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft flex items-center gap-2 transition-colors text-sm"
+            className="shadow-soft flex items-center gap-2 text-sm"
           >
             <PlusIcon className="w-5 h-5" /> Novo Lembrete
-          </button>
+          </Button>
         </div>
       </PageHeader>
 
@@ -276,38 +279,46 @@ const LembretesPage: () => React.ReactNode = () => {
                             <PinIcon className="w-3.5 h-3.5" filled={!!reminder.pinned} />
                           </button>
                           {/* Complete */}
-                          <button
+                          <IconButton
+                            variant="default"
+                            size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               markComplete(reminder.id);
                             }}
-                            className="p-1.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-100/80 dark:hover:bg-emerald-400/20 rounded-full transition-all"
+                            aria-label="Concluir"
                             title="Concluir"
+                            className="hover:text-emerald-600 hover:bg-emerald-100/80 dark:hover:bg-emerald-400/20"
                           >
                             <CheckCircleIcon className="w-3.5 h-3.5" />
-                          </button>
+                          </IconButton>
                           {/* Reschedule */}
-                          <button
+                          <IconButton
+                            variant="default"
+                            size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               openReschedule(reminder);
                             }}
-                            className="p-1.5 text-gray-500 hover:text-sky-600 hover:bg-sky-100/80 dark:hover:bg-sky-400/20 rounded-full transition-all"
+                            aria-label="Reagendar"
                             title="Reagendar"
+                            className="hover:text-sky-600 hover:bg-sky-100/80 dark:hover:bg-sky-400/20"
                           >
                             <CalendarIcon className="w-3.5 h-3.5" />
-                          </button>
+                          </IconButton>
                           {/* Delete */}
-                          <button
+                          <IconButton
+                            variant="danger"
+                            size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               confirmDelete(reminder);
                             }}
-                            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-100/80 dark:hover:bg-red-400/20 rounded-full transition-all"
+                            aria-label="Excluir"
                             title="Excluir"
                           >
                             <TrashIcon className="w-3.5 h-3.5" />
-                          </button>
+                          </IconButton>
                         </div>
                       </div>
                     );
@@ -345,13 +356,15 @@ const LembretesPage: () => React.ReactNode = () => {
                             <span className="text-[10px] text-text-secondary/60 italic">
                               Concluído em {formatDateTime(reminder.completedAt!)}
                             </span>
-                            <button
+                            <IconButton
+                              variant="danger"
+                              size="sm"
                               onClick={() => confirmDelete(reminder)}
-                              className="p-1 text-text-secondary/40 hover:text-error transition-colors"
+                              aria-label="Excluir"
                               title="Excluir"
                             >
                               <TrashIcon className="w-3 h-3" />
-                            </button>
+                            </IconButton>
                           </div>
                         </div>
                       );

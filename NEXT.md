@@ -11,43 +11,36 @@
 - Manter aqui apenas: última sessão + próximo passo + bloqueios.
 - Histórico completo até 2026-02-16: `docs/changelog/session-log-2026-02.md`.
 
-## Último estado conhecido (2026-03-01, sessão 19)
+## Último estado conhecido (2026-03-02, sessão 24)
 
-Execução da imunização estrutural do DNA concluída: regras prescritivas de placement + gate estrutural phaseado integrados ao fluxo canônico.
+Fechamento total das pendências da trilha estrutural concluído no mesmo ciclo: `S06` + `S07` zerados, baseline estrutural e baseline de poluição ratchetados, com `verify:ci` totalmente verde.
 
 ### O que mudou
 
-- [x] Criou `docs/PLACEMENT_RULES.md` (árvore decisória + naming + co-location + anti-patterns).
-- [x] Criou `scripts/validate-structure.mjs` com regras:
-  - bloqueantes: `S01`, `S02`, `S03`, `S05`
-  - phaseadas por baseline: `S04`, `S06`, `S07`
-- [x] Criou baseline versionado `scripts/structure-baseline.json` (248 entradas iniciais).
-- [x] Adicionou comandos oficiais no `package.json`:
-  - `validate:structure`
-  - `validate:structure:ratchet`
-  - `validate:structure:ratchet:check`
-- [x] Integrou `validate:structure` ao `verify-loop` e ao `verify:raw`.
-- [x] Atualizou governança/documentação:
-  - `AGENTS.md`
-  - `ARCHITECTURE.md`
-  - `.agent/rules/nexusarqui.md`
-  - `docs/governance/core-contract.md`
-  - `scripts/check-governance-docs.mjs`
-  - `scripts/README.md`
-- [x] Registrou decisão estrutural em `DECISIONS-active.md`.
+- [x] Converteu em lote as pendências de `S06` (imports profundos) para alias `@/...` com base no baseline ativo.
+- [x] Criou barrels `index.ts` para todos os 7 diretórios pendentes de `S07`.
+- [x] Ajustou ambiente de testes para alias `@/...` via `vitest.config.ts`.
+- [x] Removeu re-export de `storageService` em `src/frontend/services/infrastructure/index.ts` para manter o guard de legado verde.
+- [x] Ratchet estrutural completo aplicado: `baseline_removals=231` em `scripts/structure-baseline.json`.
+- [x] Ratchet de poluição aplicado após varredura estrutural: `baseline_additions=12` e `baseline_removals=5` em `scripts/pollution-baseline.json`.
+- [x] Regenerou inventário ativo: `.agent/memory/project-inventory.md`.
+- [x] Registrou decisão desta sessão em `DECISIONS-active.md`.
 
 ### Validação executada
 
-- [x] `npm run validate:structure:ratchet`
-- [x] `npm run validate:structure`
-- [x] `npm run validate:structure:ratchet:check`
 - [x] `npm run verify` com `[VERIFY][LOOP][PASS]` (9 gates)
+- [x] `npm run validate:structure:ratchet`
+- [x] `npm run validate:structure:ratchet:check`
+- [x] `npm run validate:structure`
+- [x] `npm run inventory:generate`
+- [x] `npm run verify:quick`
+- [x] `npm run verify:ci` (incluindo `self-review:auto` e `security:check`)
 
 ## Próximo passo exato
 
-1. Executar ratchet incremental do legado estrutural, priorizando `S06` (imports profundos) com migração gradual para alias `@/`.
-2. Planejar redução de `S07` (barrels ausentes) por domínio em micro-batches sem big-bang.
-3. Quando backend for adicionado, criar `src/backend/` ao lado de `src/frontend/` e evoluir o validador para dual-root.
+1. Consolidar commit(s) atômico(s) do lote estrutural (imports, barrels, baselines e documentação).
+2. Avaliar, em sessão dedicada, curadoria de exports dos novos barrels para reduzir superfície pública sem quebrar consumidores.
+3. Manter `npm run verify:ci` como gate obrigatório para próximos lotes funcionais.
 
 ## Bloqueios e dúvidas
 

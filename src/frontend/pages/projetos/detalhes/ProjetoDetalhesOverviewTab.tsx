@@ -1,6 +1,6 @@
 import React from 'react';
-import type { Project, ProjectAddress, ProjectStatus } from '../../../types';
-import { projectStatuses } from '../../../types';
+import type { Project, ProjectAddress, ProjectStatus } from '@/types';
+import { projectStatuses } from '@/types';
 import {
   ArchiveIcon,
   CheckCircleIcon,
@@ -8,9 +8,9 @@ import {
   LinkIcon,
   TrashIcon,
   UnarchiveIcon,
-} from '../../../components/ui';
-import { InfoCard, RevisionCounter } from '../../../components/projetos';
-import type { ProjectActionType } from '../../../components/projetos';
+} from '@/components/ui';
+import { InfoCard, RevisionCounter } from '@/components/projetos';
+import type { ProjectActionType } from '@/components/projetos';
 import type { ProjectDetailTabId } from './types';
 
 interface ProjetoDetalhesOverviewTabProps {

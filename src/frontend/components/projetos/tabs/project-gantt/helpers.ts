@@ -1,4 +1,4 @@
-import type { ProjectSection } from '../../../../types';
+import type { ProjectSection } from '@/types';
 import type {
   GanttStats,
   GroupHeader,

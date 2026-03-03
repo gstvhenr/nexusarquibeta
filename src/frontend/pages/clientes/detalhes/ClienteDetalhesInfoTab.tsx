@@ -1,22 +1,30 @@
 import React from 'react';
 import { ClienteAddressFieldset } from './ClienteAddressFieldset';
-import { ChevronDownIcon, PlusIcon, TrashIcon } from '../../../components/ui';
+import {
+  ChevronDownIcon,
+  FormField,
+  IconButton,
+  Input,
+  PlusIcon,
+  TrashIcon,
+} from '@/components/ui';
 import {
   LEAD_SOURCE_OPTIONS,
   PIPELINE_STATUS_OPTIONS,
   SERVICE_INTEREST_OPTIONS,
-} from '../../../constants';
-import { clientStatuses } from '../../../types';
-import type { Client, ClientContact } from '../../../types';
-import { formatCpfCnpj, formatDate, formatPhone } from '../../../utils/formatters';
-import { AvatarPicker } from '../../../components/clientes/AvatarPicker';
+} from '@/constants';
+import { clientStatuses } from '@/types';
+import type { Client, ClientContact } from '@/types';
+import { formatCpfCnpj, formatDate, formatPhone } from '@/utils/formatters';
+import { AvatarPicker } from '@/components/clientes/AvatarPicker';
+
+const DISABLED_OVERRIDE = 'disabled:opacity-100 disabled:cursor-default disabled:bg-background/50';
 
 interface ClienteDetalhesInfoTabProps {
   activeTab: string;
   client: Client;
   isPJ: boolean;
   isEditing: boolean;
-  commonInputClass: string;
   originalClient: Client | undefined;
   dropdownRef: React.RefObject<HTMLDivElement>;
   isInterestsDropdownOpen: boolean;
@@ -40,7 +48,6 @@ export function ClienteDetalhesInfoTab({
   client,
   isPJ,
   isEditing,
-  commonInputClass,
   originalClient,
   dropdownRef,
   isInterestsDropdownOpen,
@@ -54,6 +61,9 @@ export function ClienteDetalhesInfoTab({
   handleServiceInterestChange,
   getModifiedClass,
 }: ClienteDetalhesInfoTabProps) {
+  const commonSelectClass =
+    'w-full bg-background p-2 rounded-md border focus:border-accent text-text-primary transition disabled:opacity-100 disabled:cursor-default disabled:bg-background/50';
+
   return (
     <>
       {activeTab === 'info' && (
@@ -98,87 +108,60 @@ export function ClienteDetalhesInfoTab({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  {isPJ ? 'Razão Social' : 'Nome Completo'}
-                </label>
-                <input
+              <FormField label={isPJ ? 'Razão Social' : 'Nome Completo'}>
+                <Input
                   type="text"
                   value={client.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  className={`${commonInputClass} ${getModifiedClass(client.name, originalClient?.name)}`}
+                  className={`${DISABLED_OVERRIDE} ${getModifiedClass(client.name, originalClient?.name)}`}
                   disabled={!isEditing}
                   aria-label={isPJ ? 'Razão Social' : 'Nome Completo'}
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  {isPJ ? 'Data de Abertura' : 'Data de Nascimento'}
-                </label>
-                <input
+              </FormField>
+              <FormField label={isPJ ? 'Data de Abertura' : 'Data de Nascimento'}>
+                <Input
                   type="date"
                   value={client.birthDate || ''}
                   onChange={(e) => handleChange('birthDate', e.target.value)}
-                  className={`${commonInputClass} ${getModifiedClass(client.birthDate, originalClient?.birthDate)}`}
+                  className={`${DISABLED_OVERRIDE} ${getModifiedClass(client.birthDate, originalClient?.birthDate)}`}
                   disabled={!isEditing}
                   aria-label={isPJ ? 'Data de Abertura' : 'Data de Nascimento'}
                 />
-              </div>
-              <div>
-                <label
-                  htmlFor="field-cpf-cnpj"
-                  className="block text-sm font-medium text-text-secondary mb-1"
-                >
-                  CPF/CNPJ
-                </label>
-                <input
-                  id="field-cpf-cnpj"
+              </FormField>
+              <FormField label="CPF/CNPJ">
+                <Input
                   type="text"
                   value={client.cpfCnpj || ''}
                   onChange={(e) => handleChange('cpfCnpj', formatCpfCnpj(e.target.value))}
-                  className={`${commonInputClass} ${getModifiedClass(client.cpfCnpj, originalClient?.cpfCnpj)}`}
+                  className={`${DISABLED_OVERRIDE} ${getModifiedClass(client.cpfCnpj, originalClient?.cpfCnpj)}`}
                   disabled={!isEditing}
                   aria-label="CPF/CNPJ"
                 />
-              </div>
+              </FormField>
               {isPJ && (
                 <>
-                  <div>
-                    <label
-                      htmlFor="field-nome-do-representante"
-                      className="block text-sm font-medium text-text-secondary mb-1"
-                    >
-                      Nome do Representante
-                    </label>
-                    <input
-                      id="field-nome-do-representante"
+                  <FormField label="Nome do Representante">
+                    <Input
                       type="text"
                       value={client.representative?.name || ''}
                       onChange={(e) => handleRepChange('name', e.target.value)}
-                      className={`${commonInputClass} ${getModifiedClass(client.representative?.name, originalClient?.representative?.name)}`}
+                      className={`${DISABLED_OVERRIDE} ${getModifiedClass(client.representative?.name, originalClient?.representative?.name)}`}
                       disabled={!isEditing}
                       placeholder="Opcional"
                       aria-label="Nome do representante"
                     />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="field-cargo-relacao"
-                      className="block text-sm font-medium text-text-secondary mb-1"
-                    >
-                      Cargo / Relação
-                    </label>
-                    <input
-                      id="field-cargo-relacao"
+                  </FormField>
+                  <FormField label="Cargo / Relação">
+                    <Input
                       type="text"
                       value={client.representative?.relationship || ''}
                       onChange={(e) => handleRepChange('relationship', e.target.value)}
-                      className={`${commonInputClass} ${getModifiedClass(client.representative?.relationship, originalClient?.representative?.relationship)}`}
+                      className={`${DISABLED_OVERRIDE} ${getModifiedClass(client.representative?.relationship, originalClient?.representative?.relationship)}`}
                       disabled={!isEditing}
                       placeholder="Opcional"
                       aria-label="Cargo ou relação"
                     />
-                  </div>
+                  </FormField>
                 </>
               )}
             </div>
@@ -194,14 +177,14 @@ export function ClienteDetalhesInfoTab({
                   key={contact.id}
                   className="grid grid-cols-[1fr,auto,auto,auto] gap-3 items-center bg-background/30 p-2 rounded-lg"
                 >
-                  <input
+                  <Input
                     type="tel"
                     value={contact.phone}
                     onChange={(e) => handleContactChange(contact.id, 'phone', e.target.value)}
                     onBlur={(e) =>
                       handleContactChange(contact.id, 'phone', formatPhone(e.target.value))
                     }
-                    className={`${commonInputClass} ${originalClient?.contacts?.find((c) => c.id === contact.id)?.phone !== contact.phone ? 'border-yellow-500 ring-1 ring-yellow-500/20' : 'border-border-color'}`}
+                    className={`${DISABLED_OVERRIDE} ${originalClient?.contacts?.find((c) => c.id === contact.id)?.phone !== contact.phone ? 'border-yellow-500 ring-1 ring-yellow-500/20' : 'border-border-color'}`}
                     placeholder={`Telefone ${index + 1}`}
                     disabled={!isEditing}
                     aria-label={`Telefone ${index + 1}`}
@@ -232,14 +215,13 @@ export function ClienteDetalhesInfoTab({
                     Principal
                   </label>
                   {isEditing && (
-                    <button
-                      type="button"
+                    <IconButton
+                      variant="danger"
                       onClick={() => handleRemoveContact(contact.id)}
-                      className="p-2 text-gray-400 hover:text-error transition-colors"
                       aria-label="Remover telefone"
                     >
                       <TrashIcon className="w-4 h-4" />
-                    </button>
+                    </IconButton>
                   )}
                 </div>
               ))}
@@ -252,23 +234,16 @@ export function ClienteDetalhesInfoTab({
                   <PlusIcon className="w-4 h-4" /> Adicionar Telefone
                 </button>
               )}
-              <div>
-                <label
-                  htmlFor="field-email"
-                  className="block text-sm font-medium text-text-secondary mb-1"
-                >
-                  Email
-                </label>
-                <input
-                  id="field-email"
+              <FormField label="Email">
+                <Input
                   type="email"
                   value={client.email || ''}
                   onChange={(e) => handleChange('email', e.target.value)}
-                  className={`${commonInputClass} ${getModifiedClass(client.email, originalClient?.email)}`}
+                  className={`${DISABLED_OVERRIDE} ${getModifiedClass(client.email, originalClient?.email)}`}
                   disabled={!isEditing}
                   aria-label="Email"
                 />
-              </div>
+              </FormField>
             </div>
           </fieldset>
 
@@ -276,7 +251,6 @@ export function ClienteDetalhesInfoTab({
             client={client}
             originalClient={originalClient}
             isEditing={isEditing}
-            commonInputClass={commonInputClass}
             handleAddressChange={handleAddressChange}
             getModifiedClass={getModifiedClass}
           />
@@ -297,7 +271,7 @@ export function ClienteDetalhesInfoTab({
                   id="field-status-do-cliente"
                   value={client.status}
                   onChange={(e) => handleChange('status', e.target.value)}
-                  className={`${commonInputClass} ${getModifiedClass(client.status, originalClient?.status)}`}
+                  className={`${commonSelectClass} ${getModifiedClass(client.status, originalClient?.status)}`}
                   disabled={!isEditing}
                   aria-label="Status do cliente"
                 >
@@ -319,7 +293,7 @@ export function ClienteDetalhesInfoTab({
                   id="field-status-no-pipeline"
                   value={client.pipelineStatus}
                   onChange={(e) => handleChange('pipelineStatus', e.target.value)}
-                  className={`${commonInputClass} ${getModifiedClass(client.pipelineStatus, originalClient?.pipelineStatus)}`}
+                  className={`${commonSelectClass} ${getModifiedClass(client.pipelineStatus, originalClient?.pipelineStatus)}`}
                   disabled={!isEditing}
                   aria-label="Status no pipeline"
                 >
@@ -341,7 +315,7 @@ export function ClienteDetalhesInfoTab({
                   id="field-fonte-do-lead"
                   value={client.leadSource}
                   onChange={(e) => handleChange('leadSource', e.target.value)}
-                  className={`${commonInputClass} ${getModifiedClass(client.leadSource, originalClient?.leadSource)}`}
+                  className={`${commonSelectClass} ${getModifiedClass(client.leadSource, originalClient?.leadSource)}`}
                   disabled={!isEditing}
                   aria-label="Fonte do lead"
                 >
@@ -361,7 +335,7 @@ export function ClienteDetalhesInfoTab({
                   <button
                     type="button"
                     onClick={() => isEditing && setInterestsDropdownOpen(!isInterestsDropdownOpen)}
-                    className={`${commonInputClass} text-left flex justify-between items-center ${!isEditing ? 'opacity-100 cursor-default' : 'cursor-pointer'} ${JSON.stringify(client.serviceInterests) !== JSON.stringify(originalClient?.serviceInterests) ? 'border-yellow-500 ring-1 ring-yellow-500/20' : 'border-border-color'}`}
+                    className={`w-full bg-background p-2 rounded-md border focus:border-accent text-text-primary transition text-left flex justify-between items-center ${!isEditing ? 'opacity-100 cursor-default' : 'cursor-pointer'} ${JSON.stringify(client.serviceInterests) !== JSON.stringify(originalClient?.serviceInterests) ? 'border-yellow-500 ring-1 ring-yellow-500/20' : 'border-border-color'}`}
                     disabled={!isEditing}
                   >
                     <span className="truncate block">

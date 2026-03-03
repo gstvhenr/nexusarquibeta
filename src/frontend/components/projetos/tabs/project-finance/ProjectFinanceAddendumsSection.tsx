@@ -1,7 +1,7 @@
-import { AlertIcon, TrashIcon } from '../../../ui/icons';
-import type { ContractAddendumStatus, ProjectFinancials } from '../../../../types';
-import { formatCurrency, formatDate } from '../../../../utils/formatters';
-import { getStatusSelectionOptions } from '../../../../utils/addendumWorkflow';
+import { AlertIcon, TrashIcon } from '@/components/ui/icons';
+import type { ContractAddendumStatus, ProjectFinancials } from '@/types';
+import { formatCurrency, formatDate } from '@/utils/formatters';
+import { getStatusSelectionOptions } from '@/utils/addendumWorkflow';
 import { getAuditTrailActionText } from './helpers';
 import type { BudgetServiceOption } from './types';
 

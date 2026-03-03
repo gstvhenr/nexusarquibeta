@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Modal } from '../ui';
+import { Button, FormField, Input, Modal, Textarea } from '../ui';
 import type { Product, Supplier, ProductUnit } from '../../types';
 import {
   PRODUCT_UNIT_OPTIONS,
@@ -109,22 +109,14 @@ export const ProductFormModal: (props: {
       ) : (
         <>
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-            <div>
-              <label
-                htmlFor="field-nome-do-produto"
-                className="block text-xs font-medium text-text-secondary mb-1"
-              >
-                Nome do Produto
-              </label>
-              <input
-                id="field-nome-do-produto"
+            <FormField label="Nome do Produto">
+              <Input
                 type="text"
                 value={product.name}
                 onChange={(e) => handleChange('name', e.target.value)}
-                className={inputClass}
                 aria-label="Nome do Produto"
               />
-            </div>
+            </FormField>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label
@@ -170,22 +162,14 @@ export const ProductFormModal: (props: {
                 </select>
               </div>
             </div>
-            <div>
-              <label
-                htmlFor="field-descricao"
-                className="block text-xs font-medium text-text-secondary mb-1"
-              >
-                Descrição
-              </label>
-              <textarea
-                id="field-descricao"
+            <FormField label="Descrição">
+              <Textarea
                 value={product.description || ''}
                 onChange={(e) => handleChange('description', e.target.value)}
                 rows={2}
-                className={inputClass}
                 aria-label="Descrição do Produto"
               />
-            </div>
+            </FormField>
 
             {/* Collapsible Supplier Selection */}
             <div className="border border-border-color rounded-xl overflow-hidden bg-background/30 transition-all duration-300">
@@ -257,18 +241,12 @@ export const ProductFormModal: (props: {
             </div>
           </div>
           <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-            <button
-              onClick={onClose}
-              className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-            >
+            <Button variant="secondary" onClick={onClose}>
               Cancelar
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-            >
+            </Button>
+            <Button variant="primary" onClick={handleSave}>
               Salvar
-            </button>
+            </Button>
           </div>
         </>
       )}

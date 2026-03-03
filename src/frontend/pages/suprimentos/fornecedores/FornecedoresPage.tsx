@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { PageHeader } from '../../../components/layout';
-import { useCoreData, useFinanceData, useSupplyChainData } from '../../../context/DataContext';
-import type { Supplier, PriceEntry, SupplierProductPrice } from '../../../types';
-import { NAV_LINKS } from '../../../constants';
-import { PlusIcon } from '../../../components/ui';
-import { SuppliersView, SupplierFormModal } from '../../../components/supply-chain';
+import { PageHeader } from '@/components/layout';
+import { useCoreData, useFinanceData, useSupplyChainData } from '@/context/DataContext';
+import type { Supplier, PriceEntry, SupplierProductPrice } from '@/types';
+import { NAV_LINKS } from '@/constants';
+import { Button, PlusIcon } from '@/components/ui';
+import { SuppliersView, SupplierFormModal } from '@/components/supply-chain';
 
 const FornecedoresPage: () => React.ReactNode = () => {
   // Data hooks
@@ -109,12 +109,13 @@ const FornecedoresPage: () => React.ReactNode = () => {
   return (
     <div className="animate-fade-in-up h-full flex flex-col overflow-hidden">
       <PageHeader title="Fornecedores" icon={fornecedoresIcon}>
-        <button
+        <Button
+          variant="primary"
           onClick={() => openSupplierModal(null)}
-          className="px-5 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft flex items-center justify-center transition-colors text-sm gap-2"
+          className="flex items-center gap-2"
         >
           <PlusIcon className="w-5 h-5" /> Adicionar Fornecedor
-        </button>
+        </Button>
       </PageHeader>
 
       <div className="flex-1 min-h-0">

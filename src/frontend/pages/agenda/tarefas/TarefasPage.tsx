@@ -1,20 +1,15 @@
 import { useMemo, useState } from 'react';
-import { useAutoReset } from '../../../hooks/useAutoReset';
-import { EventFormModal, SubtaskDetailModal } from '../../../components/agenda';
-import { PageHeader } from '../../../components/layout';
-import {
-  ArchiveIcon,
-  DeleteConfirmationModal,
-  PlusIcon,
-  UnarchiveIcon,
-} from '../../../components/ui';
-import { NAV_LINKS } from '../../../constants';
-import { useSystemData } from '../../../context/DataContext';
-import type { AgendaEvent, KanbanStatus } from '../../../types';
+import { useAutoReset } from '@/hooks/useAutoReset';
+import { EventFormModal, SubtaskDetailModal } from '@/components/agenda';
+import { PageHeader } from '@/components/layout';
+import { ArchiveIcon, DeleteConfirmationModal, PlusIcon, UnarchiveIcon } from '@/components/ui';
+import { NAV_LINKS } from '@/constants';
+import { useSystemData } from '@/context/DataContext';
+import type { AgendaEvent, KanbanStatus } from '@/types';
 import { ArchivedTasksView } from './ArchivedTasksView';
 import { KanbanColumn } from './KanbanColumn';
 import { TaskToast } from './TaskToast';
-import { allSubtasksDone, KANBAN_COLUMNS } from '../../../utils/taskUtils';
+import { allSubtasksDone, KANBAN_COLUMNS } from '@/utils/taskUtils';
 
 function TarefasPage(): JSX.Element {
   const { agendaEvents, setAgendaEvents } = useSystemData();

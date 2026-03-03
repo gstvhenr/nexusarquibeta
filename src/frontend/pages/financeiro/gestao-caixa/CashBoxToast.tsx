@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircleIcon } from '../../../components/ui/icons';
+import { CheckCircleIcon } from '@/components/ui/icons';
 
 type CashBoxToastProps = {
   message: string | null;

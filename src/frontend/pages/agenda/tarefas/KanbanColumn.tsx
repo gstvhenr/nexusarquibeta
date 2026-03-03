@@ -1,5 +1,5 @@
-import { PlusIcon } from '../../../components/ui';
-import type { AgendaEvent, KanbanStatus } from '../../../types';
+import { IconButton, PlusIcon } from '@/components/ui';
+import type { AgendaEvent, KanbanStatus } from '@/types';
 import { TaskCard } from './TaskCard';
 
 type KanbanColumnProps = {
@@ -48,14 +48,15 @@ export function KanbanColumn({
             {tasks.length}
           </span>
           {onAddToColumn && (
-            <button
-              type="button"
+            <IconButton
+              variant="primary"
+              size="sm"
               onClick={onAddToColumn}
-              className="p-1 text-text-secondary hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
+              aria-label={`Adicionar tarefa em "${title}"`}
               title={`Adicionar tarefa em "${title}"`}
             >
               <PlusIcon className="w-4 h-4" />
-            </button>
+            </IconButton>
           )}
         </div>
       </div>

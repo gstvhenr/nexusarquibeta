@@ -1,8 +1,9 @@
 import React from 'react';
+import { FormField, Input, Textarea } from '../ui';
 import type { MarketingActivity, MarketingProfessional, Project } from '../../types';
 import { marketingActivityStatuses, marketingContentTypes } from '../../types';
 
-const inputClass = 'w-full bg-background p-2 rounded-md border border-border-color';
+const selectClass = 'w-full bg-background p-2 rounded-md border border-border-color';
 
 interface ActivityFormFieldsProps {
   activity: MarketingActivity & { datePart: string; timePart: string };
@@ -23,60 +24,33 @@ function ActivityFormFields({
 }: ActivityFormFieldsProps) {
   return (
     <div className="space-y-4">
-      <div>
-        <label
-          htmlFor="field-titulo-tema"
-          className="block text-sm font-medium text-text-secondary mb-1"
-        >
-          Título / Tema
-        </label>
-        <input
-          id="field-titulo-tema"
+      <FormField label="Título / Tema">
+        <Input
           type="text"
           value={activity.title}
           onChange={(e) => onChange('title', e.target.value)}
-          className={inputClass}
           disabled={readOnly}
           placeholder="Ex: Reels Obra Residência Silva"
-          aria-label="Título ou tema"
         />
-      </div>
+      </FormField>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="field-data"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Data
-          </label>
-          <input
-            id="field-data"
+        <FormField label="Data">
+          <Input
             type="date"
             value={activity.datePart}
             onChange={(e) => onChange('datePart', e.target.value)}
-            className={inputClass}
             disabled={readOnly}
-            aria-label="Data"
           />
-        </div>
-        <div>
-          <label
-            htmlFor="field-horario"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Horário
-          </label>
-          <input
-            id="field-horario"
+        </FormField>
+        <FormField label="Horário">
+          <Input
             type="time"
             value={activity.timePart}
             onChange={(e) => onChange('timePart', e.target.value)}
-            className={inputClass}
             disabled={readOnly}
-            aria-label="Hora"
           />
-        </div>
+        </FormField>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -91,7 +65,7 @@ function ActivityFormFields({
             id="field-status"
             value={activity.status}
             onChange={(e) => onChange('status', e.target.value)}
-            className={inputClass}
+            className={selectClass}
             disabled={readOnly}
             aria-label="Status"
           >
@@ -113,7 +87,7 @@ function ActivityFormFields({
             id="field-plataforma-tipo"
             value={activity.contentType}
             onChange={(e) => onChange('contentType', e.target.value)}
-            className={inputClass}
+            className={selectClass}
             disabled={readOnly}
             aria-label="Plataforma ou tipo"
           >
@@ -138,7 +112,7 @@ function ActivityFormFields({
             id="field-responsavel"
             value={activity.responsibleId}
             onChange={(e) => onChange('responsibleId', e.target.value)}
-            className={inputClass}
+            className={selectClass}
             disabled={readOnly}
             aria-label="Responsável"
           >
@@ -150,38 +124,23 @@ function ActivityFormFields({
             ))}
           </select>
         </div>
-        <div>
-          <label
-            htmlFor="field-custo-adicional-r"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Custo Adicional (R$)
-          </label>
-          <input
-            id="field-custo-adicional-r"
+        <FormField label="Custo Adicional (R$)">
+          <Input
             type="number"
             value={activity.cost || ''}
             onChange={(e) => onChange('cost', parseFloat(e.target.value) || 0)}
             placeholder="0.00"
-            className={inputClass}
             disabled={readOnly}
-            aria-label="Custo adicional"
           />
-        </div>
+        </FormField>
       </div>
 
-      <div>
-        <label
-          htmlFor="field-projeto-vinculado"
-          className="block text-sm font-medium text-text-secondary mb-1"
-        >
-          Projeto Vinculado
-        </label>
+      <FormField label="Projeto Vinculado">
         <select
           id="field-projeto-vinculado"
           value={activity.linkedProjectId || ''}
           onChange={(e) => onProjectChange(e.target.value)}
-          className={inputClass}
+          className={selectClass}
           disabled={readOnly}
           aria-label="Projeto vinculado"
         >
@@ -192,44 +151,26 @@ function ActivityFormFields({
             </option>
           ))}
         </select>
-      </div>
+      </FormField>
 
-      <div>
-        <label
-          htmlFor="field-descricao"
-          className="block text-sm font-medium text-text-secondary mb-1"
-        >
-          Descrição
-        </label>
-        <textarea
-          id="field-descricao"
+      <FormField label="Descrição">
+        <Textarea
           value={activity.description || ''}
           onChange={(e) => onChange('description', e.target.value)}
           rows={3}
-          className={inputClass}
           disabled={readOnly}
           placeholder="Detalhes do post, legenda, links..."
-          aria-label="Descrição"
         />
-      </div>
-      <div>
-        <label
-          htmlFor="field-notas-internas"
-          className="block text-sm font-medium text-text-secondary mb-1"
-        >
-          Notas Internas
-        </label>
-        <textarea
-          id="field-notas-internas"
+      </FormField>
+      <FormField label="Notas Internas">
+        <Textarea
           value={activity.notes || ''}
           onChange={(e) => onChange('notes', e.target.value)}
           rows={2}
-          className={inputClass}
           disabled={readOnly}
           placeholder="Observações para equipe..."
-          aria-label="Notas internas"
         />
-      </div>
+      </FormField>
     </div>
   );
 }

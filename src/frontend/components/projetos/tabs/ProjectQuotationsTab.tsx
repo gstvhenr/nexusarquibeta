@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { TrashIcon } from '../../ui/icons';
-import { Project, Quotation } from '../../../types';
-import { formatDate } from '../../../utils/formatters';
+import { IconButton } from '../../ui';
+import { Project, Quotation } from '@/types';
+import { formatDate } from '@/utils/formatters';
 
 interface QuotationsTabProps {
   project: Project;
@@ -49,14 +50,15 @@ export const ProjectQuotationsTab: (props: QuotationsTabProps) => React.ReactNod
               >
                 {q.status}
               </span>
-              <button
-                type="button"
+              <IconButton
+                variant="danger"
+                size="sm"
                 onClick={() => onUnlink(q.id)}
-                className="p-1 text-text-secondary/50 hover:text-error transition-colors opacity-0 group-hover:opacity-100"
                 aria-label="Desvincular cotação"
+                className="opacity-0 group-hover:opacity-100"
               >
                 <TrashIcon className="w-4 h-4" />
-              </button>
+              </IconButton>
             </div>
           </div>
         ))

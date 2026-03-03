@@ -1,6 +1,6 @@
 import React from 'react';
-import type { InstagramSnapshot } from '../../../types';
-import { formatDateWithTime } from '../../../utils/formatters';
+import type { InstagramSnapshot } from '@/types';
+import { formatDateWithTime } from '@/utils/formatters';
 
 type InstagramLatestSnapshotCardProps = {
   latestSnapshot?: InstagramSnapshot;

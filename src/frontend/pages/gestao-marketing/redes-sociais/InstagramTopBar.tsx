@@ -1,6 +1,6 @@
 import React from 'react';
-import { KeyIcon } from '../../../components/ui/icons';
-import { formatCurrency } from '../../../utils/formatters';
+import { KeyIcon } from '@/components/ui/icons';
+import { formatCurrency } from '@/utils/formatters';
 
 type InstagramTopBarProps = {
   totalInvested: number;

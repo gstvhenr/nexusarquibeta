@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { PageHeader } from '../../../components/layout';
-import { useSupplyChainData } from '../../../context/DataContext';
-import type { Product, SupplierProductPrice, PriceEntry } from '../../../types';
-import { NAV_LINKS } from '../../../constants';
+import { PageHeader } from '@/components/layout';
+import { Button, IconButton, Input } from '@/components/ui';
+import { useSupplyChainData } from '@/context/DataContext';
+import type { Product, SupplierProductPrice, PriceEntry } from '@/types';
+import { NAV_LINKS } from '@/constants';
 import {
   PlusIcon,
   CubeIcon,
@@ -10,9 +11,9 @@ import {
   ListViewIcon,
   CollectionIcon,
   EditIcon,
-} from '../../../components/ui';
-import { ProductFormModal, AddSupplierPriceModal } from '../../../components/catalogo';
-import { formatCurrency, formatDate } from '../../../utils/formatters';
+} from '@/components/ui';
+import { ProductFormModal, AddSupplierPriceModal } from '@/components/catalogo';
+import { formatCurrency, formatDate } from '@/utils/formatters';
 
 const CatalogoPage: () => React.ReactNode = () => {
   const {
@@ -160,23 +161,24 @@ const CatalogoPage: () => React.ReactNode = () => {
             <CollectionIcon className="w-5 h-5" />
           </button>
         </div>
-        <button
+        <Button
+          variant="primary"
           onClick={() => openProductModal(null)}
-          className="px-5 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft flex items-center justify-center transition-colors text-sm"
+          className="flex items-center gap-2"
         >
-          <PlusIcon className="w-5 h-5 mr-2" /> Adicionar Produto
-        </button>
+          <PlusIcon className="w-5 h-5" /> Adicionar Produto
+        </Button>
       </PageHeader>
 
       {viewMode === 'grid' ? (
         <div className="bg-surface rounded-xl shadow-soft overflow-hidden border border-border-color flex-1">
           <div className="p-4 border-b border-border-color bg-background/30">
-            <input
+            <Input
               type="search"
               placeholder="Buscar produto..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="w-full sm:w-64 bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm"
+              className="w-full sm:w-64"
             />
           </div>
           <div className="overflow-x-auto h-full">
@@ -230,16 +232,17 @@ const CatalogoPage: () => React.ReactNode = () => {
                         {linkedSupplierCount > 0 ? `${linkedSupplierCount} vinculados` : 'Nenhum'}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <button
+                        <IconButton
+                          variant="primary"
                           onClick={(e) => {
                             e.stopPropagation();
                             openProductModal(product);
                           }}
-                          className="p-2 text-text-secondary hover:text-primary rounded-full hover:bg-background transition-colors"
+                          aria-label="Editar"
                           title="Editar"
                         >
                           <EditIcon className="w-4 h-4" />
-                        </button>
+                        </IconButton>
                       </td>
                     </tr>
                   );
@@ -259,12 +262,11 @@ const CatalogoPage: () => React.ReactNode = () => {
         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden mt-6">
           <div className="md:col-span-1 bg-surface rounded-xl shadow-soft flex flex-col h-full overflow-hidden">
             <div className="p-4 border-b border-border-color shrink-0">
-              <input
+              <Input
                 type="search"
                 placeholder="Buscar produto..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm"
               />
             </div>
             <div className="flex-1 overflow-y-auto p-2">

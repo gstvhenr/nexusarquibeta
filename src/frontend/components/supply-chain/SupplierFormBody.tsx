@@ -1,10 +1,15 @@
 import React from 'react';
-import { BuildingIcon, GiftIcon, UserCircleIcon, EditIcon } from '../ui';
+import {
+  BuildingIcon,
+  FormField,
+  GiftIcon,
+  Input,
+  Textarea,
+  UserCircleIcon,
+  EditIcon,
+} from '../ui';
 import type { Supplier, SupplierContact } from '../../types';
 import { SUPPLIER_CATEGORY_OPTIONS } from '../../constants';
-
-const inputClass =
-  'w-full bg-background p-2.5 rounded-md border border-border-color focus:border-primary outline-none transition text-sm';
 
 interface SupplierFormBodyProps {
   supplier: Supplier;
@@ -62,55 +67,40 @@ function SupplierFormBody({
         <div className="flex-1 w-full space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label
-                htmlFor="field-supplier-name"
-                className="block text-xs font-bold text-text-secondary uppercase mb-1"
+              <FormField
+                label={
+                  <>
+                    Nome da Empresa <span className="text-error">*</span>
+                  </>
+                }
               >
-                Nome da Empresa <span className="text-error">*</span>
-              </label>
-              <input
-                id="field-supplier-name"
-                type="text"
-                value={supplier.name}
-                onChange={(e) => onFieldChange('name', e.target.value)}
-                className={inputClass}
-                placeholder="Ex: Marmoraria Pedra Fina"
-                aria-label="Nome do fornecedor"
-              />
+                <Input
+                  type="text"
+                  value={supplier.name}
+                  onChange={(e) => onFieldChange('name', e.target.value)}
+                  placeholder="Ex: Marmoraria Pedra Fina"
+                />
+              </FormField>
             </div>
             <div>
-              <label
-                htmlFor="field-cnpj"
-                className="block text-xs font-bold text-text-secondary uppercase mb-1"
-              >
-                CNPJ
-              </label>
-              <input
-                id="field-cnpj"
-                type="text"
-                value={supplier.cnpj || ''}
-                onChange={(e) => onFieldChange('cnpj', e.target.value)}
-                className={inputClass}
-                placeholder="00.000.000/0001-00"
-                aria-label="CNPJ"
-              />
+              <FormField label="CNPJ">
+                <Input
+                  type="text"
+                  value={supplier.cnpj || ''}
+                  onChange={(e) => onFieldChange('cnpj', e.target.value)}
+                  placeholder="00.000.000/0001-00"
+                />
+              </FormField>
             </div>
             <div>
-              <label
-                htmlFor="field-site"
-                className="block text-xs font-bold text-text-secondary uppercase mb-1"
-              >
-                Site
-              </label>
-              <input
-                id="field-site"
-                type="url"
-                value={supplier.site || ''}
-                onChange={(e) => onFieldChange('site', e.target.value)}
-                className={inputClass}
-                placeholder="https://"
-                aria-label="Site"
-              />
+              <FormField label="Site">
+                <Input
+                  type="url"
+                  value={supplier.site || ''}
+                  onChange={(e) => onFieldChange('site', e.target.value)}
+                  placeholder="https://"
+                />
+              </FormField>
             </div>
           </div>
         </div>
@@ -123,48 +113,32 @@ function SupplierFormBody({
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label
-              htmlFor="field-contact-name"
-              className="block text-xs font-bold text-text-secondary uppercase mb-1"
-            >
-              Nome do Contato
-            </label>
-            <input
-              id="field-contact-name"
-              type="text"
-              value={supplier.mainContact.name}
-              onChange={(e) => onContactChange('name', e.target.value)}
-              className={inputClass}
-              aria-label="Nome do contato"
-            />
+            <FormField label="Nome do Contato">
+              <Input
+                type="text"
+                value={supplier.mainContact.name}
+                onChange={(e) => onContactChange('name', e.target.value)}
+              />
+            </FormField>
           </div>
           <div>
-            <label
-              htmlFor="field-cargo"
-              className="block text-xs font-bold text-text-secondary uppercase mb-1"
-            >
-              Cargo
-            </label>
-            <input
-              id="field-cargo"
-              type="text"
-              value={supplier.mainContact.role || ''}
-              onChange={(e) => onContactChange('role', e.target.value)}
-              className={inputClass}
-              aria-label="Cargo"
-            />
+            <FormField label="Cargo">
+              <Input
+                type="text"
+                value={supplier.mainContact.role || ''}
+                onChange={(e) => onContactChange('role', e.target.value)}
+              />
+            </FormField>
           </div>
           <div>
             <span className="block text-xs font-bold text-text-secondary uppercase mb-1">
               Telefone / WhatsApp
             </span>
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 type="tel"
                 value={supplier.mainContact.phone}
                 onChange={(e) => onContactChange('phone', e.target.value)}
-                className={inputClass}
-                aria-label="Telefone do contato"
               />
               <label className="flex items-center gap-1.5 text-xs font-medium cursor-pointer select-none bg-background border border-border-color px-2 py-2.5 rounded-md hover:border-primary transition-colors">
                 <input
@@ -178,38 +152,24 @@ function SupplierFormBody({
             </div>
           </div>
           <div>
-            <label
-              htmlFor="field-email"
-              className="block text-xs font-bold text-text-secondary uppercase mb-1"
-            >
-              Email
-            </label>
-            <input
-              id="field-email"
-              type="email"
-              value={supplier.mainContact.email || ''}
-              onChange={(e) => onContactChange('email', e.target.value)}
-              className={inputClass}
-              aria-label="Email"
-            />
+            <FormField label="Email">
+              <Input
+                type="email"
+                value={supplier.mainContact.email || ''}
+                onChange={(e) => onContactChange('email', e.target.value)}
+              />
+            </FormField>
           </div>
         </div>
         <div className="mt-4">
-          <label
-            htmlFor="field-address"
-            className="block text-xs font-bold text-text-secondary uppercase mb-1"
-          >
-            Endereço Completo
-          </label>
-          <input
-            id="field-address"
-            type="text"
-            value={supplier.address || ''}
-            onChange={(e) => onFieldChange('address', e.target.value)}
-            className={inputClass}
-            placeholder="Rua, Número, Bairro, Cidade - UF"
-            aria-label="Endereço completo"
-          />
+          <FormField label="Endereço Completo">
+            <Input
+              type="text"
+              value={supplier.address || ''}
+              onChange={(e) => onFieldChange('address', e.target.value)}
+              placeholder="Rua, Número, Bairro, Cidade - UF"
+            />
+          </FormField>
         </div>
       </div>
 
@@ -230,7 +190,7 @@ function SupplierFormBody({
                 onChange={(e) =>
                   onFieldChange('commissionPercentage', parseFloat(e.target.value) || 0)
                 }
-                className={`${inputClass} pl-3 pr-8`}
+                className="w-full bg-background p-2.5 rounded-md border border-border-color focus:border-primary outline-none transition text-sm pl-3 pr-8"
                 placeholder="0"
                 aria-label="Comissão (%)"
               />
@@ -262,21 +222,14 @@ function SupplierFormBody({
       </div>
 
       <div>
-        <label
-          htmlFor="field-notes"
-          className="block text-xs font-bold text-text-secondary uppercase mb-1"
-        >
-          Notas Internas
-        </label>
-        <textarea
-          id="field-notes"
-          value={supplier.notes || ''}
-          onChange={(e) => onFieldChange('notes', e.target.value)}
-          rows={3}
-          className={inputClass}
-          placeholder="Informações sobre atendimento, prazos, qualidade..."
-          aria-label="Notas internas"
-        />
+        <FormField label="Notas Internas">
+          <Textarea
+            value={supplier.notes || ''}
+            onChange={(e) => onFieldChange('notes', e.target.value)}
+            rows={3}
+            placeholder="Informações sobre atendimento, prazos, qualidade..."
+          />
+        </FormField>
       </div>
     </div>
   );

@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PageHeader } from '../../../components/layout';
-import { Modal } from '../../../components/ui';
-import { useCoreData, useSupplyChainData } from '../../../context/DataContext';
-import type { Quotation, Product, QuotationItem } from '../../../types';
-import { formatCurrency } from '../../../utils/formatters';
-import { getLatestPriceFromHistory } from '../../../utils/supplierHelpers';
-import { NAV_LINKS, SUPPLIER_CATEGORY_OPTIONS } from '../../../constants';
-import { PlusIcon, TrashIcon, GiftIcon } from '../../../components/ui';
+import { PageHeader } from '@/components/layout';
+import { Button, FormField, IconButton, Input, Modal } from '@/components/ui';
+import { useCoreData, useSupplyChainData } from '@/context/DataContext';
+import type { Quotation, Product, QuotationItem } from '@/types';
+import { formatCurrency } from '@/utils/formatters';
+import { getLatestPriceFromHistory } from '@/utils/supplierHelpers';
+import { NAV_LINKS, SUPPLIER_CATEGORY_OPTIONS } from '@/constants';
+import { PlusIcon, TrashIcon, GiftIcon } from '@/components/ui';
 
 const getInitialQuotation = (id: string): Quotation => ({
   id,
@@ -53,13 +53,11 @@ const AddProductModal: (props: {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Adicionar Produtos à Cotação" size="2xl">
       <div className="flex gap-4 mb-4">
-        <input
+        <Input
           type="search"
           placeholder="Buscar produto..."
           value={filter.search}
           onChange={(e) => setFilter((f) => ({ ...f, search: e.target.value }))}
-          className="w-full bg-background p-2 rounded-md border border-border-color"
-          aria-label="Buscar produto"
         />
         <select
           value={filter.category}
@@ -103,20 +101,12 @@ const AddProductModal: (props: {
         ))}
       </div>
       <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          type="button"
-          onClick={handleAdd}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary"
-        >
+        </Button>
+        <Button variant="primary" onClick={handleAdd}>
           Adicionar Selecionados
-        </button>
+        </Button>
       </div>
     </Modal>
   );
@@ -183,17 +173,16 @@ const QuotationItemRow: (props: {
             aria-label={`Quantidade para ${product.name}`}
           />
           <span className="w-8 text-text-secondary">{product.unit}</span>
-          <button
-            type="button"
+          <IconButton
+            variant="danger"
             onClick={(e) => {
               e.stopPropagation();
               onRemove(product.id);
             }}
-            className="p-2 text-text-secondary/60 hover:text-error"
             aria-label="Remover produto da cotação"
           >
             <TrashIcon />
-          </button>
+          </IconButton>
         </div>
       </div>
       {isExpanded && (
@@ -346,22 +335,13 @@ const CotacaoDetalhesPage: () => React.ReactNode = () => {
 
       <div className="bg-surface rounded-xl shadow-soft p-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="field-nome-da-cotacao"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Nome da Cotação
-            </label>
-            <input
-              id="field-nome-da-cotacao"
+          <FormField label="Nome da Cotação">
+            <Input
               type="text"
               value={quotation.name}
               onChange={(e) => handleUpdate('name', e.target.value)}
-              className="w-full bg-background p-2 rounded-md border border-border-color"
-              aria-label="Nome da cotação"
             />
-          </div>
+          </FormField>
           <div>
             <label
               htmlFor="field-vincular-ao-projeto"
@@ -429,20 +409,12 @@ const CotacaoDetalhesPage: () => React.ReactNode = () => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <button
-              type="button"
-              onClick={() => navigate('/cotacoes')}
-              className="px-6 py-3 rounded-lg font-semibold text-text-primary bg-surface border border-border-color hover:bg-background"
-            >
+            <Button variant="secondary" onClick={() => navigate('/cotacoes')}>
               Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="px-6 py-3 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-            >
+            </Button>
+            <Button variant="primary" onClick={handleSave}>
               Salvar Cotação
-            </button>
+            </Button>
           </div>
         </div>
       </div>

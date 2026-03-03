@@ -3,7 +3,7 @@ import {
   getProjectBaseContractValue,
   getProjectLumpSumValue,
   getProjectTotalContractValue,
-} from '../../../utils/projectFinancials';
+} from '@/utils/projectFinancials';
 import { ProjectFinanceAddendumsSection } from './project-finance/ProjectFinanceAddendumsSection';
 import { ProjectFinanceConfigSection } from './project-finance/ProjectFinanceConfigSection';
 import { ProjectFinanceKPISection } from './project-finance/ProjectFinanceKPISection';

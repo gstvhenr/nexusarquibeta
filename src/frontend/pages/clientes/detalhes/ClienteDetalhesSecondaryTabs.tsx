@@ -1,8 +1,20 @@
 import React from 'react';
-import { ClientProjectsTab } from '../../../components/clientes/ClientProjectsTab';
-import { LinkIcon, MapPinIcon, PlusIcon, ProjetosIcon, TrashIcon } from '../../../components/ui';
-import type { Client, ProjectMeeting, Project } from '../../../types';
-import { formatCurrency, formatDateWithTime } from '../../../utils/formatters';
+import { ClientProjectsTab } from '@/components/clientes/ClientProjectsTab';
+import {
+  FormField,
+  IconButton,
+  Input,
+  LinkIcon,
+  MapPinIcon,
+  PlusIcon,
+  ProjetosIcon,
+  Textarea,
+  TrashIcon,
+} from '@/components/ui';
+import type { Client, ProjectMeeting, Project } from '@/types';
+import { formatCurrency, formatDateWithTime } from '@/utils/formatters';
+
+const DISABLED_OVERRIDE = 'disabled:opacity-100 disabled:cursor-default disabled:bg-background/50';
 
 type FinancialSummary = {
   projectId: string;
@@ -23,7 +35,7 @@ interface ClienteDetalhesSecondaryTabsProps {
   client: Client;
   clientProjects: Project[];
   financialSummaries: FinancialSummary[];
-  commonInputClass: string;
+
   isEditing: boolean;
   newMeeting: Partial<ProjectMeeting>;
   setNewMeeting: React.Dispatch<React.SetStateAction<Partial<ProjectMeeting>>>;
@@ -44,7 +56,7 @@ export function ClienteDetalhesSecondaryTabs({
   client,
   clientProjects,
   financialSummaries,
-  commonInputClass,
+
   isEditing,
   newMeeting,
   setNewMeeting,
@@ -185,7 +197,7 @@ export function ClienteDetalhesSecondaryTabs({
               <select
                 value={newMeeting.projectId || ''}
                 onChange={(e) => setNewMeeting((m) => ({ ...m, projectId: e.target.value }))}
-                className={commonInputClass}
+                className="w-full bg-background p-2 rounded-md border focus:border-accent text-text-primary transition disabled:opacity-100 disabled:cursor-default disabled:bg-background/50"
                 disabled={!isEditing}
                 aria-label="Projeto da reunião"
               >
@@ -196,33 +208,33 @@ export function ClienteDetalhesSecondaryTabs({
                   </option>
                 ))}
               </select>
-              <input
+              <Input
                 type="date"
                 value={newMeeting.date}
                 onChange={(e) => setNewMeeting((m) => ({ ...m, date: e.target.value }))}
-                className={commonInputClass}
+                className={DISABLED_OVERRIDE}
                 disabled={!isEditing}
                 aria-label="Data da reunião"
               />
-              <input
+              <Input
                 type="text"
                 placeholder="Motivo da Reunião"
                 value={newMeeting.reason || ''}
                 onChange={(e) => setNewMeeting((m) => ({ ...m, reason: e.target.value }))}
-                className={commonInputClass}
+                className={DISABLED_OVERRIDE}
                 disabled={!isEditing}
                 aria-label="Motivo da reunião"
               />
             </div>
-            <textarea
+            <Textarea
               value={newMeeting.notes || ''}
               onChange={(e) => setNewMeeting((m) => ({ ...m, notes: e.target.value }))}
               rows={3}
               placeholder="Descreva o que foi discutido..."
-              className={commonInputClass}
+              className={DISABLED_OVERRIDE}
               disabled={!isEditing}
               aria-label="Anotações da reunião"
-            ></textarea>
+            />
             {isEditing ? (
               <div className="text-right">
                 <button
@@ -266,14 +278,13 @@ export function ClienteDetalhesSecondaryTabs({
                     </p>
                   </div>
                   {isEditing && (
-                    <button
-                      type="button"
+                    <IconButton
+                      variant="danger"
                       onClick={() => handleDeleteMeeting(meeting.id)}
-                      className="p-2 text-gray-400 hover:text-error rounded-full hover:bg-error/10 transition-colors"
                       aria-label="Excluir reunião"
                     >
                       <TrashIcon className="w-5 h-5" />
-                    </button>
+                    </IconButton>
                   )}
                 </div>
               ))}
@@ -286,21 +297,17 @@ export function ClienteDetalhesSecondaryTabs({
 
       {activeTab === 'notes' && (
         <div className="space-y-4 h-full">
-          <label
-            htmlFor="field-observacoes-gerais"
-            className="block text-lg font-bold text-secondary mb-2"
-          >
-            Observações Gerais
-          </label>
-          <textarea
-            id="field-observacoes-gerais"
-            value={client.generalNotes || ''}
-            onChange={(e) => handleChange('generalNotes', e.target.value)}
-            rows={20}
-            placeholder="Adicione anotações gerais sobre o cliente, preferências, histórico de contatos, etc."
-            className={`${commonInputClass} ${getModifiedClass(client.generalNotes, originalClient?.generalNotes)}`}
-            disabled={!isEditing}
-          />
+          <FormField label="Observações Gerais">
+            <Textarea
+              id="field-observacoes-gerais"
+              value={client.generalNotes || ''}
+              onChange={(e) => handleChange('generalNotes', e.target.value)}
+              rows={20}
+              placeholder="Adicione anotações gerais sobre o cliente, preferências, histórico de contatos, etc."
+              className={`${DISABLED_OVERRIDE} ${getModifiedClass(client.generalNotes, originalClient?.generalNotes)}`}
+              disabled={!isEditing}
+            />
+          </FormField>
         </div>
       )}
 
@@ -334,13 +341,14 @@ export function ClienteDetalhesSecondaryTabs({
                   </div>
                 </div>
                 {isEditing && (
-                  <button
+                  <IconButton
+                    variant="danger"
                     onClick={() => handleRemoveLink(link.id)}
-                    className="p-2 text-text-secondary hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
                     aria-label={`Remover link ${link.title}`}
+                    className="opacity-0 group-hover:opacity-100"
                   >
                     <TrashIcon className="w-4 h-4" />
-                  </button>
+                  </IconButton>
                 )}
               </div>
             ))}
@@ -357,38 +365,26 @@ export function ClienteDetalhesSecondaryTabs({
               <h5 className="font-semibold text-sm text-text-primary mb-3">Adicionar Novo Link</h5>
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                 <div className="md:col-span-4">
-                  <label
-                    htmlFor="field-titulo"
-                    className="block text-xs font-medium text-text-secondary mb-1"
-                  >
-                    Título
-                  </label>
-                  <input
-                    id="field-titulo"
-                    type="text"
-                    value={newLink.title}
-                    onChange={(e) => setNewLink({ ...newLink, title: e.target.value })}
-                    className={commonInputClass}
-                    placeholder="Ex: Pasta do Drive"
-                    aria-label="Título do link"
-                  />
+                  <FormField label="Título">
+                    <Input
+                      type="text"
+                      value={newLink.title}
+                      onChange={(e) => setNewLink({ ...newLink, title: e.target.value })}
+                      placeholder="Ex: Pasta do Drive"
+                      aria-label="Título do link"
+                    />
+                  </FormField>
                 </div>
                 <div className="md:col-span-6">
-                  <label
-                    htmlFor="field-url"
-                    className="block text-xs font-medium text-text-secondary mb-1"
-                  >
-                    URL
-                  </label>
-                  <input
-                    id="field-url"
-                    type="url"
-                    value={newLink.url}
-                    onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
-                    className={commonInputClass}
-                    placeholder="https://"
-                    aria-label="URL do link"
-                  />
+                  <FormField label="URL">
+                    <Input
+                      type="url"
+                      value={newLink.url}
+                      onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
+                      placeholder="https://"
+                      aria-label="URL do link"
+                    />
+                  </FormField>
                 </div>
                 <div className="md:col-span-2">
                   <button

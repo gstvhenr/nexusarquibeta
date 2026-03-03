@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { PageHeader } from '../../components/layout';
-import { Modal } from '../../components/ui';
+import { Button, Modal } from '../../components/ui';
 import type { Project, ProjectStatus, ProjectSection, ProjectTask, Installment } from '../../types';
 import { projectStatuses } from '../../types';
 import { NAV_LINKS } from '../../constants';
@@ -111,10 +111,10 @@ const ProjetosPage: () => React.ReactNode = () => {
   return (
     <div className="animate-fade-in-up">
       <PageHeader title="Projetos" icon={projetosIcon}>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           onClick={() => setShowArchived(!showArchived)}
-          className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-surface border border-border-color hover:bg-background transition-colors text-sm flex items-center gap-2"
+          className="flex items-center gap-2"
         >
           {showArchived ? (
             <UnarchiveIcon className="w-4 h-4" />
@@ -122,7 +122,7 @@ const ProjetosPage: () => React.ReactNode = () => {
             <ArchiveIcon className="w-4 h-4" />
           )}
           {showArchived ? 'Ver Ativos' : 'Ver Arquivados'}
-        </button>
+        </Button>
       </PageHeader>
 
       {!showArchived && <ProjectStatusSummaryPanel counts={projectCounts} />}
@@ -182,20 +182,16 @@ const ProjetosPage: () => React.ReactNode = () => {
           </ul>
         </p>
         <div className="flex justify-end space-x-4">
-          <button
-            type="button"
-            onClick={() => setFinalizeConfirmOpen(false)}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color transition-colors"
-          >
+          <Button variant="secondary" onClick={() => setFinalizeConfirmOpen(false)}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={handleFinalizeConfirm}
-            className="px-6 py-2 rounded-lg font-semibold text-white bg-success hover:opacity-90 transition-colors"
+            className="bg-success hover:opacity-90"
           >
             Sim, Finalizar
-          </button>
+          </Button>
         </div>
       </Modal>
     </div>

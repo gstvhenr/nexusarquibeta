@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useAutoReset } from '../../../hooks/useAutoReset';
-import { PageHeader } from '../../../components/layout';
-import { NAV_LINKS } from '../../../constants';
-import { PlusIcon, TrashIcon, CheckCircleIcon, XIcon, EditIcon } from '../../../components/ui';
-import useLocalStorage from '../../../hooks/useLocalStorage';
+import { useAutoReset } from '@/hooks/useAutoReset';
+import { PageHeader } from '@/components/layout';
+import { NAV_LINKS } from '@/constants';
+import { PlusIcon, TrashIcon, CheckCircleIcon, XIcon, EditIcon } from '@/components/ui';
+import useLocalStorage from '@/hooks/useLocalStorage';
 
 // ─── TYPES ───────────────────────────────────────────────────
 interface NoteTab {

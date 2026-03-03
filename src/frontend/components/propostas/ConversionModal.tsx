@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal } from '../ui';
+import { Button, Input, Modal } from '../ui';
 import type { ProjectAddress } from '../../types';
 import { formatCEP } from '../../utils/formatters';
 
@@ -53,8 +53,6 @@ export const ConversionModal: (props: {
   };
 
   if (!isOpen) return null;
-  const inputClass =
-    'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm';
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Converter para Projeto">
@@ -107,57 +105,52 @@ export const ConversionModal: (props: {
             <h4 className="font-semibold text-sm text-text-primary mb-3">Novo Endereço da Obra</h4>
             <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
               <div className="md:col-span-2">
-                <input
+                <Input
                   type="text"
                   placeholder="CEP"
                   value={newAddress.zip}
                   onChange={(e) => handleAddressChange('zip', formatCEP(e.target.value))}
-                  className={inputClass}
                 />
               </div>
               <div className="md:col-span-4">
-                <input
+                <Input
                   type="text"
                   placeholder="Rua"
                   value={newAddress.street}
                   onChange={(e) => handleAddressChange('street', e.target.value)}
-                  className={inputClass}
                 />
               </div>
               <div className="md:col-span-2">
-                <input
+                <Input
                   type="text"
                   placeholder="Número"
                   value={newAddress.number}
                   onChange={(e) => handleAddressChange('number', e.target.value)}
-                  className={inputClass}
                 />
               </div>
               <div className="md:col-span-4">
-                <input
+                <Input
                   type="text"
                   placeholder="Bairro"
                   value={newAddress.neighborhood}
                   onChange={(e) => handleAddressChange('neighborhood', e.target.value)}
-                  className={inputClass}
                 />
               </div>
               <div className="md:col-span-4">
-                <input
+                <Input
                   type="text"
                   placeholder="Cidade"
                   value={newAddress.city}
                   onChange={(e) => handleAddressChange('city', e.target.value)}
-                  className={inputClass}
                 />
               </div>
               <div className="md:col-span-2">
-                <input
+                <Input
                   type="text"
                   placeholder="UF"
                   value={newAddress.state}
                   disabled
-                  className={`${inputClass} opacity-60 cursor-not-allowed`}
+                  className="opacity-60 cursor-not-allowed"
                 />
               </div>
             </div>
@@ -168,26 +161,17 @@ export const ConversionModal: (props: {
       <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
         {isStep2 ? (
           <>
-            <button
-              onClick={() => setIsStep2(false)}
-              className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-            >
+            <Button variant="secondary" onClick={() => setIsStep2(false)}>
               Voltar
-            </button>
-            <button
-              onClick={handleConfirmStep2}
-              className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-            >
+            </Button>
+            <Button variant="primary" onClick={handleConfirmStep2}>
               Confirmar Conversão
-            </button>
+            </Button>
           </>
         ) : (
-          <button
-            onClick={onClose}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-          >
+          <Button variant="secondary" onClick={onClose}>
             Cancelar
-          </button>
+          </Button>
         )}
       </div>
     </Modal>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Modal from '../ui/Modal';
+import { Button, FormField, Input, Modal, Textarea } from '../ui';
 import type { Reminder } from '../../types';
 import type { ReminderColorOption } from './reminderPalette';
 
@@ -63,53 +63,36 @@ export const ReminderFormModal: (props: {
     <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} size="2xl">
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Title */}
-        <div>
-          <label
-            htmlFor="field-titulo"
-            className="block text-sm font-semibold text-text-primary mb-1.5"
-          >
-            Título *
-          </label>
-          <input
-            id="field-titulo"
+        <FormField label="Título *">
+          <Input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ex: Ligar para fornecedor"
             required
-            className="w-full rounded-lg border border-border-color bg-background px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
-        </div>
+        </FormField>
 
         {/* Comment */}
-        <div>
-          <label
-            htmlFor="field-comentario"
-            className="block text-sm font-semibold text-text-primary mb-1.5"
-          >
-            Comentário
-          </label>
-          <textarea
-            id="field-comentario"
+        <FormField label="Comentário">
+          <Textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Detalhes adicionais..."
             rows={3}
-            className="w-full rounded-lg border border-border-color bg-background px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
           />
-        </div>
+        </FormField>
 
         {/* Date/time */}
         <div>
           <label className="block text-sm font-semibold text-text-primary mb-1.5">
             {rescheduleMode ? 'Nova Data e Horário *' : 'Data e Horário'}
           </label>
-          <input
+          <Input
             type="datetime-local"
             value={remindAt}
             onChange={(e) => setRemindAt(e.target.value)}
             required={rescheduleMode}
-            className="w-full rounded-lg border border-border-color bg-background px-4 py-2.5 text-sm text-text-primary focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
 
@@ -121,13 +104,11 @@ export const ReminderFormModal: (props: {
           >
             URL Externa <span className="text-text-secondary/50 font-normal">(opcional)</span>
           </label>
-          <input
-            id="field-url-externa-span-classname-text-text-secondary-50-font-normal-opcional-span"
+          <Input
             type="url"
             value={externalUrl}
             onChange={(e) => setExternalUrl(e.target.value)}
             placeholder="https://exemplo.com/referencia"
-            className="w-full rounded-lg border border-border-color bg-background px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
 
@@ -153,19 +134,12 @@ export const ReminderFormModal: (props: {
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg text-sm font-semibold text-text-secondary bg-surface border border-border-color hover:bg-background transition-colors"
-          >
+          <Button variant="secondary" onClick={onClose} size="sm">
             Cancelar
-          </button>
-          <button
-            type="submit"
-            className="px-5 py-2 rounded-lg text-sm font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft transition-colors"
-          >
+          </Button>
+          <Button variant="primary" type="submit" size="sm">
             {rescheduleMode ? 'Reagendar' : initial ? 'Salvar' : 'Criar'}
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>

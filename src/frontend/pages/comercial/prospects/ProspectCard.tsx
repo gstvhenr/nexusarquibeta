@@ -12,15 +12,35 @@ import {
   UnarchiveIcon,
   XCircleIcon,
   RadarIcon,
-} from '../../../components/ui';
-import type { Prospect } from '../../../types';
-import {
-  getDaysRemaining,
-  getPriorityColor,
-  getProgressGradient,
-  getStatusColor,
-} from '../../../utils/prospectUtils';
+} from '@/components/ui';
+import { IconButton } from '@/components/ui';
+import type { Prospect, ProspectPriority, ProspectStatus } from '@/types';
+import { getDaysRemaining } from '@/utils/prospectUtils';
 import type { ProspectAction } from './types';
+
+const PRIORITY_COLOR: Record<ProspectPriority, string> = {
+  Alta: 'bg-error/10 text-error ring-1 ring-error/20',
+  Média: 'bg-warning/10 text-warning ring-1 ring-warning/20',
+  Baixa: 'bg-info/10 text-info ring-1 ring-info/20',
+};
+
+const STATUS_COLOR: Record<ProspectStatus, string> = {
+  'Em Aberto': 'bg-info/10 text-info ring-1 ring-info/20',
+  Convertido: 'bg-success/10 text-success ring-1 ring-success/20',
+  Perdido: 'bg-surface text-text-secondary ring-1 ring-border-color',
+};
+
+const PROGRESS_GRADIENT: Record<'critical' | 'warning' | 'healthy', string> = {
+  critical: 'from-error to-error/70',
+  warning: 'from-warning to-warning/70',
+  healthy: 'from-success to-success/70',
+};
+
+function getProgressGradient(daysRemaining: number): string {
+  if (daysRemaining <= 3) return PROGRESS_GRADIENT.critical;
+  if (daysRemaining <= 7) return PROGRESS_GRADIENT.warning;
+  return PROGRESS_GRADIENT.healthy;
+}
 
 type ProspectCardProps = {
   prospect: Prospect;
@@ -89,12 +109,12 @@ export function ProspectCard({
                 </h3>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   <span
-                    className={`text-xs font-bold px-2 py-0.5 rounded-full ${getStatusColor(prospect.status)}`}
+                    className={`text-xs font-bold px-2 py-0.5 rounded-full ${STATUS_COLOR[prospect.status]}`}
                   >
                     {prospect.status}
                   </span>
                   <span
-                    className={`text-xs font-bold px-2 py-0.5 rounded-full ${getPriorityColor(prospect.priority)}`}
+                    className={`text-xs font-bold px-2 py-0.5 rounded-full ${PRIORITY_COLOR[prospect.priority]}`}
                   >
                     {prospect.priority}
                   </span>
@@ -118,12 +138,12 @@ export function ProspectCard({
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
                     <RadarIcon
-                      className={`w-3.5 h-3.5 ${isExpired ? 'text-red-500 animate-pulse' : 'text-text-secondary/50'}`}
+                      className={`w-3.5 h-3.5 ${isExpired ? 'text-error animate-pulse' : 'text-text-secondary/50'}`}
                     />
                     <span className="text-xs font-medium text-text-secondary">Radar</span>
                   </div>
                   <span
-                    className={`text-xs font-bold tabular-nums ${isExpired ? 'text-red-500' : daysRemaining <= 3 ? 'text-amber-500' : 'text-text-secondary'}`}
+                    className={`text-xs font-bold tabular-nums ${isExpired ? 'text-error' : daysRemaining <= 3 ? 'text-warning' : 'text-text-secondary'}`}
                   >
                     {prospect.status === 'Em Aberto'
                       ? isExpired
@@ -157,30 +177,34 @@ export function ProspectCard({
               <div className="flex items-center gap-1.5 shrink-0">
                 {prospect.status === 'Em Aberto' ? (
                   <>
-                    <button
+                    <IconButton
+                      variant="primary"
+                      size="sm"
                       onClick={() => onAction(prospect.id, 'renew')}
-                      className="p-1.5 text-text-secondary/40 hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200"
                       aria-label="Renovar"
                       title="+15 dias"
                     >
                       <ClockIcon className="w-4 h-4" />
-                    </button>
-                    <button
+                    </IconButton>
+                    <IconButton
+                      variant="default"
+                      size="sm"
                       onClick={() => onAction(prospect.id, 'convert')}
-                      className="p-1.5 text-text-secondary/40 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all duration-200"
                       aria-label="Converter para cliente"
                       title="Converter para cliente"
+                      className="hover:text-success hover:bg-success/10"
                     >
                       <CheckCircleIcon className="w-4 h-4" />
-                    </button>
-                    <button
+                    </IconButton>
+                    <IconButton
+                      variant="danger"
+                      size="sm"
                       onClick={() => onAction(prospect.id, 'lost')}
-                      className="p-1.5 text-text-secondary/40 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all duration-200"
                       aria-label="Marcar como perdido"
                       title="Marcar como perdido"
                     >
                       <XCircleIcon className="w-4 h-4" />
-                    </button>
+                    </IconButton>
                   </>
                 ) : (
                   <button
@@ -206,22 +230,24 @@ export function ProspectCard({
                 )}
 
                 <div className="flex items-center gap-0.5 ml-1 pl-1.5 border-l border-border-color/30">
-                  <button
+                  <IconButton
+                    variant="primary"
+                    size="sm"
                     onClick={() => onEdit(prospect)}
-                    className="p-1.5 text-text-secondary/40 hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200"
                     aria-label="Editar"
                     title="Editar"
                   >
                     <EditIcon className="w-4 h-4" />
-                  </button>
-                  <button
+                  </IconButton>
+                  <IconButton
+                    variant="danger"
+                    size="sm"
                     onClick={() => onDelete(prospect)}
-                    className="p-1.5 text-text-secondary/40 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all duration-200"
                     aria-label="Excluir"
                     title="Excluir"
                   >
                     <TrashIcon className="w-4 h-4" />
-                  </button>
+                  </IconButton>
                 </div>
               </div>
             </div>
@@ -234,7 +260,7 @@ export function ProspectCard({
                   <PhoneIcon className="w-3.5 h-3.5 text-text-secondary/40 shrink-0" />
                   <span>{prospect.phone}</span>
                   {prospect.hasWhatsApp && (
-                    <span className="text-xs text-emerald-500 font-medium">WA</span>
+                    <span className="text-xs text-success font-medium">WA</span>
                   )}
                 </div>
               ) : null}

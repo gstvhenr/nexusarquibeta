@@ -1,4 +1,4 @@
-import type { ProspectStatus } from '../../../types';
+import type { ProspectStatus } from '@/types';
 
 export type ProspectAction = 'renew' | 'convert' | 'lost' | 'archive';
 

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { DataProvider } from '../../../context/DataContext';
+import { DataProvider } from '@/context/DataContext';
 import PropostasPage from './PropostasPage';
 
 vi.mock('../../services/infrastructure/api', () => ({

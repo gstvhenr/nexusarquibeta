@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../../../components/layout';
-import { DeleteConfirmationModal } from '../../../components/ui';
-import { useCoreData, useSupplyChainData } from '../../../context/DataContext';
-import type { Quotation, Project } from '../../../types';
-import { NAV_LINKS } from '../../../constants';
-import { PlusIcon, ArchiveIcon, UnarchiveIcon, TrashIcon } from '../../../components/ui';
+import { PageHeader } from '@/components/layout';
+import { Button, DeleteConfirmationModal, IconButton } from '@/components/ui';
+import { useCoreData, useSupplyChainData } from '@/context/DataContext';
+import type { Quotation, Project } from '@/types';
+import { NAV_LINKS } from '@/constants';
+import { PlusIcon, ArchiveIcon, UnarchiveIcon, TrashIcon } from '@/components/ui';
 
 import { v4 as uuidv4 } from 'uuid';
 
@@ -48,41 +48,41 @@ const QuotationListItem: (props: {
         </span>
         <div className="flex items-center gap-1">
           {quotation.archived ? (
-            <button
-              type="button"
+            <IconButton
+              variant="secondary"
               onClick={(e) => {
                 e.stopPropagation();
                 onArchive(quotation.id, false);
               }}
-              className="p-2 text-text-secondary/70 hover:text-secondary rounded-full hover:bg-secondary/10"
+              aria-label="Desarquivar"
               title="Desarquivar"
             >
               <UnarchiveIcon className="w-5 h-5" />
-            </button>
+            </IconButton>
           ) : (
-            <button
-              type="button"
+            <IconButton
+              variant="secondary"
               onClick={(e) => {
                 e.stopPropagation();
                 onArchive(quotation.id, true);
               }}
-              className="p-2 text-text-secondary/70 hover:text-secondary rounded-full hover:bg-secondary/10"
+              aria-label="Arquivar"
               title="Arquivar"
             >
               <ArchiveIcon className="w-5 h-5" />
-            </button>
+            </IconButton>
           )}
-          <button
-            type="button"
+          <IconButton
+            variant="danger"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(quotation.id);
             }}
-            className="p-2 text-text-secondary/70 hover:text-error rounded-full hover:bg-error/10"
+            aria-label="Excluir"
             title="Excluir"
           >
             <TrashIcon className="w-5 h-5" />
-          </button>
+          </IconButton>
         </div>
       </div>
     </div>
@@ -132,10 +132,10 @@ const CotacoesPage: () => React.ReactNode = () => {
   return (
     <div className="animate-fade-in-up">
       <PageHeader title="Cotações" icon={cotacoesIcon}>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           onClick={() => setShowArchived(!showArchived)}
-          className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-surface border border-border-color hover:bg-background transition-colors text-sm flex items-center gap-2"
+          className="flex items-center gap-2"
         >
           {showArchived ? (
             <UnarchiveIcon className="w-4 h-4" />
@@ -143,14 +143,10 @@ const CotacoesPage: () => React.ReactNode = () => {
             <ArchiveIcon className="w-4 h-4" />
           )}
           {showArchived ? 'Ver Ativas' : 'Ver Arquivadas'}
-        </button>
-        <button
-          type="button"
-          onClick={handleCreate}
-          className="px-5 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft flex items-center gap-2 transition-colors text-sm"
-        >
+        </Button>
+        <Button variant="primary" onClick={handleCreate} className="flex items-center gap-2">
           <PlusIcon className="w-5 h-5" /> Nova Cotação
-        </button>
+        </Button>
       </PageHeader>
 
       <div className="space-y-4">

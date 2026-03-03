@@ -1,10 +1,13 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { useDisclosure } from '../../hooks';
 import { PageHeader } from '../../components/layout';
 import { DeleteConfirmationModal } from '../../components/ui';
 import { useSupplyChainData, useSystemData } from '../../context/DataContext';
 import { Freelancer, HiredService } from '../../types';
 import { NAV_LINKS } from '../../constants';
 import {
+  Button,
+  Input,
   PlusIcon,
   UserCircleIcon,
   UsersIcon,
@@ -110,8 +113,8 @@ const PrestadoresFreelancersPage: () => React.ReactNode = () => {
   const [search, setSearch] = useState('');
   const [showArchived, setShowArchived] = useState(false);
 
-  const [isDetailModalOpen, setDetailModalOpen] = useState(false);
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const detailDisclosure = useDisclosure();
+  const deleteDisclosure = useDisclosure();
 
   const [currentFreelancer, setCurrentFreelancer] = useState<Freelancer | null>(null);
 
@@ -137,34 +140,34 @@ const PrestadoresFreelancersPage: () => React.ReactNode = () => {
         }
         return [...prev, { ...freelancerToSave, id: freelancerToSave.id || uuidv4() }];
       });
-      setDetailModalOpen(false);
+      detailDisclosure.close();
     },
-    [setFreelancers],
+    [setFreelancers, detailDisclosure],
   );
 
   const handleArchiveFreelancer = useCallback(
     (id: string, archive: boolean) => {
       setFreelancers((prev) => prev.map((f) => (f.id === id ? { ...f, archived: archive } : f)));
-      setDetailModalOpen(false);
+      detailDisclosure.close();
     },
-    [setFreelancers],
+    [setFreelancers, detailDisclosure],
   );
 
   const handleDeleteRequest = (freelancer: Freelancer) => {
     setCurrentFreelancer(freelancer);
-    setDeleteModalOpen(true);
+    deleteDisclosure.open();
   };
   const handleDeleteConfirm = useCallback(() => {
     if (currentFreelancer)
       setFreelancers((prev) => prev.filter((f) => f.id !== currentFreelancer.id));
-    setDeleteModalOpen(false);
+    deleteDisclosure.close();
     setCurrentFreelancer(null);
-    setDetailModalOpen(false);
-  }, [currentFreelancer, setFreelancers]);
+    detailDisclosure.close();
+  }, [currentFreelancer, setFreelancers, deleteDisclosure, detailDisclosure]);
 
   const openDetailModal = (freelancer: Freelancer | null) => {
     setCurrentFreelancer(freelancer);
-    setDetailModalOpen(true);
+    detailDisclosure.open();
   };
 
   const subcontratacaoLink = NAV_LINKS.find((link) => link.label === 'Subcontratação');
@@ -175,25 +178,17 @@ const PrestadoresFreelancersPage: () => React.ReactNode = () => {
   return (
     <div className="animate-fade-in-up h-full flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6">
       <PageHeader title="Freelancers" icon={pageIcon}>
-        <button
-          type="button"
-          onClick={() => setShowArchived(!showArchived)}
-          className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-background border border-border-color hover:bg-border-color/50 transition-colors text-sm flex items-center gap-2"
-        >
+        <Button variant="secondary" onClick={() => setShowArchived(!showArchived)}>
           {showArchived ? (
             <UnarchiveIcon className="w-4 h-4" />
           ) : (
             <ArchiveIcon className="w-4 h-4" />
           )}
           {showArchived ? 'Ver Ativos' : 'Ver Arquivados'}
-        </button>
-        <button
-          type="button"
-          onClick={() => openDetailModal(null)}
-          className="px-5 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft flex items-center transition-colors text-sm gap-2"
-        >
+        </Button>
+        <Button onClick={() => openDetailModal(null)}>
           <PlusIcon className="w-5 h-5" /> Adicionar Freelancer
-        </button>
+        </Button>
       </PageHeader>
 
       <div className="flex flex-col flex-1 min-h-0 space-y-6">
@@ -201,12 +196,12 @@ const PrestadoresFreelancersPage: () => React.ReactNode = () => {
           <FreelancerSummaryPanel freelancers={freelancers} hiredServices={hiredServices} />
         )}
         <div className="p-4 bg-surface rounded-xl shadow-soft flex flex-wrap items-center justify-between gap-4 shrink-0 border border-border-color/50">
-          <input
+          <Input
             type="search"
             placeholder="Buscar por nome ou especialidade..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-64 bg-background p-2 rounded-md border border-border-color focus:border-accent"
+            className="sm:w-64 p-2 rounded-md"
             aria-label="Buscar freelancer"
           />
         </div>
@@ -234,16 +229,16 @@ const PrestadoresFreelancersPage: () => React.ReactNode = () => {
         </div>
       </div>
       <FreelancerDetailFormModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setDetailModalOpen(false)}
+        isOpen={detailDisclosure.isOpen}
+        onClose={detailDisclosure.close}
         onSave={handleSaveFreelancer}
         onDelete={handleDeleteRequest}
         onArchive={handleArchiveFreelancer}
         initialFreelancer={currentFreelancer}
       />
       <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
+        isOpen={deleteDisclosure.isOpen}
+        onClose={deleteDisclosure.close}
         onConfirm={handleDeleteConfirm}
         itemName={currentFreelancer?.name || ''}
         itemType="Freelancer"

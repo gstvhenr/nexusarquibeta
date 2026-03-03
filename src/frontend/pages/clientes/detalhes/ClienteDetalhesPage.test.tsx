@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { DataProvider } from '../../../context/DataContext';
+import { DataProvider } from '@/context/DataContext';
 import ClienteDetalhesPage from './ClienteDetalhesPage';
 
 const TEST_CLIENT_ID = 'client-integration-1';

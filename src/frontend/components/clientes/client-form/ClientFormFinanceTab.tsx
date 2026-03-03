@@ -1,4 +1,4 @@
-import { formatCurrency } from '../../../utils/formatters';
+import { formatCurrency } from '@/utils/formatters';
 import type { ClientFormFinanceTabProps } from './types';
 
 export const ClientFormFinanceTab = ({ financialSummaries }: ClientFormFinanceTabProps) => (

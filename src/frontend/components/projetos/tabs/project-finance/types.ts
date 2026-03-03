@@ -1,4 +1,4 @@
-import type { ContractAddendum, Installment, Project, ProjectFinancials } from '../../../../types';
+import type { ContractAddendum, Installment, Project, ProjectFinancials } from '@/types';
 
 export type BudgetServiceOption = {
   id: string;

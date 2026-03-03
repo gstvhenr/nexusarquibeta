@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Subtask } from '../../types';
 import { TrashIcon, EditIcon } from '../ui/icons';
+import { IconButton } from '../ui';
 import { formatDateTime } from './agendaFormHelpers';
 
 interface SubtaskListProps {
@@ -122,26 +123,26 @@ function SubtaskList({
           </div>
 
           {/* Edit */}
-          <button
-            type="button"
+          <IconButton
+            variant="primary"
+            size="sm"
             onClick={() => onStartEditing(sub)}
-            className="p-1.5 text-text-secondary/60 hover:text-primary hover:bg-primary/10 rounded-full transition-all shrink-0"
-            title="Editar subtarefa"
             aria-label={`Editar subtarefa "${sub.title}"`}
+            title="Editar subtarefa"
           >
             <EditIcon className="w-3.5 h-3.5" />
-          </button>
+          </IconButton>
 
           {/* Delete */}
-          <button
-            type="button"
+          <IconButton
+            variant="danger"
+            size="sm"
             onClick={() => onRemove(sub.id)}
-            className="p-1.5 text-text-secondary/60 hover:text-error hover:bg-error/10 rounded-full transition-all shrink-0"
-            title="Excluir subtarefa"
             aria-label={`Excluir subtarefa "${sub.title}"`}
+            title="Excluir subtarefa"
           >
             <TrashIcon className="w-3.5 h-3.5" />
-          </button>
+          </IconButton>
         </div>
       ))}
 

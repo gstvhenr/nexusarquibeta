@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal } from '../ui';
+import { Button, Modal } from '../ui';
 import { TrashIcon, ArchiveIcon, UnarchiveIcon } from '../ui';
 import type { Supplier, SupplierContact } from '../../types';
 import { getInitialSupplier } from '../../utils/supplierHelpers';
@@ -104,9 +104,10 @@ const SupplierFormModal: (props: {
         <div>
           {initialSupplier && (
             <div className="flex gap-2">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => onArchive(supplier)}
-                className="px-4 py-2 rounded-lg font-semibold text-sm text-secondary hover:bg-secondary/10 transition-colors flex items-center gap-2"
+                className="text-secondary hover:bg-secondary/10 flex items-center gap-2"
               >
                 {supplier.archived ? (
                   <UnarchiveIcon className="w-4 h-4" />
@@ -114,29 +115,24 @@ const SupplierFormModal: (props: {
                   <ArchiveIcon className="w-4 h-4" />
                 )}{' '}
                 {supplier.archived ? 'Reativar' : 'Arquivar'}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={handleDelete}
-                className="px-4 py-2 rounded-lg font-semibold text-sm text-error hover:bg-error/10 transition-colors flex items-center gap-2"
+                className="text-error hover:bg-error/10 flex items-center gap-2"
               >
                 <TrashIcon className="w-4 h-4" /> Excluir
-              </button>
+              </Button>
             </div>
           )}
         </div>
         <div className="flex space-x-3">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color transition-colors"
-          >
+          <Button variant="secondary" onClick={onClose}>
             Cancelar
-          </button>
-          <button
-            onClick={handleSave}
-            className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus transition-colors shadow-soft"
-          >
+          </Button>
+          <Button variant="primary" onClick={handleSave}>
             Salvar Fornecedor
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

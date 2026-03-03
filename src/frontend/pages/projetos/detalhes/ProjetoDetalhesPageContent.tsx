@@ -1,14 +1,14 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { useAutoReset } from '../../../hooks/useAutoReset';
+import { useAutoReset } from '@/hooks/useAutoReset';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PageHeader } from '../../../components/layout';
-import { Modal } from '../../../components/ui';
+import { PageHeader } from '@/components/layout';
+import { Modal } from '@/components/ui';
 import {
   useCoreData,
   useFinanceData,
   useSupplyChainData,
   useSystemData,
-} from '../../../context/DataContext';
+} from '@/context/DataContext';
 import type {
   Project,
   ProjectTask,
@@ -17,26 +17,26 @@ import type {
   ProjectAddress,
   ContractAddendumStatus,
   ProjectFinancials,
-} from '../../../types';
+} from '@/types';
 
-import { formatCurrency } from '../../../utils/formatters';
-import { canTransitionAddendumStatus } from '../../../utils/addendumWorkflow';
-import { getApprovedAddendumTotal } from '../../../utils/projectFinancials';
-import { calculateProjectProgress } from '../../../services/dashboardService';
-import { DEFAULT_BUDGET_TEMPLATE_SECTIONS } from '../../../constants/budget';
-import { CheckCircleIcon } from '../../../components/ui';
-import { EventFormModal } from '../../../components/agenda';
-import { agendaService } from '../../../services/agendaService';
+import { formatCurrency } from '@/utils/formatters';
+import { canTransitionAddendumStatus } from '@/utils/addendumWorkflow';
+import { getApprovedAddendumTotal } from '@/utils/projectFinancials';
+import { calculateProjectProgress } from '@/services/dashboardService';
+import { DEFAULT_BUDGET_TEMPLATE_SECTIONS } from '@/constants/budget';
+import { CheckCircleIcon } from '@/components/ui';
+import { EventFormModal } from '@/components/agenda';
+import { agendaService } from '@/services/agendaService';
 import { v4 as uuidv4 } from 'uuid';
-import { useProjectChecklist } from '../../../hooks/useProjectChecklist';
-import { useProjectFinancials, type PaymentTarget } from '../../../hooks/useProjectFinancials';
+import { useProjectChecklist } from '@/hooks/useProjectChecklist';
+import { useProjectFinancials, type PaymentTarget } from '@/hooks/useProjectFinancials';
 import {
   TaskDetailModal,
   LinkQuotationModal,
   ConfirmPaymentModal,
   ProjectActionModal,
-} from '../../../components/projetos';
-import { appendAddendumAuditEntry, recalculateProjectTotals } from '../../../utils/addendumUtils';
+} from '@/components/projetos';
+import { appendAddendumAuditEntry, recalculateProjectTotals } from '@/utils/addendumUtils';
 import { ProjetoDetalhesTabs } from './ProjetoDetalhesTabs';
 import type { BudgetServiceOption, ProjectDetailTabId } from './types';
 import { useProjectLifecycleActions } from './useProjectLifecycleActions';

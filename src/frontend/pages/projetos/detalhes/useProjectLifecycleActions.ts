@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { NavigateFunction } from 'react-router-dom';
-import { agendaService } from '../../../services/agendaService';
-import type { AgendaEvent, ManualIncome, ProfessionalExpense, Project } from '../../../types';
-import type { ProjectActionType } from '../../../components/projetos';
+import { agendaService } from '@/services/agendaService';
+import type { AgendaEvent, ManualIncome, ProfessionalExpense, Project } from '@/types';
+import type { ProjectActionType } from '@/components/projetos';
 
 interface UseProjectLifecycleActionsParams {
   localProject: Project | null;

@@ -1,17 +1,17 @@
 import React, { useMemo, useState } from 'react';
-import { PageHeader } from '../../../components/layout';
-import { DeleteConfirmationModal } from '../../../components/ui';
-import { ArchiveIcon, PlusIcon, UnarchiveIcon } from '../../../components/ui';
-import { NAV_LINKS } from '../../../constants';
-import { useFinanceData, useSupplyChainData } from '../../../context/DataContext';
+import { PageHeader } from '@/components/layout';
+import { Button, DeleteConfirmationModal } from '@/components/ui';
+import { ArchiveIcon, PlusIcon, UnarchiveIcon } from '@/components/ui';
+import { NAV_LINKS } from '@/constants';
+import { useFinanceData, useSupplyChainData } from '@/context/DataContext';
 import { CommissionFormModal } from './CommissionFormModal';
 import { CommissionsFilterBar } from './CommissionsFilterBar';
 import { CommissionsSummaryCards } from './CommissionsSummaryCards';
 import { CommissionsTable } from './CommissionsTable';
 import { ConfirmPaymentModal } from './ConfirmPaymentModal';
 import type { CommissionFilters } from './types';
-import type { Commission } from '../../../types';
-import { formatCurrency, parseDateString } from '../../../utils/formatters';
+import type { Commission } from '@/types';
+import { formatCurrency, parseDateString } from '@/utils/formatters';
 
 const ComissoesPage: () => React.ReactNode = () => {
   const { commissions, setCommissions } = useFinanceData();
@@ -126,10 +126,10 @@ const ComissoesPage: () => React.ReactNode = () => {
   return (
     <div className="animate-fade-in-up">
       <PageHeader title="Comissões" icon={pageIcon}>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           onClick={() => setShowArchived(!showArchived)}
-          className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-background border border-border-color hover:bg-gray-100 transition-colors text-sm flex items-center gap-2"
+          className="flex items-center gap-2"
         >
           {showArchived ? (
             <UnarchiveIcon className="w-4 h-4" />
@@ -137,14 +137,14 @@ const ComissoesPage: () => React.ReactNode = () => {
             <ArchiveIcon className="w-4 h-4" />
           )}
           {showArchived ? 'Ver Ativas' : 'Ver Arquivadas'}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="primary"
           onClick={() => openFormModal(null)}
-          className="px-5 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft flex items-center gap-2 transition-colors text-sm"
+          className="flex items-center gap-2"
         >
           <PlusIcon className="w-5 h-5" /> Adicionar Comissão
-        </button>
+        </Button>
       </PageHeader>
 
       <CommissionsSummaryCards

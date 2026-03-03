@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal } from '../ui';
+import { Button, FormField, IconButton, Input, Modal } from '../ui';
 import { EyeIcon, EyeOffIcon } from '../ui/icons';
 import { useFinancialSecurity } from '../../context/FinancialSecurityContext';
 
@@ -59,9 +59,6 @@ export const InstagramCredentialModal: (
 
   if (!isOpen) return null;
 
-  const inputClass =
-    'w-full bg-background p-2.5 rounded-md border border-border-color focus:border-accent focus:outline-none transition-colors';
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Acessos — Instagram">
       {!authenticated ? (
@@ -78,7 +75,7 @@ export const InstagramCredentialModal: (
                 if (e.key === 'Enter') handleUnlock();
               }}
               placeholder="Senha de segurança"
-              className={inputClass}
+              className="w-full bg-background p-2.5 rounded-md border border-border-color focus:border-accent focus:outline-none transition-colors"
             />
             <button
               type="button"
@@ -90,33 +87,21 @@ export const InstagramCredentialModal: (
           </div>
           {error && <p className="text-sm text-error font-semibold">{error}</p>}
           <div className="flex justify-end pt-2">
-            <button
-              type="button"
-              onClick={handleUnlock}
-              className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus transition-colors"
-            >
+            <Button variant="primary" onClick={handleUnlock}>
               Desbloquear
-            </button>
+            </Button>
           </div>
         </div>
       ) : isEditing ? (
         <div className="space-y-4">
-          <div>
-            <label
-              htmlFor="field-usuario-e-mail"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Usuário / E-mail
-            </label>
-            <input
-              id="field-usuario-e-mail"
+          <FormField label="Usuário / E-mail">
+            <Input
               type="text"
               value={editUsername}
               onChange={(e) => setEditUsername(e.target.value)}
               placeholder="usuario@email.com"
-              className={inputClass}
             />
-          </div>
+          </FormField>
           <div>
             <label
               htmlFor="field-senha"
@@ -131,7 +116,7 @@ export const InstagramCredentialModal: (
                 value={editPassword}
                 onChange={(e) => setEditPassword(e.target.value)}
                 placeholder="Senha da plataforma"
-                className={inputClass}
+                className="w-full bg-background p-2.5 rounded-md border border-border-color focus:border-accent focus:outline-none transition-colors"
               />
               <button
                 type="button"
@@ -147,20 +132,12 @@ export const InstagramCredentialModal: (
             </div>
           </div>
           <div className="flex justify-end space-x-3 pt-2 border-t border-border-color mt-4">
-            <button
-              type="button"
-              onClick={() => setIsEditing(false)}
-              className="px-5 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color transition-colors"
-            >
+            <Button variant="secondary" onClick={() => setIsEditing(false)}>
               Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={handleEditSave}
-              className="px-5 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus transition-colors"
-            >
+            </Button>
+            <Button variant="primary" onClick={handleEditSave}>
               Salvar
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
@@ -181,17 +158,16 @@ export const InstagramCredentialModal: (
                       ? credentials.password
                       : '•'.repeat(credentials.password.length || 8)}
                   </p>
-                  <button
-                    type="button"
+                  <IconButton
                     onClick={() => setShowPassword(!showPassword)}
-                    className="p-2 text-text-secondary hover:text-text-primary rounded-md hover:bg-border-color/30 transition-colors"
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {showPassword ? (
                       <EyeOffIcon className="w-4 h-4" />
                     ) : (
                       <EyeIcon className="w-4 h-4" />
                     )}
-                  </button>
+                  </IconButton>
                 </div>
               </div>
             </>
@@ -201,13 +177,13 @@ export const InstagramCredentialModal: (
             </p>
           )}
           <div className="flex justify-end pt-2 border-t border-border-color mt-4">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={handleEditStart}
-              className="px-5 py-2 rounded-lg font-semibold text-primary hover:bg-primary/10 transition-colors"
+              className="text-primary hover:bg-primary/10"
             >
               {credentials?.username ? 'Editar credenciais' : 'Cadastrar credenciais'}
-            </button>
+            </Button>
           </div>
         </div>
       )}

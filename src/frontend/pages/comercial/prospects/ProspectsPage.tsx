@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { PageHeader } from '../../../components/layout';
+import { PageHeader } from '@/components/layout';
 import {
   ArchiveIcon,
   Button,
@@ -9,19 +9,20 @@ import {
   RadarIcon,
   Select,
   UnarchiveIcon,
-} from '../../../components/ui';
-import { NAV_LINKS } from '../../../constants';
-import { useMarketingData } from '../../../context/DataContext';
-import type { Prospect } from '../../../types';
+} from '@/components/ui';
+import { NAV_LINKS } from '@/constants';
+import { useMarketingData } from '@/context/DataContext';
+import { useDisclosure } from '@/hooks';
+import type { Prospect } from '@/types';
 import { ProspectCard } from './ProspectCard';
 import { ProspectFormModal } from './ProspectFormModal';
-import { sortProspectsForRadar } from '../../../utils/prospectUtils';
+import { sortProspectsForRadar } from '@/utils/prospectUtils';
 import type { ProspectAction, ProspectStatusFilter } from './types';
 
 function ProspectsPage(): JSX.Element {
   const { prospects, setProspects } = useMarketingData();
-  const [isFormOpen, setFormOpen] = useState(false);
-  const [isDeleteOpen, setDeleteOpen] = useState(false);
+  const formDisclosure = useDisclosure();
+  const deleteDisclosure = useDisclosure();
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [filterStatus, setFilterStatus] = useState<ProspectStatusFilter>('Todos');
@@ -36,12 +37,12 @@ function ProspectsPage(): JSX.Element {
       }
       return [newProspect, ...previous];
     });
-    setFormOpen(false);
+    formDisclosure.close();
   };
 
   const handleDeleteRequest = (prospect: Prospect) => {
     setSelectedProspect(prospect);
-    setDeleteOpen(true);
+    deleteDisclosure.open();
   };
 
   const handleDeleteConfirm = () => {
@@ -50,7 +51,7 @@ function ProspectsPage(): JSX.Element {
         previous.filter((prospect) => prospect.id !== selectedProspect.id),
       );
     }
-    setDeleteOpen(false);
+    deleteDisclosure.close();
     setSelectedProspect(null);
   };
 
@@ -79,12 +80,12 @@ function ProspectsPage(): JSX.Element {
 
   const openEdit = (prospect: Prospect) => {
     setSelectedProspect(prospect);
-    setFormOpen(true);
+    formDisclosure.open();
   };
 
   const openAdd = () => {
     setSelectedProspect(null);
-    setFormOpen(true);
+    formDisclosure.open();
   };
 
   const filteredProspects = useMemo(
@@ -151,14 +152,14 @@ function ProspectsPage(): JSX.Element {
       )}
 
       <ProspectFormModal
-        isOpen={isFormOpen}
-        onClose={() => setFormOpen(false)}
+        isOpen={formDisclosure.isOpen}
+        onClose={formDisclosure.close}
         onSave={handleSave}
         initialProspect={selectedProspect}
       />
       <DeleteConfirmationModal
-        isOpen={isDeleteOpen}
-        onClose={() => setDeleteOpen(false)}
+        isOpen={deleteDisclosure.isOpen}
+        onClose={deleteDisclosure.close}
         onConfirm={handleDeleteConfirm}
         itemName={selectedProspect?.name || ''}
         itemType="Prospect"

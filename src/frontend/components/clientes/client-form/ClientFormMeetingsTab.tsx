@@ -1,5 +1,6 @@
 import { TrashIcon } from '../../ui/icons';
-import { formatDateWithTime } from '../../../utils/formatters';
+import { IconButton } from '../../ui';
+import { formatDateWithTime } from '@/utils/formatters';
 import type { ClientFormMeetingsTabProps } from './types';
 
 export const ClientFormMeetingsTab = ({
@@ -94,14 +95,14 @@ export const ClientFormMeetingsTab = ({
               <p className="text-sm whitespace-pre-wrap mt-1">{meeting.notes}</p>
             </div>
             {!isReadOnly && (
-              <button
-                type="button"
+              <IconButton
+                variant="danger"
+                size="sm"
                 onClick={() => onDeleteMeeting(meeting.id)}
-                className="p-1 text-gray-400 hover:text-error"
                 aria-label="Remover reunião"
               >
                 <TrashIcon className="w-4 h-4" />
-              </button>
+              </IconButton>
             )}
           </div>
         ))}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeftIcon } from '../../../components/ui/icons';
+import { ArrowLeftIcon } from '@/components/ui/icons';
 
 type InstagramDetailHeaderProps = {
   name: string;

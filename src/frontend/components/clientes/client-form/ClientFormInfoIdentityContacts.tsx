@@ -1,12 +1,13 @@
 import { PlusIcon, TrashIcon } from '../../ui/icons';
-import { formatCpfCnpj, formatPhone } from '../../../utils/formatters';
+import { IconButton } from '../../ui';
+import { formatCpfCnpj, formatPhone } from '@/utils/formatters';
 import type {
   ClientChangeHandler,
   ClientContactChangeHandler,
   ClientRepresentativeChangeHandler,
   FieldId,
 } from './types';
-import type { Client } from '../../../types';
+import type { Client } from '@/types';
 import { AvatarPicker } from '../AvatarPicker';
 
 interface ClientFormInfoIdentityContactsProps {
@@ -205,14 +206,14 @@ export const ClientFormInfoIdentityContacts = ({
               Principal
             </label>
             {!isReadOnly && (
-              <button
-                type="button"
+              <IconButton
+                variant="danger"
+                size="sm"
                 onClick={() => onRemoveContact(contact.id)}
-                className="p-2 text-gray-400 hover:text-error"
                 aria-label={`Remover telefone ${index + 1}`}
               >
                 <TrashIcon className="w-4 h-4" />
-              </button>
+              </IconButton>
             )}
           </div>
         ))}

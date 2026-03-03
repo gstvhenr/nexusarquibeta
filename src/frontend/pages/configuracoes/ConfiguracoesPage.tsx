@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { Button, FormField, Input } from '../../components/ui';
 import { PageHeader } from '../../components/layout';
 import { useSystemData } from '../../context/DataContext';
 import { useFinancialSecurity } from '../../context/FinancialSecurityContext';
@@ -186,13 +187,13 @@ function ConfiguracoesPage(): JSX.Element {
                   Altere a senha utilizada para desbloquear os valores financeiros.
                 </p>
               </div>
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={openPasswordModal}
-                className="px-4 py-2 rounded-lg font-semibold text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+                className="text-primary bg-primary/10 hover:bg-primary/20"
               >
                 Redefinir
-              </button>
+              </Button>
             </div>
           </div>
         </Section>
@@ -203,49 +204,35 @@ function ConfiguracoesPage(): JSX.Element {
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label
-                htmlFor="field-prazo-projeto-preliminar-dias"
-                className="block text-sm font-medium text-text-secondary mb-1"
-              >
-                Prazo Projeto Preliminar (dias)
-              </label>
-              <input
-                id="field-prazo-projeto-preliminar-dias"
-                type="number"
-                min="1"
-                value={contractDeadlines.defaultPreliminarDeadlineDays}
-                onChange={(event) =>
-                  handleDeadlineChange(
-                    'defaultPreliminarDeadlineDays',
-                    parseInt(event.target.value, 10) || 7,
-                  )
-                }
-                className="w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-text-primary"
-                aria-label="Prazo Projeto Preliminar em dias"
-              />
+              <FormField label="Prazo Projeto Preliminar (dias)">
+                <Input
+                  type="number"
+                  min="1"
+                  value={contractDeadlines.defaultPreliminarDeadlineDays}
+                  onChange={(event) =>
+                    handleDeadlineChange(
+                      'defaultPreliminarDeadlineDays',
+                      parseInt(event.target.value, 10) || 7,
+                    )
+                  }
+                />
+              </FormField>
               <p className="text-xs text-text-secondary mt-1">Geralmente 7 dias úteis.</p>
             </div>
             <div>
-              <label
-                htmlFor="field-prazo-projeto-executivo-dias"
-                className="block text-sm font-medium text-text-secondary mb-1"
-              >
-                Prazo Projeto Executivo (dias)
-              </label>
-              <input
-                id="field-prazo-projeto-executivo-dias"
-                type="number"
-                min="1"
-                value={contractDeadlines.defaultExecutiveDeadlineDays}
-                onChange={(event) =>
-                  handleDeadlineChange(
-                    'defaultExecutiveDeadlineDays',
-                    parseInt(event.target.value, 10) || 30,
-                  )
-                }
-                className="w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-text-primary"
-                aria-label="Prazo Projeto Executivo em dias"
-              />
+              <FormField label="Prazo Projeto Executivo (dias)">
+                <Input
+                  type="number"
+                  min="1"
+                  value={contractDeadlines.defaultExecutiveDeadlineDays}
+                  onChange={(event) =>
+                    handleDeadlineChange(
+                      'defaultExecutiveDeadlineDays',
+                      parseInt(event.target.value, 10) || 30,
+                    )
+                  }
+                />
+              </FormField>
               <p className="text-xs text-text-secondary mt-1">
                 Geralmente 30 dias úteis após aprovação do preliminar.
               </p>
@@ -291,13 +278,13 @@ function ConfiguracoesPage(): JSX.Element {
                   Salva todos os seus dados em um arquivo de backup.
                 </p>
               </div>
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={handleExportData}
-                className="px-4 py-2 rounded-lg font-semibold text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+                className="text-primary bg-primary/10 hover:bg-primary/20"
               >
                 Exportar
-              </button>
+              </Button>
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -306,13 +293,13 @@ function ConfiguracoesPage(): JSX.Element {
                   Carrega dados de um arquivo de backup. Substitui os dados atuais.
                 </p>
               </div>
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={() => setImportModalOpen(true)}
-                className="px-4 py-2 rounded-lg font-semibold text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+                className="text-primary bg-primary/10 hover:bg-primary/20"
               >
                 Importar
-              </button>
+              </Button>
             </div>
             <div className="flex items-center justify-between border-t border-border-color pt-4 mt-4">
               <div>
@@ -321,13 +308,13 @@ function ConfiguracoesPage(): JSX.Element {
                   Remove permanentemente todos os dados do aplicativo.
                 </p>
               </div>
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={() => setClearModalOpen(true)}
-                className="px-4 py-2 rounded-lg font-semibold text-sm text-error bg-error/10 hover:bg-error/20 transition-colors"
+                className="text-error bg-error/10 hover:bg-error/20"
               >
                 Limpar Dados
-              </button>
+              </Button>
             </div>
           </div>
         </Section>

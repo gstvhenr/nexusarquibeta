@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal } from '../../components/ui';
+import { Button, FormField, Input, Modal } from '../../components/ui';
 import { useCoreData, useSystemData } from '../../context/DataContext';
 import type { DocumentFolder, DocumentItem, DocumentFile, Project } from '../../types';
 import { fileToB64 } from '../../utils/documents';
@@ -200,22 +200,14 @@ export const AddModal: (props: AddModalProps) => React.ReactNode = ({
         )}
 
         {addType === 'folder' && (
-          <div>
-            <label
-              htmlFor="field-nome-da-pasta"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Nome da Pasta
-            </label>
-            <input
-              id="field-nome-da-pasta"
+          <FormField label="Nome da Pasta">
+            <Input
               type="text"
               value={folderName}
               onChange={(event) => setFolderName(event.target.value)}
-              className={inputClass}
               aria-label="Nome da pasta"
             />
-          </div>
+          </FormField>
         )}
 
         {addType === 'upload' && (
@@ -238,20 +230,12 @@ export const AddModal: (props: AddModalProps) => React.ReactNode = ({
         )}
       </div>
       <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-        >
+        </Button>
+        <Button variant="primary" onClick={handleSave}>
           Salvar
-        </button>
+        </Button>
       </div>
     </Modal>
   );

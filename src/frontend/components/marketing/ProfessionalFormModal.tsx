@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, UserCircleIcon } from '../ui';
+import { Button, FormField, Input, Modal, Textarea, UserCircleIcon } from '../ui';
 import type { MarketingBillingFormat, MarketingProfessional } from '../../types';
 import { marketingBillingFormats } from '../../types';
 
@@ -94,68 +94,42 @@ const ProfessionalFormModal: (props: ProfessionalFormModalProps) => React.ReactN
             />
           </div>
           <div className="flex-1 space-y-4">
-            <div>
-              <label htmlFor="field-nome" className="block text-sm font-medium text-gray-600 mb-1">
-                Nome
-              </label>
-              <input
-                id="field-nome"
+            <FormField label="Nome">
+              <Input
                 type="text"
                 value={professional.name || ''}
                 onChange={(e) => handleChange('name', e.target.value)}
-                className="w-full bg-background p-2 rounded-md border border-border-color"
                 aria-label="Nome do profissional"
               />
-            </div>
-            <div>
-              <label htmlFor="field-valor" className="block text-sm font-medium text-gray-600 mb-1">
-                Valor
-              </label>
-              <input
-                id="field-valor"
+            </FormField>
+            <FormField label="Valor">
+              <Input
                 type="number"
                 value={professional.cost || ''}
                 onChange={(e) => handleChange('cost', parseFloat(e.target.value) || 0)}
-                className="w-full bg-background p-2 rounded-md border border-border-color"
                 placeholder="0.00"
                 aria-label="Valor do profissional"
               />
-            </div>
+            </FormField>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="field-email"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Email
-            </label>
-            <input
-              id="field-email"
+          <FormField label="Email">
+            <Input
               type="email"
               value={professional.email || ''}
               onChange={(e) => handleChange('email', e.target.value)}
-              className="w-full bg-background p-2 rounded-md border border-border-color"
               aria-label="Email"
             />
-          </div>
-          <div>
-            <label
-              htmlFor="field-telefone"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Telefone
-            </label>
-            <input
-              id="field-telefone"
+          </FormField>
+          <FormField label="Telefone">
+            <Input
               type="tel"
               value={professional.phone || ''}
               onChange={(e) => handleChange('phone', e.target.value)}
-              className="w-full bg-background p-2 rounded-md border border-border-color"
               aria-label="Telefone"
             />
-          </div>
+          </FormField>
         </div>
         <div>
           <label
@@ -185,51 +159,34 @@ const ProfessionalFormModal: (props: ProfessionalFormModalProps) => React.ReactN
             ))}
           </select>
         </div>
-        <div>
-          <label
-            htmlFor="professional-notes"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Notas
-          </label>
-          <textarea
-            id="professional-notes"
+        <FormField label="Notas">
+          <Textarea
             value={professional.notes || ''}
             onChange={(e) => handleChange('notes', e.target.value)}
             rows={3}
-            className="w-full bg-background p-2 rounded-md border border-border-color"
             aria-label="Notas do profissional"
-            title="Notas do profissional"
-          ></textarea>
-        </div>
+          />
+        </FormField>
       </div>
       <div className="flex justify-between items-center mt-6 pt-4 border-t border-border-color">
         <div>
           {initialProfessional && (
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={() => onDelete(initialProfessional.id)}
-              className="px-4 py-2 rounded-lg font-semibold text-error hover:bg-error/10 transition-colors"
+              className="text-error hover:bg-error/10"
             >
               Excluir
-            </button>
+            </Button>
           )}
         </div>
         <div className="flex space-x-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-          >
+          <Button variant="secondary" onClick={onClose}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-          >
+          </Button>
+          <Button variant="primary" onClick={handleSave}>
             Salvar
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

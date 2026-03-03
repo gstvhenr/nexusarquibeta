@@ -1,4 +1,4 @@
-import { formatDateWithTime } from '../../../utils/formatters';
+import { formatDateWithTime } from '@/utils/formatters';
 import type { ClientFormAuditTabProps } from './types';
 
 export const ClientFormAuditTab = ({ auditLog }: ClientFormAuditTabProps) => (

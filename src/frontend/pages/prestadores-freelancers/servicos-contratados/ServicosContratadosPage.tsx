@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { PageHeader } from '../../../components/layout';
-import { Modal } from '../../../components/ui';
+import { PageHeader } from '@/components/layout';
+import { Button, FormField, Input, Modal } from '@/components/ui';
 import {
   useCoreData,
   useFinanceData,
   useSupplyChainData,
   useSystemData,
-} from '../../../context/DataContext';
-import { NAV_LINKS } from '../../../constants';
-import type { HiredService, ProfessionalExpense, AgendaEvent } from '../../../types';
+} from '@/context/DataContext';
+import { NAV_LINKS } from '@/constants';
+import type { HiredService, ProfessionalExpense, AgendaEvent } from '@/types';
 import {
   ClipboardDocumentListIcon,
   TrashIcon,
@@ -16,8 +16,8 @@ import {
   UserCircleIcon,
   ArchiveIcon,
   UnarchiveIcon,
-} from '../../../components/ui';
-import { formatCurrency, formatDate, getDeadlineInfo } from '../../../utils/formatters';
+} from '@/components/ui';
+import { formatCurrency, formatDate, getDeadlineInfo } from '@/utils/formatters';
 import { v4 as uuidv4 } from 'uuid';
 
 const ServicosContratadosPage: () => React.ReactNode = () => {
@@ -185,16 +185,16 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
     (child) => child.path === '/prestadores-freelancers/servicos-contratados',
   )?.icon;
 
-  const commonInputClass =
+  const selectClass =
     'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-text-primary transition';
 
   return (
     <div className="animate-fade-in-up h-full flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6">
       <PageHeader title="Serviços Contratados" icon={pageIcon}>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           onClick={() => setShowArchived(!showArchived)}
-          className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-surface border border-border-color hover:bg-background transition-colors text-sm flex items-center gap-2"
+          className="flex items-center gap-2"
         >
           {showArchived ? (
             <UnarchiveIcon className="w-4 h-4" />
@@ -202,14 +202,10 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
             <ArchiveIcon className="w-4 h-4" />
           )}
           {showArchived ? 'Ver Ativos' : 'Ver Arquivados'}
-        </button>
-        <button
-          type="button"
-          onClick={openModal}
-          className="px-5 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft flex items-center transition-colors text-sm gap-2"
-        >
+        </Button>
+        <Button variant="primary" onClick={openModal} className="flex items-center gap-2">
           <PlusIcon className="w-5 h-5" /> Contratar Serviço
-        </button>
+        </Button>
       </PageHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -331,7 +327,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
                 id="field-projeto"
                 value={selectedProjectId}
                 onChange={(e) => setSelectedProjectId(e.target.value)}
-                className={commonInputClass}
+                className={selectClass}
                 aria-label="Projeto"
               >
                 <option value="">Selecione o Projeto...</option>
@@ -353,7 +349,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
                 id="field-freelancer"
                 value={selectedFreelancerId}
                 onChange={(e) => setSelectedFreelancerId(e.target.value)}
-                className={commonInputClass}
+                className={selectClass}
                 aria-label="Freelancer"
               >
                 <option value="">Selecione o Profissional...</option>
@@ -367,39 +363,17 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="field-custo-total-r"
-                className="block text-sm font-medium text-text-secondary mb-1"
-              >
-                Custo Total (R$)
-              </label>
-              <input
-                id="field-custo-total-r"
+            <FormField label="Custo Total (R$)">
+              <Input
                 type="number"
                 value={cost || ''}
                 onChange={(e) => setCost(parseFloat(e.target.value) || 0)}
-                className={commonInputClass}
                 placeholder="0.00"
-                aria-label="Custo total"
               />
-            </div>
-            <div>
-              <label
-                htmlFor="field-prazo-de-entrega"
-                className="block text-sm font-medium text-text-secondary mb-1"
-              >
-                Prazo de Entrega
-              </label>
-              <input
-                id="field-prazo-de-entrega"
-                type="date"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                className={commonInputClass}
-                aria-label="Prazo de entrega"
-              />
-            </div>
+            </FormField>
+            <FormField label="Prazo de Entrega">
+              <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+            </FormField>
           </div>
 
           {selectedProject ? (
@@ -451,20 +425,12 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
           )}
         </div>
         <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(false)}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color transition-colors"
-          >
+          <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus transition-colors shadow-soft"
-          >
+          </Button>
+          <Button variant="primary" onClick={handleSave}>
             Confirmar Contratação
-          </button>
+          </Button>
         </div>
       </Modal>
     </div>

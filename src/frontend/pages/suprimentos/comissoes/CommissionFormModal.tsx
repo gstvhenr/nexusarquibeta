@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Modal } from '../../../components/ui';
-import { useCoreData, useSupplyChainData } from '../../../context/DataContext';
-import type { Commission } from '../../../types';
+import { Button, FormField, Input, Modal, Textarea } from '@/components/ui';
+import { useCoreData, useSupplyChainData } from '@/context/DataContext';
+import type { Commission } from '@/types';
 
 type CommissionFormModalProps = {
   isOpen: boolean;
@@ -87,7 +87,7 @@ export const CommissionFormModal: (props: CommissionFormModalProps) => React.Rea
     return null;
   }
 
-  const inputClass =
+  const selectClass =
     'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent';
 
   return (
@@ -109,7 +109,7 @@ export const CommissionFormModal: (props: CommissionFormModalProps) => React.Rea
               id="field-fornecedor"
               value={commission.supplierId}
               onChange={(event) => handleChange('supplierId', event.target.value)}
-              className={inputClass}
+              className={selectClass}
               aria-label="Fornecedor"
             >
               <option value="">Selecione o Fornecedor</option>
@@ -133,7 +133,7 @@ export const CommissionFormModal: (props: CommissionFormModalProps) => React.Rea
               id="field-cliente"
               value={commission.clientId}
               onChange={(event) => handleChange('clientId', event.target.value)}
-              className={inputClass}
+              className={selectClass}
               aria-label="Cliente"
             >
               <option value="">Selecione o Cliente</option>
@@ -148,128 +148,73 @@ export const CommissionFormModal: (props: CommissionFormModalProps) => React.Rea
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="field-data-da-venda"
-              className="block text-xs font-medium text-text-secondary mb-1"
-            >
-              Data da Venda
-            </label>
-            <input
-              id="field-data-da-venda"
+          <FormField label="Data da Venda">
+            <Input
               type="date"
               value={commission.saleDate.split('T')[0]}
               onChange={(event) => handleChange('saleDate', event.target.value)}
-              className={inputClass}
               aria-label="Data da Venda"
             />
-          </div>
-          <div>
-            <label
-              htmlFor="field-data-prevista-de-pagamento"
-              className="block text-xs font-medium text-text-secondary mb-1"
-            >
-              Data Prevista de Pagamento
-            </label>
-            <input
-              id="field-data-prevista-de-pagamento"
+          </FormField>
+          <FormField label="Data Prevista de Pagamento">
+            <Input
               type="date"
               value={commission.expectedPaymentDate?.split('T')[0] || ''}
               onChange={(event) => handleChange('expectedPaymentDate', event.target.value || null)}
-              className={inputClass}
               aria-label="Data Prevista de Pagamento"
             />
-          </div>
+          </FormField>
         </div>
         <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label
-              htmlFor="field-valor-da-venda"
-              className="block text-xs font-medium text-text-secondary mb-1"
-            >
-              Valor da Venda
-            </label>
-            <input
-              id="field-valor-da-venda"
+          <FormField label="Valor da Venda">
+            <Input
               type="number"
               placeholder="R$ 0,00"
               value={commission.saleValue || ''}
               onChange={(event) =>
                 handleChange('saleValue', Number.parseFloat(event.target.value) || 0)
               }
-              className={inputClass}
               aria-label="Valor da Venda"
             />
-          </div>
-          <div>
-            <label
-              htmlFor="field-comissao"
-              className="block text-xs font-medium text-text-secondary mb-1"
-            >
-              % Comissão
-            </label>
-            <input
-              id="field-comissao"
+          </FormField>
+          <FormField label="% Comissão">
+            <Input
               type="number"
               placeholder="%"
               value={commission.commissionPercentage || ''}
               onChange={(event) =>
                 handleChange('commissionPercentage', Number.parseFloat(event.target.value) || 0)
               }
-              className={inputClass}
               aria-label="Percentual de Comissão"
             />
-          </div>
-          <div>
-            <label
-              htmlFor="field-valor-comissao"
-              className="block text-xs font-medium text-text-secondary mb-1"
-            >
-              Valor Comissão
-            </label>
-            <input
-              id="field-valor-comissao"
+          </FormField>
+          <FormField label="Valor Comissão">
+            <Input
               type="number"
               placeholder="R$ 0,00"
               value={commission.commissionValue.toFixed(2)}
               readOnly
-              className={`${inputClass} bg-surface cursor-not-allowed`}
+              className="bg-surface cursor-not-allowed"
               aria-label="Valor da Comissão"
             />
-          </div>
+          </FormField>
         </div>
-        <div>
-          <label
-            htmlFor="field-notas-opcional"
-            className="block text-xs font-medium text-text-secondary mb-1"
-          >
-            Notas (Opcional)
-          </label>
-          <textarea
-            id="field-notas-opcional"
+        <FormField label="Notas (Opcional)">
+          <Textarea
             value={commission.notes || ''}
             onChange={(event) => handleChange('notes', event.target.value)}
             rows={2}
-            className={inputClass}
             aria-label="Notas"
           />
-        </div>
+        </FormField>
       </div>
       <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-        >
+        </Button>
+        <Button variant="primary" onClick={handleSave}>
           Salvar
-        </button>
+        </Button>
       </div>
     </Modal>
   );

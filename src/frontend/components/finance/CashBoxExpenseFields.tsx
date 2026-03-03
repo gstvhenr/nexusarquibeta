@@ -1,10 +1,10 @@
 import React from 'react';
+import { FormField, Input } from '../../components/ui';
 import type { CashBoxOrigin, CashBoxCategory, CashBoxRecurrence } from '../../types';
 import { cashBoxRecurrences } from '../../types';
 
-const inputClass =
-  'w-full bg-background p-2.5 rounded-lg border border-border-color focus:border-accent focus:ring-1 focus:ring-accent text-text-primary text-sm transition-colors outline-none';
-const selectClass = `${inputClass} appearance-none cursor-pointer`;
+const selectClass =
+  'w-full bg-background p-2.5 rounded-lg border border-border-color focus:border-accent focus:ring-1 focus:ring-accent text-text-primary text-sm transition-colors outline-none appearance-none cursor-pointer';
 const labelClass = 'block text-sm font-medium text-text-secondary mb-1.5';
 
 interface CashBoxExpenseFieldsProps {
@@ -148,22 +148,22 @@ function CashBoxExpenseFields({
         )}
       </div>
 
-      <div>
-        <label htmlFor="cb-value" className={labelClass}>
-          Valor (R$) <span className="text-error">*</span>
-        </label>
-        <input
-          id="cb-value"
+      <FormField
+        label={
+          <>
+            Valor (R$) <span className="text-error">*</span>
+          </>
+        }
+      >
+        <Input
           type="number"
           min="0"
           step="0.01"
           value={value || ''}
           onChange={(e) => onValueChange(parseFloat(e.target.value) || 0)}
-          className={inputClass}
           placeholder="0,00"
-          aria-label="Valor"
         />
-      </div>
+      </FormField>
 
       <div>
         <label htmlFor="cb-recurrence" className={labelClass}>
@@ -189,17 +189,15 @@ function CashBoxExpenseFields({
 
       <div className="grid grid-cols-2 gap-4">
         <div className={recurrence !== 'Parcelada' ? 'col-span-2' : ''}>
-          <label htmlFor="cb-due-date" className={labelClass}>
-            Data de Vencimento <span className="text-error">*</span>
-          </label>
-          <input
-            id="cb-due-date"
-            type="date"
-            value={dueDate}
-            onChange={(e) => onDueDateChange(e.target.value)}
-            className={inputClass}
-            aria-label="Data de vencimento"
-          />
+          <FormField
+            label={
+              <>
+                Data de Vencimento <span className="text-error">*</span>
+              </>
+            }
+          >
+            <Input type="date" value={dueDate} onChange={(e) => onDueDateChange(e.target.value)} />
+          </FormField>
           {recurrence === 'Indeterminada' && (
             <p className="text-xs text-text-secondary/60 mt-1">
               Será lançado mensalmente no mesmo dia, sem data final.
@@ -212,41 +210,35 @@ function CashBoxExpenseFields({
           )}
         </div>
         {recurrence === 'Parcelada' && (
-          <div>
-            <label htmlFor="cb-installments" className={labelClass}>
-              Nº de Parcelas <span className="text-error">*</span>
-            </label>
-            <input
-              id="cb-installments"
+          <FormField
+            label={
+              <>
+                Nº de Parcelas <span className="text-error">*</span>
+              </>
+            }
+          >
+            <Input
               type="number"
               min="2"
               max="120"
               value={installments}
               onChange={(e) => onInstallmentsChange(parseInt(e.target.value, 10) || 2)}
-              className={inputClass}
-              aria-label="Número de parcelas"
             />
-          </div>
+          </FormField>
         )}
       </div>
 
-      <div>
-        <label htmlFor="cb-payment-date" className={labelClass}>
-          Data de Pagamento
-        </label>
-        <input
-          id="cb-payment-date"
+      <FormField label="Data de Pagamento">
+        <Input
           type="date"
           value={paymentDate}
           onChange={(e) => onPaymentDateChange(e.target.value)}
-          className={inputClass}
-          aria-label="Data de pagamento"
         />
         <p className="text-xs text-text-secondary/60 mt-1">
           Deixe em branco se ainda não foi pago. A data de pagamento define o período da
           movimentação financeira.
         </p>
-      </div>
+      </FormField>
     </div>
   );
 }

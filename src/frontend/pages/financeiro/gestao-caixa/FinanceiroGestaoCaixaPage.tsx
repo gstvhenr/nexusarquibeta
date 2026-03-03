@@ -1,13 +1,13 @@
 import React, { useCallback, useMemo } from 'react';
 import { useState } from 'react';
-import { PageHeader } from '../../../components/layout';
-import { DeleteConfirmationModal } from '../../../components/ui';
-import { PlusIcon } from '../../../components/ui/icons';
-import { CashBoxCreditFormModal, CashBoxExpenseFormModal } from '../../../components/finance';
-import { useFinanceData } from '../../../context/DataContext';
-import { NAV_LINKS } from '../../../constants';
-import { useAutoReset } from '../../../hooks/useAutoReset';
-import type { CashBoxCredit, CashBoxExpense } from '../../../types';
+import { PageHeader } from '@/components/layout';
+import { DeleteConfirmationModal } from '@/components/ui';
+import { PlusIcon } from '@/components/ui/icons';
+import { CashBoxCreditFormModal, CashBoxExpenseFormModal } from '@/components/finance';
+import { useFinanceData } from '@/context/DataContext';
+import { NAV_LINKS } from '@/constants';
+import { useAutoReset } from '@/hooks/useAutoReset';
+import type { CashBoxCredit, CashBoxExpense } from '@/types';
 
 import {
   generateExpenses,
@@ -15,7 +15,7 @@ import {
   confirmExpense as confirmExpensePure,
   confirmCredit as confirmCreditPure,
   type CreateExpenseInput,
-} from '../../../services/cashBoxService';
+} from '@/services/cashBoxService';
 import { CashBoxEntriesTable } from './CashBoxEntriesTable';
 import { CashBoxToast } from './CashBoxToast';
 import { CashBoxTotals } from './CashBoxTotals';

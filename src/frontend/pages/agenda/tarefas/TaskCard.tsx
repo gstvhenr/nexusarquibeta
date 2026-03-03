@@ -1,7 +1,14 @@
-import { ArchiveIcon, ClockIcon, EditIcon, TrashIcon, UnarchiveIcon } from '../../../components/ui';
-import type { AgendaEvent } from '../../../types';
-import { formatDateDayMonth } from '../../../utils/formatters';
-import { priorityConfig } from '../../../utils/taskUtils';
+import {
+  ArchiveIcon,
+  ClockIcon,
+  EditIcon,
+  IconButton,
+  TrashIcon,
+  UnarchiveIcon,
+} from '@/components/ui';
+import type { AgendaEvent } from '@/types';
+import { formatDateDayMonth } from '@/utils/formatters';
+import { priorityConfig } from '@/utils/taskUtils';
 
 type TaskCardProps = {
   task: AgendaEvent;
@@ -57,32 +64,38 @@ export function TaskCard({
           {style.label}
         </span>
         <div className="flex items-center gap-1">
-          <button
+          <IconButton
+            variant="primary"
+            size="sm"
             onClick={(event) => {
               event.stopPropagation();
               onEdit(task);
             }}
-            className="p-1 text-text-secondary/60 hover:text-primary hover:bg-primary/10 rounded-full transition-all -mt-1 -mr-1"
+            aria-label="Editar Tarefa"
             title="Editar Tarefa"
+            className="-mt-1 -mr-1"
           >
             <EditIcon className="w-3.5 h-3.5" />
-          </button>
+          </IconButton>
 
           {showArchiveButton && onArchiveToggle && (
-            <button
+            <IconButton
+              variant="secondary"
+              size="sm"
               onClick={(event) => {
                 event.stopPropagation();
                 onArchiveToggle(task);
               }}
-              className="p-1 text-text-secondary/60 hover:text-secondary hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors -mt-1 -mr-1"
+              aria-label={task.archived ? 'Desarquivar' : 'Arquivar'}
               title={task.archived ? 'Desarquivar' : 'Arquivar'}
+              className="-mt-1 -mr-1"
             >
               {task.archived ? (
                 <UnarchiveIcon className="w-4 h-4" />
               ) : (
                 <ArchiveIcon className="w-4 h-4" />
               )}
-            </button>
+            </IconButton>
           )}
         </div>
       </div>
@@ -131,16 +144,18 @@ export function TaskCard({
             {task.time && <span className="ml-1 text-text-secondary/70">• {task.time}</span>}
           </span>
 
-          <button
+          <IconButton
+            variant="danger"
+            size="sm"
             onClick={(event) => {
               event.stopPropagation();
               onDelete(task);
             }}
-            className="p-1.5 text-text-secondary/60 hover:text-error hover:bg-error/10 rounded-full transition-all"
+            aria-label="Excluir Tarefa"
             title="Excluir Tarefa"
           >
             <TrashIcon className="w-3.5 h-3.5" />
-          </button>
+          </IconButton>
         </div>
       </div>
     </div>

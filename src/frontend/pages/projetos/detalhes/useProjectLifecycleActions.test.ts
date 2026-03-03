@@ -2,8 +2,8 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { useState } from 'react';
 import { useProjectLifecycleActions } from './useProjectLifecycleActions';
-import { createTestProject, createTestFinancials } from '../../../test/factories';
-import type { AgendaEvent, ManualIncome, ProfessionalExpense, Project } from '../../../types';
+import { createTestProject, createTestFinancials } from '@/test/factories';
+import type { AgendaEvent, ManualIncome, ProfessionalExpense, Project } from '@/types';
 
 // Mock agendaService — retorna events inalterados para simplificar assertions
 vi.mock('../../services/agendaService', () => ({

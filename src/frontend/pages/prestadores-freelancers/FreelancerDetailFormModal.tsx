@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Modal } from '../../components/ui';
+import { Modal, Input, Textarea, FormField, Button } from '../../components/ui';
 import { TrashIcon, UserCircleIcon, ArchiveIcon, UnarchiveIcon } from '../../components/ui';
 import { FREELANCER_SPECIALTIES } from '../../constants';
 import { Freelancer } from '../../types';
@@ -71,8 +71,7 @@ export const FreelancerDetailFormModal: (props: {
 
   if (!isOpen) return null;
 
-  const inputClass =
-    'w-full bg-background p-2 rounded-md border border-border-color disabled:opacity-70 disabled:cursor-not-allowed';
+  const inputOverride = 'p-2 rounded-md';
 
   return (
     <Modal
@@ -112,50 +111,46 @@ export const FreelancerDetailFormModal: (props: {
             )}
           </div>
           <div className="flex-1">
-            <label
-              htmlFor="field-nome"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Nome
-            </label>
-            <input
-              id="field-nome"
-              type="text"
-              value={freelancer.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              disabled={isReadOnly}
-              className={inputClass}
-              aria-label="Nome"
-            />
+            <FormField label="Nome">
+              <Input
+                id="field-nome"
+                type="text"
+                value={freelancer.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                disabled={isReadOnly}
+                className={inputOverride}
+                aria-label="Nome"
+              />
+            </FormField>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
+          <Input
             type="email"
             placeholder="Email"
             value={freelancer.email}
             onChange={(e) => handleChange('email', e.target.value)}
             disabled={isReadOnly}
-            className={inputClass}
+            className={inputOverride}
             aria-label="Email"
           />
-          <input
+          <Input
             type="tel"
             placeholder="Telefone"
             value={freelancer.phone}
             onChange={(e) => handleChange('phone', formatPhone(e.target.value))}
             disabled={isReadOnly}
-            className={inputClass}
+            className={inputOverride}
             aria-label="Telefone"
           />
         </div>
-        <input
+        <Input
           type="url"
           placeholder="Link do Portfólio"
           value={freelancer.portfolioLink || ''}
           onChange={(e) => handleChange('portfolioLink', e.target.value)}
           disabled={isReadOnly}
-          className={inputClass}
+          className={inputOverride}
           aria-label="Link do portfólio"
         />
         <div>
@@ -175,32 +170,25 @@ export const FreelancerDetailFormModal: (props: {
             ))}
           </div>
         </div>
-        <div>
-          <label
-            htmlFor="field-observacoes"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Observações
-          </label>
-          <textarea
+        <FormField label="Observações">
+          <Textarea
             id="field-observacoes"
             value={freelancer.notes || ''}
             onChange={(e) => handleChange('notes', e.target.value)}
             disabled={isReadOnly}
             rows={3}
-            className={inputClass}
+            className="p-2 rounded-md"
             aria-label="Observações"
           />
-        </div>
+        </FormField>
       </div>
       <div className="flex justify-between items-center mt-6 pt-4 border-t border-border-color">
         <div>
           {mode !== 'add' && (
             <div className="flex gap-2">
-              <button
-                type="button"
+              <Button
+                variant="ghost"
                 onClick={() => onArchive(freelancer.id, !freelancer.archived)}
-                className="px-4 py-2 rounded-lg font-semibold text-sm text-secondary hover:bg-secondary/10 flex items-center gap-2 transition-colors"
               >
                 {freelancer.archived ? (
                   <UnarchiveIcon className="w-4 h-4" />
@@ -208,51 +196,31 @@ export const FreelancerDetailFormModal: (props: {
                   <ArchiveIcon className="w-4 h-4" />
                 )}{' '}
                 {freelancer.archived ? 'Reativar' : 'Arquivar'}
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete(freelancer)}
-                className="px-4 py-2 rounded-lg font-semibold text-sm text-error hover:bg-error/10 flex items-center gap-2 transition-colors"
-              >
+              </Button>
+              <Button variant="danger" onClick={() => onDelete(freelancer)}>
                 <TrashIcon className="w-4 h-4" /> Excluir
-              </button>
+              </Button>
             </div>
           )}
         </div>
         <div className="flex space-x-4">
           {mode === 'view' ? (
             <>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-2 rounded-lg font-semibold bg-border-color/50 hover:bg-border-color transition-colors"
-              >
+              <Button variant="secondary" onClick={onClose}>
                 Fechar
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('edit')}
-                className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus transition-colors"
-              >
+              </Button>
+              <Button variant="primary" onClick={() => setMode('edit')}>
                 Editar
-              </button>
+              </Button>
             </>
           ) : (
             <>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-2 rounded-lg font-semibold bg-border-color/50 hover:bg-border-color transition-colors"
-              >
+              <Button variant="secondary" onClick={onClose}>
                 Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus transition-colors"
-              >
+              </Button>
+              <Button variant="primary" onClick={handleSave}>
                 Salvar
-              </button>
+              </Button>
             </>
           )}
         </div>

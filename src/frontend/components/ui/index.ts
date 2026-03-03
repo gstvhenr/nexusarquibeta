@@ -2,6 +2,11 @@ export { default as Modal } from './Modal';
 export { DeleteConfirmationModal } from './DeleteConfirmationModal';
 export { DocumentIcons } from './DocumentIcons';
 export { Button } from './Button';
+export { Badge } from './Badge';
+export { Input } from './Input';
+export { Textarea } from './Textarea';
+export { FormField } from './FormField';
+export { IconButton } from './IconButton';
 export { Select } from './Select';
 export { EmptyState } from './EmptyState';
 export {

@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../../../components/layout';
-import { Modal } from '../../../components/ui';
-import { useMarketingData } from '../../../context/DataContext';
-import type { SocialNetwork, SocialNetworkName } from '../../../types';
-import { NAV_LINKS, SOCIAL_NETWORKS_SUPPORTED } from '../../../constants';
-import { formatDateWithTime } from '../../../utils/formatters';
+import { PageHeader } from '@/components/layout';
+import { Button, FormField, Input, Modal, Textarea } from '@/components/ui';
+import { useMarketingData } from '@/context/DataContext';
+import type { SocialNetwork, SocialNetworkName } from '@/types';
+import { NAV_LINKS, SOCIAL_NETWORKS_SUPPORTED } from '@/constants';
+import { formatDateWithTime } from '@/utils/formatters';
 
 const SocialNetworkFormModal: (props: {
   isOpen: boolean;
@@ -40,76 +40,41 @@ const SocialNetworkFormModal: (props: {
 
   if (!isOpen || !networkConfig) return null;
 
-  const inputClass =
-    'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent';
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Editar ${networkConfig.name}`}>
       <div className="space-y-4">
-        <div>
-          <label
-            htmlFor="field-url-do-perfil"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            URL do Perfil
-          </label>
-          <input
-            id="field-url-do-perfil"
+        <FormField label="URL do Perfil">
+          <Input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder={networkConfig.placeholder}
-            className={inputClass}
           />
-        </div>
-        <div>
-          <label
-            htmlFor="field-numero-de-seguidores"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Número de Seguidores
-          </label>
-          <input
-            id="field-numero-de-seguidores"
+        </FormField>
+        <FormField label="Número de Seguidores">
+          <Input
             type="number"
             value={followers || ''}
             onChange={(e) => setFollowers(parseInt(e.target.value) || undefined)}
             placeholder="Ex: 1500"
-            className={inputClass}
           />
-        </div>
-        <div>
-          <label
-            htmlFor="field-anotacoes"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Anotações
-          </label>
-          <textarea
-            id="field-anotacoes"
+        </FormField>
+        <FormField label="Anotações">
+          <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={4}
             placeholder="Estratégias de conteúdo, público-alvo, etc."
-            className={inputClass}
-          ></textarea>
-        </div>
+          />
+        </FormField>
       </div>
       <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-        >
+        </Button>
+        <Button variant="primary" onClick={handleSave}>
           Salvar
-        </button>
+        </Button>
       </div>
     </Modal>
   );

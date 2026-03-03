@@ -1,6 +1,6 @@
 import React from 'react';
-import { commissionStatuses } from '../../../types';
-import type { CommissionStatus, Supplier } from '../../../types';
+import { commissionStatuses } from '@/types';
+import type { CommissionStatus, Supplier } from '@/types';
 import type { CommissionFilters } from './types';
 
 type CommissionsFilterBarProps = {

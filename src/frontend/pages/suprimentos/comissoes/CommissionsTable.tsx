@@ -1,7 +1,7 @@
 import React from 'react';
-import { ArchiveIcon, EditIcon, TrashIcon, UnarchiveIcon } from '../../../components/ui';
-import { formatCurrency, formatDate } from '../../../utils/formatters';
-import type { Commission } from '../../../types';
+import { ArchiveIcon, EditIcon, IconButton, TrashIcon, UnarchiveIcon } from '@/components/ui';
+import { formatCurrency, formatDate } from '@/utils/formatters';
+import type { Commission } from '@/types';
 
 type CommissionsTableProps = {
   commissions: Commission[];
@@ -87,39 +87,39 @@ export const CommissionsTable: (props: CommissionsTableProps) => React.ReactNode
                       >
                         Confirmar
                       </button>
-                      <button
-                        type="button"
+                      <IconButton
+                        variant="primary"
+                        size="sm"
                         onClick={() => onEdit(commission)}
-                        className="p-1 text-gray-400 hover:text-primary"
                         aria-label="Editar comissão"
                       >
                         <EditIcon className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
+                      </IconButton>
+                      <IconButton
+                        variant="danger"
+                        size="sm"
                         onClick={() => onDelete(commission)}
-                        className="p-1 text-gray-400 hover:text-error"
                         aria-label="Excluir comissão"
                       >
                         <TrashIcon className="w-4 h-4" />
-                      </button>
+                      </IconButton>
                     </>
                   ) : (
-                    <button
-                      type="button"
+                    <IconButton
+                      variant="secondary"
+                      size="sm"
                       onClick={() => onToggleArchive(commission.id, !commission.archived)}
-                      className="p-1 text-gray-400 hover:text-secondary"
-                      title={commission.archived ? 'Desarquivar' : 'Arquivar'}
                       aria-label={
                         commission.archived ? 'Desarquivar comissão' : 'Arquivar comissão'
                       }
+                      title={commission.archived ? 'Desarquivar' : 'Arquivar'}
                     >
                       {commission.archived ? (
                         <UnarchiveIcon className="w-4 h-4" />
                       ) : (
                         <ArchiveIcon className="w-4 h-4" />
                       )}
-                    </button>
+                    </IconButton>
                   )}
                 </div>
               </td>

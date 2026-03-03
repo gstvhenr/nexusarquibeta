@@ -1,5 +1,5 @@
-import { CashIcon, CheckCircleIcon, ClockIcon, PlusIcon } from '../../../ui/icons';
-import { formatCurrency } from '../../../../utils/formatters';
+import { CashIcon, CheckCircleIcon, ClockIcon, PlusIcon } from '@/components/ui/icons';
+import { formatCurrency } from '@/utils/formatters';
 import { FinancialKPICard } from './FinancialKPICard';
 
 interface ProjectFinanceKPISectionProps {

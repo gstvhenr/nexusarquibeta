@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarPlusIcon, CheckCircleIcon } from '../../../ui/icons';
+import { CalendarPlusIcon, CheckCircleIcon } from '@/components/ui/icons';
 import { ROW_H, SECTION_ROW_H, NAME_COL_W } from './helpers';
 import type { GroupHeader, TimeColumn, TimelineRow, TooltipData } from './types';
 import { GanttBarRenderer } from './GanttBarRenderer';

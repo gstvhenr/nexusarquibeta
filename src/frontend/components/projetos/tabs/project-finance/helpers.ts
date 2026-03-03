@@ -1,6 +1,6 @@
-import type { Installment } from '../../../../types';
-import { PAYMENT_STATUS_DOT_COLORS } from '../../../../constants';
-import { parseDateString } from '../../../../utils/formatters';
+import type { Installment } from '@/types';
+import { PAYMENT_STATUS_DOT_COLORS } from '@/constants';
+import { parseDateString } from '@/utils/formatters';
 import type { AddendumAuditEntry, InstallmentStatusMeta } from './types';
 
 export function getInstallmentStatus(inst: Installment): InstallmentStatusMeta {

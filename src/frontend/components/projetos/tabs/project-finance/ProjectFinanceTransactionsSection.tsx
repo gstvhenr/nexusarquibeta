@@ -1,7 +1,8 @@
-import { CheckCircleIcon, ClockIcon, PlusIcon, TrashIcon } from '../../../ui/icons';
-import type { Installment, Project, ProjectFinancials } from '../../../../types';
-import { formatCurrency, formatDate } from '../../../../utils/formatters';
-import { getProjectLumpSumValue } from '../../../../utils/projectFinancials';
+import { CheckCircleIcon, ClockIcon, PlusIcon, TrashIcon } from '@/components/ui/icons';
+import { IconButton } from '@/components/ui';
+import type { Installment, Project, ProjectFinancials } from '@/types';
+import { formatCurrency, formatDate } from '@/utils/formatters';
+import { getProjectLumpSumValue } from '@/utils/projectFinancials';
 import { getInstallmentStatus } from './helpers';
 
 interface ProjectFinanceTransactionsSectionProps {
@@ -163,14 +164,15 @@ export const ProjectFinanceTransactionsSection = ({
                         >
                           Receber
                         </button>
-                        <button
-                          type="button"
+                        <IconButton
+                          variant="danger"
+                          size="sm"
                           onClick={() => onRemoveInstallment(installment.id)}
-                          className="p-1 text-text-secondary hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
                           aria-label="Remover parcela"
+                          className="opacity-0 group-hover:opacity-100"
                         >
                           <TrashIcon className="w-4 h-4" />
-                        </button>
+                        </IconButton>
                       </>
                     ) : (
                       <span className="text-xs text-text-secondary italic">

@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BudgetSectionComponent } from '../../../components/orcamentos';
-import { PageHeader } from '../../../components/layout';
-import { Modal } from '../../../components/ui';
-import { NAV_LINKS } from '../../../constants';
-import { useCoreData, useSystemData } from '../../../context/DataContext';
-import { api } from '../../../services/infrastructure/api';
+import { BudgetSectionComponent } from '@/components/orcamentos';
+import { PageHeader } from '@/components/layout';
+import { Button, Modal } from '@/components/ui';
+import { NAV_LINKS } from '@/constants';
+import { useCoreData, useSystemData } from '@/context/DataContext';
+import { api } from '@/services/infrastructure/api';
 import type {
   BillingMethod,
   BudgetItem,
@@ -13,9 +13,9 @@ import type {
   BudgetUnit,
   Proposal,
   SavedSection,
-} from '../../../types';
-import { formatCurrency } from '../../../utils/formatters';
-import { calculateBudgetTotals, initializeSections } from '../../../utils/budgetHelpers';
+} from '@/types';
+import { formatCurrency } from '@/utils/formatters';
+import { calculateBudgetTotals, initializeSections } from '@/utils/budgetHelpers';
 import { SaveProposalModal } from './SaveProposalModal';
 
 function OrcamentosPage(): JSX.Element {
@@ -252,12 +252,13 @@ function OrcamentosPage(): JSX.Element {
     <>
       <div className="pb-32 animate-fade-in-up">
         <PageHeader title="Orçamentos" icon={orcamentosIcon}>
-          <button
+          <Button
+            variant="primary"
             onClick={handleSaveDefaults}
-            className="px-4 py-2 rounded-lg font-semibold text-sm text-primary-content bg-secondary hover:bg-secondary-focus transition-colors shadow-soft"
+            className="bg-secondary hover:bg-secondary-focus"
           >
             Salvar
-          </button>
+          </Button>
         </PageHeader>
 
         <div className="space-y-8">
@@ -281,12 +282,13 @@ function OrcamentosPage(): JSX.Element {
           ))}
 
           <div className="mt-8">
-            <button
+            <Button
+              variant="secondary"
               onClick={handleAddSection}
-              className="w-full p-4 text-center rounded-lg border-2 border-dashed border-border-color text-text-secondary hover:bg-background hover:border-accent transition-colors font-semibold"
+              className="w-full p-4 border-2 border-dashed border-border-color text-text-secondary hover:bg-background hover:border-accent"
             >
               + Adicionar Nova Seção
-            </button>
+            </Button>
           </div>
 
           <div className="flex justify-end pt-8">
@@ -330,22 +332,24 @@ function OrcamentosPage(): JSX.Element {
 
       <div className="fixed bottom-0 right-0 left-0 md:left-64 lg:left-80 bg-surface border-t border-border-color p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-20">
         <div className="flex justify-end items-center gap-4 px-4 md:px-8">
-          <button
+          <Button
+            variant="secondary"
             onClick={() => setClearConfirmOpen(true)}
-            className="px-6 py-2.5 rounded-lg font-semibold text-text-secondary hover:text-error hover:bg-error/10 transition-colors border border-transparent hover:border-error/20"
+            className="text-text-secondary hover:text-error hover:bg-error/10 hover:border-error/20"
           >
             Limpar Orçamento
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => {
               saveProposalLockRef.current = false;
               setIsSavingProposal(false);
               setSaveModalOpen(true);
             }}
-            className="px-8 py-2.5 rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-focus shadow-lg shadow-primary/30 transform hover:-translate-y-0.5 transition-all"
+            className="shadow-lg shadow-primary/30 transform hover:-translate-y-0.5"
           >
             Salvar Proposta
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -359,18 +363,16 @@ function OrcamentosPage(): JSX.Element {
           desfeita.
         </p>
         <div className="flex justify-end space-x-4">
-          <button
-            onClick={() => setClearConfirmOpen(false)}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-          >
+          <Button variant="secondary" onClick={() => setClearConfirmOpen(false)}>
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             onClick={handleClearBudget}
-            className="px-6 py-2 rounded-lg font-semibold text-white bg-error hover:opacity-90"
+            className="bg-error hover:opacity-90"
           >
             Limpar
-          </button>
+          </Button>
         </div>
       </Modal>
 

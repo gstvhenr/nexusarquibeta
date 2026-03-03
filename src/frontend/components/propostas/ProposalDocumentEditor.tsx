@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Proposal, ProposalBlock } from '../../types';
 import { BudgetTableBlock } from './BudgetTableBlock';
-import { PlusIcon, TrashIcon, ArrowUpCircleIcon, ArrowDownCircleIcon } from '../ui';
+import { IconButton, PlusIcon, TrashIcon, ArrowUpCircleIcon, ArrowDownCircleIcon } from '../ui';
 import { v4 as uuidv4 } from 'uuid';
 
 // --- Internal sub-component ---
@@ -25,13 +25,15 @@ const TextBlockEditor: (props: {
         <div className="prose max-w-none text-text-primary whitespace-pre-wrap p-2">{content}</div>
       )}
       {isEditing && (
-        <button
+        <IconButton
+          variant="danger"
+          size="sm"
           onClick={onDelete}
-          className="absolute -right-3 -top-3 bg-surface border border-border-color text-error p-1 rounded-full shadow-sm hover:bg-error/10"
           aria-label="Excluir bloco"
+          className="absolute -right-3 -top-3 bg-surface border border-border-color shadow-sm"
         >
           <TrashIcon className="w-4 h-4" />
-        </button>
+        </IconButton>
       )}
     </div>
   );
@@ -107,20 +109,22 @@ export const ProposalDocumentEditor: (props: {
           <div key={block.id} className="relative group/block">
             {!readOnly && (
               <div className="absolute -left-10 top-2 flex flex-col gap-1 opacity-0 group-hover/block:opacity-100 transition-opacity">
-                <button
+                <IconButton
+                  variant="primary"
+                  size="sm"
                   onClick={() => moveBlock(index, -1)}
-                  className="p-1 text-text-secondary hover:text-primary"
                   aria-label="Mover bloco para cima"
                 >
                   <ArrowUpCircleIcon className="w-5 h-5" />
-                </button>
-                <button
+                </IconButton>
+                <IconButton
+                  variant="primary"
+                  size="sm"
                   onClick={() => moveBlock(index, 1)}
-                  className="p-1 text-text-secondary hover:text-primary"
                   aria-label="Mover bloco para baixo"
                 >
                   <ArrowDownCircleIcon className="w-5 h-5" />
-                </button>
+                </IconButton>
               </div>
             )}
 

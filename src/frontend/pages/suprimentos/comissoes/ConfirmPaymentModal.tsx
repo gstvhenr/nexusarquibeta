@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Modal } from '../../../components/ui';
-import { formatCurrency } from '../../../utils/formatters';
-import type { Commission } from '../../../types';
+import { Button, FormField, Input, Modal } from '@/components/ui';
+import { formatCurrency } from '@/utils/formatters';
+import type { Commission } from '@/types';
 
 type ConfirmPaymentModalProps = {
   isOpen: boolean;
@@ -36,38 +36,22 @@ export const ConfirmPaymentModal: (props: ConfirmPaymentModalProps) => React.Rea
           <strong className="text-secondary">{formatCurrency(commission.commissionValue)}</strong>{' '}
           do fornecedor <strong className="text-secondary">{commission.supplierName}</strong>?
         </p>
-        <div>
-          <label
-            htmlFor="field-data-de-recebimento"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Data de Recebimento
-          </label>
-          <input
-            id="field-data-de-recebimento"
+        <FormField label="Data de Recebimento">
+          <Input
             type="date"
             value={paymentDate}
             onChange={(event) => setPaymentDate(event.target.value)}
-            className="w-full bg-background p-2 rounded-md border border-border-color focus:border-accent"
             aria-label="Data de Recebimento"
           />
-        </div>
+        </FormField>
       </div>
       <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          type="button"
-          onClick={() => onConfirm(paymentDate)}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-        >
+        </Button>
+        <Button variant="primary" onClick={() => onConfirm(paymentDate)}>
           Confirmar
-        </button>
+        </Button>
       </div>
     </Modal>
   );
