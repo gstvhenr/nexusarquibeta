@@ -10,6 +10,20 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-03-03 — Decomposição do DataProvider: God Object → orquestrador fino com hooks extraídos
+
+- Contexto: `DataContext.tsx` (368 LOC) centralizava state management unificado, undo/redo, legacy cleanup e ~20 setters inline. Um `useEffect` de cleanup de dados legacy (linhas 82-99) colocado no mesmo componente que o sistema de undo/redo podia sobrescrever estado restaurado silenciosamente após um undo, porque a mutação não registrava history.
+- Decisão:
+  1. Extrair `useLegacyCleanup` para `src/frontend/hooks/useLegacyCleanup.ts` — hook fire-and-forget na inicialização, sem acesso à API de history.
+  2. Extrair `useUndoRedo` para `src/frontend/hooks/useUndoRedo.ts` — hook auto-contido com state próprio de `historyPast`/`historyFuture`.
+  3. Criar `createDomainSetter` factory em `src/frontend/context/createDomainSetter.ts` — elimina ~20 setters inline idênticos.
+  4. Recompor `DataContext.tsx` como orquestrador fino que importa os hooks e factory.
+- Consequência: `DataContext.tsx` reduziu de 368 para ~215 LOC. Bug de sobreescrita undo/cleanup eliminado estruturalmente (cleanup não tem acesso a `appendToHistory`). Zero breaking changes em contratos públicos dos 6 contextos de domínio. `npm run verify` verde (9 gates).
+- Reversão:
+  1. Remover `src/frontend/hooks/useLegacyCleanup.ts`, `src/frontend/hooks/useUndoRedo.ts` e `src/frontend/context/createDomainSetter.ts`.
+  2. Restaurar `DataContext.tsx` ao estado anterior com lógica inline.
+- Referências: `src/frontend/context/DataContext.tsx`, `src/frontend/hooks/useLegacyCleanup.ts`, `src/frontend/hooks/useUndoRedo.ts`, `src/frontend/context/createDomainSetter.ts`, `NEXT.md`.
+
 ### 2026-03-02 — Estabilização pós-varredura estrutural: ratchet de poluição e fechamento `verify:ci`
 
 - Contexto: após a varredura única que zerou `S06`/`S07`, o primeiro `verify:ci` falhou no `self-review:auto` por regressões de poluição associadas aos novos barrels e ao estado pré-ratchet do baseline.

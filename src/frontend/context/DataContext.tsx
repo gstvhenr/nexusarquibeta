@@ -17,59 +17,35 @@ import { MarketingContext } from './MarketingContext';
 import { SystemContext } from './SystemContext';
 import { DataHistoryContext } from './DataHistoryContext';
 
-// ---------------------------------------------------------------------------
-// Shared helpers
-// ---------------------------------------------------------------------------
+import { useLegacyCleanup } from '../hooks/useLegacyCleanup';
+import { useUndoRedo } from '../hooks/useUndoRedo';
+import { createDomainSetter } from './createDomainSetter';
+import type { SetFieldFn } from './createDomainSetter';
 
-const HISTORY_LIMIT = 50;
-
-const cloneDataSnapshot = (snapshot: AppData): AppData => {
-  if (typeof structuredClone === 'function') {
-    return structuredClone(snapshot);
-  }
-  return JSON.parse(JSON.stringify(snapshot)) as AppData;
-};
+// ---------------------------------------------------------------------------
+// Persistence helper (stable reference for useUndoRedo)
+// ---------------------------------------------------------------------------
 
 const persistDataSnapshot = (snapshot: AppData): void => {
   api.replaceData(snapshot);
 };
 
 // ---------------------------------------------------------------------------
-// Legacy cleanup
-// ---------------------------------------------------------------------------
-
-const LEGACY_DEMO_CASHBOX_PREFIXES = ['demo_cashbox_', 'demo_cashbox_2025_', 'demo_2025_'];
-
-const isLegacyDemoCashBoxExpenseId = (id: string): boolean =>
-  LEGACY_DEMO_CASHBOX_PREFIXES.some((prefix) => id.startsWith(prefix));
-
-// ---------------------------------------------------------------------------
-// Provider (orchestrator — creates domain contexts from unified state)
+// Provider (thin orchestrator — composes extracted hooks)
 // ---------------------------------------------------------------------------
 
 export const DataProvider: (props: PropsWithChildren<{}>) => React.ReactNode = ({ children }) => {
   const [data, setData] = useState<AppData>(() => api.getData());
-  const [historyPast, setHistoryPast] = useState<AppData[]>([]);
-  const [historyFuture, setHistoryFuture] = useState<AppData[]>([]);
 
-  const clearHistory = useCallback(() => {
-    setHistoryPast([]);
-    setHistoryFuture([]);
-  }, []);
+  // --- Isolated concerns ---
+  useLegacyCleanup(setData);
+  const { appendToHistory, clearHistory, undo, redo, canUndo, canRedo } = useUndoRedo(
+    data,
+    setData,
+    persistDataSnapshot,
+  );
 
-  const appendToHistoryPast = useCallback((snapshot: AppData) => {
-    setHistoryPast((previous) => {
-      const next = [...previous, cloneDataSnapshot(snapshot)];
-      return next.length > HISTORY_LIMIT ? next.slice(next.length - HISTORY_LIMIT) : next;
-    });
-  }, []);
-
-  const applyHistorySnapshot = useCallback((snapshot: AppData) => {
-    const snapshotClone = cloneDataSnapshot(snapshot);
-    setData(snapshotClone);
-    persistDataSnapshot(snapshotClone);
-  }, []);
-
+  // --- Storage sync ---
   useEffect(() => {
     const syncState = () => {
       setData(api.getData());
@@ -79,62 +55,22 @@ export const DataProvider: (props: PropsWithChildren<{}>) => React.ReactNode = (
     return () => window.removeEventListener('storage', syncState);
   }, [clearHistory]);
 
-  useEffect(() => {
-    setData((prevData) => {
-      if (!Array.isArray(prevData.cashBoxExpenses) || prevData.cashBoxExpenses.length === 0) {
-        return prevData;
-      }
-
-      const sanitizedCashBoxExpenses = prevData.cashBoxExpenses.filter(
-        (expense) => !isLegacyDemoCashBoxExpenseId(expense.id),
-      );
-
-      if (sanitizedCashBoxExpenses.length === prevData.cashBoxExpenses.length) {
-        return prevData;
-      }
-
-      api.updateData('cashBoxExpenses', sanitizedCashBoxExpenses);
-      return { ...prevData, cashBoxExpenses: sanitizedCashBoxExpenses };
-    });
-  }, []);
-
-  const setField = useCallback(
-    <K extends keyof AppData>(key: K, value: AppData[K] | ((prev: AppData[K]) => AppData[K])) => {
+  // --- Unified field setter (with history tracking) ---
+  const setField = useCallback<SetFieldFn>(
+    (key, value) => {
       setData((prevData) => {
         const nextValue = value instanceof Function ? value(prevData[key]) : value;
         if (Object.is(nextValue, prevData[key])) {
           return prevData;
         }
 
-        appendToHistoryPast(prevData);
-        setHistoryFuture([]);
+        appendToHistory(prevData);
         api.updateData(key, nextValue);
         return { ...prevData, [key]: nextValue };
       });
     },
-    [appendToHistoryPast],
+    [appendToHistory],
   );
-
-  const undo = useCallback(() => {
-    if (historyPast.length === 0) return;
-
-    const previousSnapshot = historyPast[historyPast.length - 1];
-    setHistoryPast((previous) => previous.slice(0, -1));
-    setHistoryFuture((previous) => {
-      const next = [cloneDataSnapshot(data), ...previous];
-      return next.length > HISTORY_LIMIT ? next.slice(0, HISTORY_LIMIT) : next;
-    });
-    applyHistorySnapshot(previousSnapshot);
-  }, [applyHistorySnapshot, data, historyPast]);
-
-  const redo = useCallback(() => {
-    if (historyFuture.length === 0) return;
-
-    const [nextSnapshot, ...remaining] = historyFuture;
-    setHistoryFuture(remaining);
-    appendToHistoryPast(data);
-    applyHistorySnapshot(nextSnapshot);
-  }, [appendToHistoryPast, applyHistorySnapshot, data, historyFuture]);
 
   // --- Domain values (memoized per domain for granular re-renders) ---
 
@@ -143,13 +79,9 @@ export const DataProvider: (props: PropsWithChildren<{}>) => React.ReactNode = (
       projects: data.projects,
       proposals: data.proposals,
       clients: data.clients,
-      setProjects: (v: AppData['projects'] | ((p: AppData['projects']) => AppData['projects'])) =>
-        setField('projects', v),
-      setProposals: (
-        v: AppData['proposals'] | ((p: AppData['proposals']) => AppData['proposals']),
-      ) => setField('proposals', v),
-      setClients: (v: AppData['clients'] | ((p: AppData['clients']) => AppData['clients'])) =>
-        setField('clients', v),
+      setProjects: createDomainSetter(setField, 'projects'),
+      setProposals: createDomainSetter(setField, 'proposals'),
+      setClients: createDomainSetter(setField, 'clients'),
     }),
     [data.projects, data.proposals, data.clients, setField],
   );
@@ -161,27 +93,11 @@ export const DataProvider: (props: PropsWithChildren<{}>) => React.ReactNode = (
       manualIncomes: data.manualIncomes,
       cashBoxExpenses: data.cashBoxExpenses,
       cashBoxCredits: data.cashBoxCredits,
-      setCommissions: (
-        v: AppData['commissions'] | ((p: AppData['commissions']) => AppData['commissions']),
-      ) => setField('commissions', v),
-      setManualExpenses: (
-        v:
-          | AppData['manualExpenses']
-          | ((p: AppData['manualExpenses']) => AppData['manualExpenses']),
-      ) => setField('manualExpenses', v),
-      setManualIncomes: (
-        v: AppData['manualIncomes'] | ((p: AppData['manualIncomes']) => AppData['manualIncomes']),
-      ) => setField('manualIncomes', v),
-      setCashBoxExpenses: (
-        v:
-          | AppData['cashBoxExpenses']
-          | ((p: AppData['cashBoxExpenses']) => AppData['cashBoxExpenses']),
-      ) => setField('cashBoxExpenses', v),
-      setCashBoxCredits: (
-        v:
-          | AppData['cashBoxCredits']
-          | ((p: AppData['cashBoxCredits']) => AppData['cashBoxCredits']),
-      ) => setField('cashBoxCredits', v),
+      setCommissions: createDomainSetter(setField, 'commissions'),
+      setManualExpenses: createDomainSetter(setField, 'manualExpenses'),
+      setManualIncomes: createDomainSetter(setField, 'manualIncomes'),
+      setCashBoxExpenses: createDomainSetter(setField, 'cashBoxExpenses'),
+      setCashBoxCredits: createDomainSetter(setField, 'cashBoxCredits'),
     }),
     [
       data.commissions,
@@ -200,22 +116,11 @@ export const DataProvider: (props: PropsWithChildren<{}>) => React.ReactNode = (
       supplierProductPrices: data.supplierProductPrices,
       quotations: data.quotations,
       freelancers: data.freelancers,
-      setSuppliers: (
-        v: AppData['suppliers'] | ((p: AppData['suppliers']) => AppData['suppliers']),
-      ) => setField('suppliers', v),
-      setProducts: (v: AppData['products'] | ((p: AppData['products']) => AppData['products'])) =>
-        setField('products', v),
-      setSupplierProductPrices: (
-        v:
-          | AppData['supplierProductPrices']
-          | ((p: AppData['supplierProductPrices']) => AppData['supplierProductPrices']),
-      ) => setField('supplierProductPrices', v),
-      setQuotations: (
-        v: AppData['quotations'] | ((p: AppData['quotations']) => AppData['quotations']),
-      ) => setField('quotations', v),
-      setFreelancers: (
-        v: AppData['freelancers'] | ((p: AppData['freelancers']) => AppData['freelancers']),
-      ) => setField('freelancers', v),
+      setSuppliers: createDomainSetter(setField, 'suppliers'),
+      setProducts: createDomainSetter(setField, 'products'),
+      setSupplierProductPrices: createDomainSetter(setField, 'supplierProductPrices'),
+      setQuotations: createDomainSetter(setField, 'quotations'),
+      setFreelancers: createDomainSetter(setField, 'freelancers'),
     }),
     [
       data.suppliers,
@@ -234,29 +139,11 @@ export const DataProvider: (props: PropsWithChildren<{}>) => React.ReactNode = (
       marketingIdeas: data.marketingIdeas,
       socialNetworks: data.socialNetworks,
       prospects: data.prospects,
-      setMarketingProfessionals: (
-        v:
-          | AppData['marketingProfessionals']
-          | ((p: AppData['marketingProfessionals']) => AppData['marketingProfessionals']),
-      ) => setField('marketingProfessionals', v),
-      setMarketingActivities: (
-        v:
-          | AppData['marketingActivities']
-          | ((p: AppData['marketingActivities']) => AppData['marketingActivities']),
-      ) => setField('marketingActivities', v),
-      setMarketingIdeas: (
-        v:
-          | AppData['marketingIdeas']
-          | ((p: AppData['marketingIdeas']) => AppData['marketingIdeas']),
-      ) => setField('marketingIdeas', v),
-      setSocialNetworks: (
-        v:
-          | AppData['socialNetworks']
-          | ((p: AppData['socialNetworks']) => AppData['socialNetworks']),
-      ) => setField('socialNetworks', v),
-      setProspects: (
-        v: AppData['prospects'] | ((p: AppData['prospects']) => AppData['prospects']),
-      ) => setField('prospects', v),
+      setMarketingProfessionals: createDomainSetter(setField, 'marketingProfessionals'),
+      setMarketingActivities: createDomainSetter(setField, 'marketingActivities'),
+      setMarketingIdeas: createDomainSetter(setField, 'marketingIdeas'),
+      setSocialNetworks: createDomainSetter(setField, 'socialNetworks'),
+      setProspects: createDomainSetter(setField, 'prospects'),
     }),
     [
       data.marketingProfessionals,
@@ -279,45 +166,15 @@ export const DataProvider: (props: PropsWithChildren<{}>) => React.ReactNode = (
       acceptedPaymentMethods: data.acceptedPaymentMethods,
       hiredServices: data.hiredServices,
       contractDeadlines: data.contractDeadlines,
-      setDocumentStorage: (
-        v:
-          | AppData['documentStorage']
-          | ((p: AppData['documentStorage']) => AppData['documentStorage']),
-      ) => setField('documentStorage', v),
-      setAgendaEvents: (
-        v: AppData['agendaEvents'] | ((p: AppData['agendaEvents']) => AppData['agendaEvents']),
-      ) => setField('agendaEvents', v),
-      setReminders: (
-        v: AppData['reminders'] | ((p: AppData['reminders']) => AppData['reminders']),
-      ) => setField('reminders', v),
-      setCustomBudgetTemplate: (
-        v:
-          | AppData['customBudgetTemplate']
-          | ((p: AppData['customBudgetTemplate']) => AppData['customBudgetTemplate']),
-      ) => setField('customBudgetTemplate', v),
-      setGlobalIdentifierCounter: (
-        v:
-          | AppData['globalIdentifierCounter']
-          | ((p: AppData['globalIdentifierCounter']) => AppData['globalIdentifierCounter']),
-      ) => setField('globalIdentifierCounter', v),
-      setDismissedFocusItems: (
-        v:
-          | AppData['dismissedFocusItems']
-          | ((p: AppData['dismissedFocusItems']) => AppData['dismissedFocusItems']),
-      ) => setField('dismissedFocusItems', v),
-      setAcceptedPaymentMethods: (
-        v:
-          | AppData['acceptedPaymentMethods']
-          | ((p: AppData['acceptedPaymentMethods']) => AppData['acceptedPaymentMethods']),
-      ) => setField('acceptedPaymentMethods', v),
-      setHiredServices: (
-        v: AppData['hiredServices'] | ((p: AppData['hiredServices']) => AppData['hiredServices']),
-      ) => setField('hiredServices', v),
-      setContractDeadlines: (
-        v:
-          | AppData['contractDeadlines']
-          | ((p: AppData['contractDeadlines']) => AppData['contractDeadlines']),
-      ) => setField('contractDeadlines', v),
+      setDocumentStorage: createDomainSetter(setField, 'documentStorage'),
+      setAgendaEvents: createDomainSetter(setField, 'agendaEvents'),
+      setReminders: createDomainSetter(setField, 'reminders'),
+      setCustomBudgetTemplate: createDomainSetter(setField, 'customBudgetTemplate'),
+      setGlobalIdentifierCounter: createDomainSetter(setField, 'globalIdentifierCounter'),
+      setDismissedFocusItems: createDomainSetter(setField, 'dismissedFocusItems'),
+      setAcceptedPaymentMethods: createDomainSetter(setField, 'acceptedPaymentMethods'),
+      setHiredServices: createDomainSetter(setField, 'hiredServices'),
+      setContractDeadlines: createDomainSetter(setField, 'contractDeadlines'),
     }),
     [
       data.documentStorage,
@@ -338,10 +195,10 @@ export const DataProvider: (props: PropsWithChildren<{}>) => React.ReactNode = (
       undo,
       redo,
       clearHistory,
-      canUndo: historyPast.length > 0,
-      canRedo: historyFuture.length > 0,
+      canUndo,
+      canRedo,
     }),
-    [undo, redo, clearHistory, historyPast.length, historyFuture.length],
+    [undo, redo, clearHistory, canUndo, canRedo],
   );
 
   return (
