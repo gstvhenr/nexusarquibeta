@@ -20,9 +20,10 @@ export const ClientFormMeetingsTab = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <select
             value={newMeeting.projectId || ''}
-            onChange={(e) =>
-              onNewMeetingChange((meeting) => ({ ...meeting, projectId: e.target.value }))
-            }
+            onChange={(e) => {
+              const val = e.target.value;
+              onNewMeetingChange((meeting) => ({ ...meeting, projectId: val }));
+            }}
             className={commonInputClass}
             aria-label="Projeto da reunião"
           >
@@ -36,9 +37,10 @@ export const ClientFormMeetingsTab = ({
           <input
             type="date"
             value={newMeeting.date}
-            onChange={(e) =>
-              onNewMeetingChange((meeting) => ({ ...meeting, date: e.target.value }))
-            }
+            onChange={(e) => {
+              const val = e.target.value;
+              onNewMeetingChange((meeting) => ({ ...meeting, date: val }));
+            }}
             className={commonInputClass}
             aria-label="Data da reunião"
           />
@@ -46,16 +48,20 @@ export const ClientFormMeetingsTab = ({
             type="text"
             placeholder="Motivo da Reunião"
             value={newMeeting.reason || ''}
-            onChange={(e) =>
-              onNewMeetingChange((meeting) => ({ ...meeting, reason: e.target.value }))
-            }
+            onChange={(e) => {
+              const val = e.target.value;
+              onNewMeetingChange((meeting) => ({ ...meeting, reason: val }));
+            }}
             className={commonInputClass}
             aria-label="Motivo da reunião"
           />
         </div>
         <textarea
           value={newMeeting.notes || ''}
-          onChange={(e) => onNewMeetingChange((meeting) => ({ ...meeting, notes: e.target.value }))}
+          onChange={(e) => {
+            const val = e.target.value;
+            onNewMeetingChange((meeting) => ({ ...meeting, notes: val }));
+          }}
           rows={3}
           placeholder="Descreva o que foi discutido..."
           className={commonInputClass}

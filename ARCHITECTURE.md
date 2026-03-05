@@ -18,7 +18,7 @@
 - `clientes`: gestão de clientes e detalhes.
 - `financeiro`: gestão de caixa, visão geral, recebíveis e despesas.
 - `documentos`: documentos pessoais e de projetos.
-- `suprimentos`: fornecedores, catálogo, cotações e comissões.
+- `suprimentos`: fornecedores, catálogo e cotações.
 - `gestao-marketing`: painel, conteúdos, ideias e redes sociais.
 - `prestadores-freelancers`: freelancers e serviços contratados.
 - `relatorios`: relatórios financeiros, projetos e aquisição.

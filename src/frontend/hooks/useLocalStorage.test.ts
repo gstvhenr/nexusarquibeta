@@ -1,37 +1,102 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import useLocalStorage from './useLocalStorage';
+
+vi.mock('../services/infrastructure/uiPreferenceService', () => ({
+  uiPreferenceService: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+  },
+}));
+
 import { uiPreferenceService } from '../services/infrastructure/uiPreferenceService';
 
 describe('useLocalStorage', () => {
-  beforeEach(async () => {
-    await uiPreferenceService.removeItem('test_key');
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('uses initial value when persisted preference is empty', async () => {
-    const { result } = renderHook(() => useLocalStorage<string>('test_key', 'initial'));
-
-    await waitFor(() => {
-      expect(result.current[0]).toBe('initial');
-    });
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('persists updates to IndexedDB-backed UI preferences', async () => {
-    const { result } = renderHook(() => useLocalStorage<string>('test_key', 'initial'));
+  it('returns initialValue before hydration completes', () => {
+    // Given — getItem nunca resolve (promise pendente)
+    vi.mocked(uiPreferenceService.getItem).mockReturnValue(new Promise(() => { }));
+    vi.mocked(uiPreferenceService.setItem).mockResolvedValue(undefined);
 
-    await waitFor(() => {
-      expect(result.current[0]).toBe('initial');
+    // When — hook monta
+    const { result } = renderHook(() => useLocalStorage('test-key', 'default'));
+
+    // Then — initial value enquanto ainda não hidratou
+    expect(result.current[0]).toBe('default');
+  });
+
+  it('updates storedValue after successful hydration', async () => {
+    // Given — getItem retorna valor persistido
+    vi.mocked(uiPreferenceService.getItem).mockResolvedValue('persistido');
+    vi.mocked(uiPreferenceService.setItem).mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useLocalStorage('test-key', 'default'));
+
+    // When — aguarda resolução da promessa
+    await act(async () => {
+      await Promise.resolve();
     });
 
+    // Then — valor hidratado a partir do storage
+    expect(result.current[0]).toBe('persistido');
+  });
+
+  it('falls back to initialValue on getItem error', async () => {
+    // Given — getItem lança erro
+    vi.mocked(uiPreferenceService.getItem).mockRejectedValue(new Error('storage error'));
+    vi.mocked(uiPreferenceService.setItem).mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useLocalStorage('test-key', 'fallback'));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // Then — usa initialValue como fallback
+    expect(result.current[0]).toBe('fallback');
+  });
+
+  it('allows manual setValue before hydration', () => {
+    // Given — getItem ainda pendente
+    vi.mocked(uiPreferenceService.getItem).mockReturnValue(new Promise(() => { }));
+    vi.mocked(uiPreferenceService.setItem).mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useLocalStorage('test-key', 'original'));
+
+    // When — valor é definido manualmente antes de hidratar
     act(() => {
-      result.current[1]('updated');
+      result.current[1]('manual');
     });
 
-    await waitFor(() => {
-      expect(result.current[0]).toBe('updated');
+    // Then — valor reflete a atualização manual
+    expect(result.current[0]).toBe('manual');
+  });
+
+  it('persists value via setItem after hydration', async () => {
+    // Given — getItem retorna valor inicial
+    vi.mocked(uiPreferenceService.getItem).mockResolvedValue('valor');
+    vi.mocked(uiPreferenceService.setItem).mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useLocalStorage('test-key', 'default'));
+
+    await act(async () => {
+      await Promise.resolve();
     });
 
-    const persistedValue = await uiPreferenceService.getItem('test_key', 'fallback');
-    expect(persistedValue).toBe('updated');
+    // When — valor é atualizado
+    await act(async () => {
+      result.current[1]('novo-valor');
+      await Promise.resolve();
+    });
+
+    // Then — setItem chamado com nova chave e valor
+    expect(uiPreferenceService.setItem).toHaveBeenCalledWith('test-key', 'novo-valor');
   });
 });

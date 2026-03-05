@@ -1,130 +1,214 @@
-import { describe, expect, it } from 'vitest';
-import { act, renderHook } from '@testing-library/react';
-import { useState } from 'react';
+import { describe, expect, it, vi } from 'vitest';
+import type { Project, ProjectTask, TaskStatus } from '../types/project';
 import { useProjectChecklist } from './useProjectChecklist';
-import { createTestProject } from '../test/factories';
-import type { Project, ProjectTask } from '../types';
 
-function useChecklistWrapper(initialProject: Project) {
-  const [project, setProject] = useState<Project | null>(initialProject);
-  const [editingTask, setEditingTask] = useState<{ sectionId: string; task: ProjectTask } | null>(
-    null,
-  );
-  const [modalOpen, setModalOpen] = useState(false);
-  const checklist = useProjectChecklist(setProject, editingTask, setEditingTask, setModalOpen);
-  return { project, checklist, editingTask, modalOpen };
-}
+const makeProject = (overrides: Partial<Project> = {}): Project => ({
+  id: 'p1',
+  code: 'PRJ-001',
+  name: 'Projeto',
+  clientName: 'Cliente',
+  clientId: 'c1',
+  status: 'Em Andamento',
+  deadline: null,
+  budget: 0,
+  description: '',
+  sections: [],
+  financials: { paymentType: 'vista' },
+  ...overrides,
+});
+
+const makeSection = (id: string, tasks: ProjectTask[] = []) => ({ id, name: 'Seção', tasks });
+const makeTask = (id: string): ProjectTask => ({
+  id,
+  name: 'Tarefa',
+  completed: false,
+  hours: 0,
+  status: 'todo' as TaskStatus,
+});
 
 describe('useProjectChecklist', () => {
-  const projectWithSections = createTestProject({
-    sections: [
-      {
-        id: 'sec-1',
-        name: 'Etapa 1',
-        tasks: [
-          { id: 'task-1', name: 'Tarefa A', completed: false, hours: 2, status: 'todo' },
-          { id: 'task-2', name: 'Tarefa B', completed: false, hours: 4, status: 'todo' },
-        ],
-      },
-    ],
+  it('handleAddSection adds a new section', () => {
+    // Given — projeto sem seções
+    const setLocalProject = vi.fn();
+    const setEditingTask = vi.fn();
+    const setTaskDetailModalOpen = vi.fn();
+    const { handleAddSection } = useProjectChecklist(
+      setLocalProject,
+      null,
+      setEditingTask,
+      setTaskDetailModalOpen,
+    );
+
+    // When — adiciona seção
+    handleAddSection();
+
+    const updater = setLocalProject.mock.calls[0][0];
+    const result = updater(makeProject());
+
+    // Then — seção adicionada com nome padrão
+    expect(result.sections).toHaveLength(1);
+    expect(result.sections[0].name).toBe('Nova Etapa');
   });
 
-  it('handleAddSection adds a new section', () => {
-    // Given
-    const { result } = renderHook(() => useChecklistWrapper(projectWithSections));
+  it('handleAddSection returns null when project is null', () => {
+    // Given — projeto nulo
+    const setLocalProject = vi.fn();
+    const { handleAddSection } = useProjectChecklist(setLocalProject, null, vi.fn(), vi.fn());
 
-    // When
-    act(() => result.current.checklist.handleAddSection());
+    handleAddSection();
+    const updater = setLocalProject.mock.calls[0][0];
+    const result = updater(null);
 
-    // Then
-    expect(result.current.project?.sections).toHaveLength(2);
-    expect(result.current.project?.sections[1].name).toBe('Nova Etapa');
-    expect(result.current.project?.sections[1].tasks).toEqual([]);
+    // Then — retorna null
+    expect(result).toBeNull();
   });
 
   it('handleRemoveSection removes section by id', () => {
-    // Given
-    const { result } = renderHook(() => useChecklistWrapper(projectWithSections));
+    // Given — projeto com duas seções
+    const setLocalProject = vi.fn();
+    const { handleRemoveSection } = useProjectChecklist(setLocalProject, null, vi.fn(), vi.fn());
 
-    // When
-    act(() => result.current.checklist.handleRemoveSection('sec-1'));
+    handleRemoveSection('s1');
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({ sections: [makeSection('s1'), makeSection('s2')] });
+    const result = updater(project);
 
-    // Then
-    expect(result.current.project?.sections).toHaveLength(0);
+    // Then — apenas s2 permanece
+    expect(result.sections).toHaveLength(1);
+    expect(result.sections[0].id).toBe('s2');
   });
 
-  it('handleSectionChange renames a section', () => {
-    // Given
-    const { result } = renderHook(() => useChecklistWrapper(projectWithSections));
+  it('handleSectionChange updates section name', () => {
+    // Given — seção com nome inicial
+    const setLocalProject = vi.fn();
+    const { handleSectionChange } = useProjectChecklist(setLocalProject, null, vi.fn(), vi.fn());
 
-    // When
-    act(() => result.current.checklist.handleSectionChange('sec-1', 'name', 'Planejamento'));
+    handleSectionChange('s1', 'name', 'Novo Nome');
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({ sections: [makeSection('s1')] });
+    const result = updater(project);
 
-    // Then
-    expect(result.current.project?.sections[0].name).toBe('Planejamento');
+    // Then — nome da seção atualizado
+    expect(result.sections[0].name).toBe('Novo Nome');
   });
 
   it('handleAddTask adds a task to the correct section', () => {
-    // Given
-    const { result } = renderHook(() => useChecklistWrapper(projectWithSections));
+    // Given — projeto com uma seção vazia
+    const setLocalProject = vi.fn();
+    const { handleAddTask } = useProjectChecklist(setLocalProject, null, vi.fn(), vi.fn());
 
-    // When
-    act(() => result.current.checklist.handleAddTask('sec-1'));
+    handleAddTask('s1');
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({ sections: [makeSection('s1')] });
+    const result = updater(project);
 
-    // Then
-    expect(result.current.project?.sections[0].tasks).toHaveLength(3);
-    expect(result.current.project?.sections[0].tasks[2].status).toBe('todo');
+    // Then — tarefa adicionada à seção correta
+    expect(result.sections[0].tasks).toHaveLength(1);
+    expect(result.sections[0].tasks[0].status).toBe('todo');
   });
 
-  it('handleRemoveTask removes a task by id', () => {
-    // Given
-    const { result } = renderHook(() => useChecklistWrapper(projectWithSections));
+  it('handleRemoveTask removes task by id', () => {
+    // Given — seção com duas tarefas
+    const setLocalProject = vi.fn();
+    const { handleRemoveTask } = useProjectChecklist(setLocalProject, null, vi.fn(), vi.fn());
 
-    // When
-    act(() => result.current.checklist.handleRemoveTask('sec-1', 'task-1'));
+    handleRemoveTask('s1', 'task1');
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({
+      sections: [{ id: 's1', name: 'Seção', tasks: [makeTask('task1'), makeTask('task2')] }],
+    });
+    const result = updater(project);
 
-    // Then
-    expect(result.current.project?.sections[0].tasks).toHaveLength(1);
-    expect(result.current.project?.sections[0].tasks[0].id).toBe('task-2');
+    // Then — task1 removida
+    expect(result.sections[0].tasks).toHaveLength(1);
+    expect(result.sections[0].tasks[0].id).toBe('task2');
   });
 
-  it('handleTaskChange completed=true syncs status to done', () => {
-    // Given
-    const { result } = renderHook(() => useChecklistWrapper(projectWithSections));
+  it('handleTaskChange syncs completed and status fields', () => {
+    // Given — tarefa com status todo
+    const setLocalProject = vi.fn();
+    const { handleTaskChange } = useProjectChecklist(setLocalProject, null, vi.fn(), vi.fn());
 
-    // When
-    act(() => result.current.checklist.handleTaskChange('sec-1', 'task-1', 'completed', true));
+    handleTaskChange('s1', 'task1', 'completed', true);
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({
+      sections: [{ id: 's1', name: 'S', tasks: [makeTask('task1')] }],
+    });
+    const result = updater(project);
 
-    // Then
-    const task = result.current.project?.sections[0].tasks[0];
-    expect(task?.completed).toBe(true);
-    expect(task?.status).toBe('done');
+    // Then — status atualizado para done
+    expect(result.sections[0].tasks[0].completed).toBe(true);
+    expect(result.sections[0].tasks[0].status).toBe('done');
   });
 
-  it('handleTaskChange status=done syncs completed to true', () => {
-    // Given
-    const { result } = renderHook(() => useChecklistWrapper(projectWithSections));
+  it('handleTaskChange: setting status=done sets completed=true', () => {
+    // Given — tarefa com completed=false
+    const setLocalProject = vi.fn();
+    const { handleTaskChange } = useProjectChecklist(setLocalProject, null, vi.fn(), vi.fn());
 
-    // When
-    act(() => result.current.checklist.handleTaskChange('sec-1', 'task-1', 'status', 'done'));
+    handleTaskChange('s1', 'task1', 'status', 'done');
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({
+      sections: [{ id: 's1', name: 'S', tasks: [makeTask('task1')] }],
+    });
+    const result = updater(project);
 
-    // Then
-    const task = result.current.project?.sections[0].tasks[0];
-    expect(task?.status).toBe('done');
-    expect(task?.completed).toBe(true);
+    // Then — completed sincronizado
+    expect(result.sections[0].tasks[0].completed).toBe(true);
   });
 
-  it('handleEditTaskDetails opens modal and sets editing task', () => {
-    // Given
-    const { result } = renderHook(() => useChecklistWrapper(projectWithSections));
-    const task = projectWithSections.sections[0].tasks[0];
+  it('handleEditTaskDetails sets editingTask and opens modal', () => {
+    // Given — setters mockados
+    const setLocalProject = vi.fn();
+    const setEditingTask = vi.fn();
+    const setTaskDetailModalOpen = vi.fn();
+    const { handleEditTaskDetails } = useProjectChecklist(
+      setLocalProject,
+      null,
+      setEditingTask,
+      setTaskDetailModalOpen,
+    );
+    const task = makeTask('t1');
 
-    // When
-    act(() => result.current.checklist.handleEditTaskDetails('sec-1', task));
+    // When — edição de detalhes iniciada
+    handleEditTaskDetails('s1', task);
 
-    // Then
-    expect(result.current.editingTask?.sectionId).toBe('sec-1');
-    expect(result.current.editingTask?.task.id).toBe('task-1');
-    expect(result.current.modalOpen).toBe(true);
+    // Then — setters chamados corretamente
+    expect(setEditingTask).toHaveBeenCalledWith({ sectionId: 's1', task });
+    expect(setTaskDetailModalOpen).toHaveBeenCalledWith(true);
+  });
+
+  it('handleSaveTaskDetails does nothing when editingTask is null', () => {
+    // Given — editingTask nulo
+    const setLocalProject = vi.fn();
+    const { handleSaveTaskDetails } = useProjectChecklist(
+      setLocalProject,
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When — salva sem editing
+    handleSaveTaskDetails(makeTask('t1'));
+
+    // Then — setLocalProject não é chamado
+    expect(setLocalProject).not.toHaveBeenCalled();
+  });
+
+  it('handleGanttTaskUpdate updates task in correct section', () => {
+    // Given — projeto com seção e tarefa
+    const setLocalProject = vi.fn();
+    const { handleGanttTaskUpdate } = useProjectChecklist(setLocalProject, null, vi.fn(), vi.fn());
+    const task = { ...makeTask('task1'), name: 'Atualizada' };
+
+    handleGanttTaskUpdate('s1', task);
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({
+      sections: [{ id: 's1', name: 'S', tasks: [makeTask('task1')] }],
+    });
+    const result = updater(project);
+
+    // Then — tarefa atualizada na seção correta
+    expect(result.sections[0].tasks[0].name).toBe('Atualizada');
   });
 });

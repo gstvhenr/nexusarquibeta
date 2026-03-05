@@ -292,7 +292,7 @@ MANTER:
 
 ### Checklist de validação final (todos devem ser ✅)
 
-```markdown
+````markdown
 ## Deep Clean — Checklist de Conclusão
 
 ### Gates obrigatórios
@@ -316,12 +316,27 @@ MANTER:
 - [ ] Items "investigar" foram perguntados ao usuário antes de agir
 - [ ] Nenhuma remoção foi feita por suposição
 
+### RSIP Self-Check (Recursive Self-Improvement, 2025)
+
+Antes de declarar a limpeza concluída, execute:
+
+```text
+1. STEP-BACK: "Qual era o PRINCÍPIO de limpeza? (forense → provar → remover)"
+2. EVALUATE: "Cada remoção tem evidência de grep colada no relatório?"
+3. COVERAGE: "Todos os 5 níveis de limpeza foram pelo menos diagnosticados?"
+4. WEAKNESS: "Algum item 'investigar' ficou sem resolução?"
+5. REFINE: Se lacuna detectada → resolver ou documentar em NEXT.md
+MAX-CYCLES: 1
+```
+````
+
 ### Documentação de sessão
 
 - [ ] `NEXT.md` atualizado com itens limpos e dívida técnica residual
 - [ ] `.agent/lessons-learned.md` atualizado se novo padrão de poluição foi descoberto
 - [ ] Se mudança estrutural ocorreu → registrada em `DECISIONS-active.md`
-```
+
+````
 
 ### Relatório de saída (obrigatório)
 
@@ -358,7 +373,7 @@ Ao final, gere este relatório para o usuário:
 - Linhas removidas: ±N
 - Arquivos removidos: N
 - Gate final: `npm run verify` → [resultado]
-```
+````
 
 ---
 

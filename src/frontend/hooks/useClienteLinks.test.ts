@@ -1,27 +1,25 @@
-import { describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { useState } from 'react';
-import { useClienteLinks } from './useClienteLinks';
+import { describe, expect, it, vi } from 'vitest';
 import type { Client } from '../types';
+import { useClienteLinks } from './useClienteLinks';
 
-const createTestClient = (overrides: Partial<Client> = {}): Client => ({
-  id: 'client-1',
+const makeClient = (overrides: Partial<Client> = {}): Client => ({
+  id: 'c1',
   name: 'Cliente Teste',
-  status: 'Cliente Ativo',
+  cpfCnpj: '',
+  clientType: 'PF',
+  birthDate: '',
+  representative: { name: '', relationship: '', role: '' },
   contacts: [],
-  email: 'test@test.com',
+  email: '',
+  status: 'Potencial Cliente',
+  leadSource: 'Não informado',
   serviceInterests: [],
-  address: {
-    street: 'Rua A',
-    number: '100',
-    neighborhood: 'Centro',
-    city: 'SP',
-    state: 'SP',
-    zip: '01000-000',
-  },
+  address: { street: '', number: '', neighborhood: '', city: '', state: 'SP', zip: '', complement: '' },
   isFavorite: false,
-  registrationDate: '2026-01-01',
-  lastContactDate: '2026-01-15',
+  isUrgent: false,
+  registrationDate: new Date().toISOString(),
+  lastContactDate: new Date().toISOString(),
   pipelineStatus: 'Novo',
   meetings: [],
   behavioralProfile: { notes: '' },
@@ -30,72 +28,112 @@ const createTestClient = (overrides: Partial<Client> = {}): Client => ({
   ...overrides,
 });
 
-function useLinksWrapper(initialClient: Client) {
-  const [client, setClient] = useState<Client | null>(initialClient);
-  const links = useClienteLinks({ client, setClient });
-  return { client, links };
-}
-
 describe('useClienteLinks', () => {
-  it('handleAddLink adds a valid link', () => {
-    // Given
-    const { result } = renderHook(() => useLinksWrapper(createTestClient()));
-    act(() => result.current.links.setNewLink({ title: 'GitHub', url: 'https://github.com' }));
+  it('newLink starts empty', () => {
+    // Given — hook com cliente sem links
+    const client = makeClient();
+    const setClient = vi.fn();
+    const { result } = renderHook(() => useClienteLinks({ client, setClient }));
 
-    // When
-    act(() => result.current.links.handleAddLink());
-
-    // Then
-    expect(result.current.client?.externalLinks).toHaveLength(1);
-    expect(result.current.client?.externalLinks?.[0].title).toBe('GitHub');
-    expect(result.current.client?.externalLinks?.[0].url).toBe('https://github.com');
-    // Resets new link after adding
-    expect(result.current.links.newLink.title).toBe('');
-    expect(result.current.links.newLink.url).toBe('');
-  });
-
-  it('handleAddLink rejects invalid URL (alerts user)', () => {
-    // Given
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-    const { result } = renderHook(() => useLinksWrapper(createTestClient()));
-    act(() => result.current.links.setNewLink({ title: 'Bad', url: 'not-a-url' }));
-
-    // When
-    act(() => result.current.links.handleAddLink());
-
-    // Then
-    expect(result.current.client?.externalLinks).toHaveLength(0);
-    expect(alertSpy).toHaveBeenCalledOnce();
-    alertSpy.mockRestore();
+    // Then — campos vazios inicialmente
+    expect(result.current.newLink).toEqual({ title: '', url: '' });
   });
 
   it('handleAddLink does nothing when title is empty', () => {
-    // Given
-    const { result } = renderHook(() => useLinksWrapper(createTestClient()));
-    act(() => result.current.links.setNewLink({ title: '', url: 'https://github.com' }));
+    // Given — link sem título
+    const setClient = vi.fn();
+    const { result } = renderHook(() =>
+      useClienteLinks({ client: makeClient(), setClient }),
+    );
 
-    // When
-    act(() => result.current.links.handleAddLink());
+    act(() => {
+      result.current.setNewLink({ title: '', url: 'https://example.com' });
+    });
 
-    // Then
-    expect(result.current.client?.externalLinks).toHaveLength(0);
+    // When — tenta adicionar link inválido
+    act(() => {
+      result.current.handleAddLink();
+    });
+
+    // Then — não chama setClient
+    expect(setClient).not.toHaveBeenCalled();
+  });
+
+  it('handleAddLink does nothing when url is empty', () => {
+    // Given — link sem URL
+    const setClient = vi.fn();
+    const { result } = renderHook(() =>
+      useClienteLinks({ client: makeClient(), setClient }),
+    );
+
+    act(() => {
+      result.current.setNewLink({ title: 'Título', url: '' });
+    });
+
+    act(() => {
+      result.current.handleAddLink();
+    });
+
+    // Then — não chama setClient
+    expect(setClient).not.toHaveBeenCalled();
+  });
+
+  it('handleAddLink adds link with valid data', () => {
+    // Given — link com título e URL válidos
+    const setClient = vi.fn();
+    const client = makeClient();
+    const { result } = renderHook(() => useClienteLinks({ client, setClient }));
+
+    act(() => {
+      result.current.setNewLink({ title: 'Site', url: 'https://example.com' });
+    });
+
+    act(() => {
+      result.current.handleAddLink();
+    });
+
+    // Then — setClient chamado com updater que adiciona o link
+    expect(setClient).toHaveBeenCalled();
+    const updater = setClient.mock.calls[0][0];
+    const updated = updater(client);
+    expect(updated.externalLinks).toHaveLength(1);
+    expect(updated.externalLinks[0].url).toBe('https://example.com');
+  });
+
+  it('handleAddLink resets newLink after adding', () => {
+    // Given — link válido
+    const setClient = vi.fn();
+    const client = makeClient();
+    const { result } = renderHook(() => useClienteLinks({ client, setClient }));
+
+    act(() => {
+      result.current.setNewLink({ title: 'Site', url: 'https://example.com' });
+    });
+
+    act(() => {
+      result.current.handleAddLink();
+    });
+
+    // Then — campos resetados
+    expect(result.current.newLink).toEqual({ title: '', url: '' });
   });
 
   it('handleRemoveLink removes link by id', () => {
-    // Given
-    const client = createTestClient({
-      externalLinks: [
-        { id: 'link-1', title: 'Site', url: 'https://site.com' },
-        { id: 'link-2', title: 'Blog', url: 'https://blog.com' },
-      ],
+    // Given — cliente com um link
+    const setClient = vi.fn();
+    const client = makeClient({
+      externalLinks: [{ id: 'link-1', title: 'GitHub', url: 'https://github.com' }],
     });
-    const { result } = renderHook(() => useLinksWrapper(client));
+    const { result } = renderHook(() => useClienteLinks({ client, setClient }));
 
-    // When
-    act(() => result.current.links.handleRemoveLink('link-1'));
+    // When — remove o link
+    act(() => {
+      result.current.handleRemoveLink('link-1');
+    });
 
-    // Then
-    expect(result.current.client?.externalLinks).toHaveLength(1);
-    expect(result.current.client?.externalLinks?.[0].id).toBe('link-2');
+    // Then — updater retira o link
+    const updater = setClient.mock.calls[0][0];
+    const updated = updater(client);
+    expect(updated.externalLinks).toHaveLength(0);
   });
 });

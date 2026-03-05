@@ -1,139 +1,250 @@
-import { describe, expect, it } from 'vitest';
-import { act, renderHook } from '@testing-library/react';
-import { useState } from 'react';
-import { useProjectFinancials } from './useProjectFinancials';
-import type { PaymentTarget } from './useProjectFinancials';
+import { describe, expect, it, vi } from 'vitest';
 import { createTestProject } from '../test/factories';
-import type { Project } from '../types';
+import type { Project } from '../types/project';
+import { useProjectFinancials } from './useProjectFinancials';
 
-function useFinancialsWrapper(initialProject: Project) {
-  const [project, setProject] = useState<Project | null>(initialProject);
-  const [paymentToConfirm, setPaymentToConfirm] = useState<PaymentTarget | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const financials = useProjectFinancials(
-    setProject,
-    project,
-    paymentToConfirm,
-    setPaymentToConfirm,
-    setModalOpen,
-  );
-  return { project, financials, paymentToConfirm, modalOpen };
-}
-
-describe('useProjectFinancials', () => {
-  const baseProject = createTestProject({
+const makeProject = (overrides: Partial<Project> = {}): Project =>
+  createTestProject({
+    sections: [],
     financials: {
       paymentType: 'parcelado',
       numberOfInstallments: 3,
       installmentsPaymentDay: 15,
-      startInstallmentsInCurrentMonth: true,
-      installments: [
-        { id: 'i1', number: 1, value: 1000, dueDate: '2026-03-15', paid: false, paymentDate: null },
-        { id: 'i2', number: 2, value: 1000, dueDate: '2026-04-15', paid: false, paymentDate: null },
-      ],
+      installmentsInterestEnabled: false,
+      startInstallmentsInCurrentMonth: false,
     },
+    budget: 3000,
+    ...overrides,
   });
 
-  it('handleAddInstallment adds an extra installment with correct number', () => {
-    // Given
-    const { result } = renderHook(() => useFinancialsWrapper(baseProject));
-
-    // When
-    act(() => result.current.financials.handleAddInstallment());
-
-    // Then
-    const installments = result.current.project?.financials.installments;
-    expect(installments).toHaveLength(3);
-    expect(installments?.[2].number).toBe(3);
-    expect(installments?.[2].description).toBe('Parcela Extra');
-    expect(installments?.[2].paid).toBe(false);
-  });
-
-  it('handleRemoveInstallment removes by id', () => {
-    // Given
-    const { result } = renderHook(() => useFinancialsWrapper(baseProject));
-
-    // When
-    act(() => result.current.financials.handleRemoveInstallment('i1'));
-
-    // Then
-    const installments = result.current.project?.financials.installments;
-    expect(installments).toHaveLength(1);
-    expect(installments?.[0].id).toBe('i2');
-  });
-
-  it('handleInstallmentChange updates a specific field', () => {
-    // Given
-    const { result } = renderHook(() => useFinancialsWrapper(baseProject));
-
-    // When
-    act(() => result.current.financials.handleInstallmentChange('i1', 'value', 2500));
-
-    // Then
-    expect(result.current.project?.financials.installments?.[0].value).toBe(2500);
-  });
-
-  it('handleOpenConfirmPayment sets target and opens modal', () => {
-    // Given
-    const { result } = renderHook(() => useFinancialsWrapper(baseProject));
-
-    // When
-    act(() =>
-      result.current.financials.handleOpenConfirmPayment({ type: 'installment', id: 'i1' }),
+describe('useProjectFinancials', () => {
+  it('handleGenerateInstallments creates correct number of installments', () => {
+    // Given — projeto parcelado em 3x
+    const setLocalProject = vi.fn();
+    const { handleGenerateInstallments } = useProjectFinancials(
+      setLocalProject,
+      makeProject(),
+      null,
+      vi.fn(),
+      vi.fn(),
     );
 
-    // Then
-    expect(result.current.paymentToConfirm).toEqual({ type: 'installment', id: 'i1' });
-    expect(result.current.modalOpen).toBe(true);
+    // When — gera parcelas
+    handleGenerateInstallments();
+    const updater = setLocalProject.mock.calls[0][0];
+    const result = updater(makeProject());
+
+    // Then — 3 parcelas geradas
+    expect(result.financials.installments).toHaveLength(3);
+    expect(result.financials.installments[0].number).toBe(1);
+    expect(result.financials.installments[0].paid).toBe(false);
   });
 
-  it('handleAddDeadline adds a deadline with default title', () => {
-    // Given
-    const { result } = renderHook(() => useFinancialsWrapper(baseProject));
+  it('handleAddInstallment adds a new installment', () => {
+    // Given — projeto sem parcelas
+    const setLocalProject = vi.fn();
+    const { handleAddInstallment } = useProjectFinancials(
+      setLocalProject,
+      makeProject(),
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
 
-    // When
-    act(() => result.current.financials.handleAddDeadline());
+    handleAddInstallment();
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({ financials: { paymentType: 'parcelado', installments: [] } });
+    const result = updater(project);
 
-    // Then
-    expect(result.current.project?.additionalDeadlines).toHaveLength(1);
-    expect(result.current.project?.additionalDeadlines?.[0].title).toBe('Novo Prazo');
+    // Then — uma parcela adicionada
+    expect(result.financials.installments).toHaveLength(1);
+    expect(result.financials.installments[0].description).toBe('Parcela Extra');
   });
 
-  it('handleRemoveDeadline removes by id', () => {
-    // Given
-    const projectWithDeadlines = createTestProject({
-      ...baseProject,
-      additionalDeadlines: [{ id: 'd1', title: 'Entrega', date: '2026-05-01' }],
+  it('handleRemoveInstallment removes installment by id', () => {
+    // Given — projeto com duas parcelas
+    const setLocalProject = vi.fn();
+    const { handleRemoveInstallment } = useProjectFinancials(
+      setLocalProject,
+      makeProject(),
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    handleRemoveInstallment('inst-1');
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({
+      financials: {
+        paymentType: 'parcelado',
+        installments: [
+          { id: 'inst-1', number: 1, value: 500, dueDate: '2026-01-15', paid: false, paymentDate: null },
+          { id: 'inst-2', number: 2, value: 500, dueDate: '2026-02-15', paid: false, paymentDate: null },
+        ],
+      },
     });
-    const { result } = renderHook(() => useFinancialsWrapper(projectWithDeadlines));
+    const result = updater(project);
 
-    // When
-    act(() => result.current.financials.handleRemoveDeadline('d1'));
-
-    // Then
-    expect(result.current.project?.additionalDeadlines).toHaveLength(0);
+    // Then — só inst-2 permanece
+    expect(result.financials.installments).toHaveLength(1);
+    expect(result.financials.installments[0].id).toBe('inst-2');
   });
 
-  it('incrementRevision increments revisionCount from zero', () => {
-    // Given
-    const { result } = renderHook(() => useFinancialsWrapper(baseProject));
+  it('handleInstallmentChange updates field on correct installment', () => {
+    // Given — parcela existente
+    const setLocalProject = vi.fn();
+    const { handleInstallmentChange } = useProjectFinancials(
+      setLocalProject,
+      makeProject(),
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
 
-    // When
-    act(() => result.current.financials.incrementRevision());
+    handleInstallmentChange('inst-1', 'value', 999);
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({
+      financials: {
+        paymentType: 'parcelado',
+        installments: [
+          { id: 'inst-1', number: 1, value: 500, dueDate: '2026-01-15', paid: false, paymentDate: null },
+        ],
+      },
+    });
+    const result = updater(project);
 
-    // Then
-    expect(result.current.project?.revisionCount).toBe(1);
+    // Then — valor atualizado
+    expect(result.financials.installments[0].value).toBe(999);
   });
 
-  it('incrementRevision increments existing count', () => {
-    // Given
-    const projectWithRevision = createTestProject({ ...baseProject, revisionCount: 2 });
-    const { result } = renderHook(() => useFinancialsWrapper(projectWithRevision));
+  it('handleOpenConfirmPayment sets payment target and opens modal', () => {
+    // Given — setters mockados
+    const setPaymentToConfirm = vi.fn();
+    const setPaymentConfirmModalOpen = vi.fn();
+    const { handleOpenConfirmPayment } = useProjectFinancials(
+      vi.fn(),
+      makeProject(),
+      null,
+      setPaymentToConfirm,
+      setPaymentConfirmModalOpen,
+    );
 
-    // When
-    act(() => result.current.financials.incrementRevision());
+    // When — abre confirmação de pagamento
+    handleOpenConfirmPayment({ type: 'lump' });
 
-    // Then
-    expect(result.current.project?.revisionCount).toBe(3);
+    // Then — target definido e modal aberto
+    expect(setPaymentToConfirm).toHaveBeenCalledWith({ type: 'lump' });
+    expect(setPaymentConfirmModalOpen).toHaveBeenCalledWith(true);
+  });
+
+  it('handleConfirmPayment does nothing when paymentToConfirm is null', () => {
+    // Given — paymentToConfirm=null
+    const setLocalProject = vi.fn();
+    const { handleConfirmPayment } = useProjectFinancials(
+      setLocalProject,
+      makeProject(),
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When — confirma sem target
+    handleConfirmPayment('2026-03-01', 'PIX');
+
+    // Then — nenhuma atualização
+    expect(setLocalProject).not.toHaveBeenCalled();
+  });
+
+  it('handleConfirmPayment marks lump sum as paid', () => {
+    // Given — localProject com pagamento lump e paymentToConfirm=lump
+    const setLocalProject = vi.fn();
+    const setPaymentConfirmModalOpen = vi.fn();
+    const setPaymentToConfirm = vi.fn();
+    const project = makeProject({ financials: { paymentType: 'vista' } });
+
+    const { handleConfirmPayment } = useProjectFinancials(
+      setLocalProject,
+      project,
+      { type: 'lump' },
+      setPaymentToConfirm,
+      setPaymentConfirmModalOpen,
+    );
+
+    // When — confirma
+    handleConfirmPayment('2026-03-01', 'PIX');
+
+    // Then — projeto atualizado com lump pago
+    expect(setLocalProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        financials: expect.objectContaining({ lumpSumStatus: 'Pago', lumpSumPaymentDate: '2026-03-01' }),
+      }),
+    );
+    expect(setPaymentConfirmModalOpen).toHaveBeenCalledWith(false);
+  });
+
+  it('handleAddDeadline adds a new deadline', () => {
+    // Given — projeto sem prazos adicionais
+    const setLocalProject = vi.fn();
+    const { handleAddDeadline } = useProjectFinancials(
+      setLocalProject,
+      makeProject(),
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    handleAddDeadline();
+    const updater = setLocalProject.mock.calls[0][0];
+    const result = updater(makeProject());
+
+    // Then — prazo adicionado
+    expect(result.additionalDeadlines).toHaveLength(1);
+    expect(result.additionalDeadlines[0].title).toBe('Novo Prazo');
+  });
+
+  it('handleRemoveDeadline removes deadline by id', () => {
+    // Given — projeto com um prazo
+    const setLocalProject = vi.fn();
+    const { handleRemoveDeadline } = useProjectFinancials(
+      setLocalProject,
+      makeProject(),
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    handleRemoveDeadline('d1');
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({
+      additionalDeadlines: [
+        { id: 'd1', title: 'Prazo A', date: '2026-01-01' },
+        { id: 'd2', title: 'Prazo B', date: '2026-02-01' },
+      ],
+    });
+    const result = updater(project);
+
+    // Then — apenas d2 permanece
+    expect(result.additionalDeadlines).toHaveLength(1);
+    expect(result.additionalDeadlines[0].id).toBe('d2');
+  });
+
+  it('incrementRevision increments revisionCount', () => {
+    // Given — projeto com revisionCount=2
+    const setLocalProject = vi.fn();
+    const { incrementRevision } = useProjectFinancials(
+      setLocalProject,
+      makeProject(),
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    incrementRevision();
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({ revisionCount: 2 });
+    const result = updater(project);
+
+    // Then — revisionCount incrementado para 3
+    expect(result.revisionCount).toBe(3);
   });
 });

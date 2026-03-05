@@ -124,8 +124,8 @@ export const ClientTableRow: (props: ClientTableRowProps) => React.ReactNode = R
           <div className="text-gray-600">{client.email}</div>
         </td>
         <td className="px-6 py-4">
-          <div className="font-medium">{client.address.city}</div>
-          <div className="text-text-secondary">{client.address.state}</div>
+          <div className="font-medium">{client.address?.city || 'N/A'}</div>
+          <div className="text-text-secondary">{client.address?.state || ''}</div>
         </td>
         <td className="px-6 py-4 text-right">
           {nextDeadline ? (

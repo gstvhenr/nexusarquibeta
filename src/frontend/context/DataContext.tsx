@@ -19,8 +19,8 @@ import { DataHistoryContext } from './DataHistoryContext';
 
 import { useLegacyCleanup } from '../hooks/useLegacyCleanup';
 import { useUndoRedo } from '../hooks/useUndoRedo';
-import { createDomainSetter } from './createDomainSetter';
 import type { SetFieldFn } from './createDomainSetter';
+import { useDomain } from './useDomain';
 
 // ---------------------------------------------------------------------------
 // Persistence helper (stable reference for useUndoRedo)
@@ -72,123 +72,49 @@ export const DataProvider: (props: PropsWithChildren<{}>) => React.ReactNode = (
     [appendToHistory],
   );
 
-  // --- Domain values (memoized per domain for granular re-renders) ---
+  // --- Domain slices (each memoized per-key, setters auto-generated) ---
 
-  const coreValue: CoreDataType = useMemo(
-    () => ({
-      projects: data.projects,
-      proposals: data.proposals,
-      clients: data.clients,
-      setProjects: createDomainSetter(setField, 'projects'),
-      setProposals: createDomainSetter(setField, 'proposals'),
-      setClients: createDomainSetter(setField, 'clients'),
-    }),
-    [data.projects, data.proposals, data.clients, setField],
-  );
+  const coreValue: CoreDataType = useDomain(data, setField, [
+    'projects',
+    'proposals',
+    'clients',
+  ]);
 
-  const financeValue: FinanceDataType = useMemo(
-    () => ({
-      commissions: data.commissions,
-      manualExpenses: data.manualExpenses,
-      manualIncomes: data.manualIncomes,
-      cashBoxExpenses: data.cashBoxExpenses,
-      cashBoxCredits: data.cashBoxCredits,
-      setCommissions: createDomainSetter(setField, 'commissions'),
-      setManualExpenses: createDomainSetter(setField, 'manualExpenses'),
-      setManualIncomes: createDomainSetter(setField, 'manualIncomes'),
-      setCashBoxExpenses: createDomainSetter(setField, 'cashBoxExpenses'),
-      setCashBoxCredits: createDomainSetter(setField, 'cashBoxCredits'),
-    }),
-    [
-      data.commissions,
-      data.manualExpenses,
-      data.manualIncomes,
-      data.cashBoxExpenses,
-      data.cashBoxCredits,
-      setField,
-    ],
-  );
+  const financeValue: FinanceDataType = useDomain(data, setField, [
+    'commissions',
+    'manualExpenses',
+    'manualIncomes',
+    'cashBoxExpenses',
+    'cashBoxCredits',
+  ]);
 
-  const supplyChainValue: SupplyChainDataType = useMemo(
-    () => ({
-      suppliers: data.suppliers,
-      products: data.products,
-      supplierProductPrices: data.supplierProductPrices,
-      quotations: data.quotations,
-      freelancers: data.freelancers,
-      setSuppliers: createDomainSetter(setField, 'suppliers'),
-      setProducts: createDomainSetter(setField, 'products'),
-      setSupplierProductPrices: createDomainSetter(setField, 'supplierProductPrices'),
-      setQuotations: createDomainSetter(setField, 'quotations'),
-      setFreelancers: createDomainSetter(setField, 'freelancers'),
-    }),
-    [
-      data.suppliers,
-      data.products,
-      data.supplierProductPrices,
-      data.quotations,
-      data.freelancers,
-      setField,
-    ],
-  );
+  const supplyChainValue: SupplyChainDataType = useDomain(data, setField, [
+    'suppliers',
+    'products',
+    'supplierProductPrices',
+    'quotations',
+    'freelancers',
+  ]);
 
-  const marketingValue: MarketingDataType = useMemo(
-    () => ({
-      marketingProfessionals: data.marketingProfessionals,
-      marketingActivities: data.marketingActivities,
-      marketingIdeas: data.marketingIdeas,
-      socialNetworks: data.socialNetworks,
-      prospects: data.prospects,
-      setMarketingProfessionals: createDomainSetter(setField, 'marketingProfessionals'),
-      setMarketingActivities: createDomainSetter(setField, 'marketingActivities'),
-      setMarketingIdeas: createDomainSetter(setField, 'marketingIdeas'),
-      setSocialNetworks: createDomainSetter(setField, 'socialNetworks'),
-      setProspects: createDomainSetter(setField, 'prospects'),
-    }),
-    [
-      data.marketingProfessionals,
-      data.marketingActivities,
-      data.marketingIdeas,
-      data.socialNetworks,
-      data.prospects,
-      setField,
-    ],
-  );
+  const marketingValue: MarketingDataType = useDomain(data, setField, [
+    'marketingProfessionals',
+    'marketingActivities',
+    'marketingIdeas',
+    'socialNetworks',
+    'prospects',
+  ]);
 
-  const systemValue: SystemDataType = useMemo(
-    () => ({
-      documentStorage: data.documentStorage,
-      agendaEvents: data.agendaEvents,
-      reminders: data.reminders,
-      customBudgetTemplate: data.customBudgetTemplate,
-      globalIdentifierCounter: data.globalIdentifierCounter,
-      dismissedFocusItems: data.dismissedFocusItems,
-      acceptedPaymentMethods: data.acceptedPaymentMethods,
-      hiredServices: data.hiredServices,
-      contractDeadlines: data.contractDeadlines,
-      setDocumentStorage: createDomainSetter(setField, 'documentStorage'),
-      setAgendaEvents: createDomainSetter(setField, 'agendaEvents'),
-      setReminders: createDomainSetter(setField, 'reminders'),
-      setCustomBudgetTemplate: createDomainSetter(setField, 'customBudgetTemplate'),
-      setGlobalIdentifierCounter: createDomainSetter(setField, 'globalIdentifierCounter'),
-      setDismissedFocusItems: createDomainSetter(setField, 'dismissedFocusItems'),
-      setAcceptedPaymentMethods: createDomainSetter(setField, 'acceptedPaymentMethods'),
-      setHiredServices: createDomainSetter(setField, 'hiredServices'),
-      setContractDeadlines: createDomainSetter(setField, 'contractDeadlines'),
-    }),
-    [
-      data.documentStorage,
-      data.agendaEvents,
-      data.reminders,
-      data.customBudgetTemplate,
-      data.globalIdentifierCounter,
-      data.dismissedFocusItems,
-      data.acceptedPaymentMethods,
-      data.hiredServices,
-      data.contractDeadlines,
-      setField,
-    ],
-  );
+  const systemValue: SystemDataType = useDomain(data, setField, [
+    'documentStorage',
+    'agendaEvents',
+    'reminders',
+    'customBudgetTemplate',
+    'globalIdentifierCounter',
+    'dismissedFocusItems',
+    'acceptedPaymentMethods',
+    'hiredServices',
+    'contractDeadlines',
+  ]);
 
   const historyValue: DataHistoryContextType = useMemo(
     () => ({

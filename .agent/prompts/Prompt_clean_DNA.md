@@ -398,6 +398,19 @@ Fase 3 — Gates executáveis (requer aprovação do usuário)
 - [ ] As novas regras são verificáveis por máquina? (SIM = ideal)
 ```
 
+### RSIP Self-Check (Recursive Self-Improvement, 2025)
+
+Antes de gerar o relatório final, execute esta autoavaliação:
+
+```text
+1. EVALUATE: "Cada nova regra/gate é auto-explicativa para um agente sem memória?"
+2. COVERAGE: "Os 3 estágios de poluição (criação, acúmulo, detecção) foram endereçados?"
+3. WEAKNESS: "Qual mecanismo é mais fácil de contornar ou ignorar?"
+4. REFINE: Se mecanismo fraco detectado → fortalecer ou adicionar gate antes de entregar
+5. COHERENCE: "As novas regras conflitam com AGENTS.md ou rules existentes?"
+MAX-CYCLES: 1
+```
+
 ### Relatório de saída (obrigatório)
 
 ```markdown

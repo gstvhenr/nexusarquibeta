@@ -255,6 +255,43 @@ describe('useProjectLifecycleActions', () => {
     expect(result.current.localProject?.archived).toBe(true);
   });
 
+  it('reactivate keeps refunds unchanged when user declines reversal', () => {
+    // Given — first confirm reactivates project, second confirm declines estorno
+    vi.spyOn(window, 'confirm').mockReturnValueOnce(true).mockReturnValueOnce(false);
+
+    const archivedProject = createTestProject({
+      id: 'proj-no-reversal',
+      name: 'Projeto Sem Estorno',
+      status: 'Cancelado',
+      archived: true,
+    });
+
+    const existingRefundExpense: ProfessionalExpense = {
+      id: `exp_refund_proj-no-reversal_1700000000000`,
+      description: 'Reembolso - Projeto Sem Estorno (Projeto Encerrado)',
+      category: 'Reembolso a Cliente',
+      value: 300,
+      dueDate: '2026-02-01',
+      status: 'Pago',
+      paymentDate: '2026-02-01',
+      isRecurring: false,
+      source: 'Manual',
+    };
+
+    const { result } = renderHook(() =>
+      useLifecycleWrapper(archivedProject, [existingRefundExpense]),
+    );
+
+    // When
+    act(() => result.current.lifecycle.handleReactivate());
+
+    // Then — projeto reativado sem criar estorno
+    expect(result.current.localProject?.status).toBe('Em Andamento');
+    expect(result.current.localProject?.archived).toBe(false);
+    expect(result.current.manualIncomes).toHaveLength(0);
+    expect(result.current.manualExpenses[0].description).not.toContain('[ESTORNADO]');
+  });
+
   it('reactivate with refund reversal creates estorno incomes', () => {
     // Given — confirm both dialogs (reactivate + estorno)
     vi.spyOn(window, 'confirm').mockReturnValue(true);
@@ -278,8 +315,20 @@ describe('useProjectLifecycleActions', () => {
       source: 'Manual',
     };
 
+    const unrelatedExpense: ProfessionalExpense = {
+      id: 'exp_generic_1',
+      description: 'Despesa Operacional',
+      category: 'Outros',
+      value: 120,
+      dueDate: '2026-01-20',
+      status: 'Pago',
+      paymentDate: '2026-01-20',
+      isRecurring: false,
+      source: 'Manual',
+    };
+
     const { result } = renderHook(() =>
-      useLifecycleWrapper(archivedProject, [existingRefundExpense]),
+      useLifecycleWrapper(archivedProject, [existingRefundExpense, unrelatedExpense]),
     );
 
     // When
@@ -295,5 +344,9 @@ describe('useProjectLifecycleActions', () => {
       (expense) => expense.id === existingRefundExpense.id,
     );
     expect(markedExpense?.description).toContain('[ESTORNADO]');
+    const untouchedExpense = result.current.manualExpenses.find(
+      (expense) => expense.id === unrelatedExpense.id,
+    );
+    expect(untouchedExpense).toEqual(unrelatedExpense);
   });
 });

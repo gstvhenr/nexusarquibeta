@@ -37,8 +37,6 @@ Definir governança ativa mínima para operação agent-first com baixo custo de
 
 ### Tier arquivado (fora do fluxo padrão)
 
-- `.agent/archive/prompts-v1/**`
-- `.agent/archive/workflows/**`
 - `docs/changelog/**`
 
 ## Regras anti-drift

@@ -27,7 +27,7 @@
 
 ## P1
 
-- [ ] Continuar fragmentação de `src/types.ts` para `src/types/*` por domínio.
+- [ ] Continuar fragmentação de `src/frontend/types.ts` para `src/frontend/types/*` por domínio.
 
   - Escopo: migração incremental com compatibilidade.
   - Risco: médio/alto.

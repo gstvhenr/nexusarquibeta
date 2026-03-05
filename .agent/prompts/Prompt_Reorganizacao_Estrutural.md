@@ -56,10 +56,10 @@ Ordem de execução:
 
 Para cada arquivo movido:
 
-a) mover para local correto  
-b) atualizar todos os imports consumidores  
-c) atualizar barrel `index.ts` de origem/destino (mínimo necessário)  
-d) executar gate de verificação  
+a) mover para local correto
+b) atualizar todos os imports consumidores
+c) atualizar barrel `index.ts` de origem/destino (mínimo necessário)
+d) executar gate de verificação
 e) reportar VERDE ou VERMELHO (com diagnóstico/reversão do sub-batch)
 
 Limite: máximo 5 arquivos por verificação; preferir 1-3.
@@ -72,6 +72,7 @@ Limite: máximo 5 arquivos por verificação; preferir 1-3.
 > MODE: INCREMENTAL_ATOMIC | REGRESSION_TOLERANCE: ZERO
 
 **1. PRE-FLIGHT AUDIT**
+
 - Escanear estrutura atual.
 - Para cada arquivo, definir:
   - Path atual -> Path ideal
@@ -83,24 +84,26 @@ _Output obrigatório:_ [Arquivo | Atual | Ideal | Imports Afetados | Risk | Regr
 Ordenar por Risk ASC. Não executar sem aprovação do usuário.
 
 **2. EXECUTION PROTOCOL (BATCH)**
+
 - Batch: 1 domínio por iteração; até 5 arquivos por sub-batch.
 - Para cada arquivo:
-  2.1 localizar consumidores (`grep`/`rg`)  
-  2.2 mover mantendo nome  
-  2.3 atualizar todos os imports afetados  
-  2.4 ajustar barrel de origem/destino  
-  2.5 rodar `npm run verify`  
-  2.6 VERDE -> registrar e seguir  
+  2.1 localizar consumidores (`grep`/`rg`)
+  2.2 mover mantendo nome
+  2.3 atualizar todos os imports afetados
+  2.4 ajustar barrel de origem/destino
+  2.5 rodar `npm run verify`
+  2.6 VERDE -> registrar e seguir
   2.7 VERMELHO -> reverter sub-batch e diagnosticar
 
 **3. POST-FLIGHT VALIDATION**
-3.1 rodar gate canônico completo  
-3.2 garantir zero page `.tsx/.ts` solta em raiz de `src/pages`  
-3.3 garantir coerência menu->pages para todas as rotas de submenu  
-3.4 regenerar inventário (`npm run inventory:generate`)  
+3.1 rodar gate canônico completo
+3.2 garantir zero page `.tsx/.ts` solta em raiz de `src/pages`
+3.3 garantir coerência menu->pages para todas as rotas de submenu
+3.4 regenerar inventário (`npm run inventory:generate`)
 3.5 reportar resumo final [Arquivos movidos | Imports ajustados | Gates]
 
 **4. ABORT CONDITIONS**
+
 - 3 sub-batches vermelhos consecutivos -> parar e reportar padrão sistêmico.
 - Classificação AMBÍGUA -> parar e solicitar decisão humana.
 - Dependência circular introduzida -> parar e não resolver inline.
@@ -119,6 +122,7 @@ Ordenar por Risk ASC. Não executar sem aprovação do usuário.
 </constraints>
 <classification_rules>
 For each file F:
+
 1. Detect category (PAGE, COMPONENT, HOOK, SERVICE, UTIL, TYPE, TEST).
 2. If category == PAGE:
    - idealPath must mirror active menu/submenu route tree.
@@ -129,28 +133,55 @@ For each file F:
    - place frontend app under `frontend/` preserving `frontend/src`.
 5. Mark as DISPLACED when currentPath != idealPath.
 6. Mark as AMBIGUOUS when more than one idealPath is valid.
-</classification_rules>
+   </classification_rules>
+
+  <!-- Graph-of-Thoughts (2025): raciocínio não-linear com dependências -->
+
+<graph_reasoning>
+Arquivos NÃO devem ser classificados isoladamente.
+Usar raciocínio em grafo para respeitar dependências:
+
+    1. NODOS: cada arquivo é um nó com path atual e path(s) candidato(s)
+    2. ARESTAS: dependências de import entre arquivos
+    3. CONSTRAINT: mover A pode invalidar o path ideal de B se B importa A
+    4. RESOLUÇÃO: classificar primeiro arquivos com 0 dependentes (folhas),
+       depois propagar decisões para os nós internos
+    5. CICLOS: se A→B→A detectado → marcar AMBOS como AMBÍGUO e escalar
+    6. BATCHING: agrupar nós conectados no mesmo sub-batch para mover juntos
+
+    OUTPUT: grafo de decisão em tabela, não lista linear.
+    Colunas: [Arquivo | Depende de | Importado por | Decisão | Batch #]
+
+</graph_reasoning>
+
+  <!-- RSIP: autoavaliação antes de executar -->
+
+<rsip_pre_execution>
+Após classificar todos os arquivos e ANTES de executar movimentações: 1. EVALUATE: "A classificação respeita todas as dependências do grafo?" 2. WEAKNESS: "Algum arquivo DESLOCADO tem >5 importadores não classificados?" 3. REFINE: Se risco alto detectado → re-classificar com prioridade mais baixa
+MAX-CYCLES: 1
+</rsip_pre_execution>
 <execution_engine>
 <per_file_protocol>
+
 1. scan consumers
 2. move file
 3. patch all imports
 4. adjust barrel exports
 5. run canonical verify
 6. if red -> revert sub-batch and halt
-</per_file_protocol>
-</execution_engine>
-<post_flight>
-<validation>
-1. full verify green
-2. zero root-level pages in `src/pages`
-3. menu/submenu <-> pages path coherence
-4. inventory regenerated
-</validation>
-</post_flight>
-<abort_conditions>
-<condition trigger="3_consecutive_red_gates">HARD_STOP</condition>
-<condition trigger="ambiguous_classification">HARD_STOP</condition>
-<condition trigger="circular_dependency_detected">HARD_STOP</condition>
-</abort_conditions>
-</system_directive>
+   </per_file_protocol>
+   </execution_engine>
+   <post_flight>
+   <validation>
+7. full verify green
+8. zero root-level pages in `src/pages`
+9. menu/submenu <-> pages path coherence
+10. inventory regenerated
+    </validation>
+    </post_flight>
+    <abort_conditions>
+    <condition trigger="3_consecutive_red_gates">HARD_STOP</condition>
+    <condition trigger="ambiguous_classification">HARD_STOP</condition>
+    <condition trigger="circular_dependency_detected">HARD_STOP</condition>
+    </abort_conditions>
+    </system_directive>

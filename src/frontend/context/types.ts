@@ -3,74 +3,58 @@ import type { AppData } from '../services/infrastructure/api';
 /** Generic setter type matching React.Dispatch<React.SetStateAction<T>>. */
 export type Setter<T> = (value: T | ((prev: T) => T)) => void;
 
-export interface CoreDataType {
-  projects: AppData['projects'];
-  proposals: AppData['proposals'];
-  clients: AppData['clients'];
-  setProjects: Setter<AppData['projects']>;
-  setProposals: Setter<AppData['proposals']>;
-  setClients: Setter<AppData['clients']>;
-}
+// ---------------------------------------------------------------------------
+// DomainContext<K> — Mapped type that auto-generates setters for any AppData keys.
+// Given K = 'foo' | 'bar', produces:
+//   { foo: AppData['foo']; bar: AppData['bar'];
+//     setFoo: Setter<AppData['foo']>; setBar: Setter<AppData['bar']>; }
+// ---------------------------------------------------------------------------
 
-export interface FinanceDataType {
-  commissions: AppData['commissions'];
-  manualExpenses: AppData['manualExpenses'];
-  manualIncomes: AppData['manualIncomes'];
-  cashBoxExpenses: AppData['cashBoxExpenses'];
-  cashBoxCredits: AppData['cashBoxCredits'];
-  setCommissions: Setter<AppData['commissions']>;
-  setManualExpenses: Setter<AppData['manualExpenses']>;
-  setManualIncomes: Setter<AppData['manualIncomes']>;
-  setCashBoxExpenses: Setter<AppData['cashBoxExpenses']>;
-  setCashBoxCredits: Setter<AppData['cashBoxCredits']>;
-}
+type Capitalize<S extends string> = S extends `${infer F}${infer R}`
+  ? `${Uppercase<F>}${R}`
+  : S;
 
-export interface SupplyChainDataType {
-  suppliers: AppData['suppliers'];
-  products: AppData['products'];
-  supplierProductPrices: AppData['supplierProductPrices'];
-  quotations: AppData['quotations'];
-  freelancers: AppData['freelancers'];
-  setSuppliers: Setter<AppData['suppliers']>;
-  setProducts: Setter<AppData['products']>;
-  setSupplierProductPrices: Setter<AppData['supplierProductPrices']>;
-  setQuotations: Setter<AppData['quotations']>;
-  setFreelancers: Setter<AppData['freelancers']>;
-}
+type SetterKey<K extends string> = `set${Capitalize<K>}`;
 
-export interface MarketingDataType {
-  marketingProfessionals: AppData['marketingProfessionals'];
-  marketingActivities: AppData['marketingActivities'];
-  marketingIdeas: AppData['marketingIdeas'];
-  socialNetworks: AppData['socialNetworks'];
-  prospects: AppData['prospects'];
-  setMarketingProfessionals: Setter<AppData['marketingProfessionals']>;
-  setMarketingActivities: Setter<AppData['marketingActivities']>;
-  setMarketingIdeas: Setter<AppData['marketingIdeas']>;
-  setSocialNetworks: Setter<AppData['socialNetworks']>;
-  setProspects: Setter<AppData['prospects']>;
-}
+export type DomainContext<K extends keyof AppData> = {
+  [P in K]: AppData[P];
+} & {
+  [P in K as SetterKey<string & P>]: Setter<AppData[P]>;
+};
 
-export interface SystemDataType {
-  documentStorage: AppData['documentStorage'];
-  agendaEvents: AppData['agendaEvents'];
-  reminders: AppData['reminders'];
-  customBudgetTemplate: AppData['customBudgetTemplate'];
-  globalIdentifierCounter: AppData['globalIdentifierCounter'];
-  dismissedFocusItems: AppData['dismissedFocusItems'];
-  acceptedPaymentMethods: AppData['acceptedPaymentMethods'];
-  hiredServices: AppData['hiredServices'];
-  contractDeadlines: AppData['contractDeadlines'];
-  setDocumentStorage: Setter<AppData['documentStorage']>;
-  setAgendaEvents: Setter<AppData['agendaEvents']>;
-  setReminders: Setter<AppData['reminders']>;
-  setCustomBudgetTemplate: Setter<AppData['customBudgetTemplate']>;
-  setGlobalIdentifierCounter: Setter<AppData['globalIdentifierCounter']>;
-  setDismissedFocusItems: Setter<AppData['dismissedFocusItems']>;
-  setAcceptedPaymentMethods: Setter<AppData['acceptedPaymentMethods']>;
-  setHiredServices: Setter<AppData['hiredServices']>;
-  setContractDeadlines: Setter<AppData['contractDeadlines']>;
-}
+// ---------------------------------------------------------------------------
+// Domain-specific types (now just aliases — no boilerplate setter signatures)
+// ---------------------------------------------------------------------------
+
+export type CoreDataType = DomainContext<'projects' | 'proposals' | 'clients'>;
+
+export type FinanceDataType = DomainContext<
+  'commissions' | 'manualExpenses' | 'manualIncomes' | 'cashBoxExpenses' | 'cashBoxCredits'
+>;
+
+export type SupplyChainDataType = DomainContext<
+  'suppliers' | 'products' | 'supplierProductPrices' | 'quotations' | 'freelancers'
+>;
+
+export type MarketingDataType = DomainContext<
+  | 'marketingProfessionals'
+  | 'marketingActivities'
+  | 'marketingIdeas'
+  | 'socialNetworks'
+  | 'prospects'
+>;
+
+export type SystemDataType = DomainContext<
+  | 'documentStorage'
+  | 'agendaEvents'
+  | 'reminders'
+  | 'customBudgetTemplate'
+  | 'globalIdentifierCounter'
+  | 'dismissedFocusItems'
+  | 'acceptedPaymentMethods'
+  | 'hiredServices'
+  | 'contractDeadlines'
+>;
 
 export interface DataHistoryContextType {
   undo: () => void;

@@ -17,6 +17,16 @@ export default defineConfig({
     setupFiles: ['./src/frontend/test/setup.ts'],
     include: ['src/frontend/**/*.{test,spec}.{ts,tsx}'],
     css: true,
+    // Ensure each test FILE gets a fresh module registry.
+    // Without this, vi.useFakeTimers() in one file can bleed into the
+    // next file sharing the same worker thread (cross-file timer pollution).
+    isolate: true,
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        isolate: true,
+      },
+    },
     coverage: {
       provider: 'v8',
       include: ['src/frontend/**/*.{ts,tsx}'],

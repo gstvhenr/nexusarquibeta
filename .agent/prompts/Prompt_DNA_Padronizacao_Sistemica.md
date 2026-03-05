@@ -9,13 +9,13 @@
 
 ### FASE A: ANÁLISE DE INTENÇÃO (DEEP SCAN)
 
-* **TARGET:** Alteração das regras estruturais do projeto — injeção de mecanismos de enforcement que tornam a padronização uma invariante automática, não uma decisão ad-hoc do agente. Modificação de AGENTS.md, workflows, skills, schemas e regras de governança.
-* **VETOR DE INFERÊNCIA:** Operação no nível metacognitivo — não é padronizar código, é padronizar o *agente que padroniza código*. Cada mecanismo criado deve interceptar o fluxo de criação antes da primeira linha de código, forçando consulta ao inventário de átomos existentes, hooks disponíveis e tokens definidos.
-* **CONSTRAINTS DE EXECUÇÃO:** As mutações devem ser retrocompatíveis com o fluxo de trabalho existente. Nenhum mecanismo pode ser tão restritivo a ponto de paralisar o desenvolvimento. O equilíbrio é: **frição mínima, enforcement máximo**.
-* **PREMISSA CENTRAL:** Um LLM opera por statistical pattern matching — ele reproduz o padrão dominante. Portanto, os mecanismos de enforcement devem agir em DUAS frentes: (1) Interception → forçar consulta antes de criar, (2) Dominance Shift → garantir que o padrão dominante no codebase seja sempre o padronizado.
-* **OBJETIVO FINAL:** Que qualquer agente AI — mesmo sem memória entre sessões, mesmo sem conhecimento prévio do projeto — seja interceptado pelo sistema de governança e guiado a usar componentes existentes antes de criar novos.
+- **TARGET:** Alteração das regras estruturais do projeto — injeção de mecanismos de enforcement que tornam a padronização uma invariante automática, não uma decisão ad-hoc do agente. Modificação de AGENTS.md, workflows, skills, schemas e regras de governança.
+- **VETOR DE INFERÊNCIA:** Operação no nível metacognitivo — não é padronizar código, é padronizar o _agente que padroniza código_. Cada mecanismo criado deve interceptar o fluxo de criação antes da primeira linha de código, forçando consulta ao inventário de átomos existentes, hooks disponíveis e tokens definidos.
+- **CONSTRAINTS DE EXECUÇÃO:** As mutações devem ser retrocompatíveis com o fluxo de trabalho existente. Nenhum mecanismo pode ser tão restritivo a ponto de paralisar o desenvolvimento. O equilíbrio é: **frição mínima, enforcement máximo**.
+- **PREMISSA CENTRAL:** Um LLM opera por statistical pattern matching — ele reproduz o padrão dominante. Portanto, os mecanismos de enforcement devem agir em DUAS frentes: (1) Interception → forçar consulta antes de criar, (2) Dominance Shift → garantir que o padrão dominante no codebase seja sempre o padronizado.
+- **OBJETIVO FINAL:** Que qualquer agente AI — mesmo sem memória entre sessões, mesmo sem conhecimento prévio do projeto — seja interceptado pelo sistema de governança e guiado a usar componentes existentes antes de criar novos.
 
-*A compreensão da intenção está correta e de acordo com seus parâmetros?*
+_A compreensão da intenção está correta e de acordo com seus parâmetros?_
 
 ### FASE B: VETORES DE OTIMIZAÇÃO (PROMPT REFINEMENT)
 
@@ -50,6 +50,7 @@ ANTES de criar qualquer componente UI, hook ou utility novo, o agente DEVE:
 5. **SE NÃO EXISTIR:** Justificar por escrito no output do chat POR QUE o novo componente é necessário. Então criar seguindo o padrão dos átomos existentes (props tipadas, variants via Record, tokens via Tailwind semântico). Migrar ≥5 consumidores imediatamente.
 
 ### Elementos PROIBIDOS em novas pages:
+
 - ❌ `<button className="...">` inline — usar `<Button variant="...">` de `components/ui`
 - ❌ `<input className="...">` inline — usar `<Input>` ou `<FormField>` de `components/ui`
 - ❌ `<textarea className="...">` inline — usar `<Textarea>` de `components/ui`
@@ -63,6 +64,7 @@ ANTES de criar qualquer componente UI, hook ou utility novo, o agente DEVE:
 Criar um novo skill em `.agent/skills/standardization/SKILL.md` que funcione como referência viva:
 
 **Conteúdo do skill:**
+
 - Lista dos átomos disponíveis com API summary (props, variants, sizes).
 - Lista dos hooks genéricos disponíveis com assinatura.
 - Padrões visuais canônicos: como um form field deve ser renderizado, como um modal deve ser aberto, como cores devem ser aplicadas.
@@ -74,6 +76,7 @@ Criar um novo skill em `.agent/skills/standardization/SKILL.md` que funcione com
 Criar workflow `.agent/workflows/standardize.md` que automatize a auditoria de padronização:
 
 **Conteúdo do workflow:**
+
 - Comando para varrer `<button className=` inline nas pages → reportar count.
 - Comando para varrer `<input className=` inline → reportar count.
 - Comando para varrer `useState(false)` em pages → reportar count.
@@ -117,27 +120,27 @@ Atualizar `.agent/memory/project-inventory.md` com seção explícita de compone
 ```markdown
 ## Componentes UI Disponíveis (components/ui/)
 
-| Componente  | Arquivo        | Props Principais                          | Quando Usar                         |
-|-------------|----------------|-------------------------------------------|--------------------------------------|
-| Button      | Button.tsx     | variant, size, loading, icon, disabled    | Todo botão clicável                  |
-| Input       | Input.tsx      | variant, size, error, leftIcon, rightIcon | Todo campo de texto                  |
-| Textarea    | Textarea.tsx   | variant, size, error, rows               | Campos de texto multiline            |
-| FormField   | FormField.tsx  | label, error, hint, required             | Wrapper de label+input+erro          |
-| Select      | Select.tsx     | options, value, onChange, placeholder      | Seleção de opções                    |
-| Modal       | Modal.tsx      | isOpen, onClose, title, size             | Diálogos sobrepostos                 |
-| CardShell   | CardShell.tsx  | hover, padding, className                 | Containers com glassmorphism         |
-| EmptyState  | EmptyState.tsx | icon, title, description, action          | Estados sem dados                    |
-| Badge       | Badge.tsx      | variant, size                             | Labels de status, tags               |
-| Tabs        | Tabs.tsx       | activeTab, onChange, tabs                 | Navegação por abas                   |
+| Componente | Arquivo        | Props Principais                          | Quando Usar                  |
+| ---------- | -------------- | ----------------------------------------- | ---------------------------- |
+| Button     | Button.tsx     | variant, size, loading, icon, disabled    | Todo botão clicável          |
+| Input      | Input.tsx      | variant, size, error, leftIcon, rightIcon | Todo campo de texto          |
+| Textarea   | Textarea.tsx   | variant, size, error, rows                | Campos de texto multiline    |
+| FormField  | FormField.tsx  | label, error, hint, required              | Wrapper de label+input+erro  |
+| Select     | Select.tsx     | options, value, onChange, placeholder     | Seleção de opções            |
+| Modal      | Modal.tsx      | isOpen, onClose, title, size              | Diálogos sobrepostos         |
+| CardShell  | CardShell.tsx  | hover, padding, className                 | Containers com glassmorphism |
+| EmptyState | EmptyState.tsx | icon, title, description, action          | Estados sem dados            |
+| Badge      | Badge.tsx      | variant, size                             | Labels de status, tags       |
+| Tabs       | Tabs.tsx       | activeTab, onChange, tabs                 | Navegação por abas           |
 
 ## Hooks Genéricos Disponíveis (hooks/)
 
-| Hook            | Retorno                          | Quando Usar                             |
-|-----------------|-----------------------------------|-----------------------------------------|
-| useDisclosure   | { isOpen, open, close, toggle }  | Controle de modal/dropdown/toggle       |
-| useAutoReset    | [value, setValue]                 | Estado com auto-reset temporal          |
-| useLocalStorage | [value, setValue]                 | Persistência em localStorage            |
-| useNavigation   | { navigate, currentPath, ... }   | Navegação entre pages                   |
+| Hook            | Retorno                         | Quando Usar                       |
+| --------------- | ------------------------------- | --------------------------------- |
+| useDisclosure   | { isOpen, open, close, toggle } | Controle de modal/dropdown/toggle |
+| useAutoReset    | [value, setValue]               | Estado com auto-reset temporal    |
+| useLocalStorage | [value, setValue]               | Persistência em localStorage      |
+| useNavigation   | { navigate, currentPath, ... }  | Navegação entre pages             |
 ```
 
 **MECANISMO 6 — VALIDATE:STANDARDIZATION (Script de CI)**
@@ -161,10 +164,12 @@ Criar ou estender um script que rode como parte do gate canônico e detecte viol
 
 ```markdown
 # SYS.DIRECTIVE: STANDARDIZATION DNA INJECTION
+
 > EXECUTION_MODE: GOVERNANCE_MUTATION | SCOPE: META-RULES_ONLY
 
 **1. DIAGNOSTIC INGESTION:**
 Processe `standardization_debate.md` — diagnóstico adversarial com evidência quantitativa:
+
 - Paradoxo: infraestrutura madura (80-85%), superfície imatura (20-45%)
 - O agente AI interage primeiro com a camada mais imatura
 - Statistical pattern matching reproduz o padrão dominante (inline = 40:1)
@@ -173,16 +178,17 @@ Processe `standardization_debate.md` — diagnóstico adversarial com evidência
 **2. MUTATION TARGETS (Mecanismos de DNA):**
 Não modifique código de aplicação. Modifique exclusivamente as camadas de governança:
 
-| Mecanismo                | Arquivo Alvo                         | Propósito                                    |
-|--------------------------|--------------------------------------|----------------------------------------------|
-| Standardization Gate     | AGENTS.md                            | Pre-creation checkpoint obrigatório          |
-| Skill de Padronização    | .agent/skills/standardization/       | Contexto persistente para agentes            |
-| Workflow /standardize    | .agent/workflows/standardize.md      | Auditoria automatizada de ratios             |
-| Anti-pattern Rules       | Regras anti-pattern do projeto       | Proibições explícitas com evidência          |
-| Inventário Vivo          | .agent/memory/project-inventory.md   | Catálogo consultável de átomos e hooks       |
-| Script de Validação      | package.json / scripts/              | Gate automatizado de padronização            |
+| Mecanismo             | Arquivo Alvo                       | Propósito                              |
+| --------------------- | ---------------------------------- | -------------------------------------- |
+| Standardization Gate  | AGENTS.md                          | Pre-creation checkpoint obrigatório    |
+| Skill de Padronização | .agent/skills/standardization/     | Contexto persistente para agentes      |
+| Workflow /standardize | .agent/workflows/standardize.md    | Auditoria automatizada de ratios       |
+| Anti-pattern Rules    | Regras anti-pattern do projeto     | Proibições explícitas com evidência    |
+| Inventário Vivo       | .agent/memory/project-inventory.md | Catálogo consultável de átomos e hooks |
+| Script de Validação   | package.json / scripts/            | Gate automatizado de padronização      |
 
 **3. DESIGN PRINCIPLES:**
+
 - Frição mínima, enforcement máximo
 - Auto-explicativo para agentes sem memória entre sessões
 - Baseado em evidência quantitativa do debate adversarial
@@ -190,6 +196,7 @@ Não modifique código de aplicação. Modifique exclusivamente as camadas de go
 
 **4. VALIDATION:**
 Executar /standardize workflow pós-criação. Os mecanismos devem detectar:
+
 - ≥200 `<button>` inline (estado atual documentado)
 - ≥60 `<input>` inline
 - ≥70 useState(false) para modais
@@ -199,59 +206,102 @@ Executar /standardize workflow pós-criação. Os mecanismos devem detectar:
 #### NÍVEL 03 (RECRIAÇÃO TOTAL / GOD MODE)
 
 <system_directive>
-  <constraints>
-    <flag>APPLICATION_CODE_MUTATION_DISABLED</flag>
-    <flag>GOVERNANCE_LAYER_MUTATION_ENABLED</flag>
-    <flag>RETROCOMPATIBILITY_ENFORCED</flag>
-    <flag>MINIMAL_FRICTION_MAXIMAL_ENFORCEMENT</flag>
-  </constraints>
-  <diagnostic_injection>
-    <source>standardization_debate.md</source>
-    <core_insight>
-      O agente AI opera por statistical pattern matching.
-      Padrão dominante no codebase = inline (40:1 ratio para buttons, ∞:1 para inputs).
-      Conclusão: sem mecanismos de intercepção, todo agente novo vai reproduzir inline.
-      O único antídoto é alterar as regras do jogo — não o jogo em si.
-    </core_insight>
-    <paradox_model>
-      CAMADA 1 (Superfície) — UI Atoms 20% ← AGENT INTERAGE PRIMEIRO AQUI
-      CAMADA 2 (Rasa)       — Hooks    45%
-      CAMADA 3 (Profunda)   — Tokens   80%
-      CAMADA 4 (Core)       — Services 85% ← AGENT RARAMENTE TOCA AQUI
-      A padronização está invertida em relação à frequência de uso do agente.
-    </paradox_model>
-  </diagnostic_injection>
-  <governance_engine>
-    <mechanism id="1" name="STANDARDIZATION_GATE" target="AGENTS.md">
-      Injetar checkpoint pre-creation: antes de criar QUALQUER componente UI, o agente DEVE consultar inventário de átomos, hooks e tokens. Se equivalente existir → usar. Se não existir → justificar + criar com padrão existente + migrar ≥5 consumidores.
-      Incluir lista explícita de elementos proibidos em pages novas: button inline, input inline, useState(false) para modais, cores hardcoded Tailwind default.
-    </mechanism>
-    <mechanism id="2" name="STANDARDIZATION_SKILL" target=".agent/skills/standardization/">
-      Criar SKILL.md com: catálogo de átomos (API summary), catálogo de hooks (assinatura), padrões visuais canônicos (form field, modal, cores), checklist rápida (5 itens, < 30s), red flags de violação.
-    </mechanism>
-    <mechanism id="3" name="STANDARDIZE_WORKFLOW" target=".agent/workflows/standardize.md">
-      Workflow de auditoria: grep para button/input/useState/cores inline → counts → ratios → score de Agent-Readiness atualizado → dashboard comparativo com baseline do debate.
-    </mechanism>
-    <mechanism id="4" name="ANTI_PATTERN_RULES" target="Regras anti-pattern do projeto">
-      Seção 6.8 com 5 regras Std.1-Std.5: button inline, input inline, useState modal, cores hardcoded, CSS em utils. Cada regra com evidência quantitativa do debate e referência cruzada.
-    </mechanism>
-    <mechanism id="5" name="LIVING_INVENTORY" target=".agent/memory/project-inventory.md">
-      Tabela enriquecida: cada átomo com props principais, exemplo de uso, "quando usar". Cada hook genérico com assinatura e caso de uso. Atualizado a cada criação de novo componente.
-    </mechanism>
-    <mechanism id="6" name="VALIDATION_SCRIPT" target="package.json scripts/">
-      Script automatizado que grep violações de padronização e reporta como parte dos gates canônicos. Threshold configurável. Objetivo: reduzir counts a cada sprint.
-    </mechanism>
-  </governance_engine>
-  <inviolable_rules>
-    1. ZERO mutação em código de aplicação. Apenas governança.
-    2. Retrocompatibilidade total com fluxo de trabalho existente.
-    3. Cada mecanismo deve ser auto-explicativo para agentes sem memória.
-    4. Frição mínima: Standardization Gate deve custar < 30 segundos ao agente.
-    5. Evidência quantitativa do debate deve ser citada em cada regra.
-    6. Validar mecanismos com /standardize workflow pós-criação.
-    7. O sistema deve funcionar mesmo que o agente nunca tenha lido standardization_debate.md — as regras em AGENTS.md e o skill são suficientes.
-  </inviolable_rules>
-  <execution_trigger>
-    Processe os mecanismos em ordem (1→6). Após cada, valide que o mecanismo criado é coerente com os anteriores. Ao final, execute /standardize para comprovar detecção de estado atual. Reporte: mecanismos criados, cobertura de enforcement por camada, projeção de impacto no Agent-Readiness.
-  </execution_trigger>
+<constraints>
+<flag>APPLICATION_CODE_MUTATION_DISABLED</flag>
+<flag>GOVERNANCE_LAYER_MUTATION_ENABLED</flag>
+<flag>RETROCOMPATIBILITY_ENFORCED</flag>
+<flag>MINIMAL_FRICTION_MAXIMAL_ENFORCEMENT</flag>
+</constraints>
+<diagnostic_injection>
+<source>standardization_debate.md</source>
+<core_insight>
+O agente AI opera por statistical pattern matching.
+Padrão dominante no codebase = inline (40:1 ratio para buttons, ∞:1 para inputs).
+Conclusão: sem mecanismos de intercepção, todo agente novo vai reproduzir inline.
+O único antídoto é alterar as regras do jogo — não o jogo em si.
+</core_insight>
+<paradox_model>
+CAMADA 1 (Superfície) — UI Atoms 20% ← AGENT INTERAGE PRIMEIRO AQUI
+CAMADA 2 (Rasa) — Hooks 45%
+CAMADA 3 (Profunda) — Tokens 80%
+CAMADA 4 (Core) — Services 85% ← AGENT RARAMENTE TOCA AQUI
+A padronização está invertida em relação à frequência de uso do agente.
+</paradox_model>
+</diagnostic_injection>
+<governance_engine>
+<mechanism id="1" name="STANDARDIZATION_GATE" target="AGENTS.md">
+Injetar checkpoint pre-creation: antes de criar QUALQUER componente UI, o agente DEVE consultar inventário de átomos, hooks e tokens. Se equivalente existir → usar. Se não existir → justificar + criar com padrão existente + migrar ≥5 consumidores.
+Incluir lista explícita de elementos proibidos em pages novas: button inline, input inline, useState(false) para modais, cores hardcoded Tailwind default.
+</mechanism>
+<mechanism id="2" name="STANDARDIZATION_SKILL" target=".agent/skills/standardization/">
+Criar SKILL.md com: catálogo de átomos (API summary), catálogo de hooks (assinatura), padrões visuais canônicos (form field, modal, cores), checklist rápida (5 itens, < 30s), red flags de violação.
+</mechanism>
+<mechanism id="3" name="STANDARDIZE_WORKFLOW" target=".agent/workflows/standardize.md">
+Workflow de auditoria: grep para button/input/useState/cores inline → counts → ratios → score de Agent-Readiness atualizado → dashboard comparativo com baseline do debate.
+</mechanism>
+<mechanism id="4" name="ANTI_PATTERN_RULES" target="Regras anti-pattern do projeto">
+Seção 6.8 com 5 regras Std.1-Std.5: button inline, input inline, useState modal, cores hardcoded, CSS em utils. Cada regra com evidência quantitativa do debate e referência cruzada.
+</mechanism>
+<mechanism id="5" name="LIVING_INVENTORY" target=".agent/memory/project-inventory.md">
+Tabela enriquecida: cada átomo com props principais, exemplo de uso, "quando usar". Cada hook genérico com assinatura e caso de uso. Atualizado a cada criação de novo componente.
+</mechanism>
+<mechanism id="6" name="VALIDATION_SCRIPT" target="package.json scripts/">
+Script automatizado que grep violações de padronização e reporta como parte dos gates canônicos. Threshold configurável. Objetivo: reduzir counts a cada sprint.
+</mechanism>
+</governance_engine>
+<inviolable_rules> 1. ZERO mutação em código de aplicação. Apenas governança. 2. Retrocompatibilidade total com fluxo de trabalho existente. 3. Cada mecanismo deve ser auto-explicativo para agentes sem memória. 4. Frição mínima: Standardization Gate deve custar < 30 segundos ao agente. 5. Evidência quantitativa do debate deve ser citada em cada regra. 6. Validar mecanismos com /standardize workflow pós-criação. 7. O sistema deve funcionar mesmo que o agente nunca tenha lido standardization_debate.md — as regras em AGENTS.md e o skill são suficientes.
+</inviolable_rules>
+
+  <!-- Meta-Prompting Orchestrator (Suzgun & Kalai  2024) + Step-Back + RSIP -->
+
+<execution_trigger protocol="META_PROMPTING_ORCHESTRATOR_V2024">
+
+    <step_back>
+      ANTES de processar qualquer mecanismo, o Conductor DEVE abstrair:
+      Q1: "Qual é o PRINCÍPIO de enforcement que todos os mecanismos servem?"
+      Q2: "Quais são as 3 INVARIANTES que nenhum mecanismo pode violar?"
+         (retrocompatibilidade, frição mínima, auto-explicativo)
+      Q3: "O que um agente sem memória PRECISA encontrar nos primeiros 30s de sessão?"
+      OUTPUT: Imprimir respostas como FRAMEWORK antes de iniciar.
+    </step_back>
+
+    <orchestration>
+      O modelo opera como CONDUCTOR dos 6 mecanismos.
+      Para cada mecanismo M[n], instanciar EXPERT com persona especializada:
+        M1: "Governance Gate Designer"
+        M2: "Skill Knowledge Engineer"
+        M3: "Workflow Automation Architect"
+        M4: "Anti-Pattern Rules Author"
+        M5: "Living Inventory Cataloger"
+        M6: "CI Validation Script Engineer"
+
+      PARA CADA M[n]:
+        1. EXPERT executa com Step-Back:
+           "Qual é o PRINCÍPIO específico de enforcement que M[n] implementa?"
+           → Então executa a criação do artefato
+
+        2. CONDUCTOR valida coerência (Chain-of-Thought obrigatório):
+           THOUGHT: "M[n] é coerente com M[1..n-1] porque..."
+           CHECK:   Verificar que nenhum mecanismo anterior é contradito
+           RESULT:  ✅ coerente / ❌ conflito detectado em M[x]
+
+        3. SE ❌ → CORRIGIR antes de prosseguir para M[n+1]
+
+        4. OUTPUT INTERMEDIÁRIO obrigatório:
+           [M{n}] CRIADO: {descrição} | VALIDADO: ✅/❌ | CONFLITOS: {lista}
+    </orchestration>
+
+    <rsip_refinement>
+      Após TODOS os 6 mecanismos:
+      1. EVALUATE: "Os 6 mecanismos formam um sistema coerente?"
+      2. WEAKNESS: "Qual mecanismo é o mais fraco ou fácil de contornar?"
+      3. REFINE: Se fraqueza encontrada → fortalecer o mecanismo mais fraco
+      4. MAX-CYCLES: 1
+
+      ENTÃO: Executar /standardize para comprovar detecção de estado atual.
+      REPORT: mecanismos criados, cobertura de enforcement por camada,
+              projeção de impacto no Agent-Readiness.
+    </rsip_refinement>
+
+</execution_trigger>
 </system_directive>

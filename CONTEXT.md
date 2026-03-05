@@ -20,13 +20,13 @@ Ponteiros hierárquicos para o agente. **Não carregar todos os arquivos no iní
 ### Contratos e tipos
 
 - `docs/data-contracts/types-contracts.md` — Rastreio de todos os contratos de tipos.
-- `src/types/*` — Módulos de domínio (`cashBox.ts`, `financial-series.ts`, `project.ts`, etc.).
-- `src/test/fixtures/*` — Fixtures canônicas.
+- `src/frontend/types/*` — Módulos de domínio (`cashBox.ts`, `financial-series.ts`, `project.ts`, etc.).
+- `src/frontend/test/*` — Fixtures canônicas (`factories.ts`, `golden-fixtures.test.ts`).
 
 ### Decisões e ADRs
 
 - `DECISIONS-active.md` — Registro compacto e vigente de decisões.
-- `docs/adr/*` — Architecture Decision Records detalhados (0001 a 0009+).
+- `docs/adr/*` — Architecture Decision Records detalhados (0001 a 0011).
 - `docs/changelog/decisions-archive.md` — Histórico arquivado de decisões superseded.
 
 ## Camada 3 — Ler apenas por demanda explícita
@@ -48,12 +48,11 @@ Ponteiros hierárquicos para o agente. **Não carregar todos os arquivos no iní
 
 ### Workflows e prompts do agente
 
-- `.agent/workflows/*` — Playbooks ativos (11 workflows: `default-task-flow`, `verify-first`, `brainstorm`, `debug`, `enhance`, `orchestrate`, `plan`, `preview`, `status`, `test`, `ui-ux-pro-max`).
-- `.agent/archive/*` — Material arquivado (prompts e workflows longos fora do fluxo diário).
+- `.agent/workflows/*` — Playbooks ativos (24 workflows; ver diretório para lista completa).
 
 **Stack**: React + TypeScript strict + Vite + Vitest + TailwindCSS.
 **Storage**: IndexedDB snapshot store (fallback volátil em memória para ambientes sem IDB).
-**State**: React Context (`src/context/DataContext.tsx`).
+**State**: React Context (`src/frontend/context/DataContext.tsx`).
 
 ## Regra de archival
 

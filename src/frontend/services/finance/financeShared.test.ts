@@ -72,6 +72,17 @@ describe('financeShared', () => {
       // Then
       expect(result).toBe(false);
     });
+
+    it('returns false for null or unparseable date', () => {
+      // Given
+      const target = new Date(2026, 2, 1);
+
+      // When — null is the canonical nil value per the function signature (string | null)
+      const result = isInMonth(null, target);
+
+      // Then
+      expect(result).toBe(false);
+    });
   });
 
   describe('getMonthlyTotals', () => {
@@ -106,6 +117,19 @@ describe('financeShared', () => {
 
       // Then
       expect(result).toEqual({ receita: 0, despesa: 0, saldo: 0 });
+    });
+
+    it('computes negative saldo when despesa exceeds receita', () => {
+      // Given
+      const receivables = [{ dueDate: '2026-03-01', value: 100 }];
+      const debits = [{ dueDate: '2026-03-01', value: 400 }];
+      const target = new Date(2026, 2, 1);
+
+      // When
+      const result = getMonthlyTotals(receivables, debits, target);
+
+      // Then
+      expect(result.saldo).toBe(-300);
     });
   });
 
@@ -229,10 +253,27 @@ describe('financeShared', () => {
       // Then
       expect(result).toHaveLength(3);
     });
+
+    it('applies combined origin + category filter', () => {
+      // Given / When
+      const result = applySeriesFilters(records, { origin: 'Profissional', category: 'Comissão' });
+
+      // Then
+      expect(result).toHaveLength(1);
+      expect(result[0].item).toBe('C');
+    });
+
+    it('returns empty array when no records match combined filters', () => {
+      // Given / When
+      const result = applySeriesFilters(records, { origin: 'Pessoal', category: 'Projeto' });
+
+      // Then
+      expect(result).toHaveLength(0);
+    });
   });
 
   describe('buildSeriesFromRecords', () => {
-    it('aggregates values by month for a quarter period', () => {
+    it('aggregates values by month for a QUARTER period', () => {
       // Given
       const records: SeriesRecord[] = [
         { date: '2026-01-10', value: 100, origin: 'Profissional', category: 'A', item: 'x' },
@@ -250,6 +291,114 @@ describe('financeShared', () => {
       const febPoint = result.find((p) => p.label === '2026-02');
       expect(janPoint?.value).toBe(150);
       expect(febPoint?.value).toBe(200);
+    });
+
+    it('returns 12 points for YEAR period', () => {
+      // Given
+      const records: SeriesRecord[] = [
+        { date: '2026-06-10', value: 500, origin: 'Profissional', category: 'A', item: 'x' },
+      ];
+      const reference = new Date(2026, 6, 1); // July
+
+      // When
+      const result = buildSeriesFromRecords(records, { mode: 'YEAR', year: 2026 }, reference);
+
+      // Then
+      expect(result).toHaveLength(12);
+      expect(result[0].label).toBe('2026-01');
+      expect(result[11].label).toBe('2026-12');
+      const junPoint = result.find((p) => p.label === '2026-06');
+      expect(junPoint?.value).toBe(500);
+    });
+
+    it('returns 12 points for LAST_12_MONTHS period', () => {
+      // Given
+      const records: SeriesRecord[] = [];
+      const reference = new Date(2026, 11, 1); // December
+
+      // When
+      const result = buildSeriesFromRecords(records, { mode: 'LAST_12_MONTHS' }, reference);
+
+      // Then
+      expect(result).toHaveLength(12);
+      expect(result[0].label).toBe('2026-01');
+      expect(result[11].label).toBe('2026-12');
+    });
+
+    it('returns 6 points for SEMESTER period', () => {
+      // Given
+      const records: SeriesRecord[] = [];
+      const reference = new Date(2026, 5, 1); // June
+
+      // When
+      const result = buildSeriesFromRecords(records, { mode: 'SEMESTER' }, reference);
+
+      // Then
+      expect(result).toHaveLength(6);
+      expect(result[0].label).toBe('2026-01');
+      expect(result[5].label).toBe('2026-06');
+    });
+
+    it('returns zeros for months with no matching records', () => {
+      // Given
+      const records: SeriesRecord[] = [];
+      const reference = new Date(2026, 2, 1);
+
+      // When
+      const result = buildSeriesFromRecords(records, { mode: 'QUARTER' }, reference);
+
+      // Then
+      expect(result).toHaveLength(3);
+      result.forEach((point) => expect(point.value).toBe(0));
+    });
+
+    it('uses latest record date as reference when it exceeds the provided referenceDate', () => {
+      // Given - record is in a future month beyond the reference
+      const records: SeriesRecord[] = [
+        { date: '2026-06-15', value: 999, origin: 'Profissional', category: 'A', item: 'x' },
+      ];
+      const reference = new Date(2026, 2, 1); // March (before June)
+
+      // When
+      const result = buildSeriesFromRecords(records, { mode: 'QUARTER' }, reference);
+
+      // Then — series should be anchored to June (the latest record date)
+      const labels = result.map((p) => p.label);
+      expect(labels).toContain('2026-06');
+      const junPoint = result.find((p) => p.label === '2026-06');
+      expect(junPoint?.value).toBe(999);
+    });
+
+    it('ignores records with invalid dates', () => {
+      // Given
+      const records: SeriesRecord[] = [
+        { date: null, value: 500, origin: 'Profissional', category: 'A', item: 'x' },
+        { date: '2026-01-10', value: 200, origin: 'Profissional', category: 'A', item: 'y' },
+      ];
+      const reference = new Date(2026, 2, 1);
+
+      // When
+      const result = buildSeriesFromRecords(records, { mode: 'QUARTER' }, reference);
+
+      // Then — only the valid record is counted
+      const janPoint = result.find((p) => p.label === '2026-01');
+      expect(janPoint?.value).toBe(200);
+    });
+
+    it('rounds aggregated values to 2 decimal places', () => {
+      // Given
+      const records: SeriesRecord[] = [
+        { date: '2026-01-01', value: 100.123, origin: 'Profissional', category: 'A', item: 'x' },
+        { date: '2026-01-02', value: 200.456, origin: 'Profissional', category: 'A', item: 'y' },
+      ];
+      const reference = new Date(2026, 2, 1);
+
+      // When
+      const result = buildSeriesFromRecords(records, { mode: 'QUARTER' }, reference);
+
+      // Then
+      const janPoint = result.find((p) => p.label === '2026-01');
+      expect(janPoint?.value).toBe(300.58);
     });
   });
 
@@ -284,6 +433,66 @@ describe('financeShared', () => {
       // Then
       expect(result.categories).toEqual(['Projeto']);
       expect(result.items).toEqual(['X']);
+    });
+
+    it('cascades filters: category narrows items', () => {
+      // Given
+      const records: SeriesRecord[] = [
+        {
+          date: '2026-01-01',
+          value: 100,
+          origin: 'Profissional',
+          category: 'Projeto',
+          item: 'Alpha',
+        },
+        {
+          date: '2026-02-01',
+          value: 200,
+          origin: 'Profissional',
+          category: 'Projeto',
+          item: 'Beta',
+        },
+        {
+          date: '2026-03-01',
+          value: 300,
+          origin: 'Profissional',
+          category: 'Comissão',
+          item: 'Gamma',
+        },
+      ];
+
+      // When
+      const result = buildFilterOptions(records, { category: 'Projeto' });
+
+      // Then
+      expect(result.items).toEqual(['Alpha', 'Beta']);
+      expect(result.items).not.toContain('Gamma');
+    });
+
+    it('excludes blank category/item strings from sorted lists', () => {
+      // Given
+      const records: SeriesRecord[] = [
+        { date: '2026-01-01', value: 100, origin: 'Profissional', category: '', item: '  ' },
+        { date: '2026-02-01', value: 200, origin: 'Profissional', category: 'Projeto', item: 'A' },
+      ];
+
+      // When
+      const result = buildFilterOptions(records);
+
+      // Then
+      expect(result.categories).toEqual(['Projeto']);
+      expect(result.items).toEqual(['A']);
+    });
+
+    it('always returns the two fixed origins', () => {
+      // Given
+      const records: SeriesRecord[] = [];
+
+      // When
+      const result = buildFilterOptions(records);
+
+      // Then
+      expect(result.origins).toEqual(['Profissional', 'Pessoal']);
     });
   });
 
@@ -325,6 +534,64 @@ describe('financeShared', () => {
       // Then
       expect(result[0].date).toBe('2026-01-20');
     });
+
+    it('falls back to dueDate when paymentDate is null', () => {
+      // Given
+      const receivable = createTestReceivable({
+        id: 'r1',
+        status: 'Pago',
+        dueDate: '2026-01-15',
+        paymentDate: null,
+      });
+
+      // When
+      const result = mapReceivablesToSeriesRecords([receivable], { r1: 'Profissional' });
+
+      // Then
+      expect(result[0].date).toBe('2026-01-15');
+    });
+
+    it('defaults to Profissional when id is missing from originById', () => {
+      // Given
+      const receivable = createTestReceivable({ id: 'r-unknown', status: 'Pago' });
+
+      // When
+      const result = mapReceivablesToSeriesRecords([receivable], {});
+
+      // Then
+      expect(result[0].origin).toBe('Profissional');
+    });
+
+    it('maps category using getReceivableCategory logic', () => {
+      // Given
+      const commission = createTestReceivable({
+        id: 'r1',
+        status: 'Recebido',
+        source: 'Commission',
+        category: undefined,
+      });
+
+      // When
+      const result = mapReceivablesToSeriesRecords([commission], { r1: 'Profissional' });
+
+      // Then
+      expect(result[0].category).toBe('Comissão');
+    });
+
+    it('uses description as item', () => {
+      // Given
+      const receivable = createTestReceivable({
+        id: 'r1',
+        status: 'Pago',
+        description: 'Parcela 1/3: Projeto X',
+      });
+
+      // When
+      const result = mapReceivablesToSeriesRecords([receivable], { r1: 'Profissional' });
+
+      // Then
+      expect(result[0].item).toBe('Parcela 1/3: Projeto X');
+    });
   });
 
   describe('mapDebitsToSeriesRecords', () => {
@@ -358,6 +625,43 @@ describe('financeShared', () => {
       // Then
       expect(result[0].origin).toBe('Profissional');
       expect(result[0].item).toBe(debit.description);
+    });
+
+    it('falls back to description when cashBoxItemById value is null', () => {
+      // Given
+      const debit = createTestDebit({
+        id: 'd3',
+        source: 'CashBox',
+        description: 'Fallback Description',
+      });
+      const originMap = { d3: 'Profissional' as const };
+      const itemMap: Record<string, string | null> = { d3: null };
+
+      // When
+      const result = mapDebitsToSeriesRecords([debit], originMap, itemMap);
+
+      // Then
+      expect(result[0].item).toBe('Fallback Description');
+    });
+
+    it('maps value, date, and category correctly', () => {
+      // Given
+      const debit = createTestDebit({
+        id: 'd4',
+        source: 'Manual',
+        value: 450,
+        dueDate: '2026-05-20',
+        category: 'Outros',
+        paymentDate: '2026-05-18',
+      });
+
+      // When
+      const result = mapDebitsToSeriesRecords([debit], {}, {});
+
+      // Then
+      expect(result[0].value).toBe(450);
+      expect(result[0].date).toBe('2026-05-18');
+      expect(result[0].category).toBe('Outros');
     });
   });
 });

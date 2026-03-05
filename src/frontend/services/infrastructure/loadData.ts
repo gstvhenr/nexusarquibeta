@@ -212,15 +212,15 @@ const PERSIST_DEBOUNCE_MS = 300;
 let pendingSnapshot: AppData | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-const canUseWindow = typeof window !== 'undefined';
+const hasWindow = (): boolean => typeof window !== 'undefined';
 const dataSyncChannel: BroadcastChannel | null =
-  canUseWindow && typeof BroadcastChannel !== 'undefined'
+  hasWindow() && typeof BroadcastChannel !== 'undefined'
     ? new BroadcastChannel(DATA_SYNC_CHANNEL_NAME)
     : null;
 let syncChannelBound = false;
 
 const notifySyncListeners = (key: string | null): void => {
-  if (!canUseWindow) return;
+  if (!hasWindow()) return;
   window.dispatchEvent(new StorageEvent('storage', { key }));
 };
 
@@ -254,6 +254,10 @@ const queuePersistSnapshot = (snapshot: AppData): void => {
 };
 
 const refreshFromPersistentSnapshot = async (): Promise<void> => {
+  if (!hasWindow()) {
+    return;
+  }
+
   const persistedEntityState = await persistence.readEntityState<AppData>(APP_DATA_ENTITY_KEYS);
   if (persistedEntityState && Object.keys(persistedEntityState).length > 0) {
     appData = normalizePersistedSnapshot(persistedEntityState);
@@ -271,6 +275,10 @@ const refreshFromPersistentSnapshot = async (): Promise<void> => {
 const bindSyncChannelIfNeeded = (): void => {
   if (!dataSyncChannel || syncChannelBound) return;
   dataSyncChannel.onmessage = (event: MessageEvent) => {
+    if (!hasWindow()) {
+      return;
+    }
+
     const type = (event.data as { type?: string } | null)?.type;
     if (type === 'snapshot-updated') {
       void refreshFromPersistentSnapshot();

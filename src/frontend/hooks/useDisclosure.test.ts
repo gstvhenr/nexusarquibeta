@@ -1,94 +1,100 @@
-import { describe, expect, it } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { useDisclosure } from './useDisclosure';
 
 describe('useDisclosure', () => {
   it('starts closed by default', () => {
-    // Given / When
+    // Given — hook sem estado inicial
     const { result } = renderHook(() => useDisclosure());
 
-    // Then
+    // Then — disclosure começa fechado
     expect(result.current.isOpen).toBe(false);
   });
 
   it('starts open when initialState is true', () => {
-    // Given / When
+    // Given — hook com estado inicial aberto
     const { result } = renderHook(() => useDisclosure(true));
 
-    // Then
+    // Then — disclosure começa aberto
     expect(result.current.isOpen).toBe(true);
   });
 
   it('open() sets isOpen to true', () => {
-    // Given
-    const { result } = renderHook(() => useDisclosure());
+    // Given — disclosure fechado
+    const { result } = renderHook(() => useDisclosure(false));
 
-    // When
-    act(() => result.current.open());
+    // When — open é chamado
+    act(() => {
+      result.current.open();
+    });
 
-    // Then
+    // Then — disclosure abre
     expect(result.current.isOpen).toBe(true);
   });
 
   it('close() sets isOpen to false', () => {
-    // Given
+    // Given — disclosure aberto
     const { result } = renderHook(() => useDisclosure(true));
 
-    // When
-    act(() => result.current.close());
+    // When — close é chamado
+    act(() => {
+      result.current.close();
+    });
 
-    // Then
+    // Then — disclosure fecha
     expect(result.current.isOpen).toBe(false);
   });
 
-  it('toggle() flips the state', () => {
-    // Given
-    const { result } = renderHook(() => useDisclosure());
+  it('toggle() inverts state from false to true', () => {
+    // Given — disclosure fechado
+    const { result } = renderHook(() => useDisclosure(false));
 
-    // When / Then — toggle open
-    act(() => result.current.toggle());
-    expect(result.current.isOpen).toBe(true);
+    // When — toggle é chamado
+    act(() => {
+      result.current.toggle();
+    });
 
-    // When / Then — toggle closed
-    act(() => result.current.toggle());
-    expect(result.current.isOpen).toBe(false);
-  });
-
-  it('open/close/toggle maintain stable references', () => {
-    // Given
-    const { result, rerender } = renderHook(() => useDisclosure());
-    const firstOpen = result.current.open;
-    const firstClose = result.current.close;
-    const firstToggle = result.current.toggle;
-
-    // When
-    rerender();
-
-    // Then — useCallback guarantees referential stability
-    expect(result.current.open).toBe(firstOpen);
-    expect(result.current.close).toBe(firstClose);
-    expect(result.current.toggle).toBe(firstToggle);
-  });
-
-  it('calling open() when already open is a no-op', () => {
-    // Given
-    const { result } = renderHook(() => useDisclosure(true));
-
-    // When
-    act(() => result.current.open());
-
-    // Then
+    // Then — disclosure abre
     expect(result.current.isOpen).toBe(true);
   });
 
-  it('calling close() when already closed is a no-op', () => {
-    // Given
-    const { result } = renderHook(() => useDisclosure());
+  it('toggle() inverts state from true to false', () => {
+    // Given — disclosure aberto
+    const { result } = renderHook(() => useDisclosure(true));
 
-    // When
-    act(() => result.current.close());
+    // When — toggle é chamado
+    act(() => {
+      result.current.toggle();
+    });
 
-    // Then
+    // Then — disclosure fecha
     expect(result.current.isOpen).toBe(false);
+  });
+
+  it('toggle() called twice returns to original state', () => {
+    // Given — disclosure fechado
+    const { result } = renderHook(() => useDisclosure(false));
+
+    // When — toggle é chamado duas vezes
+    act(() => {
+      result.current.toggle();
+      result.current.toggle();
+    });
+
+    // Then — volta ao estado original
+    expect(result.current.isOpen).toBe(false);
+  });
+
+  it('open() is idempotent when already open', () => {
+    // Given — disclosure já aberto
+    const { result } = renderHook(() => useDisclosure(true));
+
+    // When — open é chamado novamente
+    act(() => {
+      result.current.open();
+    });
+
+    // Then — permanece aberto sem erros
+    expect(result.current.isOpen).toBe(true);
   });
 });

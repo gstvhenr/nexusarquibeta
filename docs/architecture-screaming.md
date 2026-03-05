@@ -8,25 +8,26 @@ Organizar o código para que a estrutura “grite” o domínio de negócio, e n
 
 ```text
 src/
-  features/
-    clientes/
-      components/
-      services/
-      hooks/
-      types.ts
-      index.ts
-    projetos/
-      components/
-      services/
-      hooks/
-      types.ts
-      index.ts
-    financeiro/
-      ...
-  shared/
-    ui/
-    utils/
-    infra/
+  frontend/
+    features/
+      clientes/
+        components/
+        services/
+        hooks/
+        types.ts
+        index.ts
+      projetos/
+        components/
+        services/
+        hooks/
+        types.ts
+        index.ts
+      financeiro/
+        ...
+    shared/
+      ui/
+      utils/
+      infra/
 ```
 
 ## Regras para migração segura
@@ -40,9 +41,10 @@ src/
 ## Estratégia prática para este repo
 
 1. Consolidar lógica de cliente/projeto em serviços reutilizáveis.
-2. Continuar a fragmentação de `src/types.ts` para `src/types/*`.
+2. Continuar a fragmentação de `src/frontend/types.ts` para `src/frontend/types/*`.
 3. Criar fronteiras de domínio por pasta e barrel mínimo por domínio.
-4. Manter o gate canônico de `AGENTS.md` verde a cada passo.
+4. Antes de criar qualquer arquivo em `src/frontend`, consultar `docs/PLACEMENT_RULES.md`.
+5. Manter `npm run validate:structure` e o gate canônico de `AGENTS.md` verdes a cada passo.
 
 ## Anti-padrões para agentes
 

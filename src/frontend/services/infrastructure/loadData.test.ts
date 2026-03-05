@@ -3,9 +3,9 @@ import type { PersistencePort } from './persistence';
 
 // vi.hoisted ensures these variables exist BEFORE vi.mock factory execution.
 const { mockWriteSnapshot, mockClearSnapshot, mockMaybeCreateAutoBackup } = vi.hoisted(() => ({
-  mockWriteSnapshot: vi.fn(async () => {}),
-  mockClearSnapshot: vi.fn(async () => {}),
-  mockMaybeCreateAutoBackup: vi.fn(async () => {}),
+  mockWriteSnapshot: vi.fn(async () => { }),
+  mockClearSnapshot: vi.fn(async () => { }),
+  mockMaybeCreateAutoBackup: vi.fn(async () => { }),
 }));
 
 const createMockPersistenceAdapter = (): PersistencePort => ({
@@ -14,10 +14,10 @@ const createMockPersistenceAdapter = (): PersistencePort => ({
   writeSnapshot: mockWriteSnapshot,
   clearSnapshot: mockClearSnapshot,
   readEntityState: async () => null,
-  writeEntityState: vi.fn(async () => {}),
+  writeEntityState: vi.fn(async () => { }),
   readPreference: async () => null,
-  writePreference: vi.fn(async () => {}),
-  removePreference: vi.fn(async () => {}),
+  writePreference: vi.fn(async () => { }),
+  removePreference: vi.fn(async () => { }),
   listBackups: vi.fn(async () => []),
   writeBackup: vi.fn(async () => ({
     id: 'stub',
@@ -27,7 +27,7 @@ const createMockPersistenceAdapter = (): PersistencePort => ({
     reason: 'auto' as const,
   })),
   readBackup: async () => null,
-  clearBackups: vi.fn(async () => {}),
+  clearBackups: vi.fn(async () => { }),
   reserveGlobalIdentifier: vi.fn(async (defaultCounter = 2500) => ({
     reservedValue: defaultCounter,
     nextValue: defaultCounter + 1,
@@ -40,7 +40,7 @@ vi.mock('./autoBackupService', () => ({
     createManualBackup: vi.fn(async () => ({})),
     listBackups: vi.fn(async () => []),
     restoreBackup: vi.fn(async () => null),
-    clearBackups: vi.fn(async () => {}),
+    clearBackups: vi.fn(async () => { }),
   },
 }));
 
@@ -178,5 +178,89 @@ describe('loadData — debounced persistence', () => {
 
     // Then
     expect(mockWriteSnapshot).toHaveBeenCalledTimes(1);
+  });
+
+  // -------------------------------------------------------------------------
+  // loadData() before initializeDataStore — synchronous fallback
+  // -------------------------------------------------------------------------
+  it('loadData returns default AppData when called before initializeDataStore', () => {
+    // Arrange — do NOT call initializeDataStore; reset by re-importing
+    const result = loadData();
+
+    // Assert — returns a valid default snapshot (not null)
+    expect(result).toBeDefined();
+    expect(Array.isArray(result.projects)).toBe(true);
+    expect(result.globalIdentifierCounter).toBe(2500);
+  });
+
+  it('loadData returns a deep clone — in-memory object cannot be mutated externally', () => {
+    // Act
+    const first = loadData();
+    first.dismissedFocusItems.push('external-mutation');
+
+    // Assert — second call returns unaffected snapshot
+    const second = loadData();
+    expect(second.dismissedFocusItems).not.toContain('external-mutation');
+  });
+
+  // -------------------------------------------------------------------------
+  // initializeDataStore — hydration from persisted snapshot
+  // -------------------------------------------------------------------------
+  it('initializeDataStore hydrates appData from a persisted entity state', async () => {
+    // Arrange — reset modules first so the fresh import picks up our adapter.
+    vi.resetModules();
+
+    const persistedState = { dismissedFocusItems: ['hydrated-item'], globalIdentifierCounter: 9999 };
+
+    const freshPersistence = await import('./persistence');
+    freshPersistence.setPersistenceAdapter({
+      ...createMockPersistenceAdapter(),
+      readEntityState: vi.fn(async () => persistedState) as never,
+    });
+
+    const freshLoadData = await import('./loadData');
+
+    // Act — initialize with a fresh module that sees our adapter
+    await freshLoadData.initializeDataStore();
+    const result = freshLoadData.loadData();
+
+    // Assert — state is hydrated from persisted entity state
+    expect(result.dismissedFocusItems).toContain('hydrated-item');
+    expect(result.globalIdentifierCounter).toBe(9999);
+
+    freshPersistence.resetPersistenceAdapter();
+  });
+
+  it('initializeDataStore is idempotent — second call does not reset in-memory data', async () => {
+    // Act — call twice
+    await initializeDataStore();
+    updateData('dismissedFocusItems', ['after-first-init']);
+    await initializeDataStore(); // second call must be a no-op
+
+    // Assert — data written after first init is preserved
+    const result = loadData();
+    expect(result.dismissedFocusItems).toContain('after-first-init');
+  });
+
+  // -------------------------------------------------------------------------
+  // updateData reflects in subsequent loadData
+  // -------------------------------------------------------------------------
+  it('updateData mutation is reflected in subsequent loadData call', () => {
+    // Act
+    updateData('dismissedFocusItems', ['new-item']);
+
+    // Assert
+    const result = loadData();
+    expect(result.dismissedFocusItems).toContain('new-item');
+  });
+
+  it('updateData preserves other keys in the snapshot', () => {
+    // Act
+    updateData('dismissedFocusItems', ['only-this-changes']);
+
+    // Assert — globalIdentifierCounter is untouched
+    const result = loadData();
+    expect(result.globalIdentifierCounter).toBe(2500);
+    expect(Array.isArray(result.projects)).toBe(true);
   });
 });

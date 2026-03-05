@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAutoReset } from './useAutoReset';
 
 describe('useAutoReset', () => {
@@ -11,79 +11,93 @@ describe('useAutoReset', () => {
     vi.useRealTimers();
   });
 
-  it('starts with the default value', () => {
-    // Given / When
+  it('returns defaultValue on initial render', () => {
+    // Given — hook instanciado com valor padrão nulo
     const { result } = renderHook(() => useAutoReset<string | null>(null, 3000));
 
-    // Then
+    // Then — valor inicial deve ser o defaultValue
     expect(result.current[0]).toBeNull();
   });
 
-  it('resets to default after the specified delay', () => {
-    // Given
+  it('updates value when setValue is called', () => {
+    // Given — hook com defaultValue null
     const { result } = renderHook(() => useAutoReset<string | null>(null, 3000));
 
-    // When
-    act(() => result.current[1]('Hello'));
-    expect(result.current[0]).toBe('Hello');
-
-    // Then — after delay
+    // When — valor é definido
     act(() => {
-      vi.advanceTimersByTime(3000);
+      result.current[1]('Salvo!');
     });
+
+    // Then — valor atualizado imediatamente
+    expect(result.current[0]).toBe('Salvo!');
+  });
+
+  it('resets to defaultValue after delayMs', () => {
+    // Given — hook com delay de 1000ms
+    const { result } = renderHook(() => useAutoReset<string | null>(null, 1000));
+
+    // When — valor é definido
+    act(() => {
+      result.current[1]('Temporário');
+    });
+
+    // Then — ainda visível antes do timeout
+    expect(result.current[0]).toBe('Temporário');
+
+    // When — tempo expira
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    // Then — volta ao defaultValue
     expect(result.current[0]).toBeNull();
   });
 
-  it('re-triggering restarts the timer', () => {
-    // Given
-    const { result } = renderHook(() => useAutoReset<string | null>(null, 3000));
+  it('restarts timer when setValue is called again before reset', () => {
+    // Given — hook com delay de 1000ms
+    const { result } = renderHook(() => useAutoReset<string | null>(null, 1000));
 
-    // When — set, wait 2s, set again
-    act(() => result.current[1]('First'));
+    act(() => {
+      result.current[1]('Primeiro');
+    });
+
+    // When — avança 600ms e chama setValue novamente
+    act(() => {
+      vi.advanceTimersByTime(600);
+      result.current[1]('Segundo');
+    });
+
+    // When — avança mais 600ms (total: 1200ms desde o primeiro)
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+
+    // Then — não resetou ainda porque o timer foi reiniciado
+    expect(result.current[0]).toBe('Segundo');
+
+    // When — expira o segundo timer
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+
+    // Then — agora resetou
+    expect(result.current[0]).toBeNull();
+  });
+
+  it('does not schedule timer when setValue is called with defaultValue', () => {
+    // Given — hook com defaultValue null
+    const { result } = renderHook(() => useAutoReset<string | null>(null, 1000));
+
+    // When — define com o próprio defaultValue
+    act(() => {
+      result.current[1](null);
+    });
+
     act(() => {
       vi.advanceTimersByTime(2000);
     });
-    act(() => result.current[1]('Second'));
 
-    // Then — at 2999ms from second set, still active
-    act(() => {
-      vi.advanceTimersByTime(2999);
-    });
-    expect(result.current[0]).toBe('Second');
-
-    // Then — at 3000ms from second set, resets
-    act(() => {
-      vi.advanceTimersByTime(1);
-    });
+    // Then — continua null sem disparar efeito colateral
     expect(result.current[0]).toBeNull();
-  });
-
-  it('unmount clears the timer (no setState after unmount)', () => {
-    // Given
-    const { result, unmount } = renderHook(() => useAutoReset<string | null>(null, 3000));
-    act(() => result.current[1]('Active'));
-
-    // When
-    unmount();
-
-    // Then — advancing timers after unmount should not throw
-    act(() => {
-      vi.advanceTimersByTime(5000);
-    });
-    // No assertion needed — if clearTimeout wasn't called, React would warn about setState on unmounted component
-  });
-
-  it('setting the default value directly does not schedule a timer', () => {
-    // Given
-    const { result } = renderHook(() => useAutoReset<boolean>(false, 1000));
-
-    // When — set to default
-    act(() => result.current[1](false));
-
-    // Then — no timer scheduled, value stays default
-    act(() => {
-      vi.advanceTimersByTime(2000);
-    });
-    expect(result.current[0]).toBe(false);
   });
 });

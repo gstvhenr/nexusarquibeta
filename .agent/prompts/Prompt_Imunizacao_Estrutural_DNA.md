@@ -157,6 +157,7 @@ Após criar todos os artefatos:
 </constraints>
 <context_ingestion>
 <sources>
+
 <source>ARCHITECTURE.md</source>
 <source>AGENTS.md</source>
 <source>docs/architecture.md</source>
@@ -169,12 +170,40 @@ Após criar todos os artefatos:
 <extract> 1. EXISTING_CONVENTIONS: naming patterns, layer rules, barrel patterns 2. GAPS: undocumented structural decisions 3. CONTRADICTIONS: conflicting rules across documents 4. DOMAIN_REGISTRY: infer canonical domain list from filesystem
 </extract>
 <output>GAP_ANALYSIS_REPORT → present to user → GATE: require approval</output>
-</context_ingestion>
+  </context_ingestion>
+
+  <!-- Step-Back Prompting (DeepMind, ICLR 2024) -->
+
+<step_back_abstraction>
+ANTES de criar qualquer artefato, o modelo DEVE responder:
+Q1: "Qual é o princípio de organização IDEAL para este projeto?"
+Q2: "Quais são os 3 erros estruturais mais custosos que agentes cometem?"
+Q3: "O que um agente sem memória PRECISA saber em 5 segundos de leitura?"
+
+    Estas respostas fundamentam TODAS as entregas.
+    Se uma entrega não contribui para uma das respostas → é desnecessária.
+
+</step_back_abstraction>
+
+  <!-- Context-Aware Decomposition: dependência entre artefatos -->
+
+<chaining_protocol>
+Artifact 1 (PLACEMENT_RULES) → output = decision tree com paths e domínios
+Artifact 2 (validate-structure) → input = regras de naming e boundary de Artifact 1
+Artifact 3 (ARCHITECTURE.md) → input = domain list e invariants de Artifact 1
+Artifact 4 (Agent Rules) → input = paths e gates de Artifacts 1-3
+
+    CONSTRAINT: Artifact N+1 DEVE referenciar outputs de Artifacts 1..N.
+    Se Artifact N+1 contradizer Artifact N → HALT e resolver antes de prosseguir.
+
+</chaining_protocol>
+
 <artifact_pipeline>
 <artifact id="1" path="docs/PLACEMENT_RULES.md" priority="P0">
 <format>BINARY_DECISION_TREE</format>
 <max_lines>150</max_lines>
 <required_sections>
+
 <section>DOMAINS_REGISTRY — canonical list of project domains</section>
 <section>DECISION_TREE — binary questions → concrete paths with examples</section>
 <section>NAMING_CONVENTIONS — table: glob pattern → required location</section>
