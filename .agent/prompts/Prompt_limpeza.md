@@ -92,6 +92,7 @@ Crie mentalmente (e registre em `PLAN.md` se necessário) o escopo:
 - Otimização de performance
 - Adição de features/dependências
 - Arquivos na "don't touch list" do AGENTS.md (sem justificativa)
+- Mover/rearranjar arquivos (se necessário, consultar `docs/PLACEMENT_RULES.md` antes)
 ```
 
 **Prioridade de execução:**
@@ -154,6 +155,7 @@ Leia na ordem:
 3. `ARCHITECTURE.md` — Camadas, boundaries, regras de importação
 4. `DECISIONS-active.md` — Decisões vigentes que protegem código aparentemente morto
 5. `.agent/lessons-learned.md` — Erros anteriores em cleanup (podem poupar re-trabalho)
+6. `.agent/memory/project-inventory.md` — Inventário ativo de hooks, services, utils e types do projeto
 
 **Pergunta-chave após leitura:**
 
@@ -301,6 +303,7 @@ MANTER:
 - [ ] `npm run check:lines` → sem novos hotspots
 - [ ] `npm run check:duplication` → sem aumento de clones
 - [ ] `npm run check:lines:ratchet` → atualizado (ratchet apertado se linhas reduziram)
+- [ ] `npm run validate:structure` → sem violações (obrigatório se arquivos foram removidos/movidos)
 
 ### Integridade
 
@@ -329,6 +332,10 @@ Antes de declarar a limpeza concluída, execute:
 MAX-CYCLES: 1
 ```
 ````
+
+### Cross-check obrigatório
+
+- [ ] Validar contra `.agent/checklists/self-review-checklist.md` (seção Anti-Poluição)
 
 ### Documentação de sessão
 

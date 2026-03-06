@@ -247,4 +247,289 @@ describe('useProjectFinancials', () => {
     // Then — revisionCount incrementado para 3
     expect(result.revisionCount).toBe(3);
   });
+
+  // ── Edge cases: null project guard ──
+
+  it('handleGenerateInstallments returns null when project is null', () => {
+    // Given
+    const setLocalProject = vi.fn();
+    const { handleGenerateInstallments } = useProjectFinancials(
+      setLocalProject,
+      null,
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When
+    handleGenerateInstallments();
+    const updater = setLocalProject.mock.calls[0][0];
+    const result = updater(null);
+
+    // Then — null guard exits early
+    expect(result).toBeNull();
+  });
+
+  it('handleAddInstallment returns null when project is null', () => {
+    // Given
+    const setLocalProject = vi.fn();
+    const { handleAddInstallment } = useProjectFinancials(
+      setLocalProject,
+      null,
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When
+    handleAddInstallment();
+    const updater = setLocalProject.mock.calls[0][0];
+    const result = updater(null);
+
+    // Then
+    expect(result).toBeNull();
+  });
+
+  it('handleRemoveInstallment returns null when project is null', () => {
+    // Given
+    const setLocalProject = vi.fn();
+    const { handleRemoveInstallment } = useProjectFinancials(
+      setLocalProject,
+      null,
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When
+    handleRemoveInstallment('any-id');
+    const updater = setLocalProject.mock.calls[0][0];
+    const result = updater(null);
+
+    // Then
+    expect(result).toBeNull();
+  });
+
+  it('handleAddDeadline returns null when project is null', () => {
+    // Given
+    const setLocalProject = vi.fn();
+    const { handleAddDeadline } = useProjectFinancials(
+      setLocalProject,
+      null,
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When
+    handleAddDeadline();
+    const updater = setLocalProject.mock.calls[0][0];
+    const result = updater(null);
+
+    // Then
+    expect(result).toBeNull();
+  });
+
+  it('incrementRevision returns null when project is null', () => {
+    // Given
+    const setLocalProject = vi.fn();
+    const { incrementRevision } = useProjectFinancials(
+      setLocalProject,
+      null,
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When
+    incrementRevision();
+    const updater = setLocalProject.mock.calls[0][0];
+    const result = updater(null);
+
+    // Then
+    expect(result).toBeNull();
+  });
+
+  // ── Edge case: numberOfInstallments fallback to 1 ──
+
+  it('handleGenerateInstallments defaults to 1 installment when numberOfInstallments is 0', () => {
+    // Given — numberOfInstallments=0 should fallback to 1
+    const setLocalProject = vi.fn();
+    const project = makeProject({
+      financials: {
+        paymentType: 'parcelado',
+        numberOfInstallments: 0,
+        installmentsPaymentDay: 15,
+        installmentsInterestEnabled: false,
+        startInstallmentsInCurrentMonth: false,
+      },
+      budget: 1000,
+    });
+    const { handleGenerateInstallments } = useProjectFinancials(
+      setLocalProject,
+      project,
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When
+    handleGenerateInstallments();
+    const updater = setLocalProject.mock.calls[0][0];
+    const result = updater(project);
+
+    // Then — fallback to 1 installment with full value
+    expect(result.financials.installments).toHaveLength(1);
+    expect(result.financials.installments[0].number).toBe(1);
+  });
+
+  // ── Edge case: interest enabled ──
+
+  it('handleGenerateInstallments applies interest rate when enabled', () => {
+    // Given — 3 installments, budget=3000, interest=10%
+    const setLocalProject = vi.fn();
+    const project = makeProject({
+      financials: {
+        paymentType: 'parcelado',
+        numberOfInstallments: 3,
+        installmentsPaymentDay: 15,
+        installmentsInterestEnabled: true,
+        installmentsInterestRate: 10,
+        startInstallmentsInCurrentMonth: false,
+      },
+      budget: 3000,
+    });
+    const { handleGenerateInstallments } = useProjectFinancials(
+      setLocalProject,
+      project,
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When
+    handleGenerateInstallments();
+    const updater = setLocalProject.mock.calls[0][0];
+    const result = updater(project);
+
+    // Then — total = 3000 * 1.10 = 3300; each = 1100
+    expect(result.financials.installments).toHaveLength(3);
+    expect(result.financials.installments[0].value).toBeCloseTo(1100, 2);
+  });
+
+  // ── handleConfirmPayment for installment type ──
+
+  it('handleConfirmPayment marks specific installment as paid', () => {
+    // Given — project with 2 installments, confirming inst-2
+    const setLocalProject = vi.fn();
+    const setPaymentConfirmModalOpen = vi.fn();
+    const setPaymentToConfirm = vi.fn();
+    const project = makeProject({
+      financials: {
+        paymentType: 'parcelado',
+        installments: [
+          { id: 'inst-1', number: 1, value: 500, dueDate: '2026-01-15', paid: false, paymentDate: null },
+          { id: 'inst-2', number: 2, value: 500, dueDate: '2026-02-15', paid: false, paymentDate: null },
+        ],
+      },
+    });
+
+    const { handleConfirmPayment } = useProjectFinancials(
+      setLocalProject,
+      project,
+      { type: 'installment', id: 'inst-2' },
+      setPaymentToConfirm,
+      setPaymentConfirmModalOpen,
+    );
+
+    // When
+    handleConfirmPayment('2026-02-20', 'Boleto bancário');
+
+    // Then — inst-2 marked paid, inst-1 untouched
+    const updatedProject = setLocalProject.mock.calls[0][0];
+    const inst1 = updatedProject.financials.installments.find(
+      (i: { id: string }) => i.id === 'inst-1',
+    );
+    const inst2 = updatedProject.financials.installments.find(
+      (i: { id: string }) => i.id === 'inst-2',
+    );
+    expect(inst1.paid).toBe(false);
+    expect(inst2.paid).toBe(true);
+    expect(inst2.paymentDate).toBe('2026-02-20');
+    expect(inst2.paymentMethod).toBe('Boleto bancário');
+    expect(setPaymentConfirmModalOpen).toHaveBeenCalledWith(false);
+    expect(setPaymentToConfirm).toHaveBeenCalledWith(null);
+  });
+
+  // ── handleDeadlineChange ──
+
+  it('handleDeadlineChange updates the correct deadline field', () => {
+    // Given
+    const setLocalProject = vi.fn();
+    const { handleDeadlineChange } = useProjectFinancials(
+      setLocalProject,
+      makeProject(),
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When
+    handleDeadlineChange('d1', 'title', 'Revisão Estrutural');
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({
+      additionalDeadlines: [
+        { id: 'd1', title: 'Antigo', date: '2026-01-01' },
+        { id: 'd2', title: 'Outro', date: '2026-02-01' },
+      ],
+    });
+    const result = updater(project);
+
+    // Then — only d1 title changed, d2 untouched
+    expect(result.additionalDeadlines[0].title).toBe('Revisão Estrutural');
+    expect(result.additionalDeadlines[1].title).toBe('Outro');
+  });
+
+  // ── incrementRevision from undefined ──
+
+  it('incrementRevision starts from 0 when revisionCount is undefined', () => {
+    // Given — project without revisionCount
+    const setLocalProject = vi.fn();
+    const { incrementRevision } = useProjectFinancials(
+      setLocalProject,
+      makeProject(),
+      null,
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When
+    incrementRevision();
+    const updater = setLocalProject.mock.calls[0][0];
+    const project = makeProject({ revisionCount: undefined });
+    const result = updater(project);
+
+    // Then — 0 + 1 = 1
+    expect(result.revisionCount).toBe(1);
+  });
+
+  // ── handleConfirmPayment does nothing when localProject is null ──
+
+  it('handleConfirmPayment does nothing when localProject is null', () => {
+    // Given — localProject=null, but paymentToConfirm exists
+    const setLocalProject = vi.fn();
+    const { handleConfirmPayment } = useProjectFinancials(
+      setLocalProject,
+      null,
+      { type: 'lump' },
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // When
+    handleConfirmPayment('2026-03-01', 'PIX');
+
+    // Then — nothing happens
+    expect(setLocalProject).not.toHaveBeenCalled();
+  });
 });

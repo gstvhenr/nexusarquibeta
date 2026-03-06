@@ -14,6 +14,8 @@
 - [ ] No new duplication detected by jscpd.
 - [ ] Coverage thresholds met for services layer.
 - [ ] Business-rule changes have tests.
+- [ ] Test impact: `vitest related --run` executado nos arquivos alterados e todos passaram.
+- [ ] Test gap: arquivos de lógica runtime sem `.test.ts(x)` foram identificados e tratados.
 - [ ] Contract/interface changes have docs updates.
 - [ ] Contract shape changes updated fixtures/golden tests.
 - [ ] `NEXT.md` updated.

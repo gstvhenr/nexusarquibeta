@@ -11,6 +11,41 @@
 - Manter aqui apenas: última sessão + próximo passo + bloqueios.
 - Histórico completo até 2026-02-16: `docs/changelog/session-log-2026-02.md`.
 
+## Último estado conhecido (2026-03-05, sessão 54)
+
+Deep Clean forense do codebase — diagnóstico completo e remoção cirúrgica de código morto.
+
+### O que mudou
+
+- [x] Diagnóstico completo via Knip, grep, lint, pollution e duplication scans.
+- [x] Removido export morto `CLIENT_STATUS_COLORS` de `src/frontend/constants/index.ts` (0 consumidores via grep).
+- [x] Removido export morto `PAYMENT_STATUS_COLORS` de `src/frontend/constants/index.ts` (0 consumidores via grep).
+- [x] Removido import type desnecessário `ClientStatus` de `src/frontend/constants/index.ts` (sem uso após remoção dos exports acima).
+- [x] Removido `export type { BadgeProps }` de `src/frontend/components/ui/Badge.tsx` (0 importadores externos).
+- [x] Atualizado baseline de poluição (`npm run check:pollution:ratchet`) para incorporar `scripts/test-impact.mjs`.
+
+### Validação executada
+
+- [x] `npm run typecheck` → FAIL apenas por passivo pré-existente (zero novas regressões).
+- [x] `npx vitest run src/frontend/constants` → **4 files PASS / 18 testes PASS**.
+- [x] `npx vitest run src/frontend/components/ui/Badge.test.tsx` → **PASS**.
+- [x] `npm run check:pollution` → **PASS** (sem regressões após ratchet).
+
+### Observações
+
+- O codebase está notavelmente limpo: 0 TODO/FIXME/HACK em produção, 0 console.log, 0 código comentado.
+- 20 "arquivos órfãos" do Knip são falsos positivos (scripts npm, entry points Vite, barrels ADR).
+- 4 clones de código detectados por `check:duplication` — fora do escopo de limpeza (requer refatoração).
+
+## Próximo passo exato
+
+1. Tratar o passivo global de `typecheck` em `components/nav`, `pages/clientes` e `pages/prestadores-freelancers`.
+2. Reexecutar `npm run verify` para perseguir fechamento com `[VERIFY][LOOP][PASS]`.
+
+## Bloqueios e dúvidas
+
+- `npm run verify` permanece bloqueado por passivo de `typecheck` pré-existente fora do escopo desta sessão.
+
 ## Último estado conhecido (2026-03-04, sessão 53)
 
 Criação de um prompt de **agente particular orquestrador** em `.agent/prompts`, com bloqueio estrito de ação fora de `.agent/prompts`, resposta exclusivamente em chat e roteamento para agente/ferramenta por tipo de demanda.

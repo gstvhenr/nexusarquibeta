@@ -9,3 +9,9 @@ staged_files="$(git diff --cached --name-only --diff-filter=ACMR)"
 if printf '%s\n' "$staged_files" | grep -Eq '^(docs/|\.github/|AGENTS\.md$|ARCHITECTURE\.md$|CONTEXT\.md$|CONTRIBUTING\.md$|DECISIONS-active\.md$|NEXT\.md$|PLAN\.md$|README\.md$|SECURITY\.md$|TASKS\.md$|TESTING\.md$)'; then
   npm run check:docs:governance
 fi
+
+# Test Impact: rodar testes afetados pelos arquivos staged
+staged_src="$(git diff --cached --name-only --diff-filter=ACMR -- 'src/frontend/**' | grep -v '\.test\.' | tr '\n' ' ')"
+if [ -n "$staged_src" ]; then
+  npx vitest related --run $staged_src
+fi

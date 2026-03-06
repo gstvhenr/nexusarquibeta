@@ -39,6 +39,7 @@ Nexus-Arqui é um ERP web para escritório de arquitetura (clientes, propostas, 
 - Duplicação de código: `npm run check:duplication`
 - Testes: `npm run test`
 - Testes com cobertura: `npm run test:coverage`
+- Impacto em testes: `npm run test:impact`
 - Build: `npm run build`
 - Self-review automático: `npm run self-review:auto`
 - Gate rápido (style/docs): `npm run verify:quick`

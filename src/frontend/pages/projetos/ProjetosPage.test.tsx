@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { DataProvider } from '@/context/DataContext';
@@ -12,18 +12,20 @@ const FUTURE_FLAGS = { v7_startTransition: true, v7_relativeSplatPath: true } as
 let modalRoot: HTMLDivElement;
 
 beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
   api.clearAllData();
+  document.getElementById('modal-root')?.remove();
   modalRoot = document.createElement('div');
-  modalRoot.setAttribute('id', 'modal-root');
+  modalRoot.id = 'modal-root';
   document.body.appendChild(modalRoot);
 });
 
 afterEach(() => {
+  vi.runOnlyPendingTimers();
   cleanup();
+  vi.useRealTimers();
   api.clearAllData();
-  if (modalRoot && document.body.contains(modalRoot)) {
-    document.body.removeChild(modalRoot);
-  }
+  document.getElementById('modal-root')?.remove();
 });
 
 function seedProjects(projects: Project[]) {

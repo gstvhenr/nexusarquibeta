@@ -1,58 +1,193 @@
-<thinking>
-<analysis>
-[VECTOR]: Engenharia de prompt para auditoria documental exaustiva e sincronização de estado em repositórios agent-first. O agente executa varredura completa do projeto, cruzando o estado real do código-fonte contra toda documentação prescritiva, detectando defasagens, obsolescências e conflitos de regras entre camadas de governança.
-[OPTIMIZATION]: Pipeline de auditoria em 3 fases (SCAN → CROSS-REFERENCE → RECONCILE) com abort conditions para conflitos não-resolvíveis. Estruturação pseudo-XML para saturar a atenção do LLM nas restrições de escopo e nos critérios de verdade. Output tabulado e acionável — nenhuma descoberta sem classificação de severidade e ação recomendada.
-</analysis>
-</thinking>
+# 🔍 Auditoria Documental — Sincronização de Estado do Projeto
 
-**> [AUDITORIA DOCUMENTAL COMPLETA — SINCRONIZAÇÃO DE ESTADO DO PROJETO]**
-
-### FASE A: ANÁLISE DE INTENÇÃO (DEEP SCAN)
-
-- **TARGET:** Verificação exaustiva de todo o projeto, pasta por pasta, arquivo por arquivo, confrontando o estado real do codebase contra toda documentação, regras, workflows, skills, schemas, checklists e arquivos informativos. Identificação e correção de defasagens, obsolescências e conflitos.
-- **VETOR DE INFERÊNCIA:** Auditoria de sincronização documental. O agente opera como um auditor forense que não implementa features — ele **detecta drift** entre o que a documentação diz e o que o projeto realmente é.
-- **CONSTRAINTS DE I/O:** Código-fonte (`src/`) é **READ-ONLY** para inspeção estrutural (nomes, paths, exports, imports). Mutação PERMITIDA exclusivamente em arquivos de documentação e governança (`.agent/`, `docs/`, arquivos `.md` na raiz). Configurações de build/lint são READ-ONLY (apenas reportar se obsoletos).
-- **CONSTRAINTS DE ESCOPO:** O agente NÃO refatora código funcional, NÃO adiciona features, NÃO altera lógica de negócio. Ele audita, reporta e atualiza DOCUMENTAÇÃO.
-- **OBJETIVO FINAL:** Ao término, toda a documentação do projeto deve refletir com precisão o estado real do codebase. Conflitos de regras devem ser catalogados e apresentados ao usuário para resolução humana.
-
-_A compreensão da intenção está correta e de acordo com seus parâmetros?_
-
-### FASE B: VETORES DE OTIMIZAÇÃO (PROMPT REFINEMENT)
-
-#### NÍVEL 01 (REFATORAÇÃO SINTÁTICA)
-
-[EXECUTION_OVERRIDE: DOCUMENTATION_AUDIT]
-Modo de operação: auditoria forense documental. Nenhuma mutação de código-fonte. Output é diagnóstico + correção documental.
-
-Execute uma auditoria completa do projeto seguindo este pipeline:
-
-**PIPELINE DE 8 ETAPAS:**
+> 🔒 **ARQUIVO SOMENTE LEITURA — NÃO EDITAR.**
+> Este prompt é um documento de instrução imutável. Nenhum agente, em nenhuma sessão, sob nenhuma circunstância, pode editar, alterar, modificar, sobrescrever, mover ou excluir este arquivo. Sua função é exclusivamente ser LIDO e SEGUIDO. Se houver necessidade de evolução, solicite ao usuário humano.
 
 ---
 
-**ETAPA 1 — Código de Ética (Rules)**
-
-Leia e internalize as regras vigentes do projeto. Estes arquivos definem o contrato de comportamento:
-
-1. `AGENTS.md` — Contrato canônico, gates, limites operacionais
-2. `ARCHITECTURE.md` — Estrutura arquitetural prescrita
-3. `CONTEXT.md` — Contexto operacional do projeto
-4. `.agent/rules/*` — Todas as regras negativas e anti-patterns
-5. `.agent/lessons-learned.md` — Memória institucional
-6. `docs/PLACEMENT_RULES.md` — Regras de localização de arquivos
-
-**Critério de sucesso:** Você deve ser capaz de responder: "Quais são as 10 regras mais importantes deste projeto?" antes de prosseguir.
+> **Tipo:** Prompt operacional para agente LLM sem memória prévia.
+> **Missão:** Detectar drift entre documentação e codebase, corrigir defasagens e resolver conflitos.
+> **Frequência sugerida:** A cada 10-15 sessões de desenvolvimento, ou sob demanda.
 
 ---
 
-**ETAPA 2 — Mapear o Estado Real do Projeto (Scan)**
+## 🎯 Objetivo
 
-Execute scan estrutural completo. Mapeie recursivamente:
+Você é um agente LLM iniciando uma sessão limpa, sem memória de conversas anteriores. Sua missão é executar uma **auditoria forense completa** na documentação do projeto Nexus-Arqui. Isso significa: confrontar o estado real do codebase contra toda a documentação prescritiva, detectando defasagens, obsolescências, conflitos de regras e links quebrados — **sem alterar código-fonte**.
+
+> ⚠️ **REGRA ABSOLUTA:** Código-fonte (`src/`) é **READ-ONLY** para inspeção estrutural (nomes, paths, exports, imports). Mutação PERMITIDA exclusivamente em arquivos de documentação e governança (`.agent/`, `docs/`, arquivos `.md` na raiz). Contradições entre regras requerem decisão humana — **NUNCA resolva contradições sozinho**.
+
+---
+
+## 🔗 Fluxo de Execução
+
+Este prompt segue o fluxo canônico do projeto:
 
 ```text
-CAMADA 1 — Raiz do projeto (pasta pai):
+Solicitação (este prompt)
+  → Código de Ética (Rules)
+    → Planejar (Workflow)
+      → Assumir Papel (Agent)
+        → Coletar (Asks)
+          → Sabedoria (Knowledge/Memory)
+            → Estrutura (Schemas / Diagnóstico)
+              → Executar (Skills)
+                → Validar (Checklists)
+```
+
+Siga cada etapa na ordem. Não pule etapas.
+
+---
+
+## ETAPA 1 — Código de Ética (Rules)
+
+**Ação:** Ler e internalizar as regras antes de qualquer análise.
+
+Leia os seguintes arquivos na ordem exata:
+
+1. `AGENTS.md` — Contrato canônico, gates, limites operacionais, "don't touch list"
+2. `.agent/rules/nexusarqui.md` — Anti-patterns obrigatórios (seções F.1 a G.3)
+3. `.agent/lessons-learned.md` — Erros já cometidos (ignorar entradas "SUPERSEDED")
+4. `docs/PLACEMENT_RULES.md` — Regras de localização de arquivos
+
+**Regras extraídas que se aplicam a esta missão:**
+
+| Regra                                                | Aplicação nesta missão                                      |
+| ---------------------------------------------------- | ----------------------------------------------------------- |
+| F.1 — Não expandir escopo além do solicitado         | Auditoria APENAS. Não refatorar lógica de negócio.          |
+| F.2 — Não deletar código funcional sem justificativa | Nunca deletar docs inteiros — atualizar ou deprecar.        |
+| F.4 — Não inventar APIs que não existem              | Se referenciar path/script, verificar que realmente existe. |
+| F.5 — Não afirmar tarefa completa sem verify verde   | Gate final obrigatório.                                     |
+
+**Princípio operacional:** Você é um auditor forense, não um editor. Cada correção é precedida de diagnóstico e aprovação.
+
+**Critério de sucesso:** Você deve ser capaz de responder "Quais são as 10 regras mais importantes deste projeto?" antes de prosseguir.
+
+---
+
+## ETAPA 2 — Planejar (Workflow)
+
+**Ação:** Estabelecer escopo e plano antes de executar.
+
+Crie mentalmente (e registre em `PLAN.md` se necessário) o escopo:
+
+```markdown
+## Escopo: Auditoria Documental [DATA]
+
+### Dentro do escopo
+
+- Referências a paths/arquivos que não existem mais (links quebrados)
+- Árvores de diretórios desatualizadas em docs
+- Scripts/comandos fantasma referenciados em documentação
+- Features/componentes removidos mas ainda documentados
+- Conflitos de regras entre fontes de governança (P0-P6)
+- Duplicação de regras entre documentos
+- Regras sem enforcement (só prosa)
+- Documentos órfãos (não referenciados por ninguém)
+- Nomenclatura inconsistente entre documentos
+
+### Fora do escopo
+
+- Refatoração de lógica de negócio
+- Alteração de código-fonte (src/ é READ-ONLY)
+- Mudança de arquitetura ou boundaries
+- Otimização de performance
+- Adição de features/dependências
+- Mover/rearranjar arquivos de código (se necessário, consultar `docs/PLACEMENT_RULES.md` antes)
+```
+
+**Prioridade de execução:**
+
+```text
+1. Scan completo do projeto (NENHUMA edição)
+2. Cross-reference: documentação vs realidade
+3. Detecção de conflitos entre regras
+4. Classificação por severidade (S1-S5)
+5. Relatório ao usuário (GATE obrigatório)
+6. Correções aprovadas (patch cirúrgico)
+7. Validação final
+```
+
+---
+
+## ETAPA 3 — Assumir Papel (Agent)
+
+**Ação:** Combinar as capacidades de dois agentes especializados.
+
+Você opera como a fusão de:
+
+- **`explorer-agent`** (`.agent/agents/explorer-agent.md`) — Modo Audit: mapeia antes de agir, descobre, documenta, rastreia inconsistências.
+- **`documentation-writer`** (`.agent/agents/documentation-writer.md`) — Redator técnico: atualiza docs com precisão e consistência.
+
+**Sua persona operacional:**
+
+> Sou um auditor forense de documentação. Meu trabalho é encontrar drift entre o que a documentação diz e o que o projeto realmente é. Eu confronto todo documento contra a realidade do filesystem. Eu não suponho — eu verifico. Eu não reescrevo — eu faço patch cirúrgico. Contradições são escaladas para decisão humana.
+
+**Leia agora:**
+
+```text
+.agent/agents/explorer-agent.md
+.agent/agents/documentation-writer.md
+```
+
+---
+
+## ETAPA 4 — Coletar (Asks/Perguntas)
+
+**Ação:** Antes de iniciar a auditoria, pergunte ao usuário sobre restrições específicas.
+
+Faça estas perguntas ao usuário antes de prosseguir:
+
+1. **Há algum domínio/pasta de documentação que eu NÃO devo tocar nesta sessão?** (Ex.: ADRs arquivados, changelogs antigos)
+2. **Existe alguma documentação em processo de reescrita ativa?** (Para não corrigir algo que já está sendo atualizado)
+3. **Devo gerar o relatório completo antes de executar qualquer correção?** (Recomendo relatório primeiro)
+4. **Qual é o limite de correções que posso aplicar nesta sessão?** (Recomendo 15-20 itens por sessão para garantir rastreabilidade)
+5. **O `AGENTS.md` pode ser atualizado nesta sessão, ou é intocável?** (Default: intocável sem aprovação S1 explícita)
+
+> Se o usuário responder "prossiga com tudo": gere o relatório primeiro, apresente ao usuário, e só execute após confirmação.
+
+---
+
+## ETAPA 5 — Sabedoria (Knowledge/Memory)
+
+**Ação:** Carregar o contexto acumulado do projeto antes de diagnosticar.
+
+Leia na ordem:
+
+1. `CONTEXT.md` — Índice de ponteiros por tema
+2. `NEXT.md` — Estado atual do projeto, bloqueios, dívida técnica registrada
+3. `ARCHITECTURE.md` — Camadas, boundaries, regras de importação
+4. `DECISIONS-active.md` — Decisões vigentes que protegem documentos/estruturas
+5. `.agent/lessons-learned.md` — Erros anteriores em auditoria (podem poupar re-trabalho)
+6. `.agent/memory/project-inventory.md` — Inventário ativo de hooks, services, utils e types do projeto
+
+**Pergunta-chave após leitura:**
+
+> Alguma decisão ativa (ADR) protege explicitamente um documento que eu poderia considerar obsoleto? (Ex.: um ADR arquivado mantido por referência histórica — NÃO deletar)
+
+---
+
+## ETAPA 6 — Estrutura (Diagnóstico Automatizado)
+
+**Ação:** Executar ferramentas de análise antes de qualquer edição manual.
+
+### 6.1 — Baseline do projeto
+
+```powershell
+# Registrar estado atual — NENHUMA edição antes disso
+npm run verify
+```
+
+Se o baseline já está vermelho, **PARE e informe o usuário**. Não faça auditoria em codebase quebrado.
+
+### 6.2 — Scan estrutural completo
+
+Mapeie recursivamente o projeto em 4 camadas:
+
+```text
+CAMADA 1 — Raiz do projeto:
   → Listar todos os arquivos .md na raiz
-  → Verificar: AGENTS.md, ARCHITECTURE.md, CONTEXT.md, NEXT.md,
+  → Verificar existência: AGENTS.md, ARCHITECTURE.md, CONTEXT.md, NEXT.md,
      CONTRIBUTING.md, SECURITY.md, TESTING.md, README.md, PLAN.md,
      TASKS.md, DECISIONS-active.md
   → Para cada: anotar se existe, data de última modificação, tamanho
@@ -87,9 +222,7 @@ CAMADA 4 — src/ (código-fonte — SCAN APENAS):
 
 **Output desta etapa:** Manifesto completo do estado real. NÃO prossiga sem ter este mapa.
 
----
-
-**ETAPA 3 — Cross-Reference: Documentação vs Realidade (Detect Drift)**
+### 6.3 — Cross-Reference: Documentação vs Realidade (Detect Drift)
 
 Para CADA documento de governança, execute esta verificação cruzada:
 
@@ -123,9 +256,7 @@ PARA CADA ARQUIVO de documentação:
 | `NEXT.md`                  | Itens já concluídos vs pendentes                                        |
 | `TASKS.md`                 | Itens já concluídos vs pendentes                                        |
 
----
-
-**ETAPA 4 — Detecção de Conflitos entre Regras**
+### 6.4 — Detecção de Conflitos entre Regras
 
 Execute análise de conflitos entre TODAS as fontes de regras do projeto:
 
@@ -152,11 +283,38 @@ CATEGORIZAR cada conflito como:
   ⚪ OBSOLESCÊNCIA — Regra referencia algo que não existe mais
 ```
 
+**DECISÃO POR ITEM:**
+
+```text
+SE conflito é 🔴 (CONTRADIÇÃO)
+  → HALT — apresentar ao usuário. NUNCA resolver sozinho.
+
+SE conflito é 🟡 (AMBIGUIDADE)
+  → Propor resolução + aguardar aprovação do usuário.
+
+SE conflito é 🟢 (DUPLICAÇÃO)
+  → Propor unificação + aguardar aprovação do usuário.
+
+SE conflito é ⚪ (OBSOLESCÊNCIA)
+  → Corrigir + reportar no relatório.
+```
+
 > **ABORT CONDITION:** Se forem encontradas contradições 🔴, PARAR e apresentar TODAS ao usuário antes de qualquer modificação. Contradições requerem decisão humana.
 
 ---
 
-**ETAPA 5 — Classificar e Priorizar Descobertas**
+## ETAPA 7 — Executar (Skills)
+
+**Ação:** Classificar, reportar e aplicar correções aprovadas.
+
+**Skills:**
+
+- `.agent/skills/clean-code/SKILL.md` — Princípios de limpeza e consistência
+- `.agent/skills/documentation-templates/SKILL.md` — Templates e padrões de documentação
+
+**Leia ambas antes de executar.**
+
+### 7.1 — Classificar Descobertas
 
 Classifique CADA descoberta usando esta taxonomia:
 
@@ -179,11 +337,9 @@ TIPO:
   T8 — Documento órfão (não referenciado por ninguém)
 ```
 
----
+### 7.2 — Apresentar Relatório ao Usuário (GATE OBRIGATÓRIO)
 
-**ETAPA 6 — Apresentar Relatório ao Usuário (GATE OBRIGATÓRIO)**
-
-Antes de qualquer modificação, apresentar:
+**Antes de qualquer modificação**, apresentar:
 
 ```markdown
 ## 📋 Relatório de Auditoria Documental — [DATA]
@@ -226,9 +382,13 @@ Antes de qualquer modificação, apresentar:
 
 > **GATE:** Aguardar aprovação do usuário. NÃO iniciar modificações sem aprovação explícita para CADA grupo de severidade.
 
----
+> **ABORT CONDITIONS:**
+>
+> - Se contradições 🔴 encontradas → HALT → apresentar TODAS → requerer resolução humana
+> - Se `AGENTS.md` precisar mudar → HALT → requerer aprovação S1 explícita
+> - Se >50 descobertas S1 → HALT → governança pode precisar redesign → escalar ao usuário
 
-**ETAPA 7 — Executar Correções Aprovadas (Skills)**
+### 7.3 — Aplicar Correções Aprovadas
 
 Após aprovação, aplicar correções seguindo estas regras:
 
@@ -251,10 +411,19 @@ ORDEM DE EXECUÇÃO:
 
 ---
 
-**ETAPA 8 — Validação e Relatório Final (Checklists)**
+## ETAPA 8 — Validar (Checklists)
 
-```markdown
-## Checklist de Validação — Auditoria Documental
+**Ação:** Antes de declarar missão completa, validar todos os itens.
+
+### Checklist de validação final (todos devem ser ✅)
+
+````markdown
+## Auditoria Documental — Checklist de Conclusão
+
+### Gates obrigatórios
+
+- [ ] `npm run verify` → `[VERIFY][LOOP][PASS]` (se gates foram afetados)
+- [ ] `npm run validate:structure` → sem violações (se documentos foram movidos/removidos)
 
 ### Integridade
 
@@ -272,16 +441,36 @@ ORDEM DE EXECUÇÃO:
 ### Completude
 
 - [ ] Todos os itens S1 e S2 foram tratados ou registrados
-- [ ] Conflitos de regras apresentados ao usuário
-- [ ] NEXT.md atualizado com itens residuais
+- [ ] Conflitos de regras 🔴 apresentados ao usuário e resolvidos
+- [ ] Itens residuais registrados em NEXT.md
 
-### Verificação
+### RSIP Self-Check (Recursive Self-Improvement)
 
-- [ ] npm run verify verde (se documentos alterados afetam gates)
-- [ ] Nenhum documento funcional deletado
+Antes de declarar a auditoria concluída, execute:
+
+```text
+1. STEP-BACK: "Qual era o PRINCÍPIO de integridade documental desta auditoria?"
+2. EVALUATE: "Cada descoberta S1 tem evidência concreta (path, linha, conteúdo)?"
+3. COVERAGE: "Todas as 4 camadas (root, .agent, docs, config) foram auditadas?"
+4. WEAKNESS: "Qual camada teve a cobertura de auditoria mais fraca?"
+5. REFINE: Se lacuna detectada → re-auditar a camada fraca ANTES de entregar
+MAX-CYCLES: 1
 ```
+````
 
-**Relatório de saída obrigatório:**
+### Cross-check obrigatório
+
+- [ ] Validar contra `.agent/checklists/self-review-checklist.md` (seção Anti-Poluição)
+
+### Documentação de sessão
+
+- [ ] `NEXT.md` atualizado com itens auditados e dívida técnica residual
+- [ ] `.agent/lessons-learned.md` atualizado se novo padrão de drift foi descoberto
+- [ ] Se mudança estrutural ocorreu → registrada em `DECISIONS-active.md`
+
+### Relatório de saída (obrigatório)
+
+Ao final, gere este relatório para o usuário:
 
 ```markdown
 ## 🔍 Relatório Final — Auditoria Documental [DATA]
@@ -291,6 +480,7 @@ ORDEM DE EXECUÇÃO:
 - Documentos auditados: X
 - Descobertas totais: Y / Corrigidas: Z / Pendentes: W
 - Conflitos de regras: N (resolvidos: R / pendentes: P)
+- Verificação final: ✅/❌
 
 ### Modificações Aplicadas
 
@@ -310,152 +500,17 @@ ORDEM DE EXECUÇÃO:
 
 - Antes da auditoria: X% sincronizado
 - Após auditoria: Y% sincronizado
+- Gate final: `npm run verify` → [resultado]
 ```
 
 ---
 
-#### NÍVEL 02 (EQUILÍBRIO HÍBRIDO)
+## ⚠️ Lembretes Finais para o Agente
 
-```markdown
-# SYS.DIRECTIVE: FULL PROJECT DOCUMENTATION AUDIT & SYNC
-
-> MODE: DOC_FORENSICS | SRC_MUTATION: DISABLED | DOC_MUTATION: ENABLED
-
-**1. CONTEXT INGESTION (EXHAUSTIVE):**
-Parse TODOS os componentes de governança:
-
-Raiz:
-AGENTS.md, ARCHITECTURE.md, CONTEXT.md, NEXT.md, CONTRIBUTING.md,
-SECURITY.md, TESTING.md, README.md, PLAN.md, TASKS.md, DECISIONS-active.md
-
-.agent/:
-agents/_, workflows/_, skills/_/SKILL.md, rules/_, checklists/_,
-schemas/_, memory/_, prompts/_, lessons-learned.md, README.md
-
-docs/:
-PLACEMENT*RULES.md, architecture.md, architecture-screaming.md,
-adr/*, audits/_, changelog/_, checklists/_, data-contracts/_,
-design-system/_, examples/_, governance/\_, process/\*
-
-src/ (STRUCTURAL SCAN ONLY — NO CONTENT READ):
-Mapear árvore → extrair: domínios, contagens, naming patterns
-
-**2. AUDIT PIPELINE:**
-
-Phase 1: SCAN — Criar manifesto do estado real do projeto
-Phase 2: CROSS-REF — Para cada doc, verificar se reflete a realidade
-Phase 3: CONFLICT-DETECT — Cruzar regras entre todas as fontes P0-P6
-Phase 4: CLASSIFY — Taxonomia S1-S5 + T1-T8 para cada descoberta
-Phase 5: REPORT — Apresentar ao usuário com ações propostas
-Phase 6: GATE — Aguardar aprovação
-Phase 7: EXECUTE — Aplicar correções aprovadas (patch cirúrgico)
-Phase 8: VALIDATE — Verificar integridade pós-correção
-
-**3. CONFLICT RESOLUTION PROTOCOL:**
-Conflitos 🔴 (contradições) → HALT → apresentar ao usuário
-Conflitos 🟡 (ambiguidades) → propor resolução + aguardar
-Conflitos 🟢 (duplicações) → propor unificação + aguardar
-Conflitos ⚪ (obsolescências) → corrigir + reportar
-
-**4. OUTPUT:**
-Relatório tabulado com severidade, arquivo, problema, correção proposta.
-Health Score antes/depois. Itens residuais em NEXT.md.
-```
-
-#### NÍVEL 03 (RECRIAÇÃO TOTAL / GOD MODE)
-
-<system*directive>
-<constraints>
-<flag>SRC_CODE_READ_ONLY</flag>
-<flag>GOVERNANCE_DOCS_WRITE_ENABLED</flag>
-<flag>OUTPUT_TARGET_AUDIT_REPORT</flag>
-<flag>FUNCTIONAL_DELTA_ZERO</flag>
-<flag>HUMAN_GATE_ON_CONTRADICTIONS</flag>
-</constraints>
-<context_ingestion>
-<scope>EXHAUSTIVE — every file in project</scope>
-<sources>
-<layer id="root">AGENTS.md, ARCHITECTURE.md, CONTEXT.md, NEXT.md, CONTRIBUTING.md, SECURITY.md, TESTING.md, README.md, PLAN.md, TASKS.md, DECISIONS-active.md</layer>
-<layer id="agent">.agent/agents/*, .agent/workflows/_, .agent/skills/_/SKILL.md, .agent/rules/_, .agent/checklists/_, .agent/schemas/_, .agent/memory/_, .agent/prompts/_, .agent/lessons-learned.md</layer>
-<layer id="docs">docs/PLACEMENT_RULES.md, docs/architecture.md, docs/architecture-screaming.md, docs/adr/_, docs/audits/_, docs/changelog/_, docs/checklists/_, docs/data-contracts/_, docs/design-system/_, docs/examples/_, docs/governance/_, docs/process/_</layer>
-<layer id="src_structure">src/\*\*/\_ (STRUCTURAL SCAN — directory tree, file names, export names — NO content read)</layer>
-<layer id="config">package.json (scripts section), tsconfig.json, vite.config.ts, eslint.config.mjs, tailwind.config.cjs</layer>
-</sources>
-<extract> 1. REAL_STATE: complete filesystem manifest (paths, counts, domains) 2. DOCUMENTED_STATE: what governance docs claim the project looks like 3. DRIFT: delta between REAL_STATE and DOCUMENTED_STATE 4. CONFLICTS: contradictions between rule sources P0-P6 5. OBSOLESCENCES: references to non-existent files, scripts, features 6. DUPLICATIONS: same rule stated in multiple locations
-</extract>
-</context_ingestion>
-
-  <!-- Step-Back Prompting (DeepMind, ICLR 2024) -->
-
-<step_back>
-ANTES de iniciar a auditoria, o agente DEVE abstrair:
-Q1: "Qual é o PRINCÍPIO de integridade documental que esta auditoria serve?"
-Q2: "Quais são os 3 tipos de drift mais perigosos para agentes sem memória?"
-Q3: "Em que ordem de prioridade os drifts devem ser corrigidos?"
-OUTPUT: Imprimir respostas como FRAMEWORK que restringe toda a auditoria.
-</step_back>
-
-<audit_engine>
-<phase id="1" name="SCAN">
-Build exhaustive manifest of project state.
-Count: files per directory, components, hooks, services, utils, types, pages.
-Identify: active domains, naming patterns, barrel files.
-Output: PROJECT_MANIFEST (internal, not shown to user yet).
-</phase>
-<phase id="2" name="CROSS_REFERENCE">
-For each governance document: - Extract all path references → verify existence - Extract all feature/component references → verify existence - Extract all script/command references → verify in package.json - Extract all cross-document references → verify target exists - Extract all directory trees shown → verify against reality
-Classify each finding: S1-S5 severity + T1-T8 type.
-</phase>
-<phase id="3" name="CONFLICT_DETECT">
-Rule sources hierarchy: P0(AGENTS.md) > P1(.agent/rules) > P2(.agent/agents) > P3(.agent/skills) > P4(.agent/workflows) > P5(docs) > P6(.agent/checklists)
-For each pair of sources: - Extract affirmative rules and negative rules - Detect: CONTRADICTION (🔴), AMBIGUITY (🟡), DUPLICATION (🟢), OBSOLESCENCE (⚪)
-Output: CONFLICT_REGISTER (tabulated).
-</phase>
-<phase id="4" name="REPORT">
-Compile all findings into structured report.
-Group by: severity → type → source file.
-Include: proposed correction for each finding.
-Present to user.
-</phase>
-<phase id="5" name="GATE">
-HALT execution.
-Wait for user approval per severity group.
-🔴 CONTRADICTIONS require individual human decision.
-S1-S2 corrections require explicit approval.
-S3-S5 corrections may be batch-approved.
-</phase>
-<phase id="6" name="EXECUTE">
-Apply approved corrections only.
-Rules: surgical patch (no rewrites), atomic diffs, AGENTS.md is sacrosanct.
-Order: S1 → S2 → S3 → S4 → S5 → duplications.
-</phase>
-<phase id="7" name="VALIDATE">
-Post-correction integrity check.
-Verify: no broken references, no new conflicts, consistency with AGENTS.md.
-Run: npm run verify (if gates were affected).
-Output: FINAL_REPORT with health score delta.
-</phase>
-</audit_engine>
-
-  <!-- RSIP: Recursive Self-Improvement (2025) -->
-
-<rsip_self_check>
-ANTES de gerar o relatório final: 1. EVALUATE: "Cada descoberta S1 tem evidência concreta (path, linha, conteúdo)?" 2. CONSISTENCY: "O health score delta pós-correção reflete as mudanças reais?" 3. COVERAGE: "Todas as camadas (root, .agent, docs, config) foram auditadas?" 4. WEAKNESS: "Qual camada teve a cobertura de auditoria mais fraca?" 5. Se lacuna detectada → re-auditar a camada fraca ANTES de entregar
-MAX-CYCLES: 1
-</rsip_self_check>
-
-<abort_conditions>
-<condition trigger="contradictions_found">HALT → present ALL contradictions → require human resolution before ANY modification</condition>
-<condition trigger="agents_md_needs_change">HALT → present specific change needed → require explicit S1 approval</condition>
-<condition trigger="more_than_50_s1_findings">HALT → project governance may need structural redesign → escalate to user</condition>
-</abort_conditions>
-<output_format>
-<report>
-Executive Summary → Conflict Register → Findings by Severity → Proposed Actions → Health Score
-</report>
-<residual>
-Unresolved items → NEXT.md
-Structural decisions needed → DECISIONS-active.md
-</residual>
-</output_format>
-</system_directive>
+1. **Você não tem memória de sessões anteriores.** Tudo que você precisa saber está nos arquivos listados nas etapas 1, 3 e 5.
+2. **Nunca corrija sem evidência.** Se uma referência parece obsoleta mas você não tem certeza, pergunte ao usuário.
+3. **Contradições são intocáveis.** Conflitos 🔴 entre regras requerem decisão humana — NUNCA resolva sozinho.
+4. **AGENTS.md é sacrossanto.** Nenhuma alteração sem aprovação S1 explícita.
+5. **Incremental > Big-bang.** Prefira 10 patches seguros a 30 arriscados.
+6. **O verify é seu juiz final.** Se está vermelho, desfaça a última correção antes de continuar.
+7. **Se este prompt não cobrir um caso específico**, consulte: `.agent/workflows/docs-audit.md` (workflow de auditoria documental).

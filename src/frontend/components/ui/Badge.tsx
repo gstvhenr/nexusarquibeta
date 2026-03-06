@@ -39,4 +39,3 @@ function Badge({
 }
 
 export { Badge };
-export type { BadgeProps };

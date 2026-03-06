@@ -1,5 +1,4 @@
 import type {
-  ClientStatus,
   DocumentStorage,
   PaymentMethod,
   PaymentStatus,
@@ -14,17 +13,7 @@ export const PROPOSAL_STATUS_CLASSES: Record<ProposalStatus, { text: string; bg:
   Rejeitado: { text: 'text-error', bg: 'bg-error/20' },
 };
 
-export const CLIENT_STATUS_COLORS: Record<ClientStatus, string> = {
-  'Potencial Cliente': 'bg-warning/20 text-warning',
-  'Cliente Ativo': 'bg-info/20 text-info',
-  'Cliente Desabilitado': 'bg-surface text-text-secondary',
-};
 
-export const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
-  'Em dia': 'bg-success/20 text-success',
-  Pendente: 'bg-warning/20 text-warning',
-  'Em Atraso': 'bg-error/20 text-error',
-};
 
 export const PAYMENT_STATUS_DOT_COLORS: Record<PaymentStatus, string> = {
   'Em dia': 'bg-success',

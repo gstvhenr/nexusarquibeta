@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "test:impact": "node scripts/test-impact.mjs",
     "inventory:generate": "node scripts/generate-inventory.mjs",
     "check:docs:governance": "node scripts/check-governance-docs.mjs",
     "validate:structure": "node scripts/validate-structure.mjs",

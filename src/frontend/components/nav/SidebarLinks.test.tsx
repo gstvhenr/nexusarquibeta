@@ -17,9 +17,14 @@ describe('SidebarLinks', () => {
     };
 
     it('deve renderizar o link corretamente e verificar ícone de fallback', () => {
+      const itemWithFallback: NavLinkItem = {
+        ...defaultItem,
+        iconName: 'NonExistentIcon' as NavLinkItem['iconName'],
+      };
+
       render(
         <MemoryRouter initialEntries={['/other']}>
-          <SidebarNavLink item={defaultItem} />
+          <SidebarNavLink item={itemWithFallback} />
         </MemoryRouter>
       );
 
