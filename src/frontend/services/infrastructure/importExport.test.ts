@@ -147,7 +147,9 @@ describe('importExport', () => {
 
     it('rejects ContractDeadlinesSettings with missing numeric fields', () => {
       const current = { defaultPreliminarDeadlineDays: 7, defaultExecutiveDeadlineDays: 30 };
-      expect(canAcceptImportedValue('contractDeadlines', { defaultPreliminarDeadlineDays: 7 }, current)).toBe(false);
+      expect(
+        canAcceptImportedValue('contractDeadlines', { defaultPreliminarDeadlineDays: 7 }, current),
+      ).toBe(false);
     });
 
     it('rejects ContractDeadlinesSettings with negative values', () => {
@@ -330,10 +332,7 @@ describe('importExport', () => {
       importClients(JSON.stringify([updated]));
 
       // Assert
-      const [, updatedClients] = mockUpdateData.mock.calls[0] as [
-        keyof AppData,
-        Client[],
-      ];
+      const [, updatedClients] = mockUpdateData.mock.calls[0] as [keyof AppData, Client[]];
       expect(updatedClients).toHaveLength(1);
       expect(updatedClients[0]).toMatchObject({ id: 'c1', name: 'New Name' });
     });

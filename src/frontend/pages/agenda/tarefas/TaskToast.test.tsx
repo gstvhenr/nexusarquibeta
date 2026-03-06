@@ -56,12 +56,8 @@ describe('TaskToast', () => {
 
   it('renders two independent toasts when mounted twice', () => {
     // Arrange — simulate two toasts rendered simultaneously
-    const { container: container1 } = render(
-      <TaskToast message="Primeira mensagem de aviso." />,
-    );
-    const { container: container2 } = render(
-      <TaskToast message="Segunda mensagem de aviso." />,
-    );
+    const { container: container1 } = render(<TaskToast message="Primeira mensagem de aviso." />);
+    const { container: container2 } = render(<TaskToast message="Segunda mensagem de aviso." />);
 
     // Assert — each renders its own unique message
     expect(container1.textContent).toContain('Primeira mensagem de aviso.');

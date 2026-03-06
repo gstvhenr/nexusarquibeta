@@ -10,12 +10,7 @@ const AUTO_BACKUP_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 // ---------------------------------------------------------------------------
 // Hoisted mocks — created before vi.mock factories run
 // ---------------------------------------------------------------------------
-const {
-  mockListBackups,
-  mockWriteBackup,
-  mockReadBackup,
-  mockClearBackups,
-} = vi.hoisted(() => ({
+const { mockListBackups, mockWriteBackup, mockReadBackup, mockClearBackups } = vi.hoisted(() => ({
   mockListBackups: vi.fn<() => Promise<BackupMetadata[]>>(),
   mockWriteBackup: vi.fn<(payload: unknown, options: unknown) => Promise<BackupMetadata>>(),
   mockReadBackup: vi.fn<(id: string) => Promise<BackupRecord<unknown> | null>>(),
@@ -27,13 +22,13 @@ const {
 const createMockPersistenceAdapter = (): PersistencePort => ({
   isSupported: () => true,
   readSnapshot: vi.fn(async () => null),
-  writeSnapshot: vi.fn(async () => { }),
-  clearSnapshot: vi.fn(async () => { }),
+  writeSnapshot: vi.fn(async () => {}),
+  clearSnapshot: vi.fn(async () => {}),
   readEntityState: vi.fn(async () => null),
-  writeEntityState: vi.fn(async () => { }),
+  writeEntityState: vi.fn(async () => {}),
   readPreference: vi.fn(async () => null),
-  writePreference: vi.fn(async () => { }),
-  removePreference: vi.fn(async () => { }),
+  writePreference: vi.fn(async () => {}),
+  removePreference: vi.fn(async () => {}),
   listBackups: mockListBackups,
   writeBackup: mockWriteBackup,
   readBackup: mockReadBackup as never,
@@ -110,9 +105,7 @@ describe('autoBackupService', () => {
 
     // Default: no existing backups
     mockListBackups.mockResolvedValue([]);
-    mockWriteBackup.mockResolvedValue(
-      makeBackupMetadata({ id: 'new-backup', hash: 'abcdef01' }),
-    );
+    mockWriteBackup.mockResolvedValue(makeBackupMetadata({ id: 'new-backup', hash: 'abcdef01' }));
     mockClearBackups.mockResolvedValue(undefined);
     mockReadBackup.mockResolvedValue(null);
   });

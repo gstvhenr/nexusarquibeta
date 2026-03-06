@@ -6,7 +6,9 @@ describe('InstagramDetailHeader', () => {
   it('renders title, icon and triggers back action', () => {
     const onBack = vi.fn();
 
-    render(<InstagramDetailHeader name="Instagram" icon={<span data-testid="icon" />} onBack={onBack} />);
+    render(
+      <InstagramDetailHeader name="Instagram" icon={<span data-testid="icon" />} onBack={onBack} />,
+    );
 
     fireEvent.click(screen.getByTitle('Voltar para Redes Sociais'));
 

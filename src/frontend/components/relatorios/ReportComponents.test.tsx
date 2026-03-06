@@ -22,11 +22,7 @@ vi.mock('recharts', () => {
     <div data-testid="xaxis" data-key={dataKey} />
   );
 
-  const YAxisStub = ({
-    tickFormatter,
-  }: {
-    tickFormatter?: (val: number) => string;
-  }) => (
+  const YAxisStub = ({ tickFormatter }: { tickFormatter?: (val: number) => string }) => (
     <div
       data-testid="yaxis"
       data-formatted-1000={tickFormatter ? tickFormatter(1000) : ''}
@@ -35,22 +31,21 @@ vi.mock('recharts', () => {
     />
   );
 
-  const TooltipStub = ({
-    content,
-  }: {
-    content?: React.ReactElement;
-  }) => {
+  const TooltipStub = ({ content }: { content?: React.ReactElement }) => {
     // Clone the custom tooltip with active payload so we can assert its output
     const cloned = content
-      ? React.cloneElement(content as React.ReactElement<{
-        active?: boolean;
-        payload?: { value: number }[];
-        label?: string;
-      }>, {
-        active: true,
-        payload: [{ value: 1500 }],
-        label: 'Janeiro',
-      })
+      ? React.cloneElement(
+          content as React.ReactElement<{
+            active?: boolean;
+            payload?: { value: number }[];
+            label?: string;
+          }>,
+          {
+            active: true,
+            payload: [{ value: 1500 }],
+            label: 'Janeiro',
+          },
+        )
       : null;
     return <div data-testid="tooltip-wrapper">{cloned}</div>;
   };
@@ -76,7 +71,7 @@ describe('ReportCard', () => {
     render(
       <ReportCard title="Resumo Financeiro">
         <p>Conteúdo da seção</p>
-      </ReportCard>
+      </ReportCard>,
     );
 
     expect(screen.getByText('Resumo Financeiro')).toBeInTheDocument();
@@ -87,7 +82,7 @@ describe('ReportCard', () => {
     const { container } = render(
       <ReportCard title="Card">
         <span>child</span>
-      </ReportCard>
+      </ReportCard>,
     );
 
     const root = container.firstChild as HTMLElement;
@@ -101,17 +96,17 @@ describe('ReportCard', () => {
     const { container } = render(
       <ReportCard title="Card" className="col-span-2">
         <span>child</span>
-      </ReportCard>
+      </ReportCard>,
     );
 
-    expect((container.firstChild as HTMLElement)).toHaveClass('col-span-2');
+    expect(container.firstChild as HTMLElement).toHaveClass('col-span-2');
   });
 
   it('does not include extra className when omitted', () => {
     const { container } = render(
       <ReportCard title="Card">
         <span>child</span>
-      </ReportCard>
+      </ReportCard>,
     );
 
     // className defaults to '' so the final class should not add extra tokens
@@ -121,7 +116,11 @@ describe('ReportCard', () => {
   });
 
   it('renders the title inside an h3 element', () => {
-    render(<ReportCard title="Meu Título"><span /></ReportCard>);
+    render(
+      <ReportCard title="Meu Título">
+        <span />
+      </ReportCard>,
+    );
     const heading = screen.getByRole('heading', { level: 3 });
     expect(heading).toHaveTextContent('Meu Título');
   });
@@ -131,7 +130,7 @@ describe('ReportCard', () => {
       <ReportCard title="Multi">
         <p>Filho 1</p>
         <p>Filho 2</p>
-      </ReportCard>
+      </ReportCard>,
     );
     expect(screen.getByText('Filho 1')).toBeInTheDocument();
     expect(screen.getByText('Filho 2')).toBeInTheDocument();
@@ -153,9 +152,7 @@ describe('StatCard', () => {
   });
 
   it('renders subtext when provided', () => {
-    render(
-      <StatCard label="Receita Total" value="R$ 50.000" subtext="vs. mês anterior" />
-    );
+    render(<StatCard label="Receita Total" value="R$ 50.000" subtext="vs. mês anterior" />);
     expect(screen.getByText('vs. mês anterior')).toBeInTheDocument();
   });
 
@@ -191,9 +188,7 @@ describe('InteractiveBarChart', () => {
 
   it('shows the empty-state message when data array is empty', () => {
     render(<InteractiveBarChart data={[]} format="currency" />);
-    expect(
-      screen.getByText('Dados insuficientes para exibir o gráfico.')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Dados insuficientes para exibir o gráfico.')).toBeInTheDocument();
   });
 
   it('does NOT render recharts stubs when data is empty', () => {
@@ -204,59 +199,36 @@ describe('InteractiveBarChart', () => {
   // ── Non-empty rendering ──────────────────────────────────────────────────────
 
   it('renders the recharts scaffold when data has entries', () => {
-    render(
-      <InteractiveBarChart
-        data={[{ label: 'Janeiro', value: 5000 }]}
-        format="currency"
-      />
-    );
-    expect(screen.queryByText('Dados insuficientes para exibir o gráfico.')).not.toBeInTheDocument();
+    render(<InteractiveBarChart data={[{ label: 'Janeiro', value: 5000 }]} format="currency" />);
+    expect(
+      screen.queryByText('Dados insuficientes para exibir o gráfico.'),
+    ).not.toBeInTheDocument();
     expect(screen.getAllByTestId('recharts-stub').length).toBeGreaterThan(0);
   });
 
   it('renders XAxis with label as dataKey', () => {
-    render(
-      <InteractiveBarChart
-        data={[{ label: 'Fev', value: 2000 }]}
-        format="number"
-      />
-    );
+    render(<InteractiveBarChart data={[{ label: 'Fev', value: 2000 }]} format="number" />);
     expect(screen.getByTestId('xaxis')).toHaveAttribute('data-key', 'label');
   });
 
   // ── YAxis formatter — currency ───────────────────────────────────────────────
 
   it('formats YAxis tick >= 1000 as R$<n>k for currency format', () => {
-    render(
-      <InteractiveBarChart
-        data={[{ label: 'Março', value: 3000 }]}
-        format="currency"
-      />
-    );
+    render(<InteractiveBarChart data={[{ label: 'Março', value: 3000 }]} format="currency" />);
     const yaxis = screen.getByTestId('yaxis');
     // 1000 → R$1k
     expect(yaxis.getAttribute('data-formatted-1000')).toBe('R$1k');
   });
 
   it('formats YAxis tick < 1000 as R$<n> for currency format', () => {
-    render(
-      <InteractiveBarChart
-        data={[{ label: 'Abril', value: 500 }]}
-        format="currency"
-      />
-    );
+    render(<InteractiveBarChart data={[{ label: 'Abril', value: 500 }]} format="currency" />);
     const yaxis = screen.getByTestId('yaxis');
     // 500 → R$500
     expect(yaxis.getAttribute('data-formatted-500')).toBe('R$500');
   });
 
   it('formats YAxis tick 0 as R$0 for currency format', () => {
-    render(
-      <InteractiveBarChart
-        data={[{ label: 'Maio', value: 0 }]}
-        format="currency"
-      />
-    );
+    render(<InteractiveBarChart data={[{ label: 'Maio', value: 0 }]} format="currency" />);
     const yaxis = screen.getByTestId('yaxis');
     expect(yaxis.getAttribute('data-formatted-0')).toBe('R$0');
   });
@@ -264,12 +236,7 @@ describe('InteractiveBarChart', () => {
   // ── YAxis formatter — number ─────────────────────────────────────────────────
 
   it('formats YAxis tick as plain string for number format', () => {
-    render(
-      <InteractiveBarChart
-        data={[{ label: 'Jun', value: 42 }]}
-        format="number"
-      />
-    );
+    render(<InteractiveBarChart data={[{ label: 'Jun', value: 42 }]} format="number" />);
     const yaxis = screen.getByTestId('yaxis');
     // tickFormatter(1000) → "1000", tickFormatter(500) → "500"
     expect(yaxis.getAttribute('data-formatted-1000')).toBe('1000');
@@ -279,12 +246,7 @@ describe('InteractiveBarChart', () => {
   // ── CustomTooltip — currency ─────────────────────────────────────────────────
 
   it('renders CustomTooltip with formatted currency value when active', () => {
-    render(
-      <InteractiveBarChart
-        data={[{ label: 'Janeiro', value: 1500 }]}
-        format="currency"
-      />
-    );
+    render(<InteractiveBarChart data={[{ label: 'Janeiro', value: 1500 }]} format="currency" />);
     // The TooltipStub clones the content with active=true, payload=[{value:1500}], label='Janeiro'
     expect(screen.getByText('Janeiro')).toBeInTheDocument();
     // formatCurrency(1500) → "R$ 1500.00"
@@ -294,12 +256,7 @@ describe('InteractiveBarChart', () => {
   // ── CustomTooltip — number ────────────────────────────────────────────────────
 
   it('renders CustomTooltip with plain numeric value when format is number', () => {
-    render(
-      <InteractiveBarChart
-        data={[{ label: 'Projetos', value: 1500 }]}
-        format="number"
-      />
-    );
+    render(<InteractiveBarChart data={[{ label: 'Projetos', value: 1500 }]} format="number" />);
     // value stays as number (1500)
     expect(screen.getByText('Valor: 1500')).toBeInTheDocument();
   });
@@ -315,6 +272,8 @@ describe('InteractiveBarChart', () => {
     render(<InteractiveBarChart data={data} format="number" />);
     // Chart scaffold should be present
     expect(screen.getAllByTestId('recharts-stub').length).toBeGreaterThan(0);
-    expect(screen.queryByText('Dados insuficientes para exibir o gráfico.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Dados insuficientes para exibir o gráfico.'),
+    ).not.toBeInTheDocument();
   });
 });

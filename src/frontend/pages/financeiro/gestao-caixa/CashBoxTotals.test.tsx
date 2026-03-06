@@ -14,8 +14,12 @@ describe('CashBoxTotals', () => {
     expect(screen.getByText(/Créditos:/)).toBeInTheDocument();
     expect(screen.getByText(/Despesas:/)).toBeInTheDocument();
     expect(screen.getByText(/Saldo:/)).toBeInTheDocument();
-    expect(screen.getByText((text) => text.includes('+R$') && text.includes('1.500,00'))).toBeVisible();
-    expect(screen.getByText((text) => text.includes('-R$') && text.includes('1.000,00'))).toBeVisible();
+    expect(
+      screen.getByText((text) => text.includes('+R$') && text.includes('1.500,00')),
+    ).toBeVisible();
+    expect(
+      screen.getByText((text) => text.includes('-R$') && text.includes('1.000,00')),
+    ).toBeVisible();
     const saldoBlock = screen.getByText('Saldo:').closest('div');
     expect(saldoBlock).not.toBeNull();
     expect(within(saldoBlock as HTMLElement).getByText(/500,00/)).toHaveClass('text-success');

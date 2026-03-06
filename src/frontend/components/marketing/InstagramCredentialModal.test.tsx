@@ -19,9 +19,7 @@ const createSecurityState = (overrides: Partial<SecurityState> = {}): SecuritySt
 const mockUseFinancialSecurity = (state: SecurityState) =>
   vi.spyOn(FinancialSecurityContextModule, 'useFinancialSecurity').mockReturnValue(state);
 
-const renderModal = (
-  overrides: Partial<ComponentProps<typeof InstagramCredentialModal>> = {},
-) =>
+const renderModal = (overrides: Partial<ComponentProps<typeof InstagramCredentialModal>> = {}) =>
   render(
     <InstagramCredentialModal
       isOpen={true}

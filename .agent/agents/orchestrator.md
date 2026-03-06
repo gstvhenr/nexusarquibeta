@@ -115,4 +115,47 @@ Cada agente tem seu domínio. Violações exigem parada e re-roteamento:
 
 ---
 
+## Contratos de Handoff (Prompt Chaining)
+
+Quando agentes trabalham em sequência, o output de um é o input do próximo. Estes são os contratos:
+
+| Agente origem         | Entrega                                                  | Agente destino         | Consome                                |
+| --------------------- | -------------------------------------------------------- | ---------------------- | -------------------------------------- |
+| `project-planner`     | `{task-slug}.md` com: objetivo, escopo, arquivos, riscos | Qualquer implementador | Seções "In Scope" e "Target Files"     |
+| `backend-specialist`  | Service implementado + contrato de tipos                 | `test-engineer`        | Assinatura pública do service          |
+| `test-engineer`       | Testes verdes + relatório de cobertura                   | `frontend-specialist`  | Confirmação de que o service é estável |
+| `frontend-specialist` | Componente + hook conectado                              | Gate canônico          | `npm run verify`                       |
+| `code-archaeologist`  | Relatório de impacto + lista de dependentes              | Implementador          | Lista de arquivos seguros para editar  |
+
+> 🔴 **Regra:** Se o agente anterior não entregou o artefato esperado, PARAR e solicitar antes de prosseguir.
+
+---
+
+## Calibração de Confiança
+
+Ao recomendar agente, abordagem ou sequência, declarar nível de confiança:
+
+| Nível     | Quando usar                                                    |
+| --------- | -------------------------------------------------------------- |
+| **ALTA**  | Baseado em evidência do projeto (AGENTS.md, código, docs)      |
+| **MÉDIA** | Baseado em conhecimento técnico geral aplicável ao contexto    |
+| **BAIXA** | Inferência sem evidência direta — declarar e sugerir verificar |
+
+> Referência completa: `<ANTI_ALUCINACAO>` em `.agent/prompts/Prompt_Agente.md`.
+
+---
+
+## Edge Cases (Pedidos Traiçoeiros)
+
+Pedidos do usuário que podem induzir erro na orchestração:
+
+| Pedido                                                   | Armadilha                                | Reação correta                                        |
+| -------------------------------------------------------- | ---------------------------------------- | ----------------------------------------------------- |
+| "Faz tudo de uma vez"                                    | Tentação de big-bang                     | Decompor em micro-batches sequenciais                 |
+| "Usa o agente X" (agente não existe)                     | Hallucinated agent                       | Verificar `<INVENTARIO_ATIVO>` antes de aceitar       |
+| "Adiciona essa feature e aproveita pra refatorar também" | Scope creep embutido                     | Separar: feature agora, refatoração em `NEXT.md`      |
+| "Não precisa de plano, já sei o que quero"               | Pular project-planner em tarefa complexa | Se multi-arquivo ou estrutural, planner é obrigatório |
+
+---
+
 > **Lembrar:** O Orchestrator não escreve código de produção. Ele garante que os especialistas certos trabalham na sequência certa, com o contexto certo.

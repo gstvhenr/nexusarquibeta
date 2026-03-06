@@ -10,6 +10,19 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-03-06 — Saneamento de grafo de dependências: `useDomain.ts` relocado + depcruise config endurecida
+
+- Contexto: `npx depcruise src --output-type err-long` reportava 5 violações `not-to-unresolvable`. Três eram causadas por `hooks/useDomain.ts` importando `./types` e `./createDomainSetter` (módulos irmãos em `context/`, não em `hooks/`), e `DataContext.tsx` importando `./useDomain` (ausente em `context/`). Duas eram ambient type declarations (`vite-env.d.ts → vite/client`, `vitest-jest-dom.d.ts → vitest/globals`) resolvidas por build tools.
+- Decisão:
+  1. Mover `useDomain.ts` e `useDomain.test.tsx` de `src/frontend/hooks/` para `src/frontend/context/`, onde seus imports (`./types`, `./createDomainSetter`) resolvem corretamente.
+  2. Deletar os arquivos fantasma em `hooks/` após validação.
+  3. Atualizar `.dependency-cruiser.cjs`: ampliar `pathNot` da regra `not-to-unresolvable` de `'^src/vite-env\\.d\\.ts$'` para `'\\.d\\.ts$'`, excluindo todas as declarações ambient.
+- Consequência: `npx depcruise src --output-type err-long` passou de 5 violações para 0 (`✔ no dependency violations found`, 649 modules, 2440 deps). Teste `useDomain.test.tsx` manteve 2/2 PASS na nova localização. Zero circular deps confirmados.
+- Reversão:
+  1. Mover `src/frontend/context/useDomain.ts` e `src/frontend/context/useDomain.test.tsx` de volta para `src/frontend/hooks/`.
+  2. Restaurar `.dependency-cruiser.cjs` com `pathNot: '^src/vite-env\\.d\\.ts$'`.
+- Referências: `src/frontend/context/useDomain.ts`, `src/frontend/context/useDomain.test.tsx`, `src/frontend/context/DataContext.tsx`, `.dependency-cruiser.cjs`, `docs/audits/archpulse-reconciliation-2026-02-28.md`.
+
 ### 2026-03-03 — Reconciliação do DNA estrutural: arquitetura documental alinhada ao baseline `src/frontend`
 
 - Contexto: o pacote de imunização estrutural já estava ativo (`PLACEMENT_RULES`, `validate:structure`, integração em gates e regras do agente), porém `docs/architecture.md` e `docs/architecture-screaming.md` ainda referenciavam caminhos legados `src/*`, gerando contradição com `ARCHITECTURE.md`, `AGENTS.md` e o enforcement real.

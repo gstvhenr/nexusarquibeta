@@ -18,17 +18,17 @@ vi.mock('wa-sqlite', () => ({
   Factory: vi.fn().mockReturnValue({
     vfs_register: vi.fn(),
     open_v2: vi.fn().mockResolvedValue(1),
-    exec: vi.fn().mockImplementation((
-      _db: number,
-      sql: string,
-      callback: (row: unknown[], columns: string[]) => void,
-    ) => {
-      // For SELECT queries, simulate one row; for others do nothing
-      if (sql.startsWith('SELECT')) {
-        callback(['1'], ['version']);
-      }
-      return Promise.resolve();
-    }),
+    exec: vi
+      .fn()
+      .mockImplementation(
+        (_db: number, sql: string, callback: (row: unknown[], columns: string[]) => void) => {
+          // For SELECT queries, simulate one row; for others do nothing
+          if (sql.startsWith('SELECT')) {
+            callback(['1'], ['version']);
+          }
+          return Promise.resolve();
+        },
+      ),
   }),
 }));
 

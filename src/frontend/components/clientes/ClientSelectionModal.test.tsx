@@ -6,7 +6,15 @@ import type { Client } from '../../types';
 
 // Mock UI components
 vi.mock('../ui', () => ({
-  Modal: ({ isOpen, title, children }: { isOpen: boolean; title?: string; children: React.ReactNode }) =>
+  Modal: ({
+    isOpen,
+    title,
+    children,
+  }: {
+    isOpen: boolean;
+    title?: string;
+    children: React.ReactNode;
+  }) =>
     isOpen ? (
       <div data-testid="mock-modal">
         <h2>{title}</h2>
@@ -103,11 +111,7 @@ describe('ClientSelectionModal', () => {
     it('should show "Desmarcar Todos" if all clients are selected', () => {
       const selectedIds = new Set(['1', '2']);
       render(
-        <ClientSelectionModal
-          {...defaultProps}
-          clients={mockClients}
-          selectedIds={selectedIds}
-        />
+        <ClientSelectionModal {...defaultProps} clients={mockClients} selectedIds={selectedIds} />,
       );
 
       const toggleAllBtn = screen.getByRole('button', { name: 'Desmarcar Todos' });
@@ -120,11 +124,7 @@ describe('ClientSelectionModal', () => {
     it('should show "Marcar Todos" if not all clients are selected', () => {
       const selectedIds = new Set(['1']);
       render(
-        <ClientSelectionModal
-          {...defaultProps}
-          clients={mockClients}
-          selectedIds={selectedIds}
-        />
+        <ClientSelectionModal {...defaultProps} clients={mockClients} selectedIds={selectedIds} />,
       );
 
       const toggleAllBtn = screen.getByRole('button', { name: 'Marcar Todos' });
@@ -135,11 +135,7 @@ describe('ClientSelectionModal', () => {
     it('should call onClearSelection when clear selection button is clicked', () => {
       const selectedIds = new Set(['1']);
       render(
-        <ClientSelectionModal
-          {...defaultProps}
-          clients={mockClients}
-          selectedIds={selectedIds}
-        />
+        <ClientSelectionModal {...defaultProps} clients={mockClients} selectedIds={selectedIds} />,
       );
 
       const clearBtn = screen.getByRole('button', { name: /Limpar Seleção/ });

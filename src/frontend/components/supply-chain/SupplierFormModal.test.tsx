@@ -136,7 +136,9 @@ describe('SupplierFormModal', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Arquivar/i }));
-    expect(onArchive).toHaveBeenCalledWith(expect.objectContaining({ id: 'sup-1', archived: false }));
+    expect(onArchive).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'sup-1', archived: false }),
+    );
 
     rerender(
       <SupplierFormModal

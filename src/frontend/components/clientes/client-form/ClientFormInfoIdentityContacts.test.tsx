@@ -16,7 +16,15 @@ vi.mock('../../ui/icons', () => ({
 }));
 
 vi.mock('../../ui', () => ({
-  IconButton: ({ children, onClick, 'aria-label': ariaLabel }: { children: React.ReactNode; onClick: () => void; 'aria-label'?: string }) => (
+  IconButton: ({
+    children,
+    onClick,
+    'aria-label': ariaLabel,
+  }: {
+    children: React.ReactNode;
+    onClick: () => void;
+    'aria-label'?: string;
+  }) => (
     <button onClick={onClick} aria-label={ariaLabel} data-testid="icon-button">
       {children}
     </button>
@@ -24,7 +32,13 @@ vi.mock('../../ui', () => ({
 }));
 
 vi.mock('../AvatarPicker', () => ({
-  AvatarPicker: ({ name, onChangeBase64 }: { name: string; onChangeBase64: (base64: string) => void }) => (
+  AvatarPicker: ({
+    name,
+    onChangeBase64,
+  }: {
+    name: string;
+    onChangeBase64: (base64: string) => void;
+  }) => (
     <button type="button" data-testid="avatar-picker" onClick={() => onChangeBase64('base64-data')}>
       Avatar for {name}
     </button>
@@ -38,9 +52,7 @@ describe('ClientFormInfoIdentityContacts', () => {
     birthDate: '1990-01-01',
     cpfCnpj: '12345678900',
     email: 'john@example.com',
-    contacts: [
-      { id: 'c1', phone: '11999999999', hasWhatsApp: true, isPrimary: true },
-    ],
+    contacts: [{ id: 'c1', phone: '11999999999', hasWhatsApp: true, isPrimary: true }],
     representative: {
       name: 'Jane Doe',
       role: 'Manager',
@@ -105,7 +117,9 @@ describe('ClientFormInfoIdentityContacts', () => {
     it('should call onRepChange for representative fields (PJ)', () => {
       render(<ClientFormInfoIdentityContacts {...mockProps} isPJ={true} />);
 
-      fireEvent.change(screen.getByLabelText('Nome do Representante'), { target: { value: 'New Rep' } });
+      fireEvent.change(screen.getByLabelText('Nome do Representante'), {
+        target: { value: 'New Rep' },
+      });
       expect(mockProps.onRepChange).toHaveBeenCalledWith('name', 'New Rep');
     });
 
@@ -169,7 +183,12 @@ describe('ClientFormInfoIdentityContacts', () => {
           { id: '3', phone: '3' },
         ],
       };
-      render(<ClientFormInfoIdentityContacts {...mockProps} client={clientWithMocks as unknown as Client} />);
+      render(
+        <ClientFormInfoIdentityContacts
+          {...mockProps}
+          client={clientWithMocks as unknown as Client}
+        />,
+      );
 
       expect(screen.queryByRole('button', { name: /Adicionar Telefone/i })).not.toBeInTheDocument();
     });

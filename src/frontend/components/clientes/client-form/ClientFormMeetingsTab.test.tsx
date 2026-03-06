@@ -12,7 +12,15 @@ vi.mock('../../ui/icons', () => ({
 }));
 
 vi.mock('../../ui', () => ({
-  IconButton: ({ children, onClick, 'aria-label': ariaLabel }: { children: React.ReactNode; onClick: () => void; 'aria-label'?: string }) => (
+  IconButton: ({
+    children,
+    onClick,
+    'aria-label': ariaLabel,
+  }: {
+    children: React.ReactNode;
+    onClick: () => void;
+    'aria-label'?: string;
+  }) => (
     <button onClick={onClick} aria-label={ariaLabel} data-testid="icon-button">
       {children}
     </button>

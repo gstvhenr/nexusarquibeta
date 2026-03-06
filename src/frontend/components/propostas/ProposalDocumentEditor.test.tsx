@@ -29,7 +29,11 @@ const mockProposal: Proposal = {
       title: 'Projeto Arquitetônico',
       items: [
         {
-          id: 1, description: 'Levantamento', quantity: 1, unit: 'un', unitPrice: 2000,
+          id: 1,
+          description: 'Levantamento',
+          quantity: 1,
+          unit: 'un',
+          unitPrice: 2000,
         },
       ],
     },
@@ -54,7 +58,7 @@ describe('ProposalDocumentEditor', () => {
         proposal={mockProposal}
         onUpdateBlocks={vi.fn()}
         readOnly={true}
-      />
+      />,
     );
 
     // Letterhead
@@ -85,7 +89,7 @@ describe('ProposalDocumentEditor', () => {
         proposal={mockProposal}
         onUpdateBlocks={vi.fn()}
         readOnly={false}
-      />
+      />,
     );
 
     // Should render textareas
@@ -110,7 +114,7 @@ describe('ProposalDocumentEditor', () => {
         proposal={mockProposal}
         onUpdateBlocks={vi.fn()}
         readOnly={false}
-      />
+      />,
     );
 
     expect(screen.getByRole('button', { name: /Começar a escrever/i })).toBeInTheDocument();
@@ -124,13 +128,13 @@ describe('ProposalDocumentEditor', () => {
         proposal={mockProposal}
         onUpdateBlocks={handleUpdate}
         readOnly={false}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Começar a escrever/i }));
 
     expect(handleUpdate).toHaveBeenCalledWith([
-      { id: 'mock-uuid', type: 'text', content: '', order: 0 }
+      { id: 'mock-uuid', type: 'text', content: '', order: 0 },
     ]);
   });
 
@@ -142,7 +146,7 @@ describe('ProposalDocumentEditor', () => {
         proposal={mockProposal}
         onUpdateBlocks={handleUpdate}
         readOnly={false}
-      />
+      />,
     );
 
     // There should be a separator after each block. Click the first one.
@@ -162,7 +166,7 @@ describe('ProposalDocumentEditor', () => {
         proposal={mockProposal}
         onUpdateBlocks={handleUpdate}
         readOnly={false}
-      />
+      />,
     );
 
     const separator = screen.getAllByText('Texto')[0].closest('[role="button"]')!;
@@ -182,7 +186,7 @@ describe('ProposalDocumentEditor', () => {
         proposal={mockProposal}
         onUpdateBlocks={handleUpdate}
         readOnly={false}
-      />
+      />,
     );
 
     const textareas = screen.getAllByPlaceholderText('Escreva seu texto aqui...');
@@ -191,7 +195,7 @@ describe('ProposalDocumentEditor', () => {
     expect(handleUpdate).toHaveBeenCalledWith([
       { ...mockTextBlocks[0], content: 'Nova introdução' },
       mockTextBlocks[1],
-      mockTextBlocks[2]
+      mockTextBlocks[2],
     ]);
   });
 
@@ -203,16 +207,13 @@ describe('ProposalDocumentEditor', () => {
         proposal={mockProposal}
         onUpdateBlocks={handleUpdate}
         readOnly={false}
-      />
+      />,
     );
 
     const deleteButtons = screen.getAllByRole('button', { name: 'Excluir bloco' });
     fireEvent.click(deleteButtons[0]);
 
-    expect(handleUpdate).toHaveBeenCalledWith([
-      mockTextBlocks[1],
-      mockTextBlocks[2]
-    ]);
+    expect(handleUpdate).toHaveBeenCalledWith([mockTextBlocks[1], mockTextBlocks[2]]);
   });
 
   it('handles moving a block down', () => {
@@ -223,7 +224,7 @@ describe('ProposalDocumentEditor', () => {
         proposal={mockProposal}
         onUpdateBlocks={handleUpdate}
         readOnly={false}
-      />
+      />,
     );
 
     // Click "move down" on the first block
@@ -233,7 +234,7 @@ describe('ProposalDocumentEditor', () => {
     expect(handleUpdate).toHaveBeenCalledWith([
       mockTextBlocks[1],
       mockTextBlocks[0],
-      mockTextBlocks[2]
+      mockTextBlocks[2],
     ]);
   });
 
@@ -245,7 +246,7 @@ describe('ProposalDocumentEditor', () => {
         proposal={mockProposal}
         onUpdateBlocks={handleUpdate}
         readOnly={false}
-      />
+      />,
     );
 
     // Click "move up" on the second block
@@ -255,7 +256,7 @@ describe('ProposalDocumentEditor', () => {
     expect(handleUpdate).toHaveBeenCalledWith([
       mockTextBlocks[1],
       mockTextBlocks[0],
-      mockTextBlocks[2]
+      mockTextBlocks[2],
     ]);
   });
 
@@ -267,7 +268,7 @@ describe('ProposalDocumentEditor', () => {
         proposal={mockProposal}
         onUpdateBlocks={handleUpdate}
         readOnly={false}
-      />
+      />,
     );
 
     // Attempt to move first block up

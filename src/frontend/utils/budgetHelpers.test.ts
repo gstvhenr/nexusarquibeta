@@ -50,9 +50,7 @@ describe('initializeSections', () => {
         title: 'Custom Section',
         unit: 'un' as const,
         billing: { method: 'percentage_on_top' as const, value: 10 },
-        items: [
-          { id: 1, description: 'Item A', quantity: 2, unitPrice: 100, estimatedHours: 0 },
-        ],
+        items: [{ id: 1, description: 'Item A', quantity: 2, unitPrice: 100, estimatedHours: 0 }],
       },
     ];
 
@@ -77,7 +75,8 @@ describe('initializeSections', () => {
         items: [{ id: 1, description: 'Item', quantity: 1, unitPrice: 200, estimatedHours: 0 }],
       },
     ];
-    const originalIncluded = (customTemplate[0].items[0] as unknown as { included?: boolean }).included;
+    const originalIncluded = (customTemplate[0].items[0] as unknown as { included?: boolean })
+      .included;
 
     // Act
     initializeSections(customTemplate);
@@ -258,8 +257,22 @@ describe('calculateBudgetTotals — billing: per_hour', () => {
         unit: 'h',
         billing: { method: 'per_hour', value: 100 },
         items: [
-          { id: 1, description: 'A', quantity: 1, unitPrice: 20, estimatedHours: 5, included: true },
-          { id: 2, description: 'B', quantity: 1, unitPrice: 20, estimatedHours: 10, included: false },
+          {
+            id: 1,
+            description: 'A',
+            quantity: 1,
+            unitPrice: 20,
+            estimatedHours: 5,
+            included: true,
+          },
+          {
+            id: 2,
+            description: 'B',
+            quantity: 1,
+            unitPrice: 20,
+            estimatedHours: 10,
+            included: false,
+          },
         ],
       }),
     ];
@@ -360,9 +373,7 @@ describe('calculateBudgetTotals — edge cases', () => {
         id: 1,
         unit: 'un',
         billing: { method: 'percentage_on_top', value: 20 },
-        items: [
-          { id: 1, description: 'X', quantity: 5, unitPrice: 300, included: false },
-        ],
+        items: [{ id: 1, description: 'X', quantity: 5, unitPrice: 300, included: false }],
       }),
     ];
 

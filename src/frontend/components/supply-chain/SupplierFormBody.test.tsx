@@ -97,9 +97,12 @@ describe('SupplierFormBody', () => {
     fireEvent.change(screen.getByPlaceholderText('Rua, Número, Bairro, Cidade - UF'), {
       target: { value: 'Av. Nova, 200' },
     });
-    fireEvent.change(screen.getByPlaceholderText('Informações sobre atendimento, prazos, qualidade...'), {
-      target: { value: 'Atualizado' },
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText('Informações sobre atendimento, prazos, qualidade...'),
+      {
+        target: { value: 'Atualizado' },
+      },
+    );
     fireEvent.change(screen.getByLabelText('Comissão (%)'), { target: { value: '12.5' } });
 
     fireEvent.change(screen.getByDisplayValue('Contato Base'), {

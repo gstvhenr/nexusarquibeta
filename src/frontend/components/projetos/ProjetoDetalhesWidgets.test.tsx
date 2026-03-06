@@ -1,10 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  ConfirmPaymentModal,
-  InfoCard,
-  RevisionCounter,
-} from './ProjetoDetalhesWidgets';
+import { ConfirmPaymentModal, InfoCard, RevisionCounter } from './ProjetoDetalhesWidgets';
 
 function setupModalRoot() {
   const modalRoot = document.createElement('div');
@@ -43,9 +39,7 @@ describe('ProjetoDetalhesWidgets', () => {
   it('handles ConfirmPaymentModal interactions', () => {
     const onClose = vi.fn();
     const onConfirm = vi.fn();
-    render(
-      <ConfirmPaymentModal isOpen={true} onClose={onClose} onConfirm={onConfirm} />,
-    );
+    render(<ConfirmPaymentModal isOpen={true} onClose={onClose} onConfirm={onConfirm} />);
 
     fireEvent.change(screen.getByLabelText('Data de recebimento'), {
       target: { value: '2026-07-01' },

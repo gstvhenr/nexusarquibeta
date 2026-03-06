@@ -20,7 +20,9 @@ describe('HealthBar', () => {
   });
 
   it('renders zero percent when total is not positive', () => {
-    const { container } = render(<HealthBar label="Previsto" value={200} total={0} variant="error" />);
+    const { container } = render(
+      <HealthBar label="Previsto" value={200} total={0} variant="error" />,
+    );
 
     expect(screen.getByText('0%')).toBeInTheDocument();
     expect(screen.getByText(/200,00/)).toHaveClass('text-error');

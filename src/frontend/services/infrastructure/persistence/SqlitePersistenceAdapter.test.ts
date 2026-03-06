@@ -22,16 +22,24 @@ vi.mock('./sqlite/sqliteRpc', () => ({
 }));
 
 // Mock URL constructor used in `new Worker(new URL(...), ...)`
-vi.stubGlobal('URL', class MockURL {
-  href: string;
-  constructor(url: string) { this.href = url; }
-});
+vi.stubGlobal(
+  'URL',
+  class MockURL {
+    href: string;
+    constructor(url: string) {
+      this.href = url;
+    }
+  },
+);
 
 // Mock the Worker global so the real constructor does not throw in Node
-vi.stubGlobal('Worker', class MockWorker {
-  addEventListener = vi.fn();
-  postMessage = vi.fn();
-});
+vi.stubGlobal(
+  'Worker',
+  class MockWorker {
+    addEventListener = vi.fn();
+    postMessage = vi.fn();
+  },
+);
 
 // Mock crypto.randomUUID for deterministic IDs
 vi.stubGlobal('crypto', {

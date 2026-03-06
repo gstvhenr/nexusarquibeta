@@ -147,7 +147,9 @@ describe('FornecedoresPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar Vínculo' }));
 
     await waitFor(() => {
-      const linkedPrice = api.getData().supplierProductPrices.find((price) => price.productId === 'prod-1');
+      const linkedPrice = api
+        .getData()
+        .supplierProductPrices.find((price) => price.productId === 'prod-1');
       expect(linkedPrice).toBeDefined();
       expect(linkedPrice?.supplierId).toBe('sup-1');
       expect(linkedPrice?.priceHistory?.[0]?.price).toBe(180);

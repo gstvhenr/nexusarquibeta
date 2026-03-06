@@ -25,7 +25,9 @@ describe('DocumentsBreadcrumb', () => {
       },
     ];
 
-    render(<DocumentsBreadcrumb breadcrumbPath={breadcrumbPath} onNavigateToIndex={onNavigateToIndex} />);
+    render(
+      <DocumentsBreadcrumb breadcrumbPath={breadcrumbPath} onNavigateToIndex={onNavigateToIndex} />,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Meus Documentos' }));
     fireEvent.click(screen.getByRole('button', { name: 'Contratos' }));
@@ -34,4 +36,3 @@ describe('DocumentsBreadcrumb', () => {
     expect(onNavigateToIndex).toHaveBeenNthCalledWith(2, 1);
   });
 });
-

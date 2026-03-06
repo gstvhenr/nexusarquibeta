@@ -6,9 +6,7 @@ import EventFormFields from './EventFormFields';
 
 type EventFormFieldsProps = ComponentProps<typeof EventFormFields>;
 
-function createBaseProps(
-  overrides: Partial<EventFormFieldsProps> = {},
-): EventFormFieldsProps {
+function createBaseProps(overrides: Partial<EventFormFieldsProps> = {}): EventFormFieldsProps {
   const clients: Client[] = [
     { id: 'c-1', name: 'Cliente Ativo', archived: false } as unknown as Client,
     { id: 'c-2', name: 'Cliente Arquivado', archived: true } as unknown as Client,

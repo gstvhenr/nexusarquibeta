@@ -23,12 +23,10 @@ function TestProviders({
   const [storage, setStorage] = useState<SystemDataType['documentStorage']>(documentStorage);
   const [agendaEvents, setAgendaEvents] = useState<SystemDataType['agendaEvents']>([]);
   const [reminders, setReminders] = useState<SystemDataType['reminders']>([]);
-  const [customBudgetTemplate, setCustomBudgetTemplate] = useState<
-    SystemDataType['customBudgetTemplate']
-  >(null);
-  const [globalIdentifierCounter, setGlobalIdentifierCounter] = useState<
-    SystemDataType['globalIdentifierCounter']
-  >(2500);
+  const [customBudgetTemplate, setCustomBudgetTemplate] =
+    useState<SystemDataType['customBudgetTemplate']>(null);
+  const [globalIdentifierCounter, setGlobalIdentifierCounter] =
+    useState<SystemDataType['globalIdentifierCounter']>(2500);
   const [dismissedFocusItems, setDismissedFocusItems] = useState<
     SystemDataType['dismissedFocusItems']
   >([]);
@@ -254,7 +252,10 @@ describe('AddModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
-    const [parentId, files] = onSave.mock.calls[0] as [string, Array<{ type: string; name: string }>];
+    const [parentId, files] = onSave.mock.calls[0] as [
+      string,
+      Array<{ type: string; name: string }>,
+    ];
 
     expect(parentId).toBe('folder-contratos');
     expect(files).toHaveLength(2);

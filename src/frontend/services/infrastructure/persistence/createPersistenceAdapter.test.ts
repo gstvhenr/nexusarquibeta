@@ -48,14 +48,14 @@ describe('createPersistenceAdapter', () => {
   afterEach(() => {
     vi.clearAllMocks();
     // Restore Worker to defined state
-    vi.stubGlobal('Worker', class MockWorker { });
+    vi.stubGlobal('Worker', class MockWorker {});
   });
 
   // ── SQLite path (Worker available) ────────────────────────────────────
 
   describe('when Worker is available', () => {
     it('creates a SqlitePersistenceAdapter when Worker is defined', () => {
-      vi.stubGlobal('Worker', class MockWorker { });
+      vi.stubGlobal('Worker', class MockWorker {});
       const adapter = factory.createPersistenceAdapter();
       expect(vi.mocked(SqliteAdapterMock)).toHaveBeenCalledTimes(1);
       expect(vi.mocked(IndexedDbAdapterMock)).not.toHaveBeenCalled();

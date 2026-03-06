@@ -26,8 +26,8 @@ const makeSeedData = (partial: Partial<SeedClientData> = {}): SeedClientData => 
 const makeStorage = (initial: Record<string, unknown> = {}) => {
   const store: Record<string, unknown> = { ...initial };
   return {
-    getItem: vi.fn(<T>(key: string, defaultValue: T): T =>
-      key in store ? (store[key] as T) : defaultValue,
+    getItem: vi.fn(
+      <T>(key: string, defaultValue: T): T => (key in store ? (store[key] as T) : defaultValue),
     ),
     setItem: vi.fn(<T>(key: string, value: T): void => {
       store[key] = value;

@@ -83,7 +83,9 @@ describe('ActivityFormModal', () => {
     });
     fireEvent.change(screen.getByDisplayValue('2026-03-20'), { target: { value: '2026-03-22' } });
     fireEvent.change(screen.getByDisplayValue('14:30'), { target: { value: '16:45' } });
-    fireEvent.change(screen.getByLabelText('Projeto vinculado'), { target: { value: 'project-2' } });
+    fireEvent.change(screen.getByLabelText('Projeto vinculado'), {
+      target: { value: 'project-2' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 
     expect(onSave).toHaveBeenCalledTimes(1);

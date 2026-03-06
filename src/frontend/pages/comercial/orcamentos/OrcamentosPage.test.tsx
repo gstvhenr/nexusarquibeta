@@ -14,7 +14,7 @@ vi.mock('@/components/orcamentos', () => ({
     onSectionChange,
     onAddItem,
     onRemoveItem,
-    onRemoveSection
+    onRemoveSection,
   }: {
     section: BudgetSection;
     onItemChange: (sectionId: number, itemId: number, field: string, value: unknown) => void;
@@ -25,10 +25,16 @@ vi.mock('@/components/orcamentos', () => ({
   }) => (
     <div data-testid={`budget-section-${section.id}`}>
       <span>{section.title}</span>
-      <button onClick={() => onSectionChange(section.id, 'title', 'Title Changed')}>Change Title</button>
+      <button onClick={() => onSectionChange(section.id, 'title', 'Title Changed')}>
+        Change Title
+      </button>
       <button onClick={() => onSectionChange(section.id, 'unit', 'm2')}>Change Unit</button>
-      <button onClick={() => onSectionChange(section.id, 'billingMethod', 'fixed')}>Change Method</button>
-      <button onClick={() => onSectionChange(section.id, 'billingValue', '50')}>Change Value</button>
+      <button onClick={() => onSectionChange(section.id, 'billingMethod', 'fixed')}>
+        Change Method
+      </button>
+      <button onClick={() => onSectionChange(section.id, 'billingValue', '50')}>
+        Change Value
+      </button>
 
       <button onClick={() => onAddItem(section.id)}>Add Item</button>
       <button onClick={() => onRemoveSection(section.id)}>Remove Section</button>
@@ -36,16 +42,24 @@ vi.mock('@/components/orcamentos', () => ({
       {section.items.map((item: BudgetItem) => (
         <div key={item.id} data-testid={`item-${item.id}`}>
           <span>{item.description}</span>
-          <button onClick={() => onItemChange(section.id, item.id, 'quantity', 5)}>Change Qty</button>
-          <button onClick={() => onItemChange(section.id, item.id, 'unitPrice', 10)}>Change Price</button>
-          <button onClick={() => onItemChange(section.id, item.id, 'estimatedHours', 2)}>Change Hours</button>
-          <button onClick={() => onItemChange(section.id, item.id, 'included', !item.included)}>Toggle Included</button>
+          <button onClick={() => onItemChange(section.id, item.id, 'quantity', 5)}>
+            Change Qty
+          </button>
+          <button onClick={() => onItemChange(section.id, item.id, 'unitPrice', 10)}>
+            Change Price
+          </button>
+          <button onClick={() => onItemChange(section.id, item.id, 'estimatedHours', 2)}>
+            Change Hours
+          </button>
+          <button onClick={() => onItemChange(section.id, item.id, 'included', !item.included)}>
+            Toggle Included
+          </button>
 
           <button onClick={() => onRemoveItem(section.id, item.id)}>Remove Item</button>
         </div>
       ))}
     </div>
-  )
+  ),
 }));
 
 describe('OrcamentosPage', () => {
@@ -56,7 +70,7 @@ describe('OrcamentosPage', () => {
 
     api.clearAllData();
     vi.spyOn(api, 'reserveGlobalIdentifier').mockResolvedValue(1002);
-    vi.spyOn(window, 'alert').mockImplementation(() => { });
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
 
     const snapshot = api.getData();
     api.replaceData({
@@ -98,10 +112,10 @@ describe('OrcamentosPage', () => {
               quantity: 1,
               unitPrice: 100,
               estimatedHours: 1,
-            }
-          ]
-        }
-      ]
+            },
+          ],
+        },
+      ],
     });
   });
 
@@ -170,7 +184,7 @@ describe('OrcamentosPage', () => {
   });
 
   it('saves defaults via alert', () => {
-    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => { });
+    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
     render(
       <MemoryRouter>
@@ -247,7 +261,10 @@ describe('OrcamentosPage', () => {
         <DataProvider>
           <Routes>
             <Route path="/" element={<OrcamentosPage />} />
-            <Route path="/propostas" element={<div data-testid="propostas-page">Propostas Page</div>} />
+            <Route
+              path="/propostas"
+              element={<div data-testid="propostas-page">Propostas Page</div>}
+            />
           </Routes>
         </DataProvider>
       </MemoryRouter>,
@@ -279,7 +296,10 @@ describe('OrcamentosPage', () => {
         <DataProvider>
           <Routes>
             <Route path="/" element={<OrcamentosPage />} />
-            <Route path="/propostas" element={<div data-testid="propostas-page">Propostas Page</div>} />
+            <Route
+              path="/propostas"
+              element={<div data-testid="propostas-page">Propostas Page</div>}
+            />
           </Routes>
         </DataProvider>
       </MemoryRouter>,

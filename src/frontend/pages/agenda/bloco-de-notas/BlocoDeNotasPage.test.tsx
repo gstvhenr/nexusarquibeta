@@ -4,8 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import BlocoDeNotasPage from './BlocoDeNotasPage';
 
 vi.mock('@/hooks/useLocalStorage', () => {
-  const useLocalStorageMock = <T,>(_key: string, initialValue: T) =>
-    React.useState(initialValue);
+  const useLocalStorageMock = <T,>(_key: string, initialValue: T) => React.useState(initialValue);
   return {
     default: useLocalStorageMock,
   };
@@ -16,13 +15,7 @@ vi.mock('@/hooks/useAutoReset', () => ({
 }));
 
 vi.mock('@/components/layout', () => ({
-  PageHeader: ({
-    title,
-    children,
-  }: {
-    title: string;
-    children: React.ReactNode;
-  }): JSX.Element => (
+  PageHeader: ({ title, children }: { title: string; children: React.ReactNode }): JSX.Element => (
     <header>
       <h1>{title}</h1>
       <div>{children}</div>

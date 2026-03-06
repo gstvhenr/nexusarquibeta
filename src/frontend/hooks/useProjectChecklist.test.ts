@@ -181,12 +181,7 @@ describe('useProjectChecklist', () => {
   it('handleSaveTaskDetails does nothing when editingTask is null', () => {
     // Given — editingTask nulo
     const setLocalProject = vi.fn();
-    const { handleSaveTaskDetails } = useProjectChecklist(
-      setLocalProject,
-      null,
-      vi.fn(),
-      vi.fn(),
-    );
+    const { handleSaveTaskDetails } = useProjectChecklist(setLocalProject, null, vi.fn(), vi.fn());
 
     // When — salva sem editing
     handleSaveTaskDetails(makeTask('t1'));

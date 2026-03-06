@@ -42,7 +42,7 @@ describe('ProposalListItem', () => {
           onUnarchive={vi.fn()}
           hasProject={false}
         />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.getByText('Projeto Residencial Alpha')).toBeInTheDocument();
@@ -63,7 +63,7 @@ describe('ProposalListItem', () => {
           hasProject={true}
           linkedProjectCode="PRJ-2026-001"
         />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.getByText('PRJ-2026-001')).toBeInTheDocument();
@@ -82,7 +82,7 @@ describe('ProposalListItem', () => {
           onUnarchive={vi.fn()}
           hasProject={false}
         />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     const container = screen.getByText('Projeto Residencial Alpha').closest('.cursor-pointer')!;
@@ -104,7 +104,7 @@ describe('ProposalListItem', () => {
           onUnarchive={vi.fn()}
           hasProject={false}
         />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     const container = screen.getByText('Projeto Residencial Alpha').closest('[role="button"]')!;
@@ -130,7 +130,7 @@ describe('ProposalListItem', () => {
           hasProject={false}
           isArchived={false}
         />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.getByRole('button', { name: 'Arquivar' })).toBeInTheDocument();
@@ -148,7 +148,7 @@ describe('ProposalListItem', () => {
           hasProject={false}
           isArchived={true}
         />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.getByRole('button', { name: 'Desarquivar' })).toBeInTheDocument();
@@ -166,7 +166,7 @@ describe('ProposalListItem', () => {
           onUnarchive={vi.fn()}
           hasProject={false}
         />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Arquivar' }));
@@ -185,7 +185,7 @@ describe('ProposalListItem', () => {
           hasProject={false}
           isArchived={true}
         />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Desarquivar' }));
@@ -202,7 +202,7 @@ describe('ProposalListItem', () => {
           onUnarchive={vi.fn()}
           hasProject={true}
         />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.queryByRole('button', { name: 'Excluir' })).not.toBeInTheDocument();
@@ -219,7 +219,7 @@ describe('ProposalListItem', () => {
           onUnarchive={vi.fn()}
           hasProject={false}
         />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     const deleteBtn = screen.getByRole('button', { name: 'Excluir' });

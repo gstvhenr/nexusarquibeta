@@ -78,8 +78,22 @@ describe('useProjectFinancials', () => {
       financials: {
         paymentType: 'parcelado',
         installments: [
-          { id: 'inst-1', number: 1, value: 500, dueDate: '2026-01-15', paid: false, paymentDate: null },
-          { id: 'inst-2', number: 2, value: 500, dueDate: '2026-02-15', paid: false, paymentDate: null },
+          {
+            id: 'inst-1',
+            number: 1,
+            value: 500,
+            dueDate: '2026-01-15',
+            paid: false,
+            paymentDate: null,
+          },
+          {
+            id: 'inst-2',
+            number: 2,
+            value: 500,
+            dueDate: '2026-02-15',
+            paid: false,
+            paymentDate: null,
+          },
         ],
       },
     });
@@ -107,7 +121,14 @@ describe('useProjectFinancials', () => {
       financials: {
         paymentType: 'parcelado',
         installments: [
-          { id: 'inst-1', number: 1, value: 500, dueDate: '2026-01-15', paid: false, paymentDate: null },
+          {
+            id: 'inst-1',
+            number: 1,
+            value: 500,
+            dueDate: '2026-01-15',
+            paid: false,
+            paymentDate: null,
+          },
         ],
       },
     });
@@ -176,7 +197,10 @@ describe('useProjectFinancials', () => {
     // Then — projeto atualizado com lump pago
     expect(setLocalProject).toHaveBeenCalledWith(
       expect.objectContaining({
-        financials: expect.objectContaining({ lumpSumStatus: 'Pago', lumpSumPaymentDate: '2026-03-01' }),
+        financials: expect.objectContaining({
+          lumpSumStatus: 'Pago',
+          lumpSumPaymentDate: '2026-03-01',
+        }),
       }),
     );
     expect(setPaymentConfirmModalOpen).toHaveBeenCalledWith(false);
@@ -428,8 +452,22 @@ describe('useProjectFinancials', () => {
       financials: {
         paymentType: 'parcelado',
         installments: [
-          { id: 'inst-1', number: 1, value: 500, dueDate: '2026-01-15', paid: false, paymentDate: null },
-          { id: 'inst-2', number: 2, value: 500, dueDate: '2026-02-15', paid: false, paymentDate: null },
+          {
+            id: 'inst-1',
+            number: 1,
+            value: 500,
+            dueDate: '2026-01-15',
+            paid: false,
+            paymentDate: null,
+          },
+          {
+            id: 'inst-2',
+            number: 2,
+            value: 500,
+            dueDate: '2026-02-15',
+            paid: false,
+            paymentDate: null,
+          },
         ],
       },
     });

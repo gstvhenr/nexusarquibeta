@@ -350,7 +350,9 @@ describe('DayDetailSidebar', () => {
       );
 
       // Act
-      const card = screen.getByText('Space Keyboard Event').closest('[role="button"]') as HTMLElement;
+      const card = screen
+        .getByText('Space Keyboard Event')
+        .closest('[role="button"]') as HTMLElement;
       fireEvent.keyDown(card, { key: ' ' });
 
       // Assert

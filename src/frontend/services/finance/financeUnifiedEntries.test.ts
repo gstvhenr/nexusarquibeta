@@ -203,7 +203,10 @@ describe('buildUnifiedFinancialEntries', () => {
 
   it('skips project with no financials object', () => {
     // Given — cast as Project to simulate a corrupted/missing financials field at runtime
-    const project = createTestProject({ id: 'p5', status: 'Em Andamento' }) as import('../../types').Project;
+    const project = createTestProject({
+      id: 'p5',
+      status: 'Em Andamento',
+    }) as import('../../types').Project;
     project.financials = undefined as unknown as import('../../types').ProjectFinancials;
 
     // When
@@ -540,7 +543,15 @@ describe('buildUnifiedFinancialEntries', () => {
     const cashBoxExpense = createTestCashBoxExpense({ id: 'cb5', dueDate: '2099-02-01' });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [manualExpense], [], [], [], [cashBoxExpense]);
+    const result = buildUnifiedFinancialEntries(
+      [],
+      [],
+      [manualExpense],
+      [],
+      [],
+      [],
+      [cashBoxExpense],
+    );
 
     // Then — cashbox (Feb) should appear before manual (Apr)
     expect(result.allDebits[0].id).toBe('cb5');

@@ -3,9 +3,9 @@ import type { PersistencePort } from './persistence';
 
 // vi.hoisted ensures these variables exist BEFORE vi.mock factory execution.
 const { mockWriteSnapshot, mockClearSnapshot, mockMaybeCreateAutoBackup } = vi.hoisted(() => ({
-  mockWriteSnapshot: vi.fn(async () => { }),
-  mockClearSnapshot: vi.fn(async () => { }),
-  mockMaybeCreateAutoBackup: vi.fn(async () => { }),
+  mockWriteSnapshot: vi.fn(async () => {}),
+  mockClearSnapshot: vi.fn(async () => {}),
+  mockMaybeCreateAutoBackup: vi.fn(async () => {}),
 }));
 
 const createMockPersistenceAdapter = (): PersistencePort => ({
@@ -14,10 +14,10 @@ const createMockPersistenceAdapter = (): PersistencePort => ({
   writeSnapshot: mockWriteSnapshot,
   clearSnapshot: mockClearSnapshot,
   readEntityState: async () => null,
-  writeEntityState: vi.fn(async () => { }),
+  writeEntityState: vi.fn(async () => {}),
   readPreference: async () => null,
-  writePreference: vi.fn(async () => { }),
-  removePreference: vi.fn(async () => { }),
+  writePreference: vi.fn(async () => {}),
+  removePreference: vi.fn(async () => {}),
   listBackups: vi.fn(async () => []),
   writeBackup: vi.fn(async () => ({
     id: 'stub',
@@ -27,7 +27,7 @@ const createMockPersistenceAdapter = (): PersistencePort => ({
     reason: 'auto' as const,
   })),
   readBackup: async () => null,
-  clearBackups: vi.fn(async () => { }),
+  clearBackups: vi.fn(async () => {}),
   reserveGlobalIdentifier: vi.fn(async (defaultCounter = 2500) => ({
     reservedValue: defaultCounter,
     nextValue: defaultCounter + 1,
@@ -40,7 +40,7 @@ vi.mock('./autoBackupService', () => ({
     createManualBackup: vi.fn(async () => ({})),
     listBackups: vi.fn(async () => []),
     restoreBackup: vi.fn(async () => null),
-    clearBackups: vi.fn(async () => { }),
+    clearBackups: vi.fn(async () => {}),
   },
 }));
 
@@ -210,7 +210,10 @@ describe('loadData — debounced persistence', () => {
     // Arrange — reset modules first so the fresh import picks up our adapter.
     vi.resetModules();
 
-    const persistedState = { dismissedFocusItems: ['hydrated-item'], globalIdentifierCounter: 9999 };
+    const persistedState = {
+      dismissedFocusItems: ['hydrated-item'],
+      globalIdentifierCounter: 9999,
+    };
 
     const freshPersistence = await import('./persistence');
     freshPersistence.setPersistenceAdapter({

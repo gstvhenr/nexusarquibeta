@@ -44,7 +44,7 @@ describe('BudgetItemRow', () => {
             {...props}
           />
         </tbody>
-      </table>
+      </table>,
     );
   };
 

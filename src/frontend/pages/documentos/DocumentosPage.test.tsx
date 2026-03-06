@@ -24,12 +24,10 @@ function TestProviders({
   const [storage, setStorage] = useState<SystemDataType['documentStorage']>(documentStorage);
   const [agendaEvents, setAgendaEvents] = useState<SystemDataType['agendaEvents']>([]);
   const [reminders, setReminders] = useState<SystemDataType['reminders']>([]);
-  const [customBudgetTemplate, setCustomBudgetTemplate] = useState<
-    SystemDataType['customBudgetTemplate']
-  >(null);
-  const [globalIdentifierCounter, setGlobalIdentifierCounter] = useState<
-    SystemDataType['globalIdentifierCounter']
-  >(2500);
+  const [customBudgetTemplate, setCustomBudgetTemplate] =
+    useState<SystemDataType['customBudgetTemplate']>(null);
+  const [globalIdentifierCounter, setGlobalIdentifierCounter] =
+    useState<SystemDataType['globalIdentifierCounter']>(2500);
   const [dismissedFocusItems, setDismissedFocusItems] = useState<
     SystemDataType['dismissedFocusItems']
   >([]);
@@ -242,7 +240,9 @@ describe('DocumentosPage', () => {
     renderPage('/documentos/pessoal');
 
     fireEvent.click(screen.getByRole('button', { name: 'Adicionar' }));
-    fireEvent.change(screen.getByLabelText('Nome da pasta'), { target: { value: '  Contratos  ' } });
+    fireEvent.change(screen.getByLabelText('Nome da pasta'), {
+      target: { value: '  Contratos  ' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 
     await waitFor(() => {

@@ -18,9 +18,7 @@ describe('PageHeader', () => {
   });
 
   it('renders a ReactNode title', () => {
-    render(
-      <PageHeader title={<span data-testid="custom-title">Custom Title</span>} />,
-    );
+    render(<PageHeader title={<span data-testid="custom-title">Custom Title</span>} />);
 
     expect(screen.getByTestId('custom-title')).toHaveTextContent('Custom Title');
   });
@@ -98,18 +96,14 @@ describe('PageHeader', () => {
   });
 
   it('applies compact contentGap (mb-4)', () => {
-    const { container } = render(
-      <PageHeader title="Projetos" contentGap="compact" />,
-    );
+    const { container } = render(<PageHeader title="Projetos" contentGap="compact" />);
 
     const wrapper = container.firstElementChild!;
     expect(wrapper.className).toContain('mb-4');
   });
 
   it('applies spacious contentGap (mb-8)', () => {
-    const { container } = render(
-      <PageHeader title="Projetos" contentGap="spacious" />,
-    );
+    const { container } = render(<PageHeader title="Projetos" contentGap="spacious" />);
 
     const wrapper = container.firstElementChild!;
     expect(wrapper.className).toContain('mb-8');

@@ -66,13 +66,7 @@ describe('SaveProposalModal', () => {
     const onSave = vi.fn();
 
     render(
-      <SaveProposalModal
-        isOpen
-        onClose={vi.fn()}
-        onSave={onSave}
-        isSaving={false}
-        clients={[]}
-      />,
+      <SaveProposalModal isOpen onClose={vi.fn()} onSave={onSave} isSaving={false} clients={[]} />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Salvar Proposta' }));
@@ -141,13 +135,7 @@ describe('SaveProposalModal', () => {
 
   it('toggles saving state correctly', () => {
     render(
-      <SaveProposalModal
-        isOpen
-        onClose={vi.fn()}
-        onSave={vi.fn()}
-        isSaving={true}
-        clients={[]}
-      />,
+      <SaveProposalModal isOpen onClose={vi.fn()} onSave={vi.fn()} isSaving={true} clients={[]} />,
     );
 
     const saveBtn = screen.getByRole('button', { name: '' });
@@ -158,13 +146,7 @@ describe('SaveProposalModal', () => {
   it('cancels correctly', () => {
     const onClose = vi.fn();
     render(
-      <SaveProposalModal
-        isOpen
-        onClose={onClose}
-        onSave={vi.fn()}
-        isSaving={false}
-        clients={[]}
-      />,
+      <SaveProposalModal isOpen onClose={onClose} onSave={vi.fn()} isSaving={false} clients={[]} />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));

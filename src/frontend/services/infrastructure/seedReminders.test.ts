@@ -203,9 +203,7 @@ describe('applySeedReminders', () => {
       const { reminders } = applySeedReminders([]);
 
       // Assert
-      const seeds = reminders.filter((r) =>
-        SEED_IDS.includes(r.id as (typeof SEED_IDS)[number]),
-      );
+      const seeds = reminders.filter((r) => SEED_IDS.includes(r.id as (typeof SEED_IDS)[number]));
       for (const seed of seeds) {
         expect(seed.pinned).toBe(false);
       }
@@ -216,9 +214,7 @@ describe('applySeedReminders', () => {
       const { reminders } = applySeedReminders([]);
 
       // Assert
-      const seeds = reminders.filter((r) =>
-        SEED_IDS.includes(r.id as (typeof SEED_IDS)[number]),
-      );
+      const seeds = reminders.filter((r) => SEED_IDS.includes(r.id as (typeof SEED_IDS)[number]));
       for (const seed of seeds) {
         expect(seed.completedAt).toBeNull();
       }
@@ -229,9 +225,7 @@ describe('applySeedReminders', () => {
       const { reminders } = applySeedReminders([]);
 
       // Assert
-      const seeds = reminders.filter((r) =>
-        SEED_IDS.includes(r.id as (typeof SEED_IDS)[number]),
-      );
+      const seeds = reminders.filter((r) => SEED_IDS.includes(r.id as (typeof SEED_IDS)[number]));
       for (const seed of seeds) {
         expect(VALID_COLORS).toContain(seed.color);
       }
@@ -242,9 +236,7 @@ describe('applySeedReminders', () => {
       const { reminders } = applySeedReminders([]);
 
       // Assert
-      const seeds = reminders.filter((r) =>
-        SEED_IDS.includes(r.id as (typeof SEED_IDS)[number]),
-      );
+      const seeds = reminders.filter((r) => SEED_IDS.includes(r.id as (typeof SEED_IDS)[number]));
       for (const seed of seeds) {
         expect(seed.title.trim().length).toBeGreaterThan(0);
       }
@@ -255,9 +247,7 @@ describe('applySeedReminders', () => {
       const { reminders } = applySeedReminders([]);
 
       // Assert
-      const seeds = reminders.filter((r) =>
-        SEED_IDS.includes(r.id as (typeof SEED_IDS)[number]),
-      );
+      const seeds = reminders.filter((r) => SEED_IDS.includes(r.id as (typeof SEED_IDS)[number]));
       for (const seed of seeds) {
         expect(seed.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
       }

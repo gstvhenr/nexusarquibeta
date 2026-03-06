@@ -74,11 +74,7 @@ export const DataProvider: (props: PropsWithChildren<{}>) => React.ReactNode = (
 
   // --- Domain slices (each memoized per-key, setters auto-generated) ---
 
-  const coreValue: CoreDataType = useDomain(data, setField, [
-    'projects',
-    'proposals',
-    'clients',
-  ]);
+  const coreValue: CoreDataType = useDomain(data, setField, ['projects', 'proposals', 'clients']);
 
   const financeValue: FinanceDataType = useDomain(data, setField, [
     'commissions',

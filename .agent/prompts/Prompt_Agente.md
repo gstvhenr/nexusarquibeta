@@ -203,21 +203,21 @@ Protocolo para quando o agente erra e o usuario corrige:
    </AUTOCORRECAO>
 
 <INVENTARIO_ATIVO>
-Ultima verificacao: 2026-03-04
+Ultima verificacao: 2026-03-06
 Fonte: filesystem `.agent/`
 
 Agentes disponiveis (`.agent/agents/`):
 
-- backend-specialist, code-archaeologist, database-architect, debugger
+- architecture-health-doctor, backend-specialist, code-archaeologist, database-architect, debugger
 - devops-engineer, documentation-writer, explorer-agent, frontend-specialist
 - orchestrator, performance-optimizer, project-planner
 - qa-automation-engineer, security-auditor, test-engineer
 
 Workflows disponiveis (`.agent/workflows/`):
 
-- brainstorm, code-cleanup-v1, componentize, contract-check, debug
-- default-task-flow, deps, docs-audit, enhance, epic
-- health-check, migrate, orchestrate, perf, plan, prd, preview
+- brainstorm, circular-deps, code-cleanup-v1, componentize, contract-check, coupling-check, debug
+- default-task-flow, deps, docs-audit, enhance, entry-points, epic
+- health-check, migrate, orchestrate, orphan-modules, perf, plan, prd, preview
 - refactor, release, research, status, test, ui-ux-pro-max, verify-first
 
 Skills disponiveis (`.agent/skills/`):

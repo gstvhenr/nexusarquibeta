@@ -238,9 +238,9 @@ describe('applySeedClients', () => {
     it('removes obsoletes, keeps customs, and fills in missing seeds', () => {
       // Arrange
       const raw = [
-        makeClient({ id: OBSOLETE_IDS[0] }),                    // obsolete → removed
-        makeClient({ id: 'custom_keep', name: 'Keep Me' }),     // custom → preserved
-        makeClient({ id: SEED_IDS[0] }),                        // seed already present
+        makeClient({ id: OBSOLETE_IDS[0] }), // obsolete → removed
+        makeClient({ id: 'custom_keep', name: 'Keep Me' }), // custom → preserved
+        makeClient({ id: SEED_IDS[0] }), // seed already present
       ];
 
       // Act
@@ -314,9 +314,7 @@ describe('applySeedClients', () => {
       const { clients } = applySeedClients([]);
 
       // Assert
-      const seeds = clients.filter((c) =>
-        SEED_IDS.includes(c.id as (typeof SEED_IDS)[number]),
-      );
+      const seeds = clients.filter((c) => SEED_IDS.includes(c.id as (typeof SEED_IDS)[number]));
       for (const seed of seeds) {
         expect(typeof seed.name).toBe('string');
         expect((seed.name as string).trim().length).toBeGreaterThan(0);

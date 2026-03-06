@@ -19,7 +19,7 @@ vi.mock('../../utils/projectFinancials', () => ({
 vi.mock('../../constants', () => ({
   PROJECT_STATUS_COLORS: {
     'Em Andamento': { bg: 'bg-blue-100', text: 'text-blue-800' },
-    'Pausado': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+    Pausado: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
   },
 }));
 

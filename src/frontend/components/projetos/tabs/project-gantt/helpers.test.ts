@@ -125,8 +125,18 @@ describe('dateToPixel', () => {
   it('maps date to second column correctly', () => {
     // Use local Date constructors to avoid UTC-to-local timezone offset
     const columns: TimeColumn[] = [
-      { label: '01', startDate: new Date(2026, 2, 1), endDate: new Date(2026, 2, 2), groupKey: '1' },
-      { label: '02', startDate: new Date(2026, 2, 2), endDate: new Date(2026, 2, 3), groupKey: '1' },
+      {
+        label: '01',
+        startDate: new Date(2026, 2, 1),
+        endDate: new Date(2026, 2, 2),
+        groupKey: '1',
+      },
+      {
+        label: '02',
+        startDate: new Date(2026, 2, 2),
+        endDate: new Date(2026, 2, 3),
+        groupKey: '1',
+      },
     ];
 
     const px = dateToPixel(new Date(2026, 2, 2), columns, colWidth);
@@ -240,8 +250,22 @@ describe('buildRows', () => {
     const sections = [
       makeSection({
         tasks: [
-          { id: 't1', name: 'T1', completed: true, hours: 2, startDate: '2026-03-01', endDate: '2026-03-05' },
-          { id: 't2', name: 'T2', completed: false, hours: 3, startDate: '2026-03-03', endDate: '2026-03-10' },
+          {
+            id: 't1',
+            name: 'T1',
+            completed: true,
+            hours: 2,
+            startDate: '2026-03-01',
+            endDate: '2026-03-05',
+          },
+          {
+            id: 't2',
+            name: 'T2',
+            completed: false,
+            hours: 3,
+            startDate: '2026-03-03',
+            endDate: '2026-03-10',
+          },
         ],
       }),
     ];
@@ -259,7 +283,14 @@ describe('buildRows', () => {
     const sections = [
       makeSection({
         tasks: [
-          { id: 't1', name: 'Task A', completed: false, hours: 2, startDate: '2026-03-01', endDate: '2026-03-05' },
+          {
+            id: 't1',
+            name: 'Task A',
+            completed: false,
+            hours: 2,
+            startDate: '2026-03-01',
+            endDate: '2026-03-05',
+          },
         ],
       }),
     ];
@@ -275,7 +306,14 @@ describe('buildRows', () => {
     const sections = [
       makeSection({
         tasks: [
-          { id: 't1', name: 'Task A', completed: false, hours: 2, startDate: '2026-03-01', endDate: '2026-03-05' },
+          {
+            id: 't1',
+            name: 'Task A',
+            completed: false,
+            hours: 2,
+            startDate: '2026-03-01',
+            endDate: '2026-03-05',
+          },
         ],
       }),
     ];
@@ -292,7 +330,14 @@ describe('buildRows', () => {
     const sections = [
       makeSection({
         tasks: [
-          { id: 't1', name: 'Late Task', completed: false, hours: 2, startDate: '2026-03-01', endDate: '2026-03-10' },
+          {
+            id: 't1',
+            name: 'Late Task',
+            completed: false,
+            hours: 2,
+            startDate: '2026-03-01',
+            endDate: '2026-03-10',
+          },
         ],
       }),
     ];
@@ -308,7 +353,14 @@ describe('buildRows', () => {
     const sections = [
       makeSection({
         tasks: [
-          { id: 't1', name: 'Done Task', completed: true, hours: 2, startDate: '2026-03-01', endDate: '2026-03-05' },
+          {
+            id: 't1',
+            name: 'Done Task',
+            completed: true,
+            hours: 2,
+            startDate: '2026-03-01',
+            endDate: '2026-03-05',
+          },
         ],
       }),
     ];
@@ -332,7 +384,16 @@ describe('buildRows', () => {
   it('uses fallback name "Nova Tarefa" for tasks with empty name', () => {
     const sections = [
       makeSection({
-        tasks: [{ id: 't1', name: '', completed: false, hours: 0, startDate: '2026-03-01', endDate: '2026-03-05' }],
+        tasks: [
+          {
+            id: 't1',
+            name: '',
+            completed: false,
+            hours: 0,
+            startDate: '2026-03-01',
+            endDate: '2026-03-05',
+          },
+        ],
       }),
     ];
 
@@ -345,7 +406,14 @@ describe('buildRows', () => {
     const sections = [
       makeSection({
         tasks: [
-          { id: 't1', name: 'DueOnly', completed: false, hours: 2, startDate: '2026-03-01', dueDate: '2026-03-07' },
+          {
+            id: 't1',
+            name: 'DueOnly',
+            completed: false,
+            hours: 2,
+            startDate: '2026-03-01',
+            dueDate: '2026-03-07',
+          },
         ],
       }),
     ];
@@ -382,8 +450,22 @@ describe('buildRows', () => {
     const sections = [
       makeSection({
         tasks: [
-          { id: 't1', name: 'A', completed: true, hours: 1, startDate: '2026-03-01', endDate: '2026-03-02' },
-          { id: 't2', name: 'B', completed: true, hours: 1, startDate: '2026-03-01', endDate: '2026-03-02' },
+          {
+            id: 't1',
+            name: 'A',
+            completed: true,
+            hours: 1,
+            startDate: '2026-03-01',
+            endDate: '2026-03-02',
+          },
+          {
+            id: 't2',
+            name: 'B',
+            completed: true,
+            hours: 1,
+            startDate: '2026-03-01',
+            endDate: '2026-03-02',
+          },
         ],
       }),
     ];
@@ -433,9 +515,30 @@ describe('computeStats', () => {
     const sections: ProjectSection[] = [
       makeSection({
         tasks: [
-          { id: 't1', name: 'Done', completed: true, hours: 2, startDate: '2026-03-01', endDate: '2026-03-05' },
-          { id: 't2', name: 'Late', completed: false, hours: 2, startDate: '2026-03-01', endDate: '2026-03-10' },
-          { id: 't3', name: 'InProg', completed: false, hours: 2, startDate: '2026-03-10', endDate: '2026-04-01' },
+          {
+            id: 't1',
+            name: 'Done',
+            completed: true,
+            hours: 2,
+            startDate: '2026-03-01',
+            endDate: '2026-03-05',
+          },
+          {
+            id: 't2',
+            name: 'Late',
+            completed: false,
+            hours: 2,
+            startDate: '2026-03-01',
+            endDate: '2026-03-10',
+          },
+          {
+            id: 't3',
+            name: 'InProg',
+            completed: false,
+            hours: 2,
+            startDate: '2026-03-10',
+            endDate: '2026-04-01',
+          },
         ],
       }),
     ];
@@ -452,7 +555,14 @@ describe('computeStats', () => {
     const sections: ProjectSection[] = [
       makeSection({
         tasks: [
-          { id: 't1', name: 'T', completed: false, hours: 2, startDate: '2026-03-01', endDate: '2026-04-15' },
+          {
+            id: 't1',
+            name: 'T',
+            completed: false,
+            hours: 2,
+            startDate: '2026-03-01',
+            endDate: '2026-04-15',
+          },
         ],
       }),
     ];
@@ -473,7 +583,14 @@ describe('computeStats', () => {
     const sections: ProjectSection[] = [
       makeSection({
         tasks: [
-          { id: 't1', name: 'CompletedPast', completed: true, hours: 2, startDate: '2026-01-01', endDate: '2026-01-10' },
+          {
+            id: 't1',
+            name: 'CompletedPast',
+            completed: true,
+            hours: 2,
+            startDate: '2026-01-01',
+            endDate: '2026-01-10',
+          },
         ],
       }),
     ];
@@ -488,7 +605,14 @@ describe('computeStats', () => {
     const sections: ProjectSection[] = [
       makeSection({
         tasks: [
-          { id: 't1', name: 'DueOnly', completed: false, hours: 2, startDate: '2026-03-01', dueDate: '2026-03-05' },
+          {
+            id: 't1',
+            name: 'DueOnly',
+            completed: false,
+            hours: 2,
+            startDate: '2026-03-01',
+            dueDate: '2026-03-05',
+          },
         ],
       }),
     ];
@@ -503,14 +627,35 @@ describe('computeStats', () => {
       makeSection({
         id: 's1',
         tasks: [
-          { id: 't1', name: 'A', completed: true, hours: 1, startDate: '2026-03-01', endDate: '2026-03-02' },
+          {
+            id: 't1',
+            name: 'A',
+            completed: true,
+            hours: 1,
+            startDate: '2026-03-01',
+            endDate: '2026-03-02',
+          },
         ],
       }),
       makeSection({
         id: 's2',
         tasks: [
-          { id: 't2', name: 'B', completed: false, hours: 1, startDate: '2026-03-01', endDate: '2026-03-02' },
-          { id: 't3', name: 'C', completed: false, hours: 1, startDate: '2026-03-10', endDate: '2026-04-01' },
+          {
+            id: 't2',
+            name: 'B',
+            completed: false,
+            hours: 1,
+            startDate: '2026-03-01',
+            endDate: '2026-03-02',
+          },
+          {
+            id: 't3',
+            name: 'C',
+            completed: false,
+            hours: 1,
+            startDate: '2026-03-10',
+            endDate: '2026-04-01',
+          },
         ],
       }),
     ];

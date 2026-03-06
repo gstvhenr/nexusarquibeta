@@ -3,27 +3,6 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ClientesDataManagementModal } from './ClientesDataManagementModal';
 
-// Mock do Modal de Seleção para isolamento
-vi.mock('../../components/clientes', () => ({
-  ClientSelectionModal: ({ isOpen }: { isOpen: boolean }) =>
-    isOpen ? <div data-testid="client-selection-modal" /> : null,
-}));
-
-// Mock do componente Modal base para simplificar renderização
-vi.mock('../../components/ui', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../components/ui')>();
-  return {
-    ...actual,
-    Modal: ({ isOpen, children, title }: any) =>
-      isOpen ? (
-        <div data-testid="base-modal">
-          <h2>{title}</h2>
-          {children}
-        </div>
-      ) : null,
-  };
-});
-
 describe('ClientesDataManagementModal', () => {
   beforeEach(() => {
     const modalRoot = document.createElement('div');
@@ -37,14 +16,14 @@ describe('ClientesDataManagementModal', () => {
     vi.clearAllMocks();
   });
 
-  const getBaseProps = () => ({
+  const getBaseProps = (): React.ComponentProps<typeof ClientesDataManagementModal> => ({
     isOpen: true,
     onClose: vi.fn(),
-    activeModalTab: 'export' as const,
+    activeModalTab: 'export',
     onActiveModalTabChange: vi.fn(),
-    exportMode: 'selected' as const,
+    exportMode: 'selected',
     onExportModeChange: vi.fn(),
-    exportStatusFilter: 'active' as const,
+    exportStatusFilter: 'active',
     onExportStatusFilterChange: vi.fn(),
     manualSelectionIds: new Set<string>(),
     onOpenSelectionModal: vi.fn(),
@@ -72,7 +51,7 @@ describe('ClientesDataManagementModal', () => {
       render(<ClientesDataManagementModal {...props} />);
 
       // Assert
-      expect(screen.getByTestId('base-modal')).toBeInTheDocument();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(screen.getByText('Gerenciamento de Dados')).toBeInTheDocument();
     });
 
@@ -84,7 +63,7 @@ describe('ClientesDataManagementModal', () => {
       render(<ClientesDataManagementModal {...props} />);
 
       // Assert
-      expect(screen.queryByTestId('base-modal')).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('deve renderizar o ClientSelectionModal quando isSelectionModalOpen for true', () => {
@@ -95,7 +74,7 @@ describe('ClientesDataManagementModal', () => {
       render(<ClientesDataManagementModal {...props} />);
 
       // Assert
-      expect(screen.getByTestId('client-selection-modal')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Seleção de Clientes' })).toBeInTheDocument();
     });
 
     it('deve chamar onClose ao clicar no botão Fechar', () => {
@@ -104,7 +83,7 @@ describe('ClientesDataManagementModal', () => {
       render(<ClientesDataManagementModal {...props} />);
 
       // Act
-      fireEvent.click(screen.getByRole('button', { name: /Fechar/i }));
+      fireEvent.click(screen.getByRole('button', { name: /^Fechar$/i }));
 
       // Assert
       expect(props.onClose).toHaveBeenCalledTimes(1);
@@ -162,7 +141,9 @@ describe('ClientesDataManagementModal', () => {
       render(<ClientesDataManagementModal {...props} />);
 
       // Act & Assert
-      expect(screen.queryByRole('button', { name: /Escolher Clientes da Lista/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Escolher Clientes da Lista/i }),
+      ).not.toBeInTheDocument();
     });
 
     it('deve disparar exportação com o formato correto', () => {
@@ -192,7 +173,9 @@ describe('ClientesDataManagementModal', () => {
       // Act & Assert
       expect(screen.getByText('Atenção ao importar')).toBeInTheDocument();
       expect(screen.getByText('Clique para selecionar o arquivo')).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Confirmar Importação/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Confirmar Importação/i }),
+      ).not.toBeInTheDocument();
     });
 
     it('deve disparar onFileSelect quando arquivo é alterado', () => {
@@ -217,7 +200,9 @@ describe('ClientesDataManagementModal', () => {
       props.activeModalTab = 'import';
       render(<ClientesDataManagementModal {...props} />);
 
-      const clickableArea = screen.getByRole('button', { name: /Clique para selecionar o arquivo/i });
+      const clickableArea = screen.getByRole('button', {
+        name: /Clique para selecionar o arquivo/i,
+      });
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       const clickSpy = vi.spyOn(fileInput, 'click');
 

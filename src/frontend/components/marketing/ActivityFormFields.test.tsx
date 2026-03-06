@@ -68,7 +68,9 @@ describe('ActivityFormFields', () => {
     expect(screen.getByRole('option', { name: 'Studio ADS' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Nenhum' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'PRJ-001 - Casa Jardim' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'PRJ-002 - Apartamento Central' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', { name: 'PRJ-002 - Apartamento Central' }),
+    ).toBeInTheDocument();
   });
 
   it('forwards field updates through callbacks', () => {
@@ -109,7 +111,9 @@ describe('ActivityFormFields', () => {
     });
     fireEvent.change(screen.getByLabelText('Responsável'), { target: { value: 'professional-1' } });
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '' } });
-    fireEvent.change(screen.getByLabelText('Projeto vinculado'), { target: { value: 'project-2' } });
+    fireEvent.change(screen.getByLabelText('Projeto vinculado'), {
+      target: { value: 'project-2' },
+    });
     fireEvent.change(screen.getByPlaceholderText('Detalhes do post, legenda, links...'), {
       target: { value: 'Nova descrição' },
     });

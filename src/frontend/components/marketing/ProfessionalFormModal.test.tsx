@@ -15,9 +15,7 @@ const existingProfessional: MarketingProfessional = {
   notes: 'Escopo mensal',
 };
 
-const renderModal = (
-  overrides: Partial<ComponentProps<typeof ProfessionalFormModal>> = {},
-) =>
+const renderModal = (overrides: Partial<ComponentProps<typeof ProfessionalFormModal>> = {}) =>
   render(
     <ProfessionalFormModal
       isOpen={true}

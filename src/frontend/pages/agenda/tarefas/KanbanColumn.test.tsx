@@ -77,7 +77,11 @@ describe('KanbanColumn', () => {
 
     it('shows a count badge matching the number of tasks', () => {
       // Arrange
-      const tasks = [createTask('t1', 'Alpha'), createTask('t2', 'Beta'), createTask('t3', 'Gamma')];
+      const tasks = [
+        createTask('t1', 'Alpha'),
+        createTask('t2', 'Beta'),
+        createTask('t3', 'Gamma'),
+      ];
 
       // Act
       render(<KanbanColumn {...defaultProps('todo', 'A Fazer', tasks)} />);
@@ -145,9 +149,7 @@ describe('KanbanColumn', () => {
       // Arrange
       const onAddToColumn = vi.fn();
 
-      render(
-        <KanbanColumn {...defaultProps('todo', 'A Fazer', [], { onAddToColumn })} />,
-      );
+      render(<KanbanColumn {...defaultProps('todo', 'A Fazer', [], { onAddToColumn })} />);
 
       // Act
       fireEvent.click(screen.getByLabelText('Adicionar tarefa em "A Fazer"'));
@@ -234,11 +236,7 @@ describe('KanbanColumn', () => {
       // Arrange — "done" column should have archive button
       const task = createTask('done-1', 'Tarefa Concluída', { kanbanStatus: 'done' });
 
-      render(
-        <KanbanColumn
-          {...defaultProps('done', 'Concluído', [task])}
-        />,
-      );
+      render(<KanbanColumn {...defaultProps('done', 'Concluído', [task])} />);
 
       // Assert — TaskCard renders archive button for done status
       expect(screen.getByLabelText('Arquivar')).toBeInTheDocument();
@@ -248,11 +246,7 @@ describe('KanbanColumn', () => {
       // Arrange
       const task = createTask('todo-1', 'Tarefa A Fazer', { kanbanStatus: 'todo' });
 
-      render(
-        <KanbanColumn
-          {...defaultProps('todo', 'A Fazer', [task])}
-        />,
-      );
+      render(<KanbanColumn {...defaultProps('todo', 'A Fazer', [task])} />);
 
       // Assert
       expect(screen.queryByLabelText('Arquivar')).not.toBeInTheDocument();

@@ -113,7 +113,9 @@ describe('ProductFormModal', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText('Nome do Produto'), { target: { value: 'Produto Novo' } });
+    fireEvent.change(screen.getByLabelText('Nome do Produto'), {
+      target: { value: 'Produto Novo' },
+    });
     fireEvent.change(screen.getByLabelText('Categoria'), { target: { value: 'Marcenaria' } });
     fireEvent.change(screen.getByLabelText('Descrição do Produto'), {
       target: { value: 'Descrição de teste' },
@@ -124,9 +126,13 @@ describe('ProductFormModal', () => {
     expect(screen.queryByText('Hidden Supplier')).not.toBeInTheDocument();
     const alphaNode = screen.getByText('Alpha Supplier');
     const zuluNode = screen.getByText('Zulu Supplier');
-    expect(alphaNode.compareDocumentPosition(zuluNode) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      alphaNode.compareDocumentPosition(zuluNode) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar fornecedor...'), { target: { value: 'zulu' } });
+    fireEvent.change(screen.getByPlaceholderText('Buscar fornecedor...'), {
+      target: { value: 'zulu' },
+    });
     expect(screen.queryByText('Alpha Supplier')).not.toBeInTheDocument();
     expect(screen.getByText('Zulu Supplier')).toBeInTheDocument();
 
@@ -226,7 +232,9 @@ describe('ProductFormModal', () => {
       target: { value: 'Produto Temporário' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Vincular Fornecedores/i }));
-    fireEvent.change(screen.getByPlaceholderText('Buscar fornecedor...'), { target: { value: 'beta' } });
+    fireEvent.change(screen.getByPlaceholderText('Buscar fornecedor...'), {
+      target: { value: 'beta' },
+    });
 
     rerender(
       <ProductFormModal

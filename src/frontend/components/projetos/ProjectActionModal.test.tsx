@@ -67,7 +67,9 @@ describe('ProjectActionModal', () => {
 
     fireEvent.click(screen.getByLabelText('Existe valor de reembolso'));
     fireEvent.change(screen.getByLabelText('Valor do reembolso'), { target: { value: '150.5' } });
-    fireEvent.change(screen.getByLabelText('Data do reembolso'), { target: { value: '2026-06-20' } });
+    fireEvent.change(screen.getByLabelText('Data do reembolso'), {
+      target: { value: '2026-06-20' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Finalizar' }));
 
     expect(onConfirm).toHaveBeenCalledWith(150.5, '2026-06-20');

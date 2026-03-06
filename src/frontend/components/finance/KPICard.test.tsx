@@ -21,13 +21,7 @@ describe('KPICard', () => {
 
   it('renders positive change badge', () => {
     render(
-      <KPICard
-        title="Saldo"
-        value="R$ 1.500,00"
-        icon={<svg />}
-        change={10.6}
-        variant="warning"
-      />,
+      <KPICard title="Saldo" value="R$ 1.500,00" icon={<svg />} change={10.6} variant="warning" />,
     );
 
     const badge = screen.getByText(/↑\s*11%/);
@@ -37,13 +31,7 @@ describe('KPICard', () => {
 
   it('renders negative change badge', () => {
     render(
-      <KPICard
-        title="Despesa"
-        value="R$ 800,00"
-        icon={<svg />}
-        change={-7.4}
-        variant="danger"
-      />,
+      <KPICard title="Despesa" value="R$ 800,00" icon={<svg />} change={-7.4} variant="danger" />,
     );
 
     const badge = screen.getByText(/↓\s*7%/);

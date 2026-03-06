@@ -18,14 +18,7 @@ describe('ProspectFormModal', () => {
   it('validates required name before saving', () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
 
-    render(
-      <ProspectFormModal
-        isOpen
-        onClose={vi.fn()}
-        onSave={vi.fn()}
-        initialProspect={null}
-      />,
-    );
+    render(<ProspectFormModal isOpen onClose={vi.fn()} onSave={vi.fn()} initialProspect={null} />);
 
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: '   ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
@@ -36,14 +29,7 @@ describe('ProspectFormModal', () => {
   it('clamps follow-up days and saves normalized contact fallback', () => {
     const onSave = vi.fn();
 
-    render(
-      <ProspectFormModal
-        isOpen
-        onClose={vi.fn()}
-        onSave={onSave}
-        initialProspect={null}
-      />,
-    );
+    render(<ProspectFormModal isOpen onClose={vi.fn()} onSave={onSave} initialProspect={null} />);
 
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Prospect Novo' } });
     fireEvent.change(screen.getByLabelText('Telefone'), { target: { value: '11988887777' } });

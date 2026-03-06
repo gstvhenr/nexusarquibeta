@@ -11,6 +11,72 @@
 - Manter aqui apenas: última sessão + próximo passo + bloqueios.
 - Histórico completo até 2026-02-16: `docs/changelog/session-log-2026-02.md`.
 
+## Último estado conhecido (2026-03-06, sessão 56)
+
+Diagnóstico completo de dependências circulares e saneamento de violações `not-to-unresolvable` no grafo de módulos.
+
+### O que mudou
+
+- [x] Diagnóstico via `npx depcruise src --output-type err-long`: zero dependências circulares; 5 violações `not-to-unresolvable`.
+- [x] Relocado `useDomain.ts` e `useDomain.test.tsx` de `src/frontend/hooks/` para `src/frontend/context/` — local correto onde `./types` e `./createDomainSetter` resolvem.
+- [x] Deletados arquivos fantasma em `hooks/` após validação.
+- [x] Atualizado `.dependency-cruiser.cjs`: `pathNot` da regra `not-to-unresolvable` ampliado de `'^src/vite-env\\.d\\.ts$'` para `'\\.d\\.ts$'`, excluindo todas as declarações ambient.
+
+### Validação executada
+
+- [x] `npx depcruise src --output-type err-long` → **✔ no dependency violations found** (649 modules, 2440 deps).
+- [x] `npx vitest run src/frontend/context/useDomain.test.tsx` → **1 file PASS / 2 testes PASS**.
+
+### Observações
+
+- Zero dependências circulares no codebase. O ciclo `types/index.ts ↔ appData.ts` reportado pelo ArchPulse em 2026-02-28 já havia sido corrigido. O ciclo `index.tsx → index.tsx` era falso positivo (ArchPulse basename collapsing).
+- A arquitetura mantém fluxo unidirecional limpo em todas as camadas: `types ← services ← hooks ← context ← pages`.
+
+## Próximo passo exato
+
+1. Executar batch dedicado de formatação (`format:check`) para destravar o gate canônico.
+2. Reexecutar `npm run verify` buscando `[VERIFY][LOOP][PASS]`.
+
+## Bloqueios e dúvidas
+
+- `npm run verify` permanece bloqueado por passivo global de formatação (`prettier --check`) fora do escopo desta sessão.
+
+## Último estado conhecido (2026-03-05, sessão 55)
+
+Remediação incremental pós-ArchPulse no passivo do gate canônico, com saneamento completo do `typecheck` e validação focada dos testes afetados.
+
+### O que mudou
+
+- [x] Reconciliado o contexto do prompt `Prompt_ArchPulse_Remediacao.md` com a auditoria `docs/audits/archpulse-reconciliation-2026-02-28.md`: nenhum novo ciclo reproduzido localmente nesta sessão.
+- [x] Corrigidas fixtures tipadas em `src/frontend/components/nav/SidebarLinks.test.tsx` para refletir o contrato atual de `NavLinkItem`.
+- [x] Corrigido drift de props em `src/frontend/pages/clientes/ClientesDataManagementModal.test.tsx` usando `React.ComponentProps<typeof ClientesDataManagementModal>`.
+- [x] Ajustados os testes de `ClientesDataManagementModal` para validar a renderização real de `Modal` e `ClientSelectionModal`, removendo dependência de mocks quebrados.
+- [x] Corrigido narrowing de `closest()` para `HTMLElement` em `src/frontend/pages/prestadores-freelancers/PrestadoresFreelancersPage.test.tsx`.
+- [x] Atualizados enums de fixtures em `src/frontend/pages/prestadores-freelancers/servicos-contratados/ServicosContratadosPage.test.tsx` (`ProfessionalExpenseCategory` e `AgendaEventType`).
+
+### Validação executada
+
+- [x] `npm run typecheck` → **PASS**.
+- [x] `npx vitest run src/frontend/components/nav/SidebarLinks.test.tsx src/frontend/pages/clientes/ClientesDataManagementModal.test.tsx src/frontend/pages/prestadores-freelancers/PrestadoresFreelancersPage.test.tsx src/frontend/pages/prestadores-freelancers/servicos-contratados/ServicosContratadosPage.test.tsx` → **4 files PASS / 33 testes PASS**.
+- [x] `npm run verify`:
+  - `typecheck` → **PASS**
+  - `lint` → **PASS**
+  - `format:check` → **FAIL** por passivo global pré-existente de formatação em **115 arquivos** fora do recorte desta sessão.
+
+### Observações
+
+- O bloqueio atual do gate canônico não está mais em tipagem nem no recorte de testes saneado; o novo gargalo objetivo é dívida global de Prettier espalhada pelo repositório.
+- Como a falha de `format:check` atinge 115 arquivos, a correção exige batch dedicado de formatação e está fora do micro-batch seguro desta sessão.
+
+## Próximo passo exato
+
+1. Executar um batch dedicado e isolado para remediação da dívida global de `format:check` (115 arquivos), com validação posterior via `npm run verify`.
+2. Após o batch de formatação, reexecutar `npm run verify` buscando fechamento com `[VERIFY][LOOP][PASS]`.
+
+## Bloqueios e dúvidas
+
+- `npm run verify` permanece bloqueado por passivo global de formatação (`prettier --check`) fora do escopo cirúrgico desta sessão.
+
 ## Último estado conhecido (2026-03-05, sessão 54)
 
 Deep Clean forense do codebase — diagnóstico completo e remoção cirúrgica de código morto.

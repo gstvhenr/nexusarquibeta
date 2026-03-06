@@ -65,8 +65,22 @@ describe('clientService.getPaymentStatusByClientId', () => {
         financials: {
           paymentType: 'parcelado',
           installments: [
-            { id: 'i1', number: 1, dueDate: '2000-01-01', paid: true, value: 100, paymentDate: '2000-01-01' },
-            { id: 'i2', number: 2, dueDate: '2000-02-01', paid: true, value: 100, paymentDate: '2000-02-01' },
+            {
+              id: 'i1',
+              number: 1,
+              dueDate: '2000-01-01',
+              paid: true,
+              value: 100,
+              paymentDate: '2000-01-01',
+            },
+            {
+              id: 'i2',
+              number: 2,
+              dueDate: '2000-02-01',
+              paid: true,
+              value: 100,
+              paymentDate: '2000-02-01',
+            },
           ],
         },
       }),
@@ -90,7 +104,14 @@ describe('clientService.getPaymentStatusByClientId', () => {
         financials: {
           paymentType: 'parcelado',
           installments: [
-            { id: 'i1', number: 1, dueDate: '2000-01-01', paid: false, value: 100, paymentDate: null },
+            {
+              id: 'i1',
+              number: 1,
+              dueDate: '2000-01-01',
+              paid: false,
+              value: 100,
+              paymentDate: null,
+            },
           ],
         },
       }),

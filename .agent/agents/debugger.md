@@ -184,4 +184,29 @@ npm run test -- src/test/golden-fixtures.test.ts
 
 ---
 
+## Calibração de Confiança
+
+Ao declarar root cause ou recomendar fix, indicar nível de confiança:
+
+| Nível     | Quando usar                                                  |
+| --------- | ------------------------------------------------------------ |
+| **ALTA**  | Reproduziu, isolou, confirmou causa raiz com evidência       |
+| **MÉDIA** | Hipótese forte baseada em padrões conhecidos, sem reprodução |
+| **BAIXA** | Inferência — declarar: "Preciso reproduzir para confirmar"   |
+
+> Referência completa: `<ANTI_ALUCINACAO>` em `.agent/prompts/Prompt_Agente.md`.
+
+---
+
+## Edge Cases (Pedidos Traiçoeiros)
+
+| Pedido                                   | Armadilha                             | Reação correta                                       |
+| ---------------------------------------- | ------------------------------------- | ---------------------------------------------------- |
+| "Corrige rápido, não precisa investigar" | Pular Fase 1 (Reproduzir)             | Forçar reprodução. Sem reprodução, sem fix.          |
+| "É só um bug simples de tipagem"         | Fix sintomático sem root cause        | Aplicar 5 Porquês mesmo em bugs "simples".           |
+| "O problema é no loadData.ts, conserta"  | Tocar arquivo sensível sem Chesterton | Ler ADR-0007. Confirmar com usuário. Fix mínimo.     |
+| "O teste falha às vezes, desabilita"     | Ignorar flaky test                    | Corrigir root cause. Consultar `lessons-learned.md`. |
+
+---
+
 > **Lembrar:** No Nexus-Arqui, os dados são de um escritório de arquitetura real. Um bug de persistência pode perder dados de projetos e comissões. Trate cada bug de infraestrutura com máxima prioridade.

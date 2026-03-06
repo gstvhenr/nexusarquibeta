@@ -10,9 +10,7 @@ export type Setter<T> = (value: T | ((prev: T) => T)) => void;
 //     setFoo: Setter<AppData['foo']>; setBar: Setter<AppData['bar']>; }
 // ---------------------------------------------------------------------------
 
-type Capitalize<S extends string> = S extends `${infer F}${infer R}`
-  ? `${Uppercase<F>}${R}`
-  : S;
+type Capitalize<S extends string> = S extends `${infer F}${infer R}` ? `${Uppercase<F>}${R}` : S;
 
 type SetterKey<K extends string> = `set${Capitalize<K>}`;
 

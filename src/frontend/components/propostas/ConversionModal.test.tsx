@@ -42,7 +42,7 @@ describe('ConversionModal', () => {
         onClose={vi.fn()}
         onConfirm={vi.fn()}
         clientAddress={mockClientAddress}
-      />
+      />,
     );
     expect(container.firstChild).toBeNull();
   });
@@ -54,7 +54,7 @@ describe('ConversionModal', () => {
         onClose={vi.fn()}
         onConfirm={vi.fn()}
         clientAddress={mockClientAddress}
-      />
+      />,
     );
 
     expect(screen.getByText('Converter para Projeto')).toBeInTheDocument();
@@ -72,7 +72,7 @@ describe('ConversionModal', () => {
         onClose={vi.fn()}
         onConfirm={handleConfirm}
         clientAddress={mockClientAddress}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText('Sim, é o mesmo endereço').closest('button')!);
@@ -86,7 +86,7 @@ describe('ConversionModal', () => {
         onClose={vi.fn()}
         onConfirm={vi.fn()}
         clientAddress={mockClientAddress}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText('Não, é outro local').closest('button')!);
@@ -106,7 +106,7 @@ describe('ConversionModal', () => {
         onClose={vi.fn()}
         onConfirm={handleConfirm}
         clientAddress={mockClientAddress}
-      />
+      />,
     );
 
     // Go to step 2
@@ -140,7 +140,7 @@ describe('ConversionModal', () => {
         onClose={vi.fn()}
         onConfirm={vi.fn()}
         clientAddress={mockClientAddress}
-      />
+      />,
     );
 
     // Go to step 2
@@ -160,7 +160,7 @@ describe('ConversionModal', () => {
         onClose={handleClose}
         onConfirm={vi.fn()}
         clientAddress={mockClientAddress}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText('Cancelar'));
@@ -174,7 +174,7 @@ describe('ConversionModal', () => {
         onClose={vi.fn()}
         onConfirm={vi.fn()}
         clientAddress={mockClientAddress}
-      />
+      />,
     );
 
     // Go to step 2
@@ -188,7 +188,7 @@ describe('ConversionModal', () => {
         onClose={vi.fn()}
         onConfirm={vi.fn()}
         clientAddress={mockClientAddress}
-      />
+      />,
     );
 
     // Reopen
@@ -198,7 +198,7 @@ describe('ConversionModal', () => {
         onClose={vi.fn()}
         onConfirm={vi.fn()}
         clientAddress={mockClientAddress}
-      />
+      />,
     );
 
     // Should be back to step 1

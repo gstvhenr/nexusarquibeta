@@ -37,7 +37,9 @@ const makeProduct = (overrides: Partial<Product> = {}): Product => ({
   ...overrides,
 });
 
-const makeSnapshot = (overrides: Partial<SupplierProductSnapshot> = {}): SupplierProductSnapshot => ({
+const makeSnapshot = (
+  overrides: Partial<SupplierProductSnapshot> = {},
+): SupplierProductSnapshot => ({
   product: makeProduct(),
   latestPrice: 250,
   lastUpdated: new Date('2026-03-01T12:00:00.000Z'),
@@ -57,7 +59,9 @@ describe('SupplierProductsTab', () => {
     expect(screen.getByText('Catálogo de Produtos')).toBeInTheDocument();
     expect(screen.getByText('Comissão Est. (10%)')).toBeInTheDocument();
     expect(
-      screen.getByText('Nenhum produto vinculado. Adicione um produto para começar a monitorar preços.'),
+      screen.getByText(
+        'Nenhum produto vinculado. Adicione um produto para começar a monitorar preços.',
+      ),
     ).toBeInTheDocument();
   });
 

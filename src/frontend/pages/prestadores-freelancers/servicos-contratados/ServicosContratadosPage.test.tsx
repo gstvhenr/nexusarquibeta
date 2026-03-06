@@ -311,7 +311,7 @@ describe('ServicosContratadosPage', () => {
         {
           id: 'exp-other',
           description: 'Despesa não vinculada',
-          category: 'Operacional',
+          category: 'Outros',
           value: 50,
           dueDate: '2026-03-21',
           status: 'Pendente',
@@ -338,7 +338,7 @@ describe('ServicosContratadosPage', () => {
           title: 'Evento independente',
           date: '2026-03-22',
           time: '09:00',
-          type: 'Reunião',
+          type: 'Outro',
           description: 'Descrição',
           priority: 2,
           recurrence: 'none',

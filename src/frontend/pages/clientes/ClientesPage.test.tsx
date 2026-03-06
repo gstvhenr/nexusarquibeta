@@ -105,15 +105,15 @@ const renderComponent = () => {
 };
 
 const mockFileReaderReadAsText = (result: string) => {
-  return vi
-    .spyOn(FileReader.prototype, 'readAsText')
-    .mockImplementation(function readAsTextMock(this: FileReader) {
-      const onloadHandler = this.onload;
-      if (typeof onloadHandler === 'function') {
-        const event = { target: { result } } as unknown as ProgressEvent<FileReader>;
-        onloadHandler.call(this, event);
-      }
-    });
+  return vi.spyOn(FileReader.prototype, 'readAsText').mockImplementation(function readAsTextMock(
+    this: FileReader,
+  ) {
+    const onloadHandler = this.onload;
+    if (typeof onloadHandler === 'function') {
+      const event = { target: { result } } as unknown as ProgressEvent<FileReader>;
+      onloadHandler.call(this, event);
+    }
+  });
 };
 
 describe('ClientesPage', () => {
@@ -178,7 +178,9 @@ describe('ClientesPage', () => {
     it('deve filtrar clientes por texto (nome, CPF, cidade ou telefone)', () => {
       renderComponent();
 
-      const searchInput = screen.getByPlaceholderText('Busca por nome ou CPF/CNPJ') as HTMLInputElement;
+      const searchInput = screen.getByPlaceholderText(
+        'Busca por nome ou CPF/CNPJ',
+      ) as HTMLInputElement;
 
       fireEvent.change(searchInput, { target: { value: 'Alpha' } });
       expect(screen.getByText('Alpha Corp')).toBeInTheDocument();
@@ -213,7 +215,9 @@ describe('ClientesPage', () => {
       const selectAllCheckbox = screen.getAllByRole('checkbox')[0];
       fireEvent.click(selectAllCheckbox);
 
-      const bulkArchiveButton = screen.getByRole('button', { name: /Arquivar clientes selecionados/i });
+      const bulkArchiveButton = screen.getByRole('button', {
+        name: /Arquivar clientes selecionados/i,
+      });
       expect(bulkArchiveButton).toBeInTheDocument();
 
       fireEvent.click(selectAllCheckbox);
@@ -358,7 +362,9 @@ describe('ClientesPage', () => {
 
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       fireEvent.change(fileInput, {
-        target: { files: [new File(['{"test":"import"}'], 'test.json', { type: 'application/json' })] },
+        target: {
+          files: [new File(['{"test":"import"}'], 'test.json', { type: 'application/json' })],
+        },
       });
 
       fireEvent.click(screen.getByRole('button', { name: /Confirmar Importação/i }));

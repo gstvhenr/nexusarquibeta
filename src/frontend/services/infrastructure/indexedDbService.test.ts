@@ -41,7 +41,7 @@ const removeIndexedDb = (): void => {
 // Suite A — Volatile fallback (IndexedDB unavailable)
 // ---------------------------------------------------------------------------
 describe('indexedDbService — volatile fallback (no IndexedDB)', () => {
-  let indexedDbService: typeof import('./indexedDbService')['indexedDbService'];
+  let indexedDbService: (typeof import('./indexedDbService'))['indexedDbService'];
 
   beforeEach(async () => {
     removeIndexedDb();
@@ -146,7 +146,10 @@ describe('indexedDbService — volatile fallback (no IndexedDB)', () => {
 
     // Act — add a second entity
     await indexedDbService.writeEntityState({ clients: ['c1'] });
-    const result = await indexedDbService.readEntityState<{ projects: string[]; clients: string[] }>();
+    const result = await indexedDbService.readEntityState<{
+      projects: string[];
+      clients: string[];
+    }>();
 
     // Assert — both keys present
     expect(result?.projects).toEqual(['p1']);
@@ -274,7 +277,7 @@ describe('indexedDbService — volatile fallback (no IndexedDB)', () => {
 // Suite B — Real IndexedDB path (fake-indexeddb)
 // ---------------------------------------------------------------------------
 describe('indexedDbService — real IndexedDB (fake-indexeddb)', () => {
-  let indexedDbService: typeof import('./indexedDbService')['indexedDbService'];
+  let indexedDbService: (typeof import('./indexedDbService'))['indexedDbService'];
 
   beforeEach(async () => {
     // Install a fresh IDBFactory per test to guarantee a clean, isolated DB.

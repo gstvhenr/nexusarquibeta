@@ -156,10 +156,7 @@ describe('applySeedAgendaEvents', () => {
 
     it('returns total = SEED_COUNT + custom events count', () => {
       // Arrange
-      const userEvents = [
-        makeEvent({ id: 'custom_a' }),
-        makeEvent({ id: 'custom_b' }),
-      ];
+      const userEvents = [makeEvent({ id: 'custom_a' }), makeEvent({ id: 'custom_b' })];
 
       // Act
       const { events } = applySeedAgendaEvents(userEvents);

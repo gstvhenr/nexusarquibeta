@@ -83,10 +83,7 @@ const renderHomePage = () =>
           <Route path="/propostas" element={<p>ROUTE_PROPOSTAS</p>} />
           <Route path="/agenda" element={<p>ROUTE_AGENDA</p>} />
           <Route path="/gestao-marketing" element={<p>ROUTE_GESTAO_MARKETING</p>} />
-          <Route
-            path="/financeiro/recebiveis"
-            element={<p>ROUTE_FINANCEIRO_RECEBIVEIS</p>}
-          />
+          <Route path="/financeiro/recebiveis" element={<p>ROUTE_FINANCEIRO_RECEBIVEIS</p>} />
         </Routes>
       </DataProvider>
     </MemoryRouter>,
@@ -384,10 +381,22 @@ describe('HomePage — Excellence Integration', () => {
       projects: [],
       proposals: [],
       marketingActivities: [
-        createMarketingActivity({ id: 'mkt-1', title: 'Story de bastidores', dueDate: dateOffset(1) }),
-        createMarketingActivity({ id: 'mkt-2', title: 'Carrossel de projeto', dueDate: dateOffset(2) }),
+        createMarketingActivity({
+          id: 'mkt-1',
+          title: 'Story de bastidores',
+          dueDate: dateOffset(1),
+        }),
+        createMarketingActivity({
+          id: 'mkt-2',
+          title: 'Carrossel de projeto',
+          dueDate: dateOffset(2),
+        }),
         createMarketingActivity({ id: 'mkt-3', title: 'Video de obra', dueDate: dateOffset(3) }),
-        createMarketingActivity({ id: 'mkt-4', title: 'Post de depoimento', dueDate: dateOffset(4) }),
+        createMarketingActivity({
+          id: 'mkt-4',
+          title: 'Post de depoimento',
+          dueDate: dateOffset(4),
+        }),
       ],
       agendaEvents: [],
       dismissedFocusItems: [],

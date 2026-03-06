@@ -140,7 +140,12 @@ describe('TarefasPage', () => {
           createTask({ id: 'todo-1', title: 'Tarefa A Fazer', kanbanStatus: 'todo' }),
           createTask({ id: 'in-1', title: 'Tarefa Em Andamento', kanbanStatus: 'in_progress' }),
           createTask({ id: 'rev-1', title: 'Tarefa Em Revisão', kanbanStatus: 'review' }),
-          createTask({ id: 'done-1', title: 'Tarefa Concluída', kanbanStatus: 'done', completed: true }),
+          createTask({
+            id: 'done-1',
+            title: 'Tarefa Concluída',
+            kanbanStatus: 'done',
+            completed: true,
+          }),
         ],
       });
 
@@ -181,9 +186,7 @@ describe('TarefasPage', () => {
     it('filters out archived tasks from the active kanban board', () => {
       // Arrange
       renderPage({
-        agendaEvents: [
-          createTask({ id: 'arch1', title: 'Tarefa Arquivada', archived: true }),
-        ],
+        agendaEvents: [createTask({ id: 'arch1', title: 'Tarefa Arquivada', archived: true })],
       });
 
       // Assert — archived tasks should NOT appear in the kanban board
@@ -230,9 +233,7 @@ describe('TarefasPage', () => {
     it('displays archived tasks in the archived section', () => {
       // Arrange
       renderPage({
-        agendaEvents: [
-          createTask({ id: 'arch1', title: 'Tarefa X Arquivada', archived: true }),
-        ],
+        agendaEvents: [createTask({ id: 'arch1', title: 'Tarefa X Arquivada', archived: true })],
       });
 
       // Act
@@ -279,7 +280,9 @@ describe('TarefasPage', () => {
       // Arrange
       renderPage();
       fireEvent.click(screen.getByRole('button', { name: 'Nova Tarefa' }));
-      fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Tarefa com subtarefas' } });
+      fireEvent.change(screen.getByLabelText('Título'), {
+        target: { value: 'Tarefa com subtarefas' },
+      });
       fireEvent.change(screen.getByLabelText('Tipo de Evento'), {
         target: { value: 'Desenvolvimento de Projeto' },
       });
@@ -294,15 +297,19 @@ describe('TarefasPage', () => {
 
       const transferStore: Record<string, string> = {};
       const dataTransfer = {
-        setData: (key: string, value: string) => { transferStore[key] = value; },
+        setData: (key: string, value: string) => {
+          transferStore[key] = value;
+        },
         getData: (key: string) => transferStore[key] ?? '',
-        clearData: () => { Object.keys(transferStore).forEach((key) => delete transferStore[key]); },
+        clearData: () => {
+          Object.keys(transferStore).forEach((key) => delete transferStore[key]);
+        },
         dropEffect: 'move',
         effectAllowed: 'all',
         files: [] as unknown as FileList,
         items: [] as unknown as DataTransferItemList,
         types: [] as string[],
-        setDragImage: () => { },
+        setDragImage: () => {},
       } as DataTransfer;
 
       // Act

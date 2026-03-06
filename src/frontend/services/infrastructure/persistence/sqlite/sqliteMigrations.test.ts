@@ -4,11 +4,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Mock the ?raw SQL import — static string so module reads it at init-time
 // ---------------------------------------------------------------------------
 vi.mock('./migrations/001_initial_schema.sql?raw', () => ({
-  default: [
-    '-- create core table',
-    'CREATE TABLE projects (id TEXT PRIMARY KEY)',
-    'CREATE TABLE clients (id TEXT PRIMARY KEY, name TEXT NOT NULL)',
-  ].join(';\n') + ';',
+  default:
+    [
+      '-- create core table',
+      'CREATE TABLE projects (id TEXT PRIMARY KEY)',
+      'CREATE TABLE clients (id TEXT PRIMARY KEY, name TEXT NOT NULL)',
+    ].join(';\n') + ';',
 }));
 
 // ---------------------------------------------------------------------------

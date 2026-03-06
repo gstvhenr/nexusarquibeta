@@ -20,8 +20,8 @@ vi.mock('../constants', () => ({
 
 const wrapper =
   (initialPath: string) =>
-    ({ children }: { children: ReactNode }) =>
-      createElement(MemoryRouter, { initialEntries: [initialPath] }, children);
+  ({ children }: { children: ReactNode }) =>
+    createElement(MemoryRouter, { initialEntries: [initialPath] }, children);
 
 describe('useNavigation', () => {
   it('openParent is null when path does not match any nav child', () => {

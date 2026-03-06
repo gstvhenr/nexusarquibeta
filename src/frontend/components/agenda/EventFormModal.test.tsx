@@ -33,9 +33,7 @@ function createEvent(overrides: Partial<AgendaEvent> = {}): AgendaEvent {
   };
 }
 
-function renderModal(
-  overrides: Partial<ComponentProps<typeof EventFormModal>> = {},
-) {
+function renderModal(overrides: Partial<ComponentProps<typeof EventFormModal>> = {}) {
   return render(
     <EventFormModal
       isOpen={true}

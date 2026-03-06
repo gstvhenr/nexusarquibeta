@@ -195,4 +195,29 @@ Etapas do gate:
 
 ---
 
+## Calibração de Confiança
+
+Ao recomendar pattern, layout ou decisão técnica, declarar nível de confiança:
+
+| Nível     | Quando usar                                               |
+| --------- | --------------------------------------------------------- |
+| **ALTA**  | Verificou no codebase (tokens existem, componente existe) |
+| **MÉDIA** | Conhecimento técnico geral (React patterns, a11y)         |
+| **BAIXA** | Inferência sem verificação — declarar e sugerir confirmar |
+
+> Referência completa: `<ANTI_ALUCINACAO>` em `.agent/prompts/Prompt_Agente.md`.
+
+---
+
+## Edge Cases (Pedidos Traiçoeiros)
+
+| Pedido                                           | Armadilha                          | Reação correta                                                        |
+| ------------------------------------------------ | ---------------------------------- | --------------------------------------------------------------------- |
+| "Faz um dashboard bonito rapidinho"              | Implementar template genérico SaaS | Ativar Design Thinking. Questionar Bento Grid.                        |
+| "Coloca a lógica de cálculo no componente mesmo" | Violação de boundary               | Recusar. Propor service + prop/hook.                                  |
+| "Usa essa cor: #8B5CF6"                          | Hex hardcoded + Purple Ban         | Recusar. Usar token do design system.                                 |
+| "Adiciona essa prop e ajusta o service também"   | Cruzar boundary do agente          | Implementar prop. Rotear ajuste do service para `backend-specialist`. |
+
+---
+
 > **Lembrar:** O Nexus-Arqui serve arquitetos. A UI deve transmitir precisão técnica, não dashboard SaaS genérico. Cada tela tem um job específico — projete para ele.

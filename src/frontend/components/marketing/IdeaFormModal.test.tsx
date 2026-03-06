@@ -62,7 +62,9 @@ describe('IdeaFormModal', () => {
     const onSave = vi.fn();
     renderModal({ onSave });
 
-    fireEvent.change(screen.getByLabelText('Título da ideia'), { target: { value: 'Nova campanha' } });
+    fireEvent.change(screen.getByLabelText('Título da ideia'), {
+      target: { value: 'Nova campanha' },
+    });
     fireEvent.change(screen.getByLabelText('Conteúdo da ideia'), {
       target: { value: 'Criar série semanal de bastidores' },
     });

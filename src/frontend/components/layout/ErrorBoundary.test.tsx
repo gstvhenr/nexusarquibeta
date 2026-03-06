@@ -14,7 +14,7 @@ const ThrowingChild = ({ shouldThrow }: { shouldThrow: boolean }) => {
 describe('ErrorBoundary', () => {
   beforeEach(() => {
     // Suppress React error boundary console noise during tests
-    vi.spyOn(console, 'error').mockImplementation(() => { });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   // ── Happy path ──
@@ -46,9 +46,7 @@ describe('ErrorBoundary', () => {
     );
 
     expect(screen.getByText('Algo deu errado.')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Pedimos desculpas pelo inconveniente/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Pedimos desculpas pelo inconveniente/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Recarregar/i })).toBeInTheDocument();
   });
 
@@ -63,7 +61,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('logs the error via console.error in componentDidCatch', () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
       <ErrorBoundary>
@@ -73,9 +71,7 @@ describe('ErrorBoundary', () => {
 
     // React itself logs + componentDidCatch logs
     expect(consoleSpy).toHaveBeenCalled();
-    const catchCall = consoleSpy.mock.calls.find(
-      (args) => args[0] === 'Uncaught error:',
-    );
+    const catchCall = consoleSpy.mock.calls.find((args) => args[0] === 'Uncaught error:');
     expect(catchCall).toBeDefined();
     expect(catchCall![1]).toBeInstanceOf(Error);
     expect((catchCall![1] as Error).message).toBe('Test explosion');
@@ -106,8 +102,9 @@ describe('ErrorBoundary', () => {
   // ── getDerivedStateFromError ──
 
   it('sets hasError to true via getDerivedStateFromError', () => {
-    const result = (ErrorBoundary as unknown as { getDerivedStateFromError: (e: Error) => { hasError: boolean } })
-      .getDerivedStateFromError(new Error('test'));
+    const result = (
+      ErrorBoundary as unknown as { getDerivedStateFromError: (e: Error) => { hasError: boolean } }
+    ).getDerivedStateFromError(new Error('test'));
 
     expect(result).toEqual({ hasError: true });
   });

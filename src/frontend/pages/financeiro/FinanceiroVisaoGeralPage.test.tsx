@@ -7,9 +7,9 @@ import { createTestProject, createTestFinancials } from '@/test/factories';
 import FinanceiroVisaoGeralPage from './FinanceiroVisaoGeralPage';
 
 class ResizeObserverMock {
-  observe() { }
-  unobserve() { }
-  disconnect() { }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
 }
 
 describe('FinanceiroVisaoGeralPage', () => {

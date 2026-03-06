@@ -106,7 +106,9 @@ describe('ClientFormInfoAddressStatus', () => {
     it('should call onChange for status fields', () => {
       render(<ClientFormInfoAddressStatus {...mockProps} />);
 
-      fireEvent.change(screen.getByLabelText('Status do Cliente'), { target: { value: 'Cliente Desabilitado' } });
+      fireEvent.change(screen.getByLabelText('Status do Cliente'), {
+        target: { value: 'Cliente Desabilitado' },
+      });
       expect(mockProps.onChange).toHaveBeenCalledWith('status', 'Cliente Desabilitado');
 
       fireEvent.change(screen.getByLabelText('Fonte do Lead'), { target: { value: 'Indicação' } });
@@ -115,7 +117,9 @@ describe('ClientFormInfoAddressStatus', () => {
 
     it('should handle service interests dropdown', () => {
       // First render closed
-      const { rerender } = render(<ClientFormInfoAddressStatus {...mockProps} isInterestsDropdownOpen={false} />);
+      const { rerender } = render(
+        <ClientFormInfoAddressStatus {...mockProps} isInterestsDropdownOpen={false} />,
+      );
       expect(screen.queryByText('Serviço B')).not.toBeInTheDocument();
 
       const toggleButton = screen.getByRole('button', { name: /Serviços de Interesse/i });

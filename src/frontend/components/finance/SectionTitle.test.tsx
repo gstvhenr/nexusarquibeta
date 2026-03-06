@@ -15,9 +15,7 @@ describe('SectionTitle', () => {
   });
 
   it('renders trailing content when provided', () => {
-    render(
-      <SectionTitle trailing={<button type="button">Atualizar</button>}>KPIs</SectionTitle>,
-    );
+    render(<SectionTitle trailing={<button type="button">Atualizar</button>}>KPIs</SectionTitle>);
 
     expect(screen.getByRole('button', { name: 'Atualizar' })).toBeInTheDocument();
   });

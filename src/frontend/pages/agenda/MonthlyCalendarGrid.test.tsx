@@ -197,8 +197,14 @@ describe('MonthlyCalendarGrid', () => {
       const dateA = makeDate(2026, 2, 10);
       getEventsFromIndex.mockReturnValue([
         {
-          id: 'e1', title: 'Alta prio', date: '2026-03-10', time: '10:00',
-          type: 'Prazo de Entrega', recurrence: 'none', priority: 5, isDeadlineEvent: false
+          id: 'e1',
+          title: 'Alta prio',
+          date: '2026-03-10',
+          time: '10:00',
+          type: 'Prazo de Entrega',
+          recurrence: 'none',
+          priority: 5,
+          isDeadlineEvent: false,
         } as AgendaEvent,
       ]);
 
@@ -245,12 +251,22 @@ describe('MonthlyCalendarGrid', () => {
       const dateA = makeDate(2026, 2, 10);
       getEventsFromIndex.mockReturnValue([
         {
-          id: 'e1', title: 'P3 A', date: '2026-03-10', time: '09:00',
-          type: 'Desenvolvimento de Projeto', recurrence: 'none', priority: 3
+          id: 'e1',
+          title: 'P3 A',
+          date: '2026-03-10',
+          time: '09:00',
+          type: 'Desenvolvimento de Projeto',
+          recurrence: 'none',
+          priority: 3,
         } as AgendaEvent,
         {
-          id: 'e2', title: 'P3 B', date: '2026-03-10', time: '10:00',
-          type: 'Desenvolvimento de Projeto', recurrence: 'none', priority: 3
+          id: 'e2',
+          title: 'P3 B',
+          date: '2026-03-10',
+          time: '10:00',
+          type: 'Desenvolvimento de Projeto',
+          recurrence: 'none',
+          priority: 3,
         } as AgendaEvent,
       ]);
 

@@ -161,8 +161,18 @@ describe('sortProspectsForRadar', () => {
 
   it('sorts Alta priority before Média', () => {
     // Arrange
-    const alta = makeProspect({ id: 'alta', priority: 'Alta', startDate: '2026-06-01', followUpDays: 30 });
-    const media = makeProspect({ id: 'media', priority: 'Média', startDate: '2026-06-01', followUpDays: 30 });
+    const alta = makeProspect({
+      id: 'alta',
+      priority: 'Alta',
+      startDate: '2026-06-01',
+      followUpDays: 30,
+    });
+    const media = makeProspect({
+      id: 'media',
+      priority: 'Média',
+      startDate: '2026-06-01',
+      followUpDays: 30,
+    });
 
     // Act — simulate Array.sort comparator
     const result = [media, alta].sort(sortProspectsForRadar);
@@ -174,8 +184,18 @@ describe('sortProspectsForRadar', () => {
 
   it('sorts Média priority before Baixa', () => {
     // Arrange
-    const media = makeProspect({ id: 'media', priority: 'Média', startDate: '2026-06-01', followUpDays: 30 });
-    const baixa = makeProspect({ id: 'baixa', priority: 'Baixa', startDate: '2026-06-01', followUpDays: 30 });
+    const media = makeProspect({
+      id: 'media',
+      priority: 'Média',
+      startDate: '2026-06-01',
+      followUpDays: 30,
+    });
+    const baixa = makeProspect({
+      id: 'baixa',
+      priority: 'Baixa',
+      startDate: '2026-06-01',
+      followUpDays: 30,
+    });
 
     // Act
     const result = [baixa, media].sort(sortProspectsForRadar);
@@ -227,8 +247,18 @@ describe('sortProspectsForRadar', () => {
 
   it('returns 0 (stable) for prospects with equal priority and equal remaining days', () => {
     // Arrange
-    const a = makeProspect({ id: 'a', priority: 'Média', startDate: '2026-06-01', followUpDays: 30 });
-    const b = makeProspect({ id: 'b', priority: 'Média', startDate: '2026-06-01', followUpDays: 30 });
+    const a = makeProspect({
+      id: 'a',
+      priority: 'Média',
+      startDate: '2026-06-01',
+      followUpDays: 30,
+    });
+    const b = makeProspect({
+      id: 'b',
+      priority: 'Média',
+      startDate: '2026-06-01',
+      followUpDays: 30,
+    });
 
     // Act
     const result = sortProspectsForRadar(a, b);

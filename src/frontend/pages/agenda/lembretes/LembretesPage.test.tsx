@@ -64,14 +64,17 @@ function TestSystemProvider({
     useState<SystemDataType['customBudgetTemplate']>(null);
   const [globalIdentifierCounter, setGlobalIdentifierCounter] =
     useState<SystemDataType['globalIdentifierCounter']>(2500);
-  const [dismissedFocusItems, setDismissedFocusItems] =
-    useState<SystemDataType['dismissedFocusItems']>([]);
-  const [acceptedPaymentMethods, setAcceptedPaymentMethods] =
-    useState<SystemDataType['acceptedPaymentMethods']>([]);
+  const [dismissedFocusItems, setDismissedFocusItems] = useState<
+    SystemDataType['dismissedFocusItems']
+  >([]);
+  const [acceptedPaymentMethods, setAcceptedPaymentMethods] = useState<
+    SystemDataType['acceptedPaymentMethods']
+  >([]);
   const [hiredServices, setHiredServices] = useState<SystemDataType['hiredServices']>([]);
-  const [contractDeadlines, setContractDeadlines] = useState<SystemDataType['contractDeadlines']>(
-    { defaultPreliminarDeadlineDays: 7, defaultExecutiveDeadlineDays: 30 },
-  );
+  const [contractDeadlines, setContractDeadlines] = useState<SystemDataType['contractDeadlines']>({
+    defaultPreliminarDeadlineDays: 7,
+    defaultExecutiveDeadlineDays: 30,
+  });
 
   const value: SystemDataType = {
     documentStorage,
@@ -191,8 +194,18 @@ describe('LembretesPage', () => {
     it('pinned reminders appear above non-pinned reminders', () => {
       // Arrange — pinned reminder is given a later creation date
       renderPage([
-        createReminder({ id: 'r1', title: 'Não Fixado', pinned: false, createdAt: '2026-01-01T00:00:00.000Z' }),
-        createReminder({ id: 'r2', title: 'Fixado', pinned: true, createdAt: '2026-06-01T00:00:00.000Z' }),
+        createReminder({
+          id: 'r1',
+          title: 'Não Fixado',
+          pinned: false,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        }),
+        createReminder({
+          id: 'r2',
+          title: 'Fixado',
+          pinned: true,
+          createdAt: '2026-06-01T00:00:00.000Z',
+        }),
       ]);
 
       // Assert — "Fixado" should appear before "Não Fixado" in the DOM

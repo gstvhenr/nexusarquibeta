@@ -15,4 +15,3 @@ describe('Section', () => {
     expect(screen.getByRole('button', { name: 'Ação' })).toBeInTheDocument();
   });
 });
-

@@ -5,7 +5,15 @@ import { BudgetSectionComponent } from './BudgetSectionComponent';
 import type { BudgetSection, BudgetItem, BillingMethod } from '../../types';
 
 vi.mock('./BudgetItemRow', () => ({
-  BudgetItemRow: ({ item, onFieldChange, onRemoveItem }: { item: BudgetItem, onFieldChange: (i: number, f: string) => (e: React.ChangeEvent<HTMLInputElement>) => void, onRemoveItem: (s: number, i: number) => void }) => (
+  BudgetItemRow: ({
+    item,
+    onFieldChange,
+    onRemoveItem,
+  }: {
+    item: BudgetItem;
+    onFieldChange: (i: number, f: string) => (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onRemoveItem: (s: number, i: number) => void;
+  }) => (
     <tr data-testid={`item-row-${item.id}`}>
       <td>
         <button onClick={() => onRemoveItem(1, item.id)}>Remove {item.id}</button>
@@ -80,7 +88,7 @@ describe('BudgetSectionComponent', () => {
         onRemoveItem={mockOnRemoveItem}
         onRemoveSection={mockOnRemoveSection}
         {...props}
-      />
+      />,
     );
   };
 

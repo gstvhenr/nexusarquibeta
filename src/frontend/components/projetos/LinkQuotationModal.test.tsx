@@ -69,7 +69,14 @@ describe('LinkQuotationModal', () => {
       createSupplyChainData({
         quotations: [
           { id: 'q-1', name: 'Cotação 1', date: '2026-03-01', status: 'Em Aberto', items: [] },
-          { id: 'q-2', name: 'Cotação 2', date: '2026-03-01', status: 'Finalizada', items: [], archived: true },
+          {
+            id: 'q-2',
+            name: 'Cotação 2',
+            date: '2026-03-01',
+            status: 'Finalizada',
+            items: [],
+            archived: true,
+          },
           { id: 'q-3', name: 'Cotação 3', date: '2026-03-01', status: 'Em Aberto', items: [] },
           { id: 'q-4', name: 'Cotação 4', date: '2026-03-01', status: 'Finalizada', items: [] },
         ],
@@ -79,7 +86,13 @@ describe('LinkQuotationModal', () => {
       createCoreData({
         projects: [
           project,
-          { ...project, id: 'project-2', code: 'PRJ-002', name: 'Projeto 2', linkedQuotationIds: ['q-3'] },
+          {
+            ...project,
+            id: 'project-2',
+            code: 'PRJ-002',
+            name: 'Projeto 2',
+            linkedQuotationIds: ['q-3'],
+          },
         ],
       }),
     );
@@ -88,12 +101,7 @@ describe('LinkQuotationModal', () => {
     const onSave = vi.fn();
 
     render(
-      <LinkQuotationModal
-        isOpen={true}
-        onClose={onClose}
-        onSave={onSave}
-        project={project}
-      />,
+      <LinkQuotationModal isOpen={true} onClose={onClose} onSave={onSave} project={project} />,
     );
 
     expect(screen.getByText('Cotação 1')).toBeInTheDocument();

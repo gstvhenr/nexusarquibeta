@@ -18,12 +18,15 @@ function createTask(id: string, title: string, overrides: Partial<AgendaEvent> =
   };
 }
 
-function renderView(tasks: AgendaEvent[], callbacks?: {
-  onOpenDetail?: (t: AgendaEvent) => void;
-  onOpenEdit?: (t: AgendaEvent) => void;
-  onUnarchive?: (t: AgendaEvent) => void;
-  onDelete?: (t: AgendaEvent) => void;
-}) {
+function renderView(
+  tasks: AgendaEvent[],
+  callbacks?: {
+    onOpenDetail?: (t: AgendaEvent) => void;
+    onOpenEdit?: (t: AgendaEvent) => void;
+    onUnarchive?: (t: AgendaEvent) => void;
+    onDelete?: (t: AgendaEvent) => void;
+  },
+) {
   render(
     <ArchivedTasksView
       tasks={tasks}

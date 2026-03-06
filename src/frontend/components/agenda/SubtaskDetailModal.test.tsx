@@ -32,9 +32,7 @@ function createTask(overrides: Partial<AgendaEvent> = {}): AgendaEvent {
   };
 }
 
-function renderModal(
-  overrides: Partial<ComponentProps<typeof SubtaskDetailModal>> = {},
-) {
+function renderModal(overrides: Partial<ComponentProps<typeof SubtaskDetailModal>> = {}) {
   return render(
     <SubtaskDetailModal
       isOpen={true}

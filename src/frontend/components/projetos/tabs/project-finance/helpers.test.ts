@@ -55,9 +55,7 @@ describe('getInstallmentStatus', () => {
     });
 
     it('ignores due date when already paid (even if past due)', () => {
-      const result = getInstallmentStatus(
-        makeInstallment({ paid: true, dueDate: '2020-01-01' }),
-      );
+      const result = getInstallmentStatus(makeInstallment({ paid: true, dueDate: '2020-01-01' }));
 
       expect(result.text).toBe('Pago');
       expect(result.color).toBe('text-success');
@@ -74,9 +72,7 @@ describe('getInstallmentStatus', () => {
 
   describe('when installment is overdue', () => {
     it('returns "Atrasado" with error styling for past due date', () => {
-      const result = getInstallmentStatus(
-        makeInstallment({ dueDate: '2026-03-01' }),
-      );
+      const result = getInstallmentStatus(makeInstallment({ dueDate: '2026-03-01' }));
 
       expect(result).toEqual({
         text: 'Atrasado',
@@ -86,26 +82,20 @@ describe('getInstallmentStatus', () => {
     });
 
     it('detects overdue when due date is exactly yesterday', () => {
-      const result = getInstallmentStatus(
-        makeInstallment({ dueDate: '2026-03-04' }),
-      );
+      const result = getInstallmentStatus(makeInstallment({ dueDate: '2026-03-04' }));
 
       expect(result.text).toBe('Atrasado');
       expect(result.dotColor).toBe('bg-error');
     });
 
     it('detects overdue for dd/mm/yyyy format (PT-BR)', () => {
-      const result = getInstallmentStatus(
-        makeInstallment({ dueDate: '01/01/2026' }),
-      );
+      const result = getInstallmentStatus(makeInstallment({ dueDate: '01/01/2026' }));
 
       expect(result.text).toBe('Atrasado');
     });
 
     it('detects overdue for dates far in the past', () => {
-      const result = getInstallmentStatus(
-        makeInstallment({ dueDate: '2020-06-15' }),
-      );
+      const result = getInstallmentStatus(makeInstallment({ dueDate: '2020-06-15' }));
 
       expect(result.text).toBe('Atrasado');
     });
@@ -115,9 +105,7 @@ describe('getInstallmentStatus', () => {
 
   describe('when installment is pending', () => {
     it('returns "Pendente" with warning styling for future due date', () => {
-      const result = getInstallmentStatus(
-        makeInstallment({ dueDate: '2026-12-31' }),
-      );
+      const result = getInstallmentStatus(makeInstallment({ dueDate: '2026-12-31' }));
 
       expect(result).toEqual({
         text: 'Pendente',
@@ -127,18 +115,14 @@ describe('getInstallmentStatus', () => {
     });
 
     it('treats today as pending (not overdue)', () => {
-      const result = getInstallmentStatus(
-        makeInstallment({ dueDate: '2026-03-05' }),
-      );
+      const result = getInstallmentStatus(makeInstallment({ dueDate: '2026-03-05' }));
 
       expect(result.text).toBe('Pendente');
       expect(result.color).toBe('text-warning');
     });
 
     it('returns consistent dot color mapped to "Pendente" status', () => {
-      const result = getInstallmentStatus(
-        makeInstallment({ dueDate: '2027-01-01' }),
-      );
+      const result = getInstallmentStatus(makeInstallment({ dueDate: '2027-01-01' }));
 
       expect(result.dotColor).toBe('bg-warning');
     });
@@ -148,17 +132,13 @@ describe('getInstallmentStatus', () => {
 
   describe('edge cases', () => {
     it('returns "Pendente" for invalid due date (parseDateString returns null)', () => {
-      const result = getInstallmentStatus(
-        makeInstallment({ dueDate: 'not-a-date' }),
-      );
+      const result = getInstallmentStatus(makeInstallment({ dueDate: 'not-a-date' }));
 
       expect(result.text).toBe('Pendente');
     });
 
     it('returns "Pendente" when dueDate is an empty string', () => {
-      const result = getInstallmentStatus(
-        makeInstallment({ dueDate: '' }),
-      );
+      const result = getInstallmentStatus(makeInstallment({ dueDate: '' }));
 
       expect(result.text).toBe('Pendente');
     });

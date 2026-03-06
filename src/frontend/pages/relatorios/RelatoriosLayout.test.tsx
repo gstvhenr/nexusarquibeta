@@ -209,8 +209,14 @@ describe('RelatoriosLayout', () => {
         <DataProvider>
           <Routes>
             <Route path="/relatorios" element={<RelatoriosLayout />}>
-              <Route path="financeiro" element={<h2 data-testid="finance-route">Financeiro route</h2>} />
-              <Route path="projetos" element={<h2 data-testid="projects-route">Projetos route</h2>} />
+              <Route
+                path="financeiro"
+                element={<h2 data-testid="finance-route">Financeiro route</h2>}
+              />
+              <Route
+                path="projetos"
+                element={<h2 data-testid="projects-route">Projetos route</h2>}
+              />
               <Route
                 path="aquisicao"
                 element={<h2 data-testid="acquisition-route">Aquisição route</h2>}

@@ -171,7 +171,7 @@ describe('PrestadoresFreelancersPage', () => {
       name: 'Confirmar Exclusão de Freelancer',
     });
     const confirmationContainer = confirmationHeading.closest('[role="document"]');
-    if (!confirmationContainer) {
+    if (!(confirmationContainer instanceof HTMLElement)) {
       throw new Error('Confirmation modal container not found');
     }
     expect(within(confirmationContainer).getByText(/Freelancer Ativo/i)).toBeInTheDocument();

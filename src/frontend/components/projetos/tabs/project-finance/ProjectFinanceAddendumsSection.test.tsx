@@ -25,7 +25,9 @@ const financialsWithData: ProjectFinancials = {
   ],
 };
 
-function renderSection(overrides: Partial<React.ComponentProps<typeof ProjectFinanceAddendumsSection>> = {}) {
+function renderSection(
+  overrides: Partial<React.ComponentProps<typeof ProjectFinanceAddendumsSection>> = {},
+) {
   const onNewAddendumChange = vi.fn();
 
   const props: React.ComponentProps<typeof ProjectFinanceAddendumsSection> = {

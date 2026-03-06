@@ -34,7 +34,7 @@ module.exports = {
       name: 'not-to-unresolvable',
       comment: 'This module depends on a module that cannot be found.',
       severity: 'error',
-      from: { pathNot: '^src/vite-env\\.d\\.ts$' },
+      from: { pathNot: '\\.d\\.ts$' },
       to: { couldNotResolve: true },
     },
     {

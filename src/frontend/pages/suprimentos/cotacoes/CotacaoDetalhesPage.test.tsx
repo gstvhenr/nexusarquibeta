@@ -200,8 +200,6 @@ describe('CotacaoDetalhesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 
     await waitFor(() => expect(screen.getByText('Página de Cotações')).toBeInTheDocument());
-    expect(api.getData().quotations.some((quotation) => quotation.id === 'qt_new_123')).toBe(
-      false,
-    );
+    expect(api.getData().quotations.some((quotation) => quotation.id === 'qt_new_123')).toBe(false);
   });
 });

@@ -22,12 +22,7 @@ describe('ValidationModal', () => {
 
   it('renders null when not open', () => {
     const { container } = render(
-      <ValidationModal
-        isOpen={false}
-        onClose={vi.fn()}
-        onRedirect={vi.fn()}
-        errors={['Erro 1']}
-      />
+      <ValidationModal isOpen={false} onClose={vi.fn()} onRedirect={vi.fn()} errors={['Erro 1']} />,
     );
     expect(container.firstChild).toBeNull();
   });
@@ -35,12 +30,7 @@ describe('ValidationModal', () => {
   it('renders correctly when open', () => {
     const errors = ['Falta CPF', 'Falta Endereço'];
     render(
-      <ValidationModal
-        isOpen={true}
-        onClose={vi.fn()}
-        onRedirect={vi.fn()}
-        errors={errors}
-      />
+      <ValidationModal isOpen={true} onClose={vi.fn()} onRedirect={vi.fn()} errors={errors} />,
     );
 
     expect(screen.getByText('Cadastro Incompleto')).toBeInTheDocument();
@@ -52,12 +42,7 @@ describe('ValidationModal', () => {
   it('calls onClose when clicking Cancel button', () => {
     const handleClose = vi.fn();
     render(
-      <ValidationModal
-        isOpen={true}
-        onClose={handleClose}
-        onRedirect={vi.fn()}
-        errors={[]}
-      />
+      <ValidationModal isOpen={true} onClose={handleClose} onRedirect={vi.fn()} errors={[]} />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
@@ -67,12 +52,7 @@ describe('ValidationModal', () => {
   it('calls onRedirect when clicking Correct button', () => {
     const handleRedirect = vi.fn();
     render(
-      <ValidationModal
-        isOpen={true}
-        onClose={vi.fn()}
-        onRedirect={handleRedirect}
-        errors={[]}
-      />
+      <ValidationModal isOpen={true} onClose={vi.fn()} onRedirect={handleRedirect} errors={[]} />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Corrigir Cadastro' }));

@@ -35,9 +35,7 @@ describe('TaskDetailModal', () => {
   });
 
   it('does not render when closed or without task', () => {
-    render(
-      <TaskDetailModal isOpen={false} onClose={vi.fn()} task={baseTask} onSave={vi.fn()} />,
-    );
+    render(<TaskDetailModal isOpen={false} onClose={vi.fn()} task={baseTask} onSave={vi.fn()} />);
     expect(screen.queryByText('Detalhes da Tarefa')).not.toBeInTheDocument();
   });
 
@@ -45,9 +43,7 @@ describe('TaskDetailModal', () => {
     const onClose = vi.fn();
     const onSave = vi.fn();
 
-    render(
-      <TaskDetailModal isOpen={true} onClose={onClose} task={baseTask} onSave={onSave} />,
-    );
+    render(<TaskDetailModal isOpen={true} onClose={onClose} task={baseTask} onSave={onSave} />);
 
     fireEvent.change(screen.getByLabelText('Nome da Tarefa'), {
       target: { value: 'Tarefa atualizada' },

@@ -98,7 +98,7 @@ describe('ClienteDetalhesSecondaryTabs', () => {
         'Adicione anotações gerais sobre o cliente, preferências, histórico de contatos, etc.',
       ),
       {
-      target: { value: 'novo texto' },
+        target: { value: 'novo texto' },
       },
     );
 

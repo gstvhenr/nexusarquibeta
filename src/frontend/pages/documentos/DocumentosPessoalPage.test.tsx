@@ -19,4 +19,3 @@ describe('DocumentosPessoalPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Meus Documentos' })).toBeInTheDocument();
   });
 });
-

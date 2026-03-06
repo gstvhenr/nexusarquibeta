@@ -189,9 +189,9 @@ describe('storageQuotaService', () => {
 
     it('triggers a download via anchor click', () => {
       // Given
-      const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => { });
+      const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
       vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
-      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => { });
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
       // When
       storageQuotaService.downloadBackup('my-backup.json');
@@ -209,9 +209,9 @@ describe('storageQuotaService', () => {
         if (tag === 'a') capturedAnchors.push(el as HTMLAnchorElement);
         return el;
       });
-      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => { });
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
       vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
-      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => { });
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
       // When
       storageQuotaService.downloadBackup('custom-name.json');
@@ -224,9 +224,9 @@ describe('storageQuotaService', () => {
 
     it('does not throw when called without filename', () => {
       // Given
-      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => { });
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
       vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
-      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => { });
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
       // When / Then
       expect(() => storageQuotaService.downloadBackup()).not.toThrow();

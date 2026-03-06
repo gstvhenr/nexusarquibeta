@@ -65,9 +65,7 @@ const ContextProbe = () => {
 
       <button
         type="button"
-        onClick={() =>
-          core.setProjects([{ id: 'project-1' }] as unknown as AppData['projects'])
-        }
+        onClick={() => core.setProjects([{ id: 'project-1' }] as unknown as AppData['projects'])}
       >
         set-projects
       </button>

@@ -107,7 +107,9 @@ describe('CashBoxExpenseFields', () => {
   });
 
   it('renders recurrence-specific hints and installments field', () => {
-    const { rerender } = render(<CashBoxExpenseFields {...BASE_PROPS} recurrence="Indeterminada" />);
+    const { rerender } = render(
+      <CashBoxExpenseFields {...BASE_PROPS} recurrence="Indeterminada" />,
+    );
 
     expect(screen.getByText(/sem data final/i)).toBeInTheDocument();
     expect(screen.queryByText(/As parcelas serão lançadas/i)).not.toBeInTheDocument();

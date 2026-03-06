@@ -221,8 +221,22 @@ describe('determineFocusItems', () => {
         financials: {
           paymentType: 'parcelado',
           installments: [
-            { id: 'i1', number: 1, value: 500, dueDate: '2026-01-01', paid: false, paymentDate: null },
-            { id: 'i2', number: 2, value: 600, dueDate: '2026-02-01', paid: false, paymentDate: null },
+            {
+              id: 'i1',
+              number: 1,
+              value: 500,
+              dueDate: '2026-01-01',
+              paid: false,
+              paymentDate: null,
+            },
+            {
+              id: 'i2',
+              number: 2,
+              value: 600,
+              dueDate: '2026-02-01',
+              paid: false,
+              paymentDate: null,
+            },
           ],
         },
       });
@@ -247,7 +261,14 @@ describe('determineFocusItems', () => {
         financials: {
           paymentType: 'parcelado',
           installments: [
-            { id: 'i1', number: 1, value: 500, dueDate: '2026-01-01', paid: true, paymentDate: '2026-01-05' },
+            {
+              id: 'i1',
+              number: 1,
+              value: 500,
+              dueDate: '2026-01-01',
+              paid: true,
+              paymentDate: '2026-01-05',
+            },
           ],
         },
       });
@@ -265,7 +286,14 @@ describe('determineFocusItems', () => {
         financials: {
           paymentType: 'parcelado',
           installments: [
-            { id: 'i1', number: 1, value: 500, dueDate: daysFromToday(10), paid: false, paymentDate: null },
+            {
+              id: 'i1',
+              number: 1,
+              value: 500,
+              dueDate: daysFromToday(10),
+              paid: false,
+              paymentDate: null,
+            },
           ],
         },
       });
@@ -285,7 +313,14 @@ describe('determineFocusItems', () => {
         financials: {
           paymentType: 'parcelado',
           installments: [
-            { id: 'i3', number: 3, value: 750, dueDate: '2026-02-15', paid: false, paymentDate: null },
+            {
+              id: 'i3',
+              number: 3,
+              value: 750,
+              dueDate: '2026-02-15',
+              paid: false,
+              paymentDate: null,
+            },
           ],
         },
       });
@@ -382,12 +417,29 @@ describe('determineFocusItems', () => {
 
     it('sorts multiple deadline projects with the soonest first', () => {
       // Arrange
-      const p1 = createTestProject({ id: 'dead-3', name: 'P3', status: 'Em Andamento', deadline: daysFromToday(3) });
-      const p2 = createTestProject({ id: 'dead-1', name: 'P1', status: 'Em Andamento', deadline: daysFromToday(1) });
-      const p3 = createTestProject({ id: 'dead-2', name: 'P2', status: 'Em Andamento', deadline: daysFromToday(2) });
+      const p1 = createTestProject({
+        id: 'dead-3',
+        name: 'P3',
+        status: 'Em Andamento',
+        deadline: daysFromToday(3),
+      });
+      const p2 = createTestProject({
+        id: 'dead-1',
+        name: 'P1',
+        status: 'Em Andamento',
+        deadline: daysFromToday(1),
+      });
+      const p3 = createTestProject({
+        id: 'dead-2',
+        name: 'P2',
+        status: 'Em Andamento',
+        deadline: daysFromToday(2),
+      });
 
       // Act
-      const result = determineFocusItems([p1, p2, p3], [], [], []).filter((i) => i.type === 'deadline');
+      const result = determineFocusItems([p1, p2, p3], [], [], []).filter(
+        (i) => i.type === 'deadline',
+      );
 
       // Assert
       expect(result[0].id).toBe('deadline_dead-1');
@@ -697,7 +749,9 @@ describe('determineFocusItems', () => {
       ];
 
       // Act
-      const result = determineFocusItems([], [], [], events).filter((i) => i.type === 'event_today');
+      const result = determineFocusItems([], [], [], events).filter(
+        (i) => i.type === 'event_today',
+      );
 
       // Assert
       expect(result[0].id).toBe('event_today_e1');
@@ -799,7 +853,11 @@ describe('determineFocusItems', () => {
       const TODAY = FIXED_NOW.toISOString().split('T')[0];
       const p1 = createTestProject({
         id: 'uid-p1',
-        financials: { paymentType: 'vista', lumpSumStatus: 'Em aberto', lumpSumDueDate: '2026-01-01' },
+        financials: {
+          paymentType: 'vista',
+          lumpSumStatus: 'Em aberto',
+          lumpSumDueDate: '2026-01-01',
+        },
       });
       const p2 = createTestProject({
         id: 'uid-p2',

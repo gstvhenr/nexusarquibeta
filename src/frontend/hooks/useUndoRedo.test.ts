@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { AppData } from '../services/infrastructure/api';
 import { useUndoRedo } from './useUndoRedo';
 
-const makeData = (n: number): AppData => ({ __version: n } as unknown as AppData);
+const makeData = (n: number): AppData => ({ __version: n }) as unknown as AppData;
 
 describe('useUndoRedo', () => {
   it('starts with canUndo=false and canRedo=false', () => {

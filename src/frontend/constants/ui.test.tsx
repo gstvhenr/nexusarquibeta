@@ -104,7 +104,14 @@ describe('constants/ui', () => {
   });
 
   it('keeps receivable source colors complete with valid HSL tokens', () => {
-    const expectedSources = ['Projeto', 'Comissão', 'Consultoria', 'Reembolso', 'Rendimento', 'Outros'];
+    const expectedSources = [
+      'Projeto',
+      'Comissão',
+      'Consultoria',
+      'Reembolso',
+      'Rendimento',
+      'Outros',
+    ];
 
     expect(Object.keys(RECEIVABLE_SOURCE_COLORS)).toEqual(expectedSources);
     expectedSources.forEach((source) => {

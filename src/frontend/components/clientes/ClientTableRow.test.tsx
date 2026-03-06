@@ -14,7 +14,15 @@ vi.mock('../../utils/supplierHelpers', () => ({
 }));
 
 vi.mock('../ui', () => ({
-  Badge: ({ children, variant, className }: { children: React.ReactNode; variant?: string; className?: string }) => (
+  Badge: ({
+    children,
+    variant,
+    className,
+  }: {
+    children: React.ReactNode;
+    variant?: string;
+    className?: string;
+  }) => (
     <span data-testid="badge" data-variant={variant} className={className}>
       {children}
     </span>
@@ -25,7 +33,9 @@ vi.mock('../ui/icons', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('../ui/icons');
   return {
     ...actual,
-    SirenIcon: ({ className }: { className?: string }) => <svg data-testid="siren-icon" className={className} />,
+    SirenIcon: ({ className }: { className?: string }) => (
+      <svg data-testid="siren-icon" className={className} />
+    ),
     ClockIcon: () => <svg data-testid="clock-icon" />,
     AlertIcon: () => <svg data-testid="alert-icon" />,
   };
@@ -61,7 +71,7 @@ describe('ClientTableRow', () => {
         <tbody>
           <ClientTableRow {...props} />
         </tbody>
-      </table>
+      </table>,
     );
   };
 

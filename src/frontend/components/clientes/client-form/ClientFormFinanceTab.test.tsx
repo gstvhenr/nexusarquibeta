@@ -18,7 +18,9 @@ describe('ClientFormFinanceTab', () => {
 
   it('should render empty state when financialSummaries is empty', () => {
     render(<ClientFormFinanceTab financialSummaries={[]} />);
-    expect(screen.getByText('Nenhum projeto ativo para exibir dados financeiros.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Nenhum projeto ativo para exibir dados financeiros.'),
+    ).toBeInTheDocument();
   });
 
   it('should render summaries correctly', () => {

@@ -115,9 +115,7 @@ describe('SupplierCommissionsTab', () => {
       makeCommission({ id: 'c1', clientName: 'A' }),
       makeCommission({ id: 'c2', clientName: 'B' }),
     ];
-    const { container } = render(
-      <SupplierCommissionsTab supplierCommissions={commissions} />,
-    );
+    const { container } = render(<SupplierCommissionsTab supplierCommissions={commissions} />);
     const rows = container.querySelectorAll('tbody tr');
     expect(rows.length).toBe(2);
   });

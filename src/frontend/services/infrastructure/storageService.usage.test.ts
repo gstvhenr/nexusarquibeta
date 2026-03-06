@@ -132,7 +132,10 @@ describe('storageService legacy guard', () => {
       const violations = findViolations(sourceFiles);
 
       // Then — descriptive message lists the violating files for easy debugging
-      expect(violations, `Files illegally importing storageService:\n${violations.join('\n')}`).toEqual([]);
+      expect(
+        violations,
+        `Files illegally importing storageService:\n${violations.join('\n')}`,
+      ).toEqual([]);
     });
   });
 });

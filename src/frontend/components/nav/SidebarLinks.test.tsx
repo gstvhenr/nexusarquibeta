@@ -25,7 +25,7 @@ describe('SidebarLinks', () => {
       render(
         <MemoryRouter initialEntries={['/other']}>
           <SidebarNavLink item={itemWithFallback} />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       const link = screen.getByRole('link', { name: /Home Link/i });
@@ -43,7 +43,7 @@ describe('SidebarLinks', () => {
       render(
         <MemoryRouter initialEntries={['/other']}>
           <SidebarNavLink item={itemWithIconName} />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       const link = screen.getByRole('link', { name: /Home Link/i });
@@ -53,13 +53,14 @@ describe('SidebarLinks', () => {
     it('não deve renderizar se o item não tiver path', () => {
       const noPathItem: NavLinkItem = {
         label: 'No Path',
+        icon: fallbackIcon,
         iconName: 'HomeIcon',
       };
 
       const { container } = render(
         <MemoryRouter>
           <SidebarNavLink item={noPathItem} />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       expect(container.firstChild).toBeNull();
@@ -72,7 +73,7 @@ describe('SidebarLinks', () => {
             <Route path="/home" element={<SidebarNavLink item={defaultItem} />} />
             <Route path="*" element={<SidebarNavLink item={defaultItem} />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       const link = screen.getByRole('link', { name: /Home Link/i });
@@ -85,7 +86,7 @@ describe('SidebarLinks', () => {
       render(
         <MemoryRouter initialEntries={['/other']}>
           <SidebarNavLink item={defaultItem} onClick={handleClick} />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       const link = screen.getByRole('link', { name: /Home Link/i });
@@ -98,7 +99,7 @@ describe('SidebarLinks', () => {
       render(
         <MemoryRouter initialEntries={['/other']}>
           <SidebarNavLink item={defaultItem} isChild />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       const link = screen.getByRole('link', { name: /Home Link/i });
@@ -123,8 +124,8 @@ describe('SidebarLinks', () => {
           path: '/child-2',
           icon: fallbackIcon,
           iconName: 'HomeIcon',
-        }
-      ]
+        },
+      ],
     };
 
     it('deve renderizar o botão pai fechado adequadamente', () => {
@@ -132,7 +133,7 @@ describe('SidebarLinks', () => {
       render(
         <MemoryRouter>
           <SidebarParentLink item={parentItem} isOpen={false} onToggle={handleToggle} />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       const button = screen.getByRole('button', { name: /Parent Menu/i });
@@ -148,7 +149,7 @@ describe('SidebarLinks', () => {
       render(
         <MemoryRouter>
           <SidebarParentLink item={parentItem} isOpen={false} onToggle={handleToggle} />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       const button = screen.getByRole('button', { name: /Parent Menu/i });
@@ -163,8 +164,13 @@ describe('SidebarLinks', () => {
 
       render(
         <MemoryRouter>
-          <SidebarParentLink item={parentItem} isOpen={true} onToggle={handleToggle} onChildClick={handleChildClick} />
-        </MemoryRouter>
+          <SidebarParentLink
+            item={parentItem}
+            isOpen={true}
+            onToggle={handleToggle}
+            onChildClick={handleChildClick}
+          />
+        </MemoryRouter>,
       );
 
       const button = screen.getByRole('button', { name: /Parent Menu/i });
@@ -184,13 +190,14 @@ describe('SidebarLinks', () => {
     it('deve renderizar o pai aberto mesmo se a propriedade children for vazia', () => {
       const parentNoChildren: NavLinkItem = {
         label: 'No Children',
+        icon: fallbackIcon,
         iconName: 'HomeIcon',
       };
 
       render(
         <MemoryRouter>
           <SidebarParentLink item={parentNoChildren} isOpen={true} onToggle={vi.fn()} />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       const list = screen.getByRole('list');

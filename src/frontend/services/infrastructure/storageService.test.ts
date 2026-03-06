@@ -52,7 +52,7 @@ describe('storageService', () => {
     it('returns the initialValue and logs an error when JSON is malformed', () => {
       // Given
       localStorage.setItem('bad-json', '{not valid json}');
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       // When
       const result = storageService.getItem<object>('bad-json', { fallback: true });
@@ -113,7 +113,7 @@ describe('storageService', () => {
     it('logs a warning and does nothing when window is undefined', () => {
       // Given
       mockWindowUndefined();
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       // When
       storageService.setItem('key', 'value');
@@ -125,7 +125,7 @@ describe('storageService', () => {
 
     it('logs an error when JSON serialization fails (circular reference)', () => {
       // Given
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.spyOn(JSON, 'stringify').mockImplementationOnce(() => {
         throw new TypeError('Converting circular structure to JSON');
       });
@@ -184,14 +184,14 @@ describe('storageService', () => {
     it('logs an error when the underlying removeItem call throws', () => {
       // Given — jsdom protects localStorage from direct method override;
       // stub the entire window.localStorage with a fake that throws on removeItem.
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.stubGlobal('localStorage', {
         getItem: () => null,
-        setItem: () => { },
+        setItem: () => {},
         removeItem: () => {
           throw new DOMException('QuotaExceededError');
         },
-        clear: () => { },
+        clear: () => {},
       });
 
       // When

@@ -242,7 +242,11 @@ describe('WeeklyTimeGrid', () => {
   describe('financial events', () => {
     it('hides edit and toggle controls for income financial events', () => {
       // Arrange
-      const event = createEvent({ id: 'fin-income', title: 'Recebimento', isFinancialEvent: 'income' });
+      const event = createEvent({
+        id: 'fin-income',
+        title: 'Recebimento',
+        isFinancialEvent: 'income',
+      });
       const weeklyGrid = createWeekGrid(new Date('2026-03-09T00:00:00.000Z'));
 
       getEventsFromIndex.mockImplementation((date: Date) =>

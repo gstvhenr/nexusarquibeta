@@ -37,7 +37,9 @@ describe('FinanceiroDebitosPage', () => {
 
     expect(screen.getByText('Despesas')).toBeInTheDocument();
     expect(screen.getByText('Evolução de gastos')).toBeInTheDocument();
-    expect(screen.getByText('Sem despesas registradas no período selecionado.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Sem despesas registradas no período selecionado.'),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('Período do gráfico')).toBeInTheDocument();
     expect(screen.getByLabelText('Filtro por origem')).toBeInTheDocument();
     expect(screen.getByLabelText('Filtro por categoria')).toBeInTheDocument();

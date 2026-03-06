@@ -21,7 +21,15 @@ const makeClient = (): Client => ({
   status: 'Potencial Cliente',
   leadSource: 'Não informado',
   serviceInterests: [],
-  address: { street: '', number: '', neighborhood: '', city: '', state: 'SP', zip: '', complement: '' },
+  address: {
+    street: '',
+    number: '',
+    neighborhood: '',
+    city: '',
+    state: 'SP',
+    zip: '',
+    complement: '',
+  },
   isFavorite: false,
   isUrgent: false,
   registrationDate: new Date().toISOString(),
@@ -105,7 +113,10 @@ describe('useClienteMeetings', () => {
     // Then — setClient chamado com updater que remove a reunião
     expect(args.setClient).toHaveBeenCalled();
     const updater = args.setClient.mock.calls[0][0];
-    const client = { ...makeClient(), meetings: [{ id: 'meeting-1', date: '', reason: 'R', notes: '' }] };
+    const client = {
+      ...makeClient(),
+      meetings: [{ id: 'meeting-1', date: '', reason: 'R', notes: '' }],
+    };
     const updated = updater(client);
     expect(updated.meetings).toHaveLength(0);
   });

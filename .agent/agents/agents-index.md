@@ -11,12 +11,13 @@ Agentes especializados disponíveis para o projeto. Cada arquivo contém persona
 
 ## 🏗 Core / Arquitetura
 
-| Arquivo                 | Agente             | Gatilhos                                              |
-| ----------------------- | ------------------ | ----------------------------------------------------- |
-| `orchestrator.md`       | Orchestrator       | multi-agente, complexo, coordenar, múltiplos domínios |
-| `project-planner.md`    | Project Planner    | planejar, arquitetar, decompor, roadmap               |
-| `explorer-agent.md`     | Explorer           | auditar, analisar repositório, mapear, viabilidade    |
-| `code-archaeologist.md` | Code Archaeologist | legado, refatorar, entender codebase, dead code       |
+| Arquivo                         | Agente             | Gatilhos                                                                      |
+| ------------------------------- | ------------------ | ----------------------------------------------------------------------------- |
+| `orchestrator.md`               | Orchestrator       | multi-agente, complexo, coordenar, múltiplos domínios                         |
+| `project-planner.md`            | Project Planner    | planejar, arquitetar, decompor, roadmap                                       |
+| `explorer-agent.md`             | Explorer           | auditar, analisar repositório, mapear, viabilidade                            |
+| `code-archaeologist.md`         | Code Archaeologist | legado, refatorar, entender codebase, dead code                               |
+| `architecture-health-doctor.md` | Arch Health Doctor | circular, acoplamento, coupling, órfão, orphan, entry point, grafo, ArchPulse |
 
 ## 💻 Desenvolvimento
 
@@ -64,6 +65,7 @@ Agentes especializados disponíveis para o projeto. Cada arquivo contém persona
 
 ## 🔁 SYS_UPDATE Log
 
-| Data       | Arquivo        | Resumo                                                                                                                                                                                                                                                                     |
-| ---------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-02-21 | ALL (14 files) | [SYS_UPDATE] Integração dos 20 agentes do Antigravity Kit. Removidos game-developer, mobile-developer, seo-specialist, penetration-tester, product-manager e product-owner (irrelevantes para ERP interno React). 14 agentes adaptados ao stack e contexto do Nexus-Arqui. |
+| Data       | Arquivo                       | Resumo                                                                                                                                                                                                                                                                     |
+| ---------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-02-21 | ALL (14 files)                | [SYS_UPDATE] Integração dos 20 agentes do Antigravity Kit. Removidos game-developer, mobile-developer, seo-specialist, penetration-tester, product-manager e product-owner (irrelevantes para ERP interno React). 14 agentes adaptados ao stack e contexto do Nexus-Arqui. |
+| 2026-03-06 | architecture-health-doctor.md | [SYS_UPDATE] Novo agente especialista em saúde estrutural do grafo de dependências. Acompanha 4 workflows: `/circular-deps`, `/orphan-modules`, `/coupling-check`, `/entry-points`.                                                                                        |

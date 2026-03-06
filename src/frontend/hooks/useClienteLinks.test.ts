@@ -15,7 +15,15 @@ const makeClient = (overrides: Partial<Client> = {}): Client => ({
   status: 'Potencial Cliente',
   leadSource: 'Não informado',
   serviceInterests: [],
-  address: { street: '', number: '', neighborhood: '', city: '', state: 'SP', zip: '', complement: '' },
+  address: {
+    street: '',
+    number: '',
+    neighborhood: '',
+    city: '',
+    state: 'SP',
+    zip: '',
+    complement: '',
+  },
   isFavorite: false,
   isUrgent: false,
   registrationDate: new Date().toISOString(),
@@ -42,9 +50,7 @@ describe('useClienteLinks', () => {
   it('handleAddLink does nothing when title is empty', () => {
     // Given — link sem título
     const setClient = vi.fn();
-    const { result } = renderHook(() =>
-      useClienteLinks({ client: makeClient(), setClient }),
-    );
+    const { result } = renderHook(() => useClienteLinks({ client: makeClient(), setClient }));
 
     act(() => {
       result.current.setNewLink({ title: '', url: 'https://example.com' });
@@ -62,9 +68,7 @@ describe('useClienteLinks', () => {
   it('handleAddLink does nothing when url is empty', () => {
     // Given — link sem URL
     const setClient = vi.fn();
-    const { result } = renderHook(() =>
-      useClienteLinks({ client: makeClient(), setClient }),
-    );
+    const { result } = renderHook(() => useClienteLinks({ client: makeClient(), setClient }));
 
     act(() => {
       result.current.setNewLink({ title: 'Título', url: '' });

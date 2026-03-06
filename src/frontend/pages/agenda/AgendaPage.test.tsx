@@ -12,12 +12,20 @@ vi.mock('../../services/infrastructure/api', () => ({
       clients: [],
       documentStorage: {
         personal: {
-          id: 'personal-root', name: 'Meus Documentos', type: 'folder', children: [],
-          dateAdded: '2026-03-03T10:00:00.000Z', dateModified: '2026-03-03T10:00:00.000Z',
+          id: 'personal-root',
+          name: 'Meus Documentos',
+          type: 'folder',
+          children: [],
+          dateAdded: '2026-03-03T10:00:00.000Z',
+          dateModified: '2026-03-03T10:00:00.000Z',
         },
         projects: {
-          id: 'projects-root', name: 'Documentos de Projetos', type: 'folder', children: [],
-          dateAdded: '2026-03-03T10:00:00.000Z', dateModified: '2026-03-03T10:00:00.000Z',
+          id: 'projects-root',
+          name: 'Documentos de Projetos',
+          type: 'folder',
+          children: [],
+          dateAdded: '2026-03-03T10:00:00.000Z',
+          dateModified: '2026-03-03T10:00:00.000Z',
         },
       },
       suppliers: [],
@@ -197,7 +205,9 @@ describe('AgendaPage — Integration', () => {
       fireEvent.click(screen.getByText('Novo Evento'));
 
       // Assert
-      expect(await screen.findByRole('heading', { name: 'Novo Evento / Tarefa' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: 'Novo Evento / Tarefa' }),
+      ).toBeInTheDocument();
     });
 
     it('closes the modal when the Cancel button is pressed', async () => {
@@ -211,7 +221,9 @@ describe('AgendaPage — Integration', () => {
       fireEvent.click(screen.getByRole('button', { name: /Cancelar/i }));
 
       // Assert — modal is closed
-      expect(screen.queryByRole('heading', { name: 'Novo Evento / Tarefa' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('heading', { name: 'Novo Evento / Tarefa' }),
+      ).not.toBeInTheDocument();
     });
   });
 

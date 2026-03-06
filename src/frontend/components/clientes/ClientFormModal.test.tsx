@@ -28,11 +28,27 @@ vi.mock('./client-form', () => ({
   ClientFormInfoTab: () => <div data-testid="mock-info-tab" />,
   ClientFormMeetingsTab: () => <div data-testid="mock-meetings-tab" />,
   ClientFormNotesTab: () => <div data-testid="mock-notes-tab" />,
-  ClientFormFooter: ({ onSave, onSwitchToEdit, onClose, isReadOnly }: { onSave: () => void; onSwitchToEdit: () => void; onClose: () => void; isReadOnly: boolean }) => (
+  ClientFormFooter: ({
+    onSave,
+    onSwitchToEdit,
+    onClose,
+    isReadOnly,
+  }: {
+    onSave: () => void;
+    onSwitchToEdit: () => void;
+    onClose: () => void;
+    isReadOnly: boolean;
+  }) => (
     <div data-testid="mock-footer">
-      <button onClick={onSave} data-testid="save-btn">Save</button>
-      <button onClick={onSwitchToEdit} data-testid="edit-btn">Edit</button>
-      <button onClick={onClose} data-testid="close-btn">Close</button>
+      <button onClick={onSave} data-testid="save-btn">
+        Save
+      </button>
+      <button onClick={onSwitchToEdit} data-testid="edit-btn">
+        Edit
+      </button>
+      <button onClick={onClose} data-testid="close-btn">
+        Close
+      </button>
       <span data-readonly={isReadOnly}>ReadOnly:{String(isReadOnly)}</span>
     </div>
   ),
@@ -40,7 +56,15 @@ vi.mock('./client-form', () => ({
 
 // Mock the UI Modal since we want to focus on ClientFormModal behavior
 vi.mock('../ui/Modal', () => ({
-  default: ({ isOpen, title, children }: { isOpen: boolean; title: string; children: React.ReactNode }) =>
+  default: ({
+    isOpen,
+    title,
+    children,
+  }: {
+    isOpen: boolean;
+    title: string;
+    children: React.ReactNode;
+  }) =>
     isOpen ? (
       <div data-testid="mock-modal">
         <h2>{title}</h2>
@@ -129,7 +153,7 @@ describe('ClientFormModal', () => {
           {...defaultProps}
           initialClient={defaultClient as never}
           isReadOnly={true}
-        />
+        />,
       );
       expect(screen.getByText('Detalhes do Cliente')).toBeInTheDocument();
     });
@@ -138,8 +162,10 @@ describe('ClientFormModal', () => {
       render(
         <ClientFormModal
           {...defaultProps}
-          initialClient={{ ...defaultClient, auditLog: [{ date: '2026-01-01', action: 'Created' }] } as never}
-        />
+          initialClient={
+            { ...defaultClient, auditLog: [{ date: '2026-01-01', action: 'Created' }] } as never
+          }
+        />,
       );
       expect(screen.getByText('Histórico')).toBeInTheDocument();
     });
@@ -151,7 +177,7 @@ describe('ClientFormModal', () => {
         <ClientFormModal
           {...defaultProps}
           initialClient={{ ...defaultClient, auditLog: [{ date: '2026-01-01' }] } as never}
-        />
+        />,
       );
     };
 

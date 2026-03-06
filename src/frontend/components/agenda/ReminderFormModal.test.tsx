@@ -78,7 +78,9 @@ describe('ReminderFormModal', () => {
     fireEvent.change(screen.getByPlaceholderText('Detalhes adicionais...'), {
       target: { value: '  Comentário importante  ' },
     });
-    const dateTimeInput = document.querySelector('input[type="datetime-local"]') as HTMLInputElement;
+    const dateTimeInput = document.querySelector(
+      'input[type="datetime-local"]',
+    ) as HTMLInputElement;
     fireEvent.change(dateTimeInput, {
       target: { value: '2026-03-15T08:45' },
     });
@@ -137,7 +139,9 @@ describe('ReminderFormModal', () => {
     expect(screen.getByRole('heading', { name: 'Reagendar Lembrete' })).toBeInTheDocument();
     expect(screen.getByText('Nova Data e Horário *')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reagendar' })).toBeInTheDocument();
-    const dateTimeInput = document.querySelector('input[type="datetime-local"]') as HTMLInputElement;
+    const dateTimeInput = document.querySelector(
+      'input[type="datetime-local"]',
+    ) as HTMLInputElement;
     expect(dateTimeInput).toHaveValue('');
 
     fireEvent.change(screen.getByDisplayValue('Lembrete existente'), {

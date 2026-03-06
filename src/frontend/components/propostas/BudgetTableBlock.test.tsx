@@ -41,7 +41,7 @@ describe('BudgetTableBlock', () => {
         showDiscount={true}
         showGrandTotal={true}
         totalsAlignment="right"
-      />
+      />,
     );
 
     // Section title
@@ -81,7 +81,7 @@ describe('BudgetTableBlock', () => {
         showDiscount={false}
         showGrandTotal={false}
         totalsAlignment="left"
-      />
+      />,
     );
 
     // Items should still be rendered
@@ -109,7 +109,7 @@ describe('BudgetTableBlock', () => {
         showDiscount={false}
         showGrandTotal={true}
         totalsAlignment="right"
-      />
+      />,
     );
 
     expect(screen.getByText('Total')).toBeInTheDocument();
@@ -126,7 +126,7 @@ describe('BudgetTableBlock', () => {
         showDiscount={true}
         showGrandTotal={true}
         totalsAlignment="right"
-      />
+      />,
     );
 
     expect(screen.getByText('Total')).toBeInTheDocument();
@@ -142,7 +142,7 @@ describe('BudgetTableBlock', () => {
         showDiscount={false}
         showGrandTotal={true}
         totalsAlignment="right"
-      />
+      />,
     );
 
     // Check for right alignment class
@@ -156,7 +156,7 @@ describe('BudgetTableBlock', () => {
         showDiscount={false}
         showGrandTotal={true}
         totalsAlignment="left"
-      />
+      />,
     );
 
     // Check for left alignment class

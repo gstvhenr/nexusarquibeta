@@ -127,7 +127,9 @@ describe('TaskCard', () => {
       const task = createTask();
       const onViewDetails = vi.fn();
 
-      render(<TaskCard task={task} onViewDetails={onViewDetails} onEdit={vi.fn()} onDelete={vi.fn()} />);
+      render(
+        <TaskCard task={task} onViewDetails={onViewDetails} onEdit={vi.fn()} onDelete={vi.fn()} />,
+      );
 
       // Act
       fireEvent.click(screen.getByText('Revisar planta executiva'));
@@ -142,7 +144,9 @@ describe('TaskCard', () => {
       const onViewDetails = vi.fn();
       const onEdit = vi.fn();
 
-      render(<TaskCard task={task} onViewDetails={onViewDetails} onEdit={onEdit} onDelete={vi.fn()} />);
+      render(
+        <TaskCard task={task} onViewDetails={onViewDetails} onEdit={onEdit} onDelete={vi.fn()} />,
+      );
 
       // Act
       fireEvent.click(screen.getByLabelText('Editar Tarefa'));
@@ -158,7 +162,9 @@ describe('TaskCard', () => {
       const onViewDetails = vi.fn();
       const onDelete = vi.fn();
 
-      render(<TaskCard task={task} onViewDetails={onViewDetails} onEdit={vi.fn()} onDelete={onDelete} />);
+      render(
+        <TaskCard task={task} onViewDetails={onViewDetails} onEdit={vi.fn()} onDelete={onDelete} />,
+      );
 
       // Act
       fireEvent.click(screen.getByLabelText('Excluir Tarefa'));
@@ -298,7 +304,9 @@ describe('TaskCard', () => {
       const task = createTask();
       const onViewDetails = vi.fn();
 
-      const { container } = render(<TaskCard task={task} onViewDetails={onViewDetails} onEdit={vi.fn()} onDelete={vi.fn()} />);
+      const { container } = render(
+        <TaskCard task={task} onViewDetails={onViewDetails} onEdit={vi.fn()} onDelete={vi.fn()} />,
+      );
       // Use container.querySelector to get the outermost div[role=button] specifically,
       // as getByRole('button') is ambiguous (matches both card wrapper and inner buttons)
       const card = container.querySelector('[role="button"]') as HTMLElement;
@@ -315,7 +323,9 @@ describe('TaskCard', () => {
       const task = createTask();
       const onViewDetails = vi.fn();
 
-      const { container } = render(<TaskCard task={task} onViewDetails={onViewDetails} onEdit={vi.fn()} onDelete={vi.fn()} />);
+      const { container } = render(
+        <TaskCard task={task} onViewDetails={onViewDetails} onEdit={vi.fn()} onDelete={vi.fn()} />,
+      );
       const card = container.querySelector('[role="button"]') as HTMLElement;
 
       // Act
@@ -330,7 +340,9 @@ describe('TaskCard', () => {
       const task = createTask();
       const onViewDetails = vi.fn();
 
-      const { container } = render(<TaskCard task={task} onViewDetails={onViewDetails} onEdit={vi.fn()} onDelete={vi.fn()} />);
+      const { container } = render(
+        <TaskCard task={task} onViewDetails={onViewDetails} onEdit={vi.fn()} onDelete={vi.fn()} />,
+      );
       const card = container.querySelector('[role="button"]') as HTMLElement;
 
       // Act

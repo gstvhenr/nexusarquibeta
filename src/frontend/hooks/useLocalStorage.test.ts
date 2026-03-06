@@ -22,7 +22,7 @@ describe('useLocalStorage', () => {
 
   it('returns initialValue before hydration completes', () => {
     // Given — getItem nunca resolve (promise pendente)
-    vi.mocked(uiPreferenceService.getItem).mockReturnValue(new Promise(() => { }));
+    vi.mocked(uiPreferenceService.getItem).mockReturnValue(new Promise(() => {}));
     vi.mocked(uiPreferenceService.setItem).mockResolvedValue(undefined);
 
     // When — hook monta
@@ -65,7 +65,7 @@ describe('useLocalStorage', () => {
 
   it('allows manual setValue before hydration', () => {
     // Given — getItem ainda pendente
-    vi.mocked(uiPreferenceService.getItem).mockReturnValue(new Promise(() => { }));
+    vi.mocked(uiPreferenceService.getItem).mockReturnValue(new Promise(() => {}));
     vi.mocked(uiPreferenceService.setItem).mockResolvedValue(undefined);
 
     const { result } = renderHook(() => useLocalStorage('test-key', 'original'));

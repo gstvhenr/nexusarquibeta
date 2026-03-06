@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { Client, Commission, Freelancer, MarketingActivity, ProfessionalExpense, Project, Proposal } from '../types';
+import type {
+  Client,
+  Commission,
+  Freelancer,
+  MarketingActivity,
+  ProfessionalExpense,
+  Project,
+  Proposal,
+} from '../types';
 import { generateReport, type ReportFilter, type ReportDataInput } from './reportService';
 
 // ── Shared factories ──────────────────────────────────────────────────
@@ -37,7 +45,12 @@ const buildProject = (overrides: Partial<Project> = {}): Project =>
   }) as Project;
 
 const allTimeFilter: ReportFilter = { type: 'preset', days: 99999, startDate: '', endDate: '' };
-const customFeb2026: ReportFilter = { type: 'custom', days: 0, startDate: '2026-02-01', endDate: '2026-02-28' };
+const customFeb2026: ReportFilter = {
+  type: 'custom',
+  days: 0,
+  startDate: '2026-02-01',
+  endDate: '2026-02-28',
+};
 
 // ── Financial Metrics ─────────────────────────────────────────────────
 
@@ -49,7 +62,12 @@ describe('reportService.generateReport — financialMetrics', () => {
       code: '#3001',
       status: 'Concluído',
       finalizedAt: '2026-02-10',
-      financials: { paymentType: 'vista', totalValue: 2000, baseContractValue: 2000, lumpSumStatus: 'Pago' },
+      financials: {
+        paymentType: 'vista',
+        totalValue: 2000,
+        baseContractValue: 2000,
+        lumpSumStatus: 'Pago',
+      },
     });
 
     const commission: Commission = {
@@ -112,16 +130,11 @@ describe('reportService.generateReport — financialMetrics', () => {
     const freelancer: Freelancer = {
       id: 'fl_1',
       name: 'Anna Freelancer',
-      projects: [
-        { id: 'flp_1', projectName: 'Projeto X', cost: 400, date: '2026-02-15' },
-      ],
+      projects: [{ id: 'flp_1', projectName: 'Projeto X', cost: 400, date: '2026-02-15' }],
     } as Freelancer;
 
     // When
-    const report = generateReport(
-      { ...buildBaseData(), freelancers: [freelancer] },
-      customFeb2026,
-    );
+    const report = generateReport({ ...buildBaseData(), freelancers: [freelancer] }, customFeb2026);
 
     // Then
     expect(report.financialMetrics.totalCosts).toBe(400);
@@ -133,13 +146,23 @@ describe('reportService.generateReport — financialMetrics', () => {
       id: 'proj_jan',
       status: 'Concluído',
       finalizedAt: '2026-01-15',
-      financials: { paymentType: 'vista', totalValue: 1000, baseContractValue: 1000, lumpSumStatus: 'Pago' },
+      financials: {
+        paymentType: 'vista',
+        totalValue: 1000,
+        baseContractValue: 1000,
+        lumpSumStatus: 'Pago',
+      },
     });
     const projFeb = buildProject({
       id: 'proj_feb',
       status: 'Concluído',
       finalizedAt: '2026-02-20',
-      financials: { paymentType: 'vista', totalValue: 500, baseContractValue: 500, lumpSumStatus: 'Pago' },
+      financials: {
+        paymentType: 'vista',
+        totalValue: 500,
+        baseContractValue: 500,
+        lumpSumStatus: 'Pago',
+      },
     });
 
     // When
@@ -188,7 +211,12 @@ describe('reportService.generateReport — projectMetrics', () => {
       status: 'Concluído',
       archived: false,
       finalizedAt: '2026-02-10',
-      financials: { paymentType: 'vista', totalValue: 1000, baseContractValue: 1000, lumpSumStatus: 'Pago' },
+      financials: {
+        paymentType: 'vista',
+        totalValue: 1000,
+        baseContractValue: 1000,
+        lumpSumStatus: 'Pago',
+      },
     });
 
     // When
@@ -212,14 +240,24 @@ describe('reportService.generateReport — projectMetrics', () => {
       id: 'pa',
       status: 'Em Andamento',
       archived: false,
-      financials: { paymentType: 'vista', totalValue: 500, baseContractValue: 500, lumpSumStatus: 'Em aberto' },
+      financials: {
+        paymentType: 'vista',
+        totalValue: 500,
+        baseContractValue: 500,
+        lumpSumStatus: 'Em aberto',
+      },
     });
     const concluded = buildProject({
       id: 'pc',
       status: 'Concluído',
       archived: false,
       finalizedAt: '2026-02-05',
-      financials: { paymentType: 'vista', totalValue: 1500, baseContractValue: 1500, lumpSumStatus: 'Pago' },
+      financials: {
+        paymentType: 'vista',
+        totalValue: 1500,
+        baseContractValue: 1500,
+        lumpSumStatus: 'Pago',
+      },
     });
 
     // When
@@ -284,18 +322,38 @@ describe('reportService.generateReport — acquisitionMetrics', () => {
   it('counts proposals in period and computes conversionRate', () => {
     // Given — 2 propostas no período, 1 convertida em projeto
     const convertedProposal = {
-      id: 'prop_1', code: '#001', name: 'Proposta 1', date: '2026-02-05',
-      status: 'Concluído', archived: false, sections: [], discount: 0, subtotal: 100, total: 100,
+      id: 'prop_1',
+      code: '#001',
+      name: 'Proposta 1',
+      date: '2026-02-05',
+      status: 'Concluído',
+      archived: false,
+      sections: [],
+      discount: 0,
+      subtotal: 100,
+      total: 100,
     } as Proposal;
     const pendingProposal = {
-      id: 'prop_2', code: '#002', name: 'Proposta 2', date: '2026-02-12',
-      status: 'Pendente', archived: false, sections: [], discount: 0, subtotal: 200, total: 200,
+      id: 'prop_2',
+      code: '#002',
+      name: 'Proposta 2',
+      date: '2026-02-12',
+      status: 'Pendente',
+      archived: false,
+      sections: [],
+      discount: 0,
+      subtotal: 200,
+      total: 200,
     } as Proposal;
     const linkedProject = buildProject({ id: 'p_conv', proposalId: 'prop_1' });
 
     // When
     const report = generateReport(
-      { ...buildBaseData(), proposals: [convertedProposal, pendingProposal], projects: [linkedProject] },
+      {
+        ...buildBaseData(),
+        proposals: [convertedProposal, pendingProposal],
+        projects: [linkedProject],
+      },
       customFeb2026,
     );
 
@@ -308,13 +366,20 @@ describe('reportService.generateReport — acquisitionMetrics', () => {
   it('computes marketingSpend for activities in period', () => {
     // Given
     const mkt: MarketingActivity = {
-      id: 'mkt_1', title: 'Campanha FB', status: 'Concluído',
-      contentType: 'Campanha de ADS', dueDate: '2026-02-10', responsibleId: 'arch',
+      id: 'mkt_1',
+      title: 'Campanha FB',
+      status: 'Concluído',
+      contentType: 'Campanha de ADS',
+      dueDate: '2026-02-10',
+      responsibleId: 'arch',
       cost: 300,
     } as MarketingActivity;
 
     // When
-    const report = generateReport({ ...buildBaseData(), marketingActivities: [mkt] }, customFeb2026);
+    const report = generateReport(
+      { ...buildBaseData(), marketingActivities: [mkt] },
+      customFeb2026,
+    );
 
     // Then
     expect(report.acquisitionMetrics.marketingSpend).toBe(300);
@@ -324,22 +389,45 @@ describe('reportService.generateReport — acquisitionMetrics', () => {
     // Given — 2 novos clientes registrados no mês e R$200 de spend
     const clients: Client[] = [
       {
-        id: 'cli_1', name: 'Cliente Novo 1', contacts: [], status: 'Potencial Cliente',
-        serviceInterests: [], address: { street: '', number: '', neighborhood: '', city: '', state: '', zip: '' },
-        isFavorite: false, registrationDate: '2026-02-05', lastContactDate: '2026-02-05',
-        pipelineStatus: 'Novo', meetings: [], behavioralProfile: { notes: '' }, archived: false,
+        id: 'cli_1',
+        name: 'Cliente Novo 1',
+        contacts: [],
+        status: 'Potencial Cliente',
+        serviceInterests: [],
+        address: { street: '', number: '', neighborhood: '', city: '', state: '', zip: '' },
+        isFavorite: false,
+        registrationDate: '2026-02-05',
+        lastContactDate: '2026-02-05',
+        pipelineStatus: 'Novo',
+        meetings: [],
+        behavioralProfile: { notes: '' },
+        archived: false,
       } as Client,
       {
-        id: 'cli_2', name: 'Cliente Novo 2', contacts: [], status: 'Potencial Cliente',
-        serviceInterests: [], address: { street: '', number: '', neighborhood: '', city: '', state: '', zip: '' },
-        isFavorite: false, registrationDate: '2026-02-15', lastContactDate: '2026-02-15',
-        pipelineStatus: 'Novo', meetings: [], behavioralProfile: { notes: '' }, archived: false,
+        id: 'cli_2',
+        name: 'Cliente Novo 2',
+        contacts: [],
+        status: 'Potencial Cliente',
+        serviceInterests: [],
+        address: { street: '', number: '', neighborhood: '', city: '', state: '', zip: '' },
+        isFavorite: false,
+        registrationDate: '2026-02-15',
+        lastContactDate: '2026-02-15',
+        pipelineStatus: 'Novo',
+        meetings: [],
+        behavioralProfile: { notes: '' },
+        archived: false,
       } as Client,
     ];
 
     const mkt: MarketingActivity = {
-      id: 'mkt_cac', title: 'ADS', status: 'Concluído',
-      contentType: 'Campanha de ADS', dueDate: '2026-02-08', responsibleId: 'arch', cost: 200,
+      id: 'mkt_cac',
+      title: 'ADS',
+      status: 'Concluído',
+      contentType: 'Campanha de ADS',
+      dueDate: '2026-02-08',
+      responsibleId: 'arch',
+      cost: 200,
     } as MarketingActivity;
 
     // When
@@ -358,27 +446,59 @@ describe('reportService.generateReport — acquisitionMetrics', () => {
     // Given — 2 clientes por Indicação, 1 por Google Ads; 1 com projeto vinculado
     const clients: Client[] = [
       {
-        id: 'c1', name: 'C1', leadSource: 'Indicação',
-        projectLinks: [{ projectId: 'p1', projectCode: '#1', projectName: 'P1', status: 'Em Andamento' }],
-        contacts: [], status: 'Cliente Ativo', serviceInterests: [],
+        id: 'c1',
+        name: 'C1',
+        leadSource: 'Indicação',
+        projectLinks: [
+          { projectId: 'p1', projectCode: '#1', projectName: 'P1', status: 'Em Andamento' },
+        ],
+        contacts: [],
+        status: 'Cliente Ativo',
+        serviceInterests: [],
         address: { street: '', number: '', neighborhood: '', city: '', state: '', zip: '' },
-        isFavorite: false, registrationDate: '2025-01-01', lastContactDate: '2025-01-01',
-        pipelineStatus: 'Novo', meetings: [], behavioralProfile: { notes: '' }, archived: false,
+        isFavorite: false,
+        registrationDate: '2025-01-01',
+        lastContactDate: '2025-01-01',
+        pipelineStatus: 'Novo',
+        meetings: [],
+        behavioralProfile: { notes: '' },
+        archived: false,
       } as Client,
       {
-        id: 'c2', name: 'C2', leadSource: 'Indicação', projectLinks: [],
-        contacts: [], status: 'Potencial Cliente', serviceInterests: [],
+        id: 'c2',
+        name: 'C2',
+        leadSource: 'Indicação',
+        projectLinks: [],
+        contacts: [],
+        status: 'Potencial Cliente',
+        serviceInterests: [],
         address: { street: '', number: '', neighborhood: '', city: '', state: '', zip: '' },
-        isFavorite: false, registrationDate: '2025-02-01', lastContactDate: '2025-02-01',
-        pipelineStatus: 'Novo', meetings: [], behavioralProfile: { notes: '' }, archived: false,
+        isFavorite: false,
+        registrationDate: '2025-02-01',
+        lastContactDate: '2025-02-01',
+        pipelineStatus: 'Novo',
+        meetings: [],
+        behavioralProfile: { notes: '' },
+        archived: false,
       } as Client,
       {
-        id: 'c3', name: 'C3', leadSource: 'Google Ads',
-        projectLinks: [{ projectId: 'p2', projectCode: '#2', projectName: 'P2', status: 'Em Andamento' }],
-        contacts: [], status: 'Cliente Ativo', serviceInterests: [],
+        id: 'c3',
+        name: 'C3',
+        leadSource: 'Google Ads',
+        projectLinks: [
+          { projectId: 'p2', projectCode: '#2', projectName: 'P2', status: 'Em Andamento' },
+        ],
+        contacts: [],
+        status: 'Cliente Ativo',
+        serviceInterests: [],
         address: { street: '', number: '', neighborhood: '', city: '', state: '', zip: '' },
-        isFavorite: false, registrationDate: '2025-03-01', lastContactDate: '2025-03-01',
-        pipelineStatus: 'Novo', meetings: [], behavioralProfile: { notes: '' }, archived: false,
+        isFavorite: false,
+        registrationDate: '2025-03-01',
+        lastContactDate: '2025-03-01',
+        pipelineStatus: 'Novo',
+        meetings: [],
+        behavioralProfile: { notes: '' },
+        archived: false,
       } as Client,
     ];
 
@@ -406,17 +526,43 @@ describe('reportService.generateReport — acquisitionMetrics', () => {
     // Given
     const data: ReportDataInput = {
       ...buildBaseData(),
-      proposals: [{
-        id: 'prop_old', code: '#4001', name: 'Proposta antiga', date: '2020-01-15',
-        status: 'Pendente', sections: [], discount: 0, subtotal: 1000, total: 1000,
-      } as Proposal],
-      clients: [{
-        id: 'cli_old', name: 'Cliente Antigo', contacts: [], status: 'Potencial Cliente',
-        serviceInterests: [],
-        address: { street: 'Rua X', number: '1', neighborhood: 'Centro', city: 'São Paulo', state: 'SP', zip: '01000-000' },
-        isFavorite: false, registrationDate: '2020-01-10', lastContactDate: '2020-01-10',
-        pipelineStatus: 'Contato Inicial', meetings: [], behavioralProfile: { notes: '' }, archived: false,
-      } as Client],
+      proposals: [
+        {
+          id: 'prop_old',
+          code: '#4001',
+          name: 'Proposta antiga',
+          date: '2020-01-15',
+          status: 'Pendente',
+          sections: [],
+          discount: 0,
+          subtotal: 1000,
+          total: 1000,
+        } as Proposal,
+      ],
+      clients: [
+        {
+          id: 'cli_old',
+          name: 'Cliente Antigo',
+          contacts: [],
+          status: 'Potencial Cliente',
+          serviceInterests: [],
+          address: {
+            street: 'Rua X',
+            number: '1',
+            neighborhood: 'Centro',
+            city: 'São Paulo',
+            state: 'SP',
+            zip: '01000-000',
+          },
+          isFavorite: false,
+          registrationDate: '2020-01-10',
+          lastContactDate: '2020-01-10',
+          pipelineStatus: 'Contato Inicial',
+          meetings: [],
+          behavioralProfile: { notes: '' },
+          archived: false,
+        } as Client,
+      ],
     };
 
     // When
@@ -438,12 +584,26 @@ describe('reportService.generateReport — preset filter with N days', () => {
     sixtyDaysAgo.setDate(today.getDate() - 60);
 
     const recentProposal = {
-      id: 'prop_recent', code: '#R1', name: 'Recente', date: today.toISOString().split('T')[0],
-      status: 'Pendente', sections: [], discount: 0, subtotal: 100, total: 100,
+      id: 'prop_recent',
+      code: '#R1',
+      name: 'Recente',
+      date: today.toISOString().split('T')[0],
+      status: 'Pendente',
+      sections: [],
+      discount: 0,
+      subtotal: 100,
+      total: 100,
     } as Proposal;
     const oldProposal = {
-      id: 'prop_old', code: '#O1', name: 'Antiga', date: sixtyDaysAgo.toISOString().split('T')[0],
-      status: 'Pendente', sections: [], discount: 0, subtotal: 100, total: 100,
+      id: 'prop_old',
+      code: '#O1',
+      name: 'Antiga',
+      date: sixtyDaysAgo.toISOString().split('T')[0],
+      status: 'Pendente',
+      sections: [],
+      discount: 0,
+      subtotal: 100,
+      total: 100,
     } as Proposal;
 
     const last30Filter: ReportFilter = { type: 'preset', days: 30, startDate: '', endDate: '' };

@@ -86,17 +86,15 @@ describe('MarketingIdeasView', () => {
   it('sorts ideas by date when favorite priority is equal and renders title fallback', () => {
     const onEditIdea = vi.fn();
 
-    render(
-      <MarketingIdeasView
-        ideas={ideas}
-        onEditIdea={onEditIdea}
-        onToggleFavorite={vi.fn()}
-      />,
-    );
+    render(<MarketingIdeasView ideas={ideas} onEditIdea={onEditIdea} onToggleFavorite={vi.fn()} />);
 
     const newerIdeaContent = screen.getByText('Sem título e cor desconhecida');
     const olderIdeaTitle = screen.getByText('Ideia Normal');
-    expect(newerIdeaContent.compareDocumentPosition(olderIdeaTitle)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(screen.queryByRole('heading', { name: 'Sem título e cor desconhecida' })).not.toBeInTheDocument();
+    expect(newerIdeaContent.compareDocumentPosition(olderIdeaTitle)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(
+      screen.queryByRole('heading', { name: 'Sem título e cor desconhecida' }),
+    ).not.toBeInTheDocument();
   });
 });

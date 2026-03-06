@@ -80,11 +80,9 @@ describe('SupplierContactDetailsTab', () => {
 
     rerender(
       <SupplierContactDetailsTab
-        supplier={
-          makeSupplier({
-            notes: '',
-          })
-        }
+        supplier={makeSupplier({
+          notes: '',
+        })}
       />,
     );
 

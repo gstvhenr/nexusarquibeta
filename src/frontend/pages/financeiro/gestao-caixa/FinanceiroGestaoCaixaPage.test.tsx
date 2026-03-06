@@ -90,7 +90,9 @@ describe('FinanceiroGestaoCaixaPage', () => {
     fireEvent.change(screen.getByLabelText('Origem'), { target: { value: 'Profissional' } });
     fireEvent.change(screen.getByLabelText('Categoria'), { target: { value: 'Softwares' } });
     fireEvent.change(screen.getByLabelText('Item'), { target: { value: 'Adobe Creative Cloud' } });
-    fireEvent.change(within(expenseModal).getByPlaceholderText('0,00'), { target: { value: '150' } });
+    fireEvent.change(within(expenseModal).getByPlaceholderText('0,00'), {
+      target: { value: '150' },
+    });
     fireEvent.change(screen.getByLabelText('Recorrência'), { target: { value: 'Única' } });
     const expenseDateInputs = expenseModal.querySelectorAll('input[type="date"]');
     expect(expenseDateInputs.length).toBeGreaterThan(0);

@@ -10,7 +10,9 @@ vi.mock('./ClientFormInfoAddressStatus', () => ({
 }));
 
 vi.mock('./ClientFormInfoIdentityContacts', () => ({
-  ClientFormInfoIdentityContacts: () => <div data-testid="identity-contacts">Identity Contacts</div>,
+  ClientFormInfoIdentityContacts: () => (
+    <div data-testid="identity-contacts">Identity Contacts</div>
+  ),
 }));
 
 describe('ClientFormInfoTab', () => {

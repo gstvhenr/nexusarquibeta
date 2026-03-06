@@ -143,10 +143,7 @@ describe('applySeedProspects', () => {
 
     it('returns total = SEED_COUNT + custom prospects count', () => {
       // Arrange
-      const customs = [
-        makeProspect({ id: 'custom_a' }),
-        makeProspect({ id: 'custom_b' }),
-      ];
+      const customs = [makeProspect({ id: 'custom_a' }), makeProspect({ id: 'custom_b' })];
 
       // Act
       const { prospects } = applySeedProspects(customs);
@@ -207,9 +204,7 @@ describe('applySeedProspects', () => {
       const { prospects } = applySeedProspects([]);
 
       // Assert
-      const seeds = prospects.filter((p) =>
-        SEED_IDS.includes(p.id as (typeof SEED_IDS)[number]),
-      );
+      const seeds = prospects.filter((p) => SEED_IDS.includes(p.id as (typeof SEED_IDS)[number]));
       for (const seed of seeds) {
         expect(seed.status).toBe('Em Aberto');
       }
@@ -220,9 +215,7 @@ describe('applySeedProspects', () => {
       const { prospects } = applySeedProspects([]);
 
       // Assert
-      const seeds = prospects.filter((p) =>
-        SEED_IDS.includes(p.id as (typeof SEED_IDS)[number]),
-      );
+      const seeds = prospects.filter((p) => SEED_IDS.includes(p.id as (typeof SEED_IDS)[number]));
       for (const seed of seeds) {
         expect(seed.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
       }
@@ -233,9 +226,7 @@ describe('applySeedProspects', () => {
       const { prospects } = applySeedProspects([]);
 
       // Assert
-      const seeds = prospects.filter((p) =>
-        SEED_IDS.includes(p.id as (typeof SEED_IDS)[number]),
-      );
+      const seeds = prospects.filter((p) => SEED_IDS.includes(p.id as (typeof SEED_IDS)[number]));
       for (const seed of seeds) {
         expect(seed.followUpDays).toBeGreaterThan(0);
       }

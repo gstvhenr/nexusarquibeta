@@ -15,7 +15,7 @@ describe('AvatarPicker', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(window, 'alert').mockImplementation(() => { });
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -39,13 +39,17 @@ describe('AvatarPicker', () => {
 
     it('should show camera icon and input when not read-only', () => {
       render(<AvatarPicker {...defaultProps} isReadOnly={false} />);
-      expect(screen.getByRole('button', { name: 'Atualizar Avatar do Cliente' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Atualizar Avatar do Cliente' }),
+      ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Alterar foto' })).toBeInTheDocument();
     });
 
     it('should not show camera icon or input when read-only', () => {
       render(<AvatarPicker {...defaultProps} isReadOnly={true} />);
-      expect(screen.queryByRole('button', { name: 'Atualizar Avatar do Cliente' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Atualizar Avatar do Cliente' }),
+      ).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Alterar foto' })).not.toBeInTheDocument();
       expect(screen.getByRole('img', { name: 'Atualizar Avatar do Cliente' })).toBeInTheDocument(); // role changes to img
     });
@@ -118,7 +122,9 @@ describe('AvatarPicker', () => {
       fireEvent.change(fileInput, { target: { files: [validFile] } });
 
       await waitFor(() => {
-        expect(defaultProps.onChangeBase64).toHaveBeenCalledWith(expect.stringContaining('data:image/jpeg;base64,'));
+        expect(defaultProps.onChangeBase64).toHaveBeenCalledWith(
+          expect.stringContaining('data:image/jpeg;base64,'),
+        );
       });
       expect(fileInput.value).toBe('');
     });

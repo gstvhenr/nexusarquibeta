@@ -13,8 +13,6 @@ export const PROPOSAL_STATUS_CLASSES: Record<ProposalStatus, { text: string; bg:
   Rejeitado: { text: 'text-error', bg: 'bg-error/20' },
 };
 
-
-
 export const PAYMENT_STATUS_DOT_COLORS: Record<PaymentStatus, string> = {
   'Em dia': 'bg-success',
   Pendente: 'bg-warning',

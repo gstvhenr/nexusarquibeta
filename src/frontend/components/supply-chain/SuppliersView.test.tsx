@@ -153,9 +153,24 @@ describe('SuppliersView', () => {
           makeSupplier({ id: 'sup-b', name: 'Fornecedor Beta' }),
         ]}
         commissions={[
-          makeCommission({ id: 'c1', supplierId: 'sup-a', commissionValue: 120, status: 'Pendente' }),
-          makeCommission({ id: 'c2', supplierId: 'sup-a', commissionValue: 300, status: 'Recebido' }),
-          makeCommission({ id: 'c3', supplierId: 'sup-b', commissionValue: 500, status: 'Pendente' }),
+          makeCommission({
+            id: 'c1',
+            supplierId: 'sup-a',
+            commissionValue: 120,
+            status: 'Pendente',
+          }),
+          makeCommission({
+            id: 'c2',
+            supplierId: 'sup-a',
+            commissionValue: 300,
+            status: 'Recebido',
+          }),
+          makeCommission({
+            id: 'c3',
+            supplierId: 'sup-b',
+            commissionValue: 500,
+            status: 'Pendente',
+          }),
         ]}
         quotations={[
           makeQuotation({
