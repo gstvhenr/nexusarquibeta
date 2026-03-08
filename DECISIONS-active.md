@@ -10,6 +10,20 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-03-08 — Blindagem da camada de persistência: `indexedDbService` restrito a `persistence/`
+
+- Contexto: o barrel `src/frontend/services/infrastructure/index.ts` re-exportava `export * from './indexedDbService'`, permitindo qualquer módulo importar `indexedDbService` diretamente sem passar pela abstração `PersistencePort`. Não havia enforcement automatizado.
+- Decisão:
+  1. Remover `export * from './indexedDbService'` do barrel `index.ts`.
+  2. Migrar `storageQuotaService.test.ts` de `indexedDbService.clearAutomaticBackups()` direto para `createPersistenceAdapter().clearBackups()`.
+  3. Criar `indexedDbService.usage.test.ts` — teste de guarda com allowlist de 6 arquivos, análogo ao `storageService.usage.test.ts`.
+- Consequência: `indexedDbService` agora é acessível apenas por `persistence/IndexedDbPersistenceAdapter.ts` (e testes diretos). Qualquer novo import fora da allowlist falha automaticamente no gate de testes. Audit confirmou que `loadData.ts` e `storageQuotaService.ts` já consumiam via `PersistencePort`.
+- Reversão:
+  1. Restaurar `export * from './indexedDbService'` em `index.ts`.
+  2. Reverter import no `storageQuotaService.test.ts` para `indexedDbService` direto.
+  3. Deletar `indexedDbService.usage.test.ts`.
+- Referências: `src/frontend/services/infrastructure/index.ts`, `src/frontend/services/infrastructure/storageQuotaService.test.ts`, `src/frontend/services/infrastructure/indexedDbService.usage.test.ts`, `src/frontend/services/infrastructure/persistence/PersistencePort.ts`.
+
 ### 2026-03-06 — Saneamento de grafo de dependências: `useDomain.ts` relocado + depcruise config endurecida
 
 - Contexto: `npx depcruise src --output-type err-long` reportava 5 violações `not-to-unresolvable`. Três eram causadas por `hooks/useDomain.ts` importando `./types` e `./createDomainSetter` (módulos irmãos em `context/`, não em `hooks/`), e `DataContext.tsx` importando `./useDomain` (ausente em `context/`). Duas eram ambient type declarations (`vite-env.d.ts → vite/client`, `vitest-jest-dom.d.ts → vitest/globals`) resolvidas por build tools.

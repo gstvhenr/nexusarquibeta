@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Header, Sidebar } from './components/layout';
+import { Header, Sidebar, RouteErrorBoundary } from './components/layout';
 import LoadingFallback from './components/ui/LoadingFallback';
 
 // Critical-path page: loaded eagerly for instant first paint.
@@ -78,80 +78,85 @@ const App: () => React.ReactNode = () => {
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         <main className={`flex-1 flex flex-col min-h-0 ${mainPaddingClass}`}>
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
+          <RouteErrorBoundary key={location.pathname}>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
 
-              <Route path="/agenda" element={<Navigate to="/agenda/calendario" replace />} />
-              <Route path="/agenda/calendario" element={<AgendaPage />} />
-              <Route path="/agenda/tarefas" element={<TarefasPage />} />
-              <Route path="/agenda/lembretes" element={<LembretesPage />} />
-              <Route path="/agenda/bloco-de-notas" element={<BlocoDeNotasPage />} />
+                <Route path="/agenda" element={<Navigate to="/agenda/calendario" replace />} />
+                <Route path="/agenda/calendario" element={<AgendaPage />} />
+                <Route path="/agenda/tarefas" element={<TarefasPage />} />
+                <Route path="/agenda/lembretes" element={<LembretesPage />} />
+                <Route path="/agenda/bloco-de-notas" element={<BlocoDeNotasPage />} />
 
-              <Route path="/prospects" element={<ProspectsPage />} />
-              <Route path="/propostas" element={<PropostasPage />} />
-              <Route path="/propostas/:id" element={<PropostaDetalhesPage />} />
-              <Route path="/clientes" element={<ClientesPage />} />
-              <Route path="/clientes/:id" element={<ClienteDetalhesPage />} />
-              <Route path="/orcamentos" element={<OrcamentosPage />} />
-              <Route path="/projetos" element={<ProjetosPage />} />
-              <Route path="/projetos/:id" element={<ProjetoDetalhesPage />} />
-              <Route
-                path="/financeiro"
-                element={<Navigate to="/financeiro/visao-geral" replace />}
-              />
-              <Route path="/financeiro/visao-geral" element={<FinanceiroVisaoGeralPage />} />
-              <Route path="/financeiro/previsao-caixa" element={<FinanceiroPrevisaoCaixaPage />} />
-              <Route path="/financeiro/recebiveis" element={<FinanceiroRecebiveisPage />} />
-              <Route path="/financeiro/debitos" element={<FinanceiroDebitosPage />} />
-              <Route path="/financeiro/gestao-caixa" element={<FinanceiroGestaoCaixaPage />} />
-              <Route path="/documentos" element={<Navigate to="/documentos/pessoal" replace />} />
-              <Route path="/documentos/pessoal" element={<DocumentosPessoalPage />} />
-              <Route path="/documentos/projetos" element={<DocumentosProjetosPage />} />
-              <Route path="/fornecedores" element={<FornecedoresPage />} />
-              <Route path="/catalogo" element={<CatalogoPage />} />
-              <Route path="/cotacoes" element={<CotacoesPage />} />
-              <Route path="/cotacoes/:id" element={<CotacaoDetalhesPage />} />
-              <Route path="/comissoes" element={<ComissoesPage />} />
-              <Route
-                path="/gestao-marketing"
-                element={<Navigate to="/gestao-marketing/painel" replace />}
-              />
-              <Route path="/gestao-marketing/painel" element={<GestaoMarketingPainelPage />} />
-              <Route
-                path="/gestao-marketing/conteudos"
-                element={<GestaoMarketingConteudosPage />}
-              />
-              <Route
-                path="/gestao-marketing/banco-de-ideias"
-                element={<GestaoMarketingBancoIdeiasPage />}
-              />
-              <Route path="/gestao-marketing/redes-sociais" element={<RedesSociaisPage />} />
-              <Route
-                path="/gestao-marketing/redes-sociais/:networkId"
-                element={<InstagramDetailPage />}
-              />
-              <Route
-                path="/prestadores-freelancers"
-                element={<Navigate to="/prestadores-freelancers/visao-geral" replace />}
-              />
-              <Route
-                path="/prestadores-freelancers/visao-geral"
-                element={<PrestadoresFreelancersPage />}
-              />
-              <Route
-                path="/prestadores-freelancers/servicos-contratados"
-                element={<ServicosContratadosPage />}
-              />
-              <Route path="/relatorios/*" element={<RelatoriosLayout />}>
-                <Route index element={<Navigate to="/relatorios/financeiro" replace />} />
-                <Route path="financeiro" element={<RelatorioFinanceiroPage />} />
-                <Route path="projetos" element={<RelatorioProjetosPage />} />
-                <Route path="aquisicao" element={<RelatorioAquisicaoPage />} />
-              </Route>
-              <Route path="/configuracoes" element={<ConfiguracoesPage />} />
-            </Routes>
-          </Suspense>
+                <Route path="/prospects" element={<ProspectsPage />} />
+                <Route path="/propostas" element={<PropostasPage />} />
+                <Route path="/propostas/:id" element={<PropostaDetalhesPage />} />
+                <Route path="/clientes" element={<ClientesPage />} />
+                <Route path="/clientes/:id" element={<ClienteDetalhesPage />} />
+                <Route path="/orcamentos" element={<OrcamentosPage />} />
+                <Route path="/projetos" element={<ProjetosPage />} />
+                <Route path="/projetos/:id" element={<ProjetoDetalhesPage />} />
+                <Route
+                  path="/financeiro"
+                  element={<Navigate to="/financeiro/visao-geral" replace />}
+                />
+                <Route path="/financeiro/visao-geral" element={<FinanceiroVisaoGeralPage />} />
+                <Route
+                  path="/financeiro/previsao-caixa"
+                  element={<FinanceiroPrevisaoCaixaPage />}
+                />
+                <Route path="/financeiro/recebiveis" element={<FinanceiroRecebiveisPage />} />
+                <Route path="/financeiro/debitos" element={<FinanceiroDebitosPage />} />
+                <Route path="/financeiro/gestao-caixa" element={<FinanceiroGestaoCaixaPage />} />
+                <Route path="/documentos" element={<Navigate to="/documentos/pessoal" replace />} />
+                <Route path="/documentos/pessoal" element={<DocumentosPessoalPage />} />
+                <Route path="/documentos/projetos" element={<DocumentosProjetosPage />} />
+                <Route path="/fornecedores" element={<FornecedoresPage />} />
+                <Route path="/catalogo" element={<CatalogoPage />} />
+                <Route path="/cotacoes" element={<CotacoesPage />} />
+                <Route path="/cotacoes/:id" element={<CotacaoDetalhesPage />} />
+                <Route path="/comissoes" element={<ComissoesPage />} />
+                <Route
+                  path="/gestao-marketing"
+                  element={<Navigate to="/gestao-marketing/painel" replace />}
+                />
+                <Route path="/gestao-marketing/painel" element={<GestaoMarketingPainelPage />} />
+                <Route
+                  path="/gestao-marketing/conteudos"
+                  element={<GestaoMarketingConteudosPage />}
+                />
+                <Route
+                  path="/gestao-marketing/banco-de-ideias"
+                  element={<GestaoMarketingBancoIdeiasPage />}
+                />
+                <Route path="/gestao-marketing/redes-sociais" element={<RedesSociaisPage />} />
+                <Route
+                  path="/gestao-marketing/redes-sociais/:networkId"
+                  element={<InstagramDetailPage />}
+                />
+                <Route
+                  path="/prestadores-freelancers"
+                  element={<Navigate to="/prestadores-freelancers/visao-geral" replace />}
+                />
+                <Route
+                  path="/prestadores-freelancers/visao-geral"
+                  element={<PrestadoresFreelancersPage />}
+                />
+                <Route
+                  path="/prestadores-freelancers/servicos-contratados"
+                  element={<ServicosContratadosPage />}
+                />
+                <Route path="/relatorios/*" element={<RelatoriosLayout />}>
+                  <Route index element={<Navigate to="/relatorios/financeiro" replace />} />
+                  <Route path="financeiro" element={<RelatorioFinanceiroPage />} />
+                  <Route path="projetos" element={<RelatorioProjetosPage />} />
+                  <Route path="aquisicao" element={<RelatorioAquisicaoPage />} />
+                </Route>
+                <Route path="/configuracoes" element={<ConfiguracoesPage />} />
+              </Routes>
+            </Suspense>
+          </RouteErrorBoundary>
         </main>
       </div>
     </div>

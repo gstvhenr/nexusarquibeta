@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { storageQuotaService } from './storageQuotaService';
 import { api } from './api';
-import { indexedDbService } from './indexedDbService';
+import { createPersistenceAdapter } from './persistence';
+
+const persistence = createPersistenceAdapter();
 
 const waitForAsyncQueue = async (): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, 0));
@@ -11,7 +13,7 @@ describe('storageQuotaService', () => {
   beforeEach(async () => {
     api.clearAllData();
     vi.clearAllMocks();
-    await indexedDbService.clearAutomaticBackups();
+    await persistence.clearBackups();
     await waitForAsyncQueue();
   });
 

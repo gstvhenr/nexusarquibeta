@@ -91,6 +91,7 @@ export const ProjectFinanceAddendumsSection = ({
               onChange={(event) =>
                 onUpdateAddendumStatus(addendum.id, event.target.value as ContractAddendumStatus)
               }
+              aria-label={`Status do aditivo ${addendum.description}`}
               className={`${commonInputClass} text-xs py-1 px-2`}
             >
               {getStatusSelectionOptions(addendum.status || 'Pendente').map((status) => (
@@ -154,6 +155,7 @@ export const ProjectFinanceAddendumsSection = ({
           onChange={(event) =>
             onNewAddendumChange((current) => ({ ...current, date: event.target.value }))
           }
+          aria-label="Data do aditivo"
           className={commonInputClass}
         />
       </div>
@@ -188,6 +190,7 @@ export const ProjectFinanceAddendumsSection = ({
       <select
         value={selectedBudgetServiceId}
         onChange={(event) => onBudgetServiceIdChange(event.target.value)}
+        aria-label="Serviço do orçamento"
         className={commonInputClass}
       >
         <option value="">Selecionar serviço</option>
@@ -209,6 +212,7 @@ export const ProjectFinanceAddendumsSection = ({
           type="date"
           value={budgetServiceDate}
           onChange={(event) => onBudgetServiceDateChange(event.target.value)}
+          aria-label="Data do serviço"
           className={commonInputClass}
         />
       </div>

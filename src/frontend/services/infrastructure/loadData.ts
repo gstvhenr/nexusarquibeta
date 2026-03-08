@@ -205,6 +205,7 @@ const normalizePersistedSnapshot = (snapshot: unknown): AppData => {
 
 // Singleton state in memory
 let appData: AppData | null = null;
+let isInitialized = false;
 let initializationPromise: Promise<void> | null = null;
 let persistenceQueue: Promise<void> = Promise.resolve();
 
@@ -326,7 +327,7 @@ const storageKeyMap: { [P in keyof AppData]: string } = {
 export async function initializeDataStore(): Promise<void> {
   bindSyncChannelIfNeeded();
 
-  if (appData) {
+  if (isInitialized) {
     return;
   }
 
@@ -339,6 +340,7 @@ export async function initializeDataStore(): Promise<void> {
     const persistedEntityState = await persistence.readEntityState<AppData>(APP_DATA_ENTITY_KEYS);
     if (persistedEntityState && Object.keys(persistedEntityState).length > 0) {
       appData = normalizePersistedSnapshot(persistedEntityState);
+      isInitialized = true;
       return;
     }
 
@@ -348,17 +350,20 @@ export async function initializeDataStore(): Promise<void> {
       await persistence.writeEntityState(
         cloneSnapshot(appData) as unknown as Record<string, unknown>,
       );
+      isInitialized = true;
       return;
     }
 
     appData = createDefaultAppData();
     await persistence.writeSnapshot(cloneSnapshot(appData));
+    isInitialized = true;
   })()
     .catch((error) => {
       console.error('Failed to initialize data store:', error);
       if (!appData) {
         appData = createDefaultAppData();
       }
+      isInitialized = true;
     })
     .finally(() => {
       initializationPromise = null;
@@ -380,6 +385,11 @@ export function loadData(): AppData {
   }
 
   // Synchronous fallback path for tests and non-awaited call sites.
+  if (!isInitialized) {
+    console.warn(
+      'loadData() called before initializeDataStore() completed. Returning default data.',
+    );
+  }
   appData = createDefaultAppData();
   queuePersistSnapshot(appData);
   return cloneSnapshot(appData);
@@ -447,6 +457,7 @@ export function resetPersistentDataAndNotify(): void {
   pendingSnapshot = null;
 
   appData = null;
+  isInitialized = false;
   persistenceQueue = persistenceQueue
     .then(() => persistence.clearSnapshot())
     .then(() => {
@@ -474,4 +485,23 @@ export function flushPersistence(): void {
  */
 export function invalidateCacheAndNotify(): void {
   notifySyncListeners(null);
+}
+
+/**
+ * Resets ALL module-level singleton state for test isolation.
+ * Must be called in afterEach() to prevent state leaking between test cases.
+ *
+ * @internal Test-only — not part of the public API contract.
+ */
+export function resetForTest(): void {
+  if (debounceTimer !== null) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+  pendingSnapshot = null;
+  appData = null;
+  isInitialized = false;
+  initializationPromise = null;
+  persistenceQueue = Promise.resolve();
+  syncChannelBound = false;
 }

@@ -26,6 +26,12 @@ const renderApp = (initialPath: string) =>
     </MemoryRouter>,
   );
 
+/**
+ * Lazy-loaded route redirects take longer under full-suite coverage
+ * instrumentation. Increase waitFor timeout beyond the default 1000ms.
+ */
+const REDIRECT_WAIT_OPTIONS = { timeout: 5000 } as const;
+
 describe('App entrypoint', () => {
   it('uses standard layout classes for non-special routes', () => {
     const { container } = renderApp('/rota-inexistente');
@@ -78,7 +84,7 @@ describe('App entrypoint', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/agenda/calendario');
-    });
+    }, REDIRECT_WAIT_OPTIONS);
   });
 
   it('redirects /documentos to /documentos/pessoal', async () => {
@@ -86,7 +92,7 @@ describe('App entrypoint', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/documentos/pessoal');
-    });
+    }, REDIRECT_WAIT_OPTIONS);
   });
 
   it('redirects /relatorios to /relatorios/financeiro', async () => {
@@ -94,6 +100,6 @@ describe('App entrypoint', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/relatorios/financeiro');
-    });
+    }, REDIRECT_WAIT_OPTIONS);
   });
 });

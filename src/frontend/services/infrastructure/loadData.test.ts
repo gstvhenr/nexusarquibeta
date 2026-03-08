@@ -50,6 +50,7 @@ let loadData: LoadDataModule['loadData'];
 let replaceData: LoadDataModule['replaceData'];
 let flushPersistence: LoadDataModule['flushPersistence'];
 let resetPersistentDataAndNotify: LoadDataModule['resetPersistentDataAndNotify'] | null = null;
+let resetForTest: LoadDataModule['resetForTest'] | null = null;
 let initializeDataStore: LoadDataModule['initializeDataStore'];
 
 const flushPersistenceQueue = async (): Promise<void> => {
@@ -82,6 +83,7 @@ describe('loadData — debounced persistence', () => {
     replaceData = loadDataModule.replaceData;
     flushPersistence = loadDataModule.flushPersistence;
     resetPersistentDataAndNotify = loadDataModule.resetPersistentDataAndNotify;
+    resetForTest = loadDataModule.resetForTest;
     initializeDataStore = loadDataModule.initializeDataStore;
 
     await initializeDataStore();
@@ -92,7 +94,8 @@ describe('loadData — debounced persistence', () => {
   }, 20000);
 
   afterEach(async () => {
-    resetPersistentDataAndNotify?.();
+    resetForTest?.();
+    resetForTest = null;
     resetPersistentDataAndNotify = null;
     vi.runAllTimers();
     await flushPersistenceQueue();
@@ -265,5 +268,163 @@ describe('loadData — debounced persistence', () => {
     const result = loadData();
     expect(result.globalIdentifierCounter).toBe(2500);
     expect(Array.isArray(result.projects)).toBe(true);
+  });
+
+  // -------------------------------------------------------------------------
+  // Race condition fix — initializeDataStore overrides fallback defaults
+  // -------------------------------------------------------------------------
+  it('initializeDataStore overrides defaults set by pre-init loadData call', async () => {
+    // Arrange — fresh module where loadData is called BEFORE initializeDataStore
+    vi.resetModules();
+
+    const persistedState = {
+      dismissedFocusItems: ['real-user-data'],
+      globalIdentifierCounter: 7777,
+    };
+
+    const freshPersistence = await import('./persistence');
+    freshPersistence.setPersistenceAdapter({
+      ...createMockPersistenceAdapter(),
+      readEntityState: vi.fn(async () => persistedState) as never,
+    });
+
+    const freshLoadData = await import('./loadData');
+
+    // Act — loadData first (creates fallback defaults), then initializeDataStore
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const preInitResult = freshLoadData.loadData();
+    expect(preInitResult.globalIdentifierCounter).toBe(2500); // fallback default
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+
+    // Now init — must override the fallback defaults with real data
+    await freshLoadData.initializeDataStore();
+    const postInitResult = freshLoadData.loadData();
+
+    // Assert — persisted data wins over fallback defaults
+    expect(postInitResult.dismissedFocusItems).toContain('real-user-data');
+    expect(postInitResult.globalIdentifierCounter).toBe(7777);
+
+    freshLoadData.resetForTest();
+    freshPersistence.resetPersistenceAdapter();
+  });
+
+  // -------------------------------------------------------------------------
+  // console.warn on pre-init loadData
+  // -------------------------------------------------------------------------
+  it('loadData warns when called before initializeDataStore', async () => {
+    // Arrange — fresh module, no init
+    vi.resetModules();
+
+    const freshPersistence = await import('./persistence');
+    freshPersistence.setPersistenceAdapter(createMockPersistenceAdapter());
+
+    const freshLoadData = await import('./loadData');
+
+    // Act
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    freshLoadData.loadData();
+
+    // Assert
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('loadData() called before initializeDataStore()'),
+    );
+    warnSpy.mockRestore();
+
+    freshLoadData.resetForTest();
+    freshPersistence.resetPersistenceAdapter();
+  });
+
+  // -------------------------------------------------------------------------
+  // resetForTest isolation
+  // -------------------------------------------------------------------------
+  it('resetForTest clears all module state for test isolation', async () => {
+    // Arrange — populate state
+    updateData('dismissedFocusItems', ['some-data']);
+    const beforeReset = loadData();
+    expect(beforeReset.dismissedFocusItems).toContain('some-data');
+
+    // Act
+    resetForTest?.();
+
+    // Assert — after reset, loadData returns fresh defaults (with warn)
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const afterReset = loadData();
+    expect(afterReset.dismissedFocusItems).not.toContain('some-data');
+    expect(afterReset.globalIdentifierCounter).toBe(2500);
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  // -------------------------------------------------------------------------
+  // Concurrent race: initializeDataStore in-flight when loadData is called
+  // -------------------------------------------------------------------------
+  it('loadData during in-flight initializeDataStore gets overridden by real data', async () => {
+    // Arrange — fresh module with slow persistence read
+    vi.resetModules();
+
+    const persistedState = {
+      dismissedFocusItems: ['concurrent-real-data'],
+      globalIdentifierCounter: 5555,
+    };
+
+    const freshPersistence = await import('./persistence');
+    freshPersistence.setPersistenceAdapter({
+      ...createMockPersistenceAdapter(),
+      readEntityState: vi.fn(
+        () =>
+          new Promise((resolve) => {
+            // Simulate async delay — resolve after we call loadData
+            setTimeout(() => resolve(persistedState), 50);
+          }),
+      ) as never,
+    });
+
+    const freshLoadData = await import('./loadData');
+
+    // Act — start init (does NOT await), then call loadData while init is in-flight
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const initPromise = freshLoadData.initializeDataStore();
+
+    // loadData runs while init is still pending — gets defaults
+    const midFlightResult = freshLoadData.loadData();
+    expect(midFlightResult.globalIdentifierCounter).toBe(2500); // fallback defaults
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+
+    // Now let the init complete
+    vi.advanceTimersByTime(100);
+    await initPromise;
+
+    // Assert — after init completes, real data wins
+    const postInitResult = freshLoadData.loadData();
+    expect(postInitResult.dismissedFocusItems).toContain('concurrent-real-data');
+    expect(postInitResult.globalIdentifierCounter).toBe(5555);
+
+    freshLoadData.resetForTest();
+    freshPersistence.resetPersistenceAdapter();
+  });
+
+  // -------------------------------------------------------------------------
+  // resetPersistentDataAndNotify resets isInitialized
+  // -------------------------------------------------------------------------
+  it('resetPersistentDataAndNotify resets isInitialized so next init re-reads', async () => {
+    // Arrange — init already completed
+    const data = loadData();
+    expect(data).toBeDefined();
+
+    // Act — reset
+    resetPersistentDataAndNotify?.();
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // Assert — initializeDataStore runs again (not no-op)
+    // Re-init with the mock adapter that returns null (defaults)
+    await initializeDataStore();
+    const afterReInit = loadData();
+    expect(afterReInit.globalIdentifierCounter).toBe(2500);
+    expect(Array.isArray(afterReInit.projects)).toBe(true);
   });
 });

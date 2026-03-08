@@ -1,7 +1,6 @@
 export * from './api';
 export * from './autoBackupService';
 export * from './importExport';
-export * from './indexedDbService';
 export * from './loadData';
 export * from './migrations';
 export * from './seedAgendaEvents';

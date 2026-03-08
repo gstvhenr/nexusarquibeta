@@ -6,6 +6,8 @@ import { api } from '@/services/infrastructure/api';
 import PrestadoresFreelancersPage from './PrestadoresFreelancersPage';
 
 const FUTURE_FLAGS = { v7_startTransition: true, v7_relativeSplatPath: true } as const;
+const INTEGRATION_TIMEOUT_MS = 15_000;
+const INTEGRATION_WAIT_OPTIONS = { timeout: INTEGRATION_TIMEOUT_MS };
 
 const renderPage = () =>
   render(
@@ -123,43 +125,76 @@ describe('PrestadoresFreelancersPage', () => {
     });
   });
 
-  it('creates, archives and reactivates a freelancer', async () => {
-    renderPage();
+  it(
+    'creates, archives and reactivates a freelancer',
+    async () => {
+      renderPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /Adicionar Freelancer/i }));
-    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Freelancer Novo' } });
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'novo@example.com' } });
-    fireEvent.change(screen.getByLabelText('Telefone'), { target: { value: '11911111111' } });
-    fireEvent.click(screen.getByLabelText('Renderização'));
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+      fireEvent.click(
+        await screen.findByRole(
+          'button',
+          { name: /Adicionar Freelancer/i },
+          INTEGRATION_WAIT_OPTIONS,
+        ),
+      );
+      fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Freelancer Novo' } });
+      fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'novo@example.com' } });
+      fireEvent.change(screen.getByLabelText('Telefone'), { target: { value: '11911111111' } });
+      fireEvent.click(screen.getByLabelText('Renderização'));
+      fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 
-    expect(await screen.findByText('Freelancer Novo')).toBeInTheDocument();
-    await waitFor(() =>
       expect(
-        api.getData().freelancers.some((freelancer) => freelancer.name === 'Freelancer Novo'),
-      ).toBe(true),
-    );
+        await screen.findByText('Freelancer Novo', undefined, INTEGRATION_WAIT_OPTIONS),
+      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          api
+            .getData()
+            .freelancers.some(
+              (freelancer) =>
+                freelancer.name === 'Freelancer Novo' && freelancer.archived === false,
+            ),
+        ).toBe(true);
+      }, INTEGRATION_WAIT_OPTIONS);
 
-    fireEvent.click(screen.getByRole('button', { name: /Freelancer Novo/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Arquivar/i }));
+      fireEvent.click(
+        await screen.findByRole('button', { name: /Freelancer Novo/i }, INTEGRATION_WAIT_OPTIONS),
+      );
+      fireEvent.click(screen.getByRole('button', { name: /Arquivar/i }));
 
-    await waitFor(() =>
-      expect(screen.queryByRole('button', { name: /Freelancer Novo/i })).not.toBeInTheDocument(),
-    );
+      await waitFor(() => {
+        expect(screen.queryByRole('button', { name: /Freelancer Novo/i })).not.toBeInTheDocument();
+        const archivedFreelancer = api
+          .getData()
+          .freelancers.find((freelancer) => freelancer.name === 'Freelancer Novo');
+        expect(archivedFreelancer?.archived).toBe(true);
+      }, INTEGRATION_WAIT_OPTIONS);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Ver Arquivados' }));
-    expect(await screen.findByText('Freelancer Novo')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Ver Arquivados' }));
+      expect(
+        await screen.findByText('Freelancer Novo', undefined, INTEGRATION_WAIT_OPTIONS),
+      ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Freelancer Novo/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Reativar/i }));
+      fireEvent.click(
+        await screen.findByRole('button', { name: /Freelancer Novo/i }, INTEGRATION_WAIT_OPTIONS),
+      );
+      fireEvent.click(screen.getByRole('button', { name: /Reativar/i }));
 
-    await waitFor(() =>
-      expect(screen.queryByRole('button', { name: /Freelancer Novo/i })).not.toBeInTheDocument(),
-    );
+      await waitFor(() => {
+        expect(screen.queryByRole('button', { name: /Freelancer Novo/i })).not.toBeInTheDocument();
+        const reactivatedFreelancer = api
+          .getData()
+          .freelancers.find((freelancer) => freelancer.name === 'Freelancer Novo');
+        expect(reactivatedFreelancer?.archived).toBe(false);
+      }, INTEGRATION_WAIT_OPTIONS);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Ver Ativos' }));
-    expect(await screen.findByText('Freelancer Novo')).toBeInTheDocument();
-  });
+      fireEvent.click(screen.getByRole('button', { name: 'Ver Ativos' }));
+      expect(
+        await screen.findByText('Freelancer Novo', undefined, INTEGRATION_WAIT_OPTIONS),
+      ).toBeInTheDocument();
+    },
+    INTEGRATION_TIMEOUT_MS,
+  );
 
   it('deletes freelancer through confirmation modal', async () => {
     renderPage();

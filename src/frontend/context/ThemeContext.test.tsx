@@ -45,9 +45,9 @@ describe('ThemeContext', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('theme-value')).toHaveTextContent('light');
+      expect(document.documentElement.classList.contains('light')).toBe(true);
+      expect(document.documentElement.classList.contains('dark')).toBe(false);
     });
-    expect(document.documentElement.classList.contains('light')).toBe(true);
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 
   it('injects theme css variables and animations through ThemeStyle', () => {
