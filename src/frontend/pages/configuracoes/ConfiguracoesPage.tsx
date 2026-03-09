@@ -11,6 +11,7 @@ import { ImportDataModal } from './ImportDataModal';
 import { PasswordResetModal } from './PasswordResetModal';
 import { Section } from './Section';
 import { Toggle } from './Toggle';
+import { getTodayDateOnly } from '../../utils/formatters';
 
 function ConfiguracoesPage(): JSX.Element {
   const { theme, toggleTheme } = useTheme();
@@ -83,7 +84,7 @@ function ConfiguracoesPage(): JSX.Element {
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `nexusarqui_backup_${new Date().toISOString().split('T')[0]}.json`;
+      anchor.download = `nexusarqui_backup_${getTodayDateOnly()}.json`;
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);

@@ -7,7 +7,7 @@ import type {
   Project,
   Prospect,
 } from '../types';
-import { formatCurrency, parseDateString } from '../utils/formatters';
+import { formatCurrency, parseDateString, toDateOnlyString } from '../utils/formatters';
 
 /** Narrowed input — only the fields getUnifiedEvents actually reads. */
 export interface UnifiedEventsInput {
@@ -141,14 +141,14 @@ export const agendaService = {
     // 3. Prospects Follow-up (Radar)
     prospects.forEach((prospect) => {
       if (prospect.status === 'Em Aberto' && !prospect.archived) {
-        const startDate = new Date(prospect.startDate);
+        const startDate = parseDateString(prospect.startDate);
+        if (!startDate) return;
         const followUpDate = new Date(startDate);
         followUpDate.setDate(startDate.getDate() + prospect.followUpDays);
-
         generatedEvents.push({
           id: `prosp_${prospect.id}`,
           title: `Follow-up: ${prospect.name}`,
-          date: followUpDate.toISOString().split('T')[0],
+          date: toDateOnlyString(followUpDate),
           time: '09:00',
           type: 'Reunião com Cliente',
           description: `Retorno de contato (Radar). Interesse: ${prospect.interest}.`,

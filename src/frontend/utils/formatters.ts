@@ -1,3 +1,16 @@
+const padDateSegment = (value: number): string => String(value).padStart(2, '0');
+
+export const toDateOnlyString = (date: Date): string => {
+  if (Number.isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = padDateSegment(date.getMonth() + 1);
+  const day = padDateSegment(date.getDate());
+  return `${year}-${month}-${day}`;
+};
+
+export const getTodayDateOnly = (): string => toDateOnlyString(new Date());
+
 export const formatCurrency = (value: number | undefined | null) => {
   if (value === undefined || value === null)
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(0);
@@ -20,7 +33,8 @@ export const parseDateString = (dateStr: string | null | undefined): Date | null
 
   // YYYY-MM-DD (force local midnight to avoid UTC shift)
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedDate)) {
-    const parsed = new Date(`${trimmedDate}T00:00:00`);
+    const [year, month, day] = trimmedDate.split('-').map(Number);
+    const parsed = new Date(year, month - 1, day);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
@@ -33,7 +47,7 @@ export const formatDate = (isoDate: string | null | undefined) => {
   if (!isoDate) return 'N/D';
   const date = parseDateString(isoDate);
   if (!date || isNaN(date.getTime())) return 'N/D';
-  return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+  return date.toLocaleDateString('pt-BR');
 };
 
 export const formatDateWithTime = (isoDate: string | null | undefined) => {
@@ -53,7 +67,7 @@ export const formatDateDayMonth = (isoDate: string | null | undefined) => {
   if (!isoDate) return 'N/D';
   const date = parseDateString(isoDate);
   if (!date || isNaN(date.getTime())) return 'N/D';
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', timeZone: 'UTC' });
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 };
 
 export const formatBytes = (bytes: number, decimals = 2): string => {

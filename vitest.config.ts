@@ -28,7 +28,7 @@ export default defineConfig({
       },
     },
     coverage: {
-      provider: 'v8',
+      provider: 'istanbul',
       include: ['src/frontend/**/*.{ts,tsx}'],
       exclude: [
         'src/frontend/services/infrastructure/**',

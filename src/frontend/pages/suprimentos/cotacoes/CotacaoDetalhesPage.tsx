@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/layout';
 import { Button, FormField, IconButton, Input, Modal } from '@/components/ui';
 import { useCoreData, useSupplyChainData } from '@/context/DataContext';
 import type { Quotation, Product, QuotationItem } from '@/types';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency, getTodayDateOnly } from '@/utils/formatters';
 import { getLatestPriceFromHistory } from '@/utils/supplierHelpers';
 import { NAV_LINKS, SUPPLIER_CATEGORY_OPTIONS } from '@/constants';
 import { PlusIcon, TrashIcon, GiftIcon } from '@/components/ui';
@@ -12,7 +12,7 @@ import { PlusIcon, TrashIcon, GiftIcon } from '@/components/ui';
 const getInitialQuotation = (id: string): Quotation => ({
   id,
   name: 'Nova Cotação',
-  date: new Date().toISOString().split('T')[0],
+  date: getTodayDateOnly(),
   status: 'Em Aberto',
   items: [],
   selections: {},

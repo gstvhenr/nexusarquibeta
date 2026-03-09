@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
 import type { Supplier } from '../../types';
+import { getTodayDateOnly } from '../../utils/formatters';
 
 /**
  * Modal for adding a supplier price entry to a product.
@@ -16,7 +17,7 @@ export const AddSupplierPriceModal: (props: {
 }) => React.ReactNode = ({ isOpen, onClose, onSave, suppliers, productName }) => {
   const [supplierId, setSupplierId] = useState('');
   const [price, setPrice] = useState(0);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(getTodayDateOnly());
   useEffect(() => {
     if (isOpen && suppliers.length > 0) setSupplierId(suppliers[0].id);
   }, [isOpen, suppliers]);

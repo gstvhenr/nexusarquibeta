@@ -1,7 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Client, AgendaEvent } from '../types';
 import { useClienteMeetings } from './useClienteMeetings';
+import { getTodayDateOnly } from '../utils/formatters';
 
 vi.mock('../services/clientService', () => ({
   saveClientAndUpdateState: vi.fn(() => ({ updatedClients: [] })),
@@ -53,6 +54,10 @@ const defaultArgs = () => ({
 });
 
 describe('useClienteMeetings', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('handleAddMeeting does nothing when reason and notes are empty', () => {
     // Given — reunião sem motivo nem notas
     const args = defaultArgs();
@@ -85,6 +90,8 @@ describe('useClienteMeetings', () => {
 
   it('handleAddMeeting resets newMeeting after adding', () => {
     // Given — motivo preenchido
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 2, 8, 23, 30, 0));
     const args = defaultArgs();
     const { result } = renderHook(() => useClienteMeetings(args));
 
@@ -97,6 +104,7 @@ describe('useClienteMeetings', () => {
     });
 
     // Then — newMeeting resetado
+    expect(result.current.newMeeting.date).toBe(getTodayDateOnly());
     expect(result.current.newMeeting.reason).toBe('');
     expect(result.current.newMeeting.notes).toBe('');
   });
@@ -123,6 +131,8 @@ describe('useClienteMeetings', () => {
 
   it('handleScheduleMeeting sets preFilledEvent and opens modal', () => {
     // Given — cliente válido
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 2, 8, 23, 30, 0));
     const args = defaultArgs();
     const { result } = renderHook(() => useClienteMeetings(args));
 
@@ -133,6 +143,7 @@ describe('useClienteMeetings', () => {
     // Then — modal aberto com evento pré-preenchido
     expect(result.current.isMeetingModalOpen).toBe(true);
     expect(result.current.preFilledEvent?.title).toContain('Cliente Teste');
+    expect(result.current.preFilledEvent?.date).toBe(getTodayDateOnly());
   });
 
   it('handleSaveAgendaEvent adds new event and closes modal', () => {

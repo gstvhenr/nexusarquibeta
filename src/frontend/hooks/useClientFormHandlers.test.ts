@@ -1,7 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Client, Project } from '../types';
 import { useClientFormHandlers } from './useClientFormHandlers';
+import { getTodayDateOnly } from '../utils/formatters';
 
 vi.mock('../constants', () => ({
   PIPELINE_STATUS_OPTIONS: ['Novo', 'Em Negociação', 'Fechado'],
@@ -31,6 +32,10 @@ const defaultArgs = (overrides = {}) => ({
 });
 
 describe('useClientFormHandlers', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('initializes with empty client when initialClient is null', () => {
     // Given — sem cliente inicial
     const { result } = renderHook(() => useClientFormHandlers(defaultArgs()));
@@ -39,6 +44,25 @@ describe('useClientFormHandlers', () => {
     expect(result.current.client.name).toBe('');
     expect(result.current.client.clientType).toBe('PF');
     expect(result.current.client.contacts).toHaveLength(1);
+  });
+
+  it('initializes and resets meeting date using the current local day', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 2, 8, 23, 30, 0));
+
+    const { result } = renderHook(() => useClientFormHandlers(defaultArgs()));
+
+    expect(result.current.newMeeting.date).toBe(getTodayDateOnly());
+
+    act(() => {
+      result.current.setNewMeeting({ date: '2026-03-01', reason: 'Kick-off', notes: '' });
+    });
+
+    act(() => {
+      result.current.handleAddMeeting();
+    });
+
+    expect(result.current.newMeeting.date).toBe(getTodayDateOnly());
   });
 
   it('handleChange updates client field', () => {

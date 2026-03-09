@@ -23,6 +23,7 @@ import type {
   CashBoxCreditProfessionalCategory,
   CashBoxCreditPersonalCategory,
 } from '../types';
+import { toDateOnlyString } from '../utils/formatters';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -47,7 +48,7 @@ const clampDay = (desiredDay: number, year: number, month: number): number =>
 const buildDateString = (desiredDay: number, year: number, month: number): string => {
   const d = clampDay(desiredDay, year, month);
   const date = new Date(year, month, d);
-  return date.toISOString().split('T')[0];
+  return toDateOnlyString(date);
 };
 
 // ── Public API ───────────────────────────────────────────────────────

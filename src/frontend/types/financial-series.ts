@@ -1,6 +1,6 @@
 import type { CashBoxCredit, CashBoxExpense, CashBoxOrigin } from './cashBox';
 import type { Commission, ManualIncome, ProfessionalExpense } from './finance';
-import type { Freelancer } from './freelancer';
+import type { Freelancer, HiredService } from './freelancer';
 import type { MarketingActivity } from './marketing';
 import type { Project } from './project';
 
@@ -40,6 +40,7 @@ export interface FinancialSeriesSource {
   manualIncomes: ManualIncome[];
   marketingActivities: MarketingActivity[];
   freelancers: Freelancer[];
+  hiredServices?: HiredService[];
   cashBoxExpenses?: CashBoxExpense[];
   cashBoxCredits?: CashBoxCredit[];
 }

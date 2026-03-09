@@ -2,8 +2,9 @@ import type { Project, Proposal, MarketingActivity, AgendaEvent, Installment } f
 import {
   formatCurrency,
   formatDateDayMonth,
-  parseDateString,
   getDeadlineInfo,
+  getTodayDateOnly,
+  parseDateString,
 } from '../utils/formatters';
 import { getProjectLumpSumValue } from '../utils/projectFinancials';
 
@@ -188,7 +189,7 @@ export const determineFocusItems = (
     });
 
   // 5. Upcoming Events Today
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getTodayDateOnly();
   const now = new Date();
   agendaEvents
     .filter(

@@ -580,6 +580,10 @@ describe('reportService.generateReport — preset filter with N days', () => {
   it('limits proposals and clients to the last 30 days window', () => {
     // Given — proposta de hoje vs. proposta de 60 dias atrás
     const today = new Date();
+    const getLocalYYYYMMDD = (d: Date) => {
+      const offset = d.getTimezoneOffset() * 60000;
+      return new Date(d.getTime() - offset).toISOString().split('T')[0];
+    };
     const sixtyDaysAgo = new Date(today);
     sixtyDaysAgo.setDate(today.getDate() - 60);
 
@@ -587,7 +591,7 @@ describe('reportService.generateReport — preset filter with N days', () => {
       id: 'prop_recent',
       code: '#R1',
       name: 'Recente',
-      date: today.toISOString().split('T')[0],
+      date: getLocalYYYYMMDD(today),
       status: 'Pendente',
       sections: [],
       discount: 0,
@@ -598,7 +602,7 @@ describe('reportService.generateReport — preset filter with N days', () => {
       id: 'prop_old',
       code: '#O1',
       name: 'Antiga',
-      date: sixtyDaysAgo.toISOString().split('T')[0],
+      date: getLocalYYYYMMDD(sixtyDaysAgo),
       status: 'Pendente',
       sections: [],
       discount: 0,

@@ -54,7 +54,7 @@ describe('buildUnifiedFinancialEntries', () => {
 
   it('returns empty arrays when all inputs are empty', () => {
     // Given / When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [], []);
+    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables).toEqual([]);
@@ -84,7 +84,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([project], [], [], [], [], []);
+    const result = buildUnifiedFinancialEntries([project], [], [], [], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables).toHaveLength(1);
@@ -125,7 +125,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([project], [], [], [], [], []);
+    const result = buildUnifiedFinancialEntries([project], [], [], [], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables).toHaveLength(2);
@@ -148,7 +148,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([project], [], [], [], [], []);
+    const result = buildUnifiedFinancialEntries([project], [], [], [], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables[0].status).toBe('Pago');
@@ -177,10 +177,100 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([project], [], [], [], [], []);
+    const result = buildUnifiedFinancialEntries([project], [], [], [], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables[0].status).toBe('Vencido');
+  });
+
+  it('creates receivables from approved and invoiced project addendums', () => {
+    // Given
+    const project = createTestProject({
+      id: 'p-add',
+      code: 'PRJ-ADD',
+      name: 'Projeto com Aditivo',
+      status: 'Em Andamento',
+      financials: {
+        paymentType: 'vista',
+        lumpSumValue: 5000,
+        lumpSumDueDate: '2099-12-15',
+        lumpSumStatus: 'Em aberto',
+        addendums: [
+          {
+            id: 'add-1',
+            description: 'Aditivo Aprovado',
+            value: 1500,
+            date: '2099-06-15',
+            status: 'Aprovado',
+          },
+          {
+            id: 'add-2',
+            description: 'Aditivo Faturado',
+            value: 2000,
+            date: '2099-07-15',
+            status: 'Faturado',
+          },
+          {
+            id: 'add-3',
+            description: 'Aditivo Rascunho',
+            value: 3000,
+            date: '2099-08-15',
+            status: 'Rascunho',
+          },
+        ],
+      },
+    });
+
+    // When
+    const result = buildUnifiedFinancialEntries([project], [], [], [], [], [], [], [], []);
+
+    // Then
+    // 1 base lumpSum, 2 addendums (Aprovado e Faturado)
+    expect(result.allReceivables).toHaveLength(3);
+
+    const addendum1 = result.allReceivables.find((r) => r.id === 'addon_p-add_add-1');
+    expect(addendum1).toBeDefined();
+    expect(addendum1?.value).toBe(1500);
+    expect(addendum1?.status).toBe('Em Aberto'); // future date, Aprovado
+    expect(addendum1?.source).toBe('Project');
+
+    const addendum2 = result.allReceivables.find((r) => r.id === 'addon_p-add_add-2');
+    expect(addendum2).toBeDefined();
+    expect(addendum2?.value).toBe(2000);
+    expect(addendum2?.status).toBe('Pago'); // Faturado is Pago
+
+    const addendum3 = result.allReceivables.find((r) => r.id === 'addon_p-add_add-3');
+    expect(addendum3).toBeUndefined(); // Rascunho is ignored
+  });
+
+  it('marks approved project addendum as Vencido when past due and unbilled', () => {
+    // Given
+    const project = createTestProject({
+      id: 'p-add-overdue',
+      status: 'Em Andamento',
+      financials: {
+        paymentType: 'vista',
+        lumpSumValue: 5000,
+        lumpSumDueDate: '2099-12-15',
+        addendums: [
+          {
+            id: 'add-overdue',
+            description: 'Aditivo Antigo',
+            value: 1000,
+            date: '2000-01-01', // well in the past
+            status: 'Aprovado', // not faturado
+          },
+        ],
+      },
+    });
+
+    // When
+    const result = buildUnifiedFinancialEntries([project], [], [], [], [], [], [], [], []);
+
+    // Then
+    const addendum = result.allReceivables.find((r) => r.id === 'addon_p-add-overdue_add-overdue');
+    expect(addendum).toBeDefined();
+    expect(addendum?.status).toBe('Vencido');
   });
 
   it('skips cancelled projects', () => {
@@ -195,7 +285,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([project], [], [], [], [], []);
+    const result = buildUnifiedFinancialEntries([project], [], [], [], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables).toHaveLength(0);
@@ -210,7 +300,7 @@ describe('buildUnifiedFinancialEntries', () => {
     project.financials = undefined as unknown as import('../../types').ProjectFinancials;
 
     // When
-    const result = buildUnifiedFinancialEntries([project], [], [], [], [], []);
+    const result = buildUnifiedFinancialEntries([project], [], [], [], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables).toHaveLength(0);
@@ -229,7 +319,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [commission], [], [], [], []);
+    const result = buildUnifiedFinancialEntries([], [commission], [], [], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables).toHaveLength(1);
@@ -249,7 +339,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [commission], [], [], [], []);
+    const result = buildUnifiedFinancialEntries([], [commission], [], [], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables[0].status).toBe('Pago');
@@ -265,7 +355,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [commission], [], [], [], []);
+    const result = buildUnifiedFinancialEntries([], [commission], [], [], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables[0].status).toBe('Vencido');
@@ -284,7 +374,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [income], [], []);
+    const result = buildUnifiedFinancialEntries([], [], [], [income], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables).toHaveLength(1);
@@ -305,7 +395,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [income], [], []);
+    const result = buildUnifiedFinancialEntries([], [], [], [income], [], [], [], [], []);
 
     // Then
     expect(result.allReceivables[0].status).toBe('Em Aberto');
@@ -322,7 +412,7 @@ describe('buildUnifiedFinancialEntries', () => {
     };
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [income], [], []);
+    const result = buildUnifiedFinancialEntries([], [], [], [income], [], [], [], [], []);
 
     // Then
     expect(result.receivableOriginById['inc3']).toBe('Pessoal');
@@ -341,7 +431,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [], [credit]);
+    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [], [], [credit]);
 
     // Then
     expect(result.allReceivables).toHaveLength(1);
@@ -364,7 +454,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [], [credit]);
+    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [], [], [credit]);
 
     // Then
     expect(result.allReceivables[0].status).toBe('Em Aberto');
@@ -380,7 +470,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [], [credit]);
+    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [], [], [credit]);
 
     // Then
     expect(result.allReceivables[0].status).toBe('Vencido');
@@ -399,7 +489,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [activity], []);
+    const result = buildUnifiedFinancialEntries([], [], [], [], [activity], [], [], [], []);
 
     // Then
     expect(result.allDebits).toHaveLength(1);
@@ -421,7 +511,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [activity], []);
+    const result = buildUnifiedFinancialEntries([], [], [], [], [activity], [], [], [], []);
 
     // Then
     expect(result.allDebits[0].status).toBe('Pago');
@@ -434,7 +524,7 @@ describe('buildUnifiedFinancialEntries', () => {
     const noDate = createTestMarketingActivity({ id: 'mkt4', cost: 300, dueDate: null });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [noCost, noDate], []);
+    const result = buildUnifiedFinancialEntries([], [], [], [], [noCost, noDate], [], [], [], []);
 
     // Then
     expect(result.allDebits).toHaveLength(0);
@@ -455,7 +545,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [expense]);
+    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [], [expense], []);
 
     // Then
     expect(result.allDebits).toHaveLength(1);
@@ -478,7 +568,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [expense]);
+    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [], [expense], []);
 
     // Then
     expect(result.allDebits[0].description).toBe('Operacional (2/6)');
@@ -493,7 +583,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [expense]);
+    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [], [expense], []);
 
     // Then
     expect(result.allDebits[0].isRecurring).toBe(true);
@@ -507,7 +597,7 @@ describe('buildUnifiedFinancialEntries', () => {
     });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [expense]);
+    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [], [expense], []);
 
     // Then
     expect(result.allDebits[0].status).toBe('Vencido');
@@ -521,7 +611,17 @@ describe('buildUnifiedFinancialEntries', () => {
     const expense2 = createTestCashBoxExpense({ id: 'e2', dueDate: '2099-01-10', value: 200 });
 
     // When
-    const result = buildUnifiedFinancialEntries([], [], [], [], [], [], [expense1, expense2]);
+    const result = buildUnifiedFinancialEntries(
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [expense1, expense2],
+      [],
+    );
 
     // Then
     expect(result.allDebits[0].id).toBe('e2');
@@ -550,7 +650,9 @@ describe('buildUnifiedFinancialEntries', () => {
       [],
       [],
       [],
+      [],
       [cashBoxExpense],
+      [],
     );
 
     // Then — cashbox (Feb) should appear before manual (Apr)

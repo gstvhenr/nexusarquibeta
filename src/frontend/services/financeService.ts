@@ -4,6 +4,7 @@ import type {
   ProfessionalExpense,
   MarketingActivity,
   Freelancer,
+  HiredService,
   ManualIncome,
   CashBoxExpense,
   CashBoxCredit,
@@ -36,6 +37,7 @@ const buildSourceEntries = (source: FinancialSeriesSource): UnifiedFinancialEntr
     source.manualIncomes,
     source.marketingActivities,
     source.freelancers,
+    source.hiredServices ?? [],
     source.cashBoxExpenses ?? [],
     source.cashBoxCredits ?? [],
   );
@@ -151,6 +153,7 @@ export const getFinancialPageData = (
   manualIncomes: ManualIncome[],
   marketingActivities: MarketingActivity[],
   freelancers: Freelancer[],
+  hiredServices: HiredService[],
   viewDate: Date,
   _chartReferenceDate: Date = new Date(),
   cashBoxExpenses: CashBoxExpense[] = [],
@@ -163,6 +166,7 @@ export const getFinancialPageData = (
     manualIncomes,
     marketingActivities,
     freelancers,
+    hiredServices,
     cashBoxExpenses,
     cashBoxCredits,
   );

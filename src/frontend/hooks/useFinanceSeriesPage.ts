@@ -4,6 +4,7 @@ import {
   useFinanceData,
   useMarketingData,
   useSupplyChainData,
+  useSystemData,
 } from '../context/DataContext';
 import { NAV_LINKS } from '../constants';
 import type {
@@ -37,6 +38,7 @@ export function useFinanceSeriesPage(config: FinanceSeriesConfig) {
     useFinanceData();
   const { marketingActivities } = useMarketingData();
   const { freelancers } = useSupplyChainData();
+  const { hiredServices } = useSystemData();
 
   const [period, setPeriod] = useState<PeriodSelection>({ mode: 'LAST_12_MONTHS' });
   const [filters, setFilters] = useState<Filters>({});
@@ -77,6 +79,7 @@ export function useFinanceSeriesPage(config: FinanceSeriesConfig) {
       manualIncomes,
       marketingActivities,
       freelancers,
+      hiredServices,
       cashBoxExpenses,
       cashBoxCredits,
     }),
@@ -87,6 +90,7 @@ export function useFinanceSeriesPage(config: FinanceSeriesConfig) {
       manualIncomes,
       marketingActivities,
       freelancers,
+      hiredServices,
       cashBoxExpenses,
       cashBoxCredits,
     ],

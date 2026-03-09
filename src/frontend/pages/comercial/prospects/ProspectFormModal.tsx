@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Modal, Input, Textarea, FormField, Button, RadarIcon } from '@/components/ui';
 import { PROSPECT_INTEREST_OPTIONS, PROSPECT_ORIGIN_OPTIONS } from '@/constants';
 import type { Prospect } from '@/types';
-import { formatPhone } from '@/utils/formatters';
+import { formatPhone, getTodayDateOnly, parseDateString } from '@/utils/formatters';
 
 type ProspectFormModalProps = {
   isOpen: boolean;
@@ -28,7 +28,7 @@ const buildInitialProspect = (initialProspect: Prospect | null): Prospect =>
         priority: 'Média',
         status: 'Em Aberto',
         createdAt: new Date().toISOString(),
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: getTodayDateOnly(),
         followUpDays: 15,
         notes: '',
         archived: false,
@@ -80,6 +80,10 @@ export function ProspectFormModal({
   if (!isOpen) return null;
 
   const inputOverride = 'p-2 rounded-md';
+  const followUpBaseDate = parseDateString(prospect.startDate);
+  const followUpDeadline = followUpBaseDate
+    ? new Date(followUpBaseDate.getTime() + prospect.followUpDays * 24 * 60 * 60 * 1000)
+    : null;
 
   return (
     <Modal
@@ -214,11 +218,7 @@ export function ProspectFormModal({
                 aria-label="Dias de radar"
               />
               <p className="text-xs text-text-secondary mt-1">
-                * Ativo até{' '}
-                {new Date(
-                  new Date(prospect.startDate).getTime() +
-                    prospect.followUpDays * 24 * 60 * 60 * 1000,
-                ).toLocaleDateString('pt-BR')}
+                * Ativo até {followUpDeadline?.toLocaleDateString('pt-BR') ?? 'Data inválida'}
               </p>
             </FormField>
           </div>

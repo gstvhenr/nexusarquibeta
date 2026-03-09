@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import type { AgendaEvent, MarketingActivity, Proposal } from '../types';
 import { createTestProject } from '../test/factories';
 import { determineFocusItems } from './dashboardFocusItems';
+import { toDateOnlyString } from '../utils/formatters';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -9,7 +10,7 @@ import { determineFocusItems } from './dashboardFocusItems';
 const daysFromToday = (n: number): string => {
   const d = new Date();
   d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0];
+  return toDateOnlyString(d);
 };
 
 /** Builds a minimal AgendaEvent for test purposes. */
@@ -654,7 +655,7 @@ describe('determineFocusItems', () => {
   // ── Priority 5 — Upcoming Events Today ───────────────────────────────────
 
   describe('upcoming events today', () => {
-    const TODAY = FIXED_NOW.toISOString().split('T')[0]; // '2026-03-03'
+    const TODAY = toDateOnlyString(FIXED_NOW); // '2026-03-03'
 
     it('generates an event_today item for a future event scheduled today', () => {
       // Arrange — time is after FIXED_NOW (12:00)
@@ -792,7 +793,7 @@ describe('determineFocusItems', () => {
 
     it('places deadline items before event_today items', () => {
       // Arrange
-      const TODAY = FIXED_NOW.toISOString().split('T')[0];
+      const TODAY = toDateOnlyString(FIXED_NOW);
       const projectWithDeadline = createTestProject({
         status: 'Em Andamento',
         deadline: daysFromToday(1),
@@ -810,7 +811,7 @@ describe('determineFocusItems', () => {
 
     it('returns items from all 5 categories simultaneously', () => {
       // Arrange
-      const TODAY = FIXED_NOW.toISOString().split('T')[0];
+      const TODAY = toDateOnlyString(FIXED_NOW);
       const projectWithOverdue = createTestProject({
         id: 'all-pay',
         financials: {
@@ -850,7 +851,7 @@ describe('determineFocusItems', () => {
   describe('generated item IDs', () => {
     it('produces unique IDs across all generated items', () => {
       // Arrange
-      const TODAY = FIXED_NOW.toISOString().split('T')[0];
+      const TODAY = toDateOnlyString(FIXED_NOW);
       const p1 = createTestProject({
         id: 'uid-p1',
         financials: {

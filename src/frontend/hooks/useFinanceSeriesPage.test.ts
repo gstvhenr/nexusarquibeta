@@ -13,6 +13,7 @@ vi.mock('../context/DataContext', () => ({
   })),
   useMarketingData: vi.fn(() => ({ marketingActivities: [] })),
   useSupplyChainData: vi.fn(() => ({ freelancers: [] })),
+  useSystemData: vi.fn(() => ({ hiredServices: [] })),
 }));
 
 vi.mock('../constants', () => ({

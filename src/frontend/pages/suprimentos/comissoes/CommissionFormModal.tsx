@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Button, FormField, Input, Modal, Textarea } from '@/components/ui';
 import { useCoreData, useSupplyChainData } from '@/context/DataContext';
 import type { Commission } from '@/types';
+import { getTodayDateOnly } from '@/utils/formatters';
 
 type CommissionFormModalProps = {
   isOpen: boolean;
@@ -26,7 +27,7 @@ export const CommissionFormModal: (props: CommissionFormModalProps) => React.Rea
     () =>
       initialCommission || {
         id: '',
-        saleDate: new Date().toISOString().split('T')[0],
+        saleDate: getTodayDateOnly(),
         supplierId: '',
         supplierName: '',
         clientId: '',

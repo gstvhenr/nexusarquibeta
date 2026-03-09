@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { PIPELINE_STATUS_OPTIONS } from '../constants';
 import type { Client, ClientContact, ProjectMeeting, Project } from '../types';
+import { getTodayDateOnly } from '../utils/formatters';
 
 const getInitialClient = (): Client => ({
   id: '',
@@ -48,7 +49,7 @@ export function useClientFormHandlers({
   const [client, setClient] = useState<Client>(initialClient || getInitialClient());
   const [isInterestsDropdownOpen, setInterestsDropdownOpen] = useState(false);
   const [newMeeting, setNewMeeting] = useState<Partial<ProjectMeeting>>({
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayDateOnly(),
     reason: '',
     notes: '',
   });
@@ -85,7 +86,7 @@ export function useClientFormHandlers({
     }
 
     setClient(clientData);
-    setNewMeeting({ date: new Date().toISOString().split('T')[0], reason: '', notes: '' });
+    setNewMeeting({ date: getTodayDateOnly(), reason: '', notes: '' });
     setInterestsDropdownOpen(false);
   }, [initialClient, isOpen]);
 
@@ -191,7 +192,7 @@ export function useClientFormHandlers({
 
     const meetingToAdd: ProjectMeeting = {
       id: uuidv4(),
-      date: newMeeting.date || new Date().toISOString(),
+      date: newMeeting.date || getTodayDateOnly(),
       reason: newMeeting.reason || 'Reunião de Acompanhamento',
       notes: newMeeting.notes || '',
       projectId: newMeeting.projectId,
@@ -199,7 +200,7 @@ export function useClientFormHandlers({
     };
 
     setClient((current) => ({ ...current, meetings: [meetingToAdd, ...(current.meetings || [])] }));
-    setNewMeeting({ date: new Date().toISOString().split('T')[0], reason: '', notes: '' });
+    setNewMeeting({ date: getTodayDateOnly(), reason: '', notes: '' });
   }, [newMeeting, projects]);
 
   const handleDeleteMeeting = useCallback((id: string) => {

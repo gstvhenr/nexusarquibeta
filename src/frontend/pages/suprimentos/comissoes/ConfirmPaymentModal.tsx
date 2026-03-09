@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, FormField, Input, Modal } from '@/components/ui';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency, getTodayDateOnly } from '@/utils/formatters';
 import type { Commission } from '@/types';
 
 type ConfirmPaymentModalProps = {
@@ -16,11 +16,11 @@ export const ConfirmPaymentModal: (props: ConfirmPaymentModalProps) => React.Rea
   onConfirm,
   commission,
 }) => {
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentDate, setPaymentDate] = useState(getTodayDateOnly());
 
   useEffect(() => {
     if (isOpen) {
-      setPaymentDate(new Date().toISOString().split('T')[0]);
+      setPaymentDate(getTodayDateOnly());
     }
   }, [isOpen]);
 

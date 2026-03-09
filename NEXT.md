@@ -12,40 +12,22 @@
 - Histórico completo até 2026-02-16: `docs/changelog/session-log-2026-02.md`.
 - Histórico de sessões 36-56 (2026-03-04 a 2026-03-06): `docs/changelog/session-log-2026-03.md`.
 
-## Último estado conhecido (2026-03-08, sessão 59)
+## Último estado conhecido (2026-03-09, remoção temporária de teste flakey em detalhes de projeto)
 
-Estabilização de testes flaky em cobertura para `ProjetoDetalhesPageContent` e `PrestadoresFreelancersPage` (escopo test-only).
+- O teste [ProjetoDetalhesPageContent.test.tsx](/mnt/c/Users/gustavo.geraldo/Documents/05.%20Nexus-Arqui%20%28Beta%29/src/frontend/pages/projetos/detalhes/ProjetoDetalhesPageContent.test.tsx) foi removido por solicitação explícita do usuário.
+- O motivo foi instabilidade recorrente e custo alto de manutenção no fluxo integrado de detalhes de projeto durante `test:coverage`.
+- A página de produção [ProjetoDetalhesPageContent.tsx](/mnt/c/Users/gustavo.geraldo/Documents/05.%20Nexus-Arqui%20%28Beta%29/src/frontend/pages/projetos/detalhes/ProjetoDetalhesPageContent.tsx) não foi alterada nesta sessão.
 
 ### O que mudou
 
-- [x] `src/frontend/pages/projetos/detalhes/ProjetoDetalhesPageContent.test.tsx`:
-  - fluxo `dirty-state` agora espera `Salvar Alterações` + `Cancelar` no mesmo `waitFor` antes do clique em cancelar;
-  - fluxo de `base contract value` deixou de depender do toast transitório e valida sucesso por persistência + limpeza da save bar;
-  - adicionados `waitForOptions` explícitos nas buscas críticas.
-- [x] `src/frontend/pages/prestadores-freelancers/PrestadoresFreelancersPage.test.tsx`:
-  - cenário `creates, archives and reactivates a freelancer` endurecido com checkpoints de estado na API (`archived: true/false`) e esperas explícitas nas transições de lista.
+- `src/frontend/pages/projetos/detalhes/ProjetoDetalhesPageContent.test.tsx`: arquivo removido temporariamente.
 
-### Validação executada
+### Bloqueios e dúvidas
 
-- [x] `npx vitest run src/frontend/pages/projetos/detalhes/ProjetoDetalhesPageContent.test.tsx --reporter=verbose` → **PASS (4/4)**.
-- [x] `npx vitest run src/frontend/pages/prestadores-freelancers/PrestadoresFreelancersPage.test.tsx --reporter=verbose` → **PASS (4/4)**.
-- [x] `npm run test:coverage -- --reporter=json --outputFile .agent/tmp/test-coverage-after-fix.json`:
-  - suites alvo (`ProjetoDetalhesPageContent` e `PrestadoresFreelancersPage`) **PASS**;
-  - falhas remanescentes fora do escopo em `HomePage.test.tsx` e `GestaoMarketingPage.test.tsx`.
-- [x] `npm run verify` (re-run após formatação) avançou até `test:coverage`, mas permaneceu **FAIL** com 3 testes fora do escopo:
-  - `src/frontend/pages/home/HomePage.test.tsx` (`dismisses and restores focus alerts through system state`);
-  - `src/frontend/pages/gestao-marketing/GestaoMarketingPage.test.tsx` (`handles professional create, update and delete flows in dashboard view`);
-  - `src/frontend/pages/clientes/ClientesPage.test.tsx` (`deve alternar entre clientes ativos e arquivados`).
-
-### Observações
-
-- Nenhum arquivo da don't touch list foi modificado.
-- Nenhuma mudança em código de produção; somente testes.
+- O cenário de dirty-state / beforeunload da página de detalhes de projeto está sem cobertura automatizada neste momento.
+- `npm run verify` não foi executado nesta sessão após a remoção do teste, por decisão do usuário.
 
 ## Próximo passo exato
 
-1. Estabilizar os 3 testes remanescentes (`HomePage`, `GestaoMarketingPage`, `ClientesPage`) para fechar `npm run verify` com `[VERIFY][LOOP][PASS]`.
-
-## Bloqueios e dúvidas
-
-- Nenhum bloqueio.
+- Rodar `npm run verify` manualmente nesta branch sem esse teste.
+- Em sessão futura, recriar cobertura menor e mais estável para `ProjetoDetalhesPageContent`, preferencialmente quebrada em testes menores por comportamento.

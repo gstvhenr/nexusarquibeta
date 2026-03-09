@@ -1,14 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/layout';
 import { Button, FormField, Input, Modal } from '@/components/ui';
-import {
-  useCoreData,
-  useFinanceData,
-  useSupplyChainData,
-  useSystemData,
-} from '@/context/DataContext';
+import { useCoreData, useSupplyChainData, useSystemData } from '@/context/DataContext';
 import { NAV_LINKS } from '@/constants';
-import type { HiredService, ProfessionalExpense, AgendaEvent } from '@/types';
+import type { HiredService } from '@/types';
 import {
   ClipboardDocumentListIcon,
   TrashIcon,
@@ -17,14 +12,14 @@ import {
   ArchiveIcon,
   UnarchiveIcon,
 } from '@/components/ui';
-import { formatCurrency, formatDate, getDeadlineInfo } from '@/utils/formatters';
+import { formatCurrency, formatDate, getDeadlineInfo, getTodayDateOnly } from '@/utils/formatters';
 import { v4 as uuidv4 } from 'uuid';
 
 const ServicosContratadosPage: () => React.ReactNode = () => {
   const { projects, setProjects } = useCoreData();
-  const { setManualExpenses } = useFinanceData();
+
   const { freelancers } = useSupplyChainData();
-  const { hiredServices, setHiredServices, setAgendaEvents } = useSystemData();
+  const { hiredServices, setHiredServices } = useSystemData();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
@@ -64,7 +59,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
     setSelectedTaskIds([]);
     setSelectedFreelancerId('');
     setCost(0);
-    setDeadline(new Date().toISOString().split('T')[0]);
+    setDeadline(getTodayDateOnly());
     setIsModalOpen(true);
   };
 
@@ -94,38 +89,6 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
 
     // 1. Create Hired Service
     setHiredServices((prev) => [newService, ...prev]);
-
-    // 2. Create Expense in Finance
-    const newExpense: ProfessionalExpense = {
-      id: `exp_hired_${newServiceId}`,
-      description: `Subcontratação: ${freelancer.name} (${project.name})`,
-      category: 'Serviços Terceirizados',
-      value: cost,
-      dueDate: deadline, // Assuming payment on delivery for simplicity
-      status: 'Pendente',
-      isRecurring: false,
-      source: 'Freelancer',
-      freelancerActivityId: newServiceId,
-      paymentDate: null,
-    };
-    setManualExpenses((prev) => [newExpense, ...prev]);
-
-    // 3. Create Agenda Event (Deadline)
-    const newEvent: AgendaEvent = {
-      id: `evt_hired_${newServiceId}`,
-      title: `Entrega: ${freelancer.name}`,
-      date: deadline,
-      time: '12:00',
-      type: 'Prazo de Entrega',
-      description: `Entrega de serviço contratado para o projeto "${project.name}". Freelancer: ${freelancer.name}`,
-      projectId: project.id,
-      projectName: project.name,
-      priority: 4,
-      recurrence: 'none',
-      freelancerServiceId: newServiceId,
-      completed: false,
-    };
-    setAgendaEvents((prev) => [newEvent, ...prev]);
 
     // 4. Update Project Tasks Assignee
     if (selectedTaskIds.length > 0) {
@@ -164,15 +127,8 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (
-      window.confirm(
-        'Tem certeza que deseja excluir este serviço? As despesas e eventos associados também serão removidos.',
-      )
-    ) {
+    if (window.confirm('Tem certeza que deseja excluir este serviço?')) {
       setHiredServices((prev) => prev.filter((s) => s.id !== id));
-      // Also remove linked expenses and events
-      setManualExpenses((prev) => prev.filter((e) => e.freelancerActivityId !== id));
-      setAgendaEvents((prev) => prev.filter((e) => e.freelancerServiceId !== id));
     }
   };
 

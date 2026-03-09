@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { agendaService } from '../../services/agendaService';
 import type { EventIndex } from '../../services/agendaService';
 import { DAYS, DEFAULT_CELL_HEIGHT_REM, priorityColors } from './agendaConstants';
+import { toDateOnlyString } from '../../utils/formatters';
 
 interface MonthlyCalendarGridProps {
   calendarGrid: Date[];
@@ -32,7 +33,7 @@ function MonthlyCalendarGrid({
       const isPast = dateTimestamp.getTime() < today.getTime();
       const isSelected = date.toDateString() === selectedDate.toDateString();
 
-      const dayKey = date.toISOString().split('T')[0];
+      const dayKey = toDateOnlyString(date);
       const isDifferentMonth = date.getMonth() !== currentDate.getMonth();
 
       const eventIndicators = (

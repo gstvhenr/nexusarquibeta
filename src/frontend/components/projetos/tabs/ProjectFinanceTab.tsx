@@ -4,6 +4,7 @@ import {
   getProjectLumpSumValue,
   getProjectTotalContractValue,
 } from '@/utils/projectFinancials';
+import { getTodayDateOnly } from '@/utils/formatters';
 import { ProjectFinanceAddendumsSection } from './project-finance/ProjectFinanceAddendumsSection';
 import { ProjectFinanceConfigSection } from './project-finance/ProjectFinanceConfigSection';
 import { ProjectFinanceKPISection } from './project-finance/ProjectFinanceKPISection';
@@ -29,15 +30,13 @@ export const ProjectFinanceTab: (props: FinanceTabProps) => React.ReactNode = ({
   const [newAddendum, setNewAddendum] = useState({
     description: '',
     value: 0,
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayDateOnly(),
     isDiscount: false,
   });
 
   const [selectedBudgetServiceId, setSelectedBudgetServiceId] = useState('');
   const [budgetServiceValue, setBudgetServiceValue] = useState(0);
-  const [budgetServiceDate, setBudgetServiceDate] = useState(
-    new Date().toISOString().split('T')[0],
-  );
+  const [budgetServiceDate, setBudgetServiceDate] = useState(getTodayDateOnly());
   const [budgetServiceMode, setBudgetServiceMode] = useState<'increase' | 'discount'>('increase');
 
   const commonInputClass =
@@ -86,7 +85,7 @@ export const ProjectFinanceTab: (props: FinanceTabProps) => React.ReactNode = ({
     setNewAddendum({
       description: '',
       value: 0,
-      date: new Date().toISOString().split('T')[0],
+      date: getTodayDateOnly(),
       isDiscount: false,
     });
   };
@@ -118,7 +117,7 @@ export const ProjectFinanceTab: (props: FinanceTabProps) => React.ReactNode = ({
 
     setSelectedBudgetServiceId('');
     setBudgetServiceValue(0);
-    setBudgetServiceDate(new Date().toISOString().split('T')[0]);
+    setBudgetServiceDate(getTodayDateOnly());
     setBudgetServiceMode('increase');
   };
 

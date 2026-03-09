@@ -14,6 +14,7 @@ import {
   useFinanceData,
   useMarketingData,
   useSupplyChainData,
+  useSystemData,
 } from '../../context/DataContext';
 import { formatYAxisTick } from '../../utils/formatters';
 import { getCashFlowForecastSeries } from '../../services/financeService';
@@ -27,6 +28,7 @@ const FinanceiroPrevisaoCaixaPage: () => React.ReactNode = () => {
     useFinanceData();
   const { marketingActivities } = useMarketingData();
   const { freelancers } = useSupplyChainData();
+  const { hiredServices } = useSystemData();
 
   const source: FinancialSeriesSource = useMemo(
     () => ({
@@ -36,6 +38,7 @@ const FinanceiroPrevisaoCaixaPage: () => React.ReactNode = () => {
       manualIncomes,
       marketingActivities,
       freelancers,
+      hiredServices,
       cashBoxExpenses,
       cashBoxCredits,
     }),
@@ -46,6 +49,7 @@ const FinanceiroPrevisaoCaixaPage: () => React.ReactNode = () => {
       manualIncomes,
       marketingActivities,
       freelancers,
+      hiredServices,
       cashBoxExpenses,
       cashBoxCredits,
     ],

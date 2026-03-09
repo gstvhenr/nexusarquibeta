@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
 import { AlertIcon } from '../ui';
+import { getTodayDateOnly } from '../../utils/formatters';
 
 export type ProjectActionType = 'delete' | 'inactivate' | 'finalize';
 
@@ -13,13 +14,13 @@ export const ProjectActionModal: (props: {
 }) => React.ReactNode = ({ isOpen, onClose, onConfirm, projectName, actionType }) => {
   const [hasRefund, setHasRefund] = useState(false);
   const [refundAmount, setRefundAmount] = useState<number>(0);
-  const [refundDate, setRefundDate] = useState(new Date().toISOString().split('T')[0]);
+  const [refundDate, setRefundDate] = useState(getTodayDateOnly());
 
   useEffect(() => {
     if (!isOpen) return;
     setHasRefund(false);
     setRefundAmount(0);
-    setRefundDate(new Date().toISOString().split('T')[0]);
+    setRefundDate(getTodayDateOnly());
   }, [isOpen]);
 
   const handleSubmit = () => {

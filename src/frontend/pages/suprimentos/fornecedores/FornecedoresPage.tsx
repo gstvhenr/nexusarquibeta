@@ -5,6 +5,7 @@ import type { Supplier, PriceEntry, SupplierProductPrice } from '@/types';
 import { NAV_LINKS } from '@/constants';
 import { Button, PlusIcon } from '@/components/ui';
 import { SuppliersView, SupplierFormModal } from '@/components/supply-chain';
+import { getTodayDateOnly } from '@/utils/formatters';
 
 const FornecedoresPage: () => React.ReactNode = () => {
   // Data hooks
@@ -64,7 +65,7 @@ const FornecedoresPage: () => React.ReactNode = () => {
   const handleLinkProduct = useCallback(
     (productId: string, price: number) => {
       if (!selectedSupplier) return;
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayDateOnly();
 
       setSupplierProductPrices((prev) => {
         const existingEntryIndex = prev.findIndex(

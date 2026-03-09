@@ -3,6 +3,7 @@ import type { AgendaEvent } from '../types';
 import type { UnifiedEventsInput } from './agendaService';
 import { agendaService } from './agendaService';
 import { createTestProject, createTestCommission } from '../test/factories';
+import { toDateOnlyString } from '../utils/formatters';
 
 const buildBaseData = (): UnifiedEventsInput => ({
   agendaEvents: [],
@@ -163,6 +164,31 @@ describe('agendaService', () => {
     expect(ids).not.toContain('comm_comm_settled_1');
   });
 
+  it('generates prospect follow-up events using date-only strings', () => {
+    const data: UnifiedEventsInput = {
+      ...buildBaseData(),
+      prospects: [
+        {
+          id: 'prospect_1',
+          name: 'Cliente Radar',
+          origin: 'Instagram',
+          interest: 'Residencial',
+          priority: 'Média',
+          status: 'Em Aberto',
+          createdAt: '2026-03-08T12:00:00.000Z',
+          followUpDays: 15,
+          startDate: '2026-03-08',
+          archived: false,
+        },
+      ],
+    };
+
+    const events = agendaService.getUnifiedEvents(data);
+    const followUp = events.find((event) => event.id === 'prosp_prospect_1');
+
+    expect(followUp?.date).toBe('2026-03-23');
+  });
+
   it('generates events for pending manual expenses and pending commissions', () => {
     // Given
     const pendingCommission = createTestCommission({
@@ -237,7 +263,7 @@ describe('agendaService', () => {
     const pastEvent: AgendaEvent = {
       id: 'past_evt',
       title: 'Evento passado',
-      date: yesterday.toISOString().split('T')[0],
+      date: toDateOnlyString(yesterday),
       time: '08:00',
       type: 'Outro',
       priority: 1,
@@ -247,7 +273,7 @@ describe('agendaService', () => {
     const futureEvent: AgendaEvent = {
       id: 'future_evt',
       title: 'Evento futuro',
-      date: tomorrow.toISOString().split('T')[0],
+      date: toDateOnlyString(tomorrow),
       time: '23:00',
       type: 'Outro',
       priority: 1,

@@ -1,14 +1,15 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Outlet, Route, Routes, useOutletContext } from 'react-router-dom';
 import { DataProvider } from '@/context/DataContext';
 import { api } from '@/services/infrastructure/api';
 import type { Commission, ProfessionalExpense, Project, Proposal } from '@/types';
+import { getTodayDateOnly, toDateOnlyString } from '@/utils/formatters';
 import type { RelatoriosOutletContext } from './RelatoriosLayout';
 
 import RelatoriosLayout from './RelatoriosLayout';
 
-const toIsoDate = (date: Date): string => date.toISOString().split('T')[0];
+const toIsoDate = (date: Date): string => toDateOnlyString(date);
 
 const dateDaysAgo = (days: number): string => {
   const date = new Date();
@@ -201,6 +202,32 @@ describe('RelatoriosLayout', () => {
   afterEach(() => {
     cleanup();
     api.clearAllData();
+  });
+
+  it('uses the current local day as the default end date', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 2, 8, 23, 30, 0));
+
+    try {
+      render(
+        <MemoryRouter initialEntries={['/relatorios/financeiro']} future={FUTURE_FLAGS}>
+          <DataProvider>
+            <Routes>
+              <Route path="/relatorios" element={<RelatoriosLayout />}>
+                <Route
+                  path="financeiro"
+                  element={<h2 data-testid="finance-route">Financeiro route</h2>}
+                />
+              </Route>
+            </Routes>
+          </DataProvider>
+        </MemoryRouter>,
+      );
+
+      expect(screen.getByLabelText('Data de fim')).toHaveValue(getTodayDateOnly());
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('renders tab navigation and switches active route across all report tabs', async () => {

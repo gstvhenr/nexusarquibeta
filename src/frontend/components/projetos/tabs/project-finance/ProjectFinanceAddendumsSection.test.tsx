@@ -75,7 +75,7 @@ describe('ProjectFinanceAddendumsSection', () => {
 
     expect(screen.getAllByText('Aditivo estrutural').length).toBeGreaterThan(0);
     fireEvent.change(screen.getAllByRole('combobox')[0], { target: { value: 'Aprovado' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Remover aditivo' }));
+    fireEvent.click(screen.getByRole('button', { name: /Remover aditivo/i }));
 
     expect(props.onUpdateAddendumStatus).toHaveBeenCalledWith('ad-1', 'Aprovado');
     expect(props.onRemoveAddendum).toHaveBeenCalledWith('ad-1');

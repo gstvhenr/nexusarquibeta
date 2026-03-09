@@ -6,6 +6,7 @@ import {
   useFinanceData,
   useMarketingData,
   useSupplyChainData,
+  useSystemData,
 } from '../../context/DataContext';
 import { formatCurrency } from '../../utils/formatters';
 import { getFinancialPageData } from '../../services/financeService';
@@ -52,6 +53,7 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
     useFinanceData();
   const { marketingActivities } = useMarketingData();
   const { freelancers } = useSupplyChainData();
+  const { hiredServices } = useSystemData();
 
   const [donutView, setDonutView] = useState<DonutView>('expenses');
   const [monthOffset, setMonthOffset] = useState(0);
@@ -68,6 +70,7 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
         manualIncomes,
         marketingActivities,
         freelancers,
+        hiredServices,
         viewDate,
         new Date(),
         cashBoxExpenses,
@@ -80,6 +83,7 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
       manualIncomes,
       marketingActivities,
       freelancers,
+      hiredServices,
       cashBoxExpenses,
       cashBoxCredits,
       viewDate,

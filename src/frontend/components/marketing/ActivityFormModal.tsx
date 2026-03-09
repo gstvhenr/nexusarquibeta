@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Modal } from '../ui';
 import type { MarketingActivity, MarketingProfessional, Project } from '../../types';
 import ActivityFormFields from './ActivityFormFields';
+import { getTodayDateOnly } from '../../utils/formatters';
 
 interface ActivityFormModalProps {
   isOpen: boolean;
@@ -38,15 +39,13 @@ const ActivityFormModal: (props: ActivityFormModalProps) => React.ReactNode = ({
         timePart: extractTime(initialActivity.dueDate),
       };
     }
-
-    const now = new Date();
     return {
       id: `act_${Date.now()}`,
       title: '',
       status: 'Pendente',
       contentType: 'Post (Instagram)',
       dueDate: null,
-      datePart: now.toISOString().split('T')[0],
+      datePart: getTodayDateOnly(),
       timePart: '09:00',
       responsibleId: 'architect',
       description: '',

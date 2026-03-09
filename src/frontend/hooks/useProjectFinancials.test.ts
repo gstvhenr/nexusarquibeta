@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTestProject } from '../test/factories';
-import type { Project } from '../types/project';
+import type { Installment, Project } from '../types/project';
 import { useProjectFinancials } from './useProjectFinancials';
+import { getTodayDateOnly } from '../utils/formatters';
 
 const makeProject = (overrides: Partial<Project> = {}): Project =>
   createTestProject({
@@ -18,8 +19,14 @@ const makeProject = (overrides: Partial<Project> = {}): Project =>
   });
 
 describe('useProjectFinancials', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('handleGenerateInstallments creates correct number of installments', () => {
     // Given — projeto parcelado em 3x
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 2, 8, 23, 30, 0));
     const setLocalProject = vi.fn();
     const { handleGenerateInstallments } = useProjectFinancials(
       setLocalProject,
@@ -38,10 +45,15 @@ describe('useProjectFinancials', () => {
     expect(result.financials.installments).toHaveLength(3);
     expect(result.financials.installments[0].number).toBe(1);
     expect(result.financials.installments[0].paid).toBe(false);
+    expect(
+      result.financials.installments?.map((installment: Installment) => installment.dueDate),
+    ).toEqual(['2026-04-15', '2026-05-15', '2026-06-15']);
   });
 
   it('handleAddInstallment adds a new installment', () => {
     // Given — projeto sem parcelas
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 2, 8, 23, 30, 0));
     const setLocalProject = vi.fn();
     const { handleAddInstallment } = useProjectFinancials(
       setLocalProject,
@@ -59,6 +71,7 @@ describe('useProjectFinancials', () => {
     // Then — uma parcela adicionada
     expect(result.financials.installments).toHaveLength(1);
     expect(result.financials.installments[0].description).toBe('Parcela Extra');
+    expect(result.financials.installments[0].dueDate).toBe(getTodayDateOnly());
   });
 
   it('handleRemoveInstallment removes installment by id', () => {
@@ -208,6 +221,8 @@ describe('useProjectFinancials', () => {
 
   it('handleAddDeadline adds a new deadline', () => {
     // Given — projeto sem prazos adicionais
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 2, 8, 23, 30, 0));
     const setLocalProject = vi.fn();
     const { handleAddDeadline } = useProjectFinancials(
       setLocalProject,
@@ -224,6 +239,7 @@ describe('useProjectFinancials', () => {
     // Then — prazo adicionado
     expect(result.additionalDeadlines).toHaveLength(1);
     expect(result.additionalDeadlines[0].title).toBe('Novo Prazo');
+    expect(result.additionalDeadlines[0].date).toBe(getTodayDateOnly());
   });
 
   it('handleRemoveDeadline removes deadline by id', () => {

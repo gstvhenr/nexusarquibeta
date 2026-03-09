@@ -1,4 +1,5 @@
 import type { AgendaEvent, AgendaEventType, AgendaEventRecurrence } from '../../types';
+import { toDateOnlyString } from '../../utils/formatters';
 
 export const priorityConfig: Record<
   number,
@@ -46,7 +47,7 @@ export const priorityLabels: Record<number, { label: string; color: string }> = 
 
 export const getInitialEvent = (date: Date): Omit<AgendaEvent, 'id'> => ({
   title: '',
-  date: date.toISOString().split('T')[0],
+  date: toDateOnlyString(date),
   isAllDay: false,
   time: '09:00',
   timeEnd: '10:00',

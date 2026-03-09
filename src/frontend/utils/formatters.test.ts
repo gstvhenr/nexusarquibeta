@@ -9,9 +9,44 @@ import {
   formatDateWithTime,
   formatPhone,
   formatYAxisTick,
+  getTodayDateOnly,
   getDeadlineInfo,
   parseDateString,
+  toDateOnlyString,
 } from './formatters';
+
+// ---------------------------------------------------------------------------
+// toDateOnlyString
+// ---------------------------------------------------------------------------
+
+describe('toDateOnlyString', () => {
+  it('formats a local Date into YYYY-MM-DD', () => {
+    const result = toDateOnlyString(new Date(2026, 2, 8, 23, 30, 0));
+
+    expect(result).toBe('2026-03-08');
+  });
+
+  it('returns empty string for invalid dates', () => {
+    expect(toDateOnlyString(new Date('invalid'))).toBe('');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getTodayDateOnly
+// ---------------------------------------------------------------------------
+
+describe('getTodayDateOnly', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('returns the current local calendar day', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 2, 8, 23, 30, 0));
+
+    expect(getTodayDateOnly()).toBe('2026-03-08');
+  });
+});
 
 // ---------------------------------------------------------------------------
 // parseDateString
@@ -44,6 +79,7 @@ describe('parseDateString', () => {
     expect(date?.getFullYear()).toBe(2026);
     expect(date?.getMonth()).toBe(1);
     expect(date?.getDate()).toBe(12);
+    expect(date?.getHours()).toBe(0);
   });
 
   it('parses full ISO datetime string', () => {

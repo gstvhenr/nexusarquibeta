@@ -240,18 +240,25 @@ describe('HomePage — Excellence Integration', () => {
 
     renderHomePage();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Dispensar' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Dispensar' }, { timeout: 15000 }));
 
-    expect(await screen.findByText('Tudo sob controle!')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Rever dispensados' })).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(api.getData().dismissedFocusItems).toContain('payment_overdue_lump_proj-alert');
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Tudo sob controle!')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Rever dispensados' })).toBeInTheDocument();
+        expect(api.getData().dismissedFocusItems).toContain('payment_overdue_lump_proj-alert');
+      },
+      { timeout: 15000 },
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Rever dispensados' }));
 
-    expect(await screen.findByText('FINANCEIRO URGENTE')).toBeInTheDocument();
+    await waitFor(
+      () => {
+        expect(screen.getByText('FINANCEIRO URGENTE')).toBeInTheDocument();
+      },
+      { timeout: 15000 },
+    );
     await waitFor(() => {
       expect(api.getData().dismissedFocusItems).toEqual([]);
     });

@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Project, Installment, AdditionalDeadline } from '../types/project';
 import type { PaymentMethod } from '../types/finance';
+import { getTodayDateOnly, toDateOnlyString } from '../utils/formatters';
 import { getProjectTotalContractValue } from '../utils/projectFinancials';
 
 type ProjectSetter = React.Dispatch<React.SetStateAction<Project | null>>;
@@ -42,7 +43,7 @@ export function useProjectFinancials(
           id: uuidv4(),
           number: i + 1,
           value: valuePerInstallment,
-          dueDate: targetDate.toISOString().split('T')[0],
+          dueDate: toDateOnlyString(targetDate),
           paid: false,
           paymentDate: null,
         };
@@ -74,7 +75,7 @@ export function useProjectFinancials(
         id: uuidv4(),
         number: currentInstallments.length + 1,
         value: 0,
-        dueDate: new Date().toISOString().split('T')[0],
+        dueDate: getTodayDateOnly(),
         paid: false,
         paymentDate: null,
         description: 'Parcela Extra',
@@ -132,7 +133,7 @@ export function useProjectFinancials(
             ...p,
             additionalDeadlines: [
               ...(p.additionalDeadlines || []),
-              { id: uuidv4(), title: 'Novo Prazo', date: new Date().toISOString().split('T')[0] },
+              { id: uuidv4(), title: 'Novo Prazo', date: getTodayDateOnly() },
             ],
           }
         : null,

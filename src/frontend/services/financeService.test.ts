@@ -8,6 +8,7 @@ import type {
   MarketingActivity,
   ProfessionalExpense,
   Project,
+  HiredService,
 } from '../types';
 import {
   getExpensesFilterOptions,
@@ -25,6 +26,7 @@ const buildSource = (overrides: Partial<FinancialSeriesSource> = {}): FinancialS
   manualIncomes: [] as ManualIncome[],
   marketingActivities: [] as MarketingActivity[],
   freelancers: [] as Freelancer[],
+  hiredServices: [] as HiredService[],
   cashBoxExpenses: [],
   cashBoxCredits: [],
   ...overrides,
@@ -65,6 +67,7 @@ describe('financeService.getFinancialPageData', () => {
       ] as ManualIncome[],
       [] as MarketingActivity[],
       [] as Freelancer[],
+      [] as HiredService[],
       viewDate,
       viewDate,
     );
@@ -374,6 +377,7 @@ describe('financeService cashBoxCredits in page data', () => {
       [] as ManualIncome[],
       [] as MarketingActivity[],
       [] as Freelancer[],
+      [] as HiredService[],
       viewDate,
       viewDate,
       [],

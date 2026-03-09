@@ -70,7 +70,7 @@ export const ProjectFinanceAddendumsSection = ({
               type="button"
               onClick={() => onRemoveAddendum(addendum.id)}
               className="text-text-secondary hover:text-error"
-              aria-label="Remover aditivo"
+              aria-label={`Remover aditivo ${addendum.description}`}
             >
               <TrashIcon className="w-4 h-4" />
             </button>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { paymentMethods, type PaymentMethod } from '../../types';
 import { AlertIcon, PlusIcon } from '../ui';
 import { Modal } from '../ui';
+import { getTodayDateOnly } from '../../utils/formatters';
 
 export const InfoCard: (props: {
   label: string;
@@ -58,12 +59,12 @@ export const ConfirmPaymentModal: (props: {
   onClose: () => void;
   onConfirm: (date: string, method: PaymentMethod) => void;
 }) => React.ReactNode = ({ isOpen, onClose, onConfirm }) => {
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentDate, setPaymentDate] = useState(getTodayDateOnly());
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(paymentMethods[0]);
 
   useEffect(() => {
     if (!isOpen) return;
-    setPaymentDate(new Date().toISOString().split('T')[0]);
+    setPaymentDate(getTodayDateOnly());
     setPaymentMethod(paymentMethods[0]);
   }, [isOpen]);
 

@@ -151,7 +151,7 @@ describe('ServicosContratadosPage', () => {
     expect(alertSpy).toHaveBeenCalledWith('Preencha todos os campos obrigatórios.');
   });
 
-  it('creates service and propagates side-effects to finance, agenda and delegated tasks', async () => {
+  it('creates service and propagates side-effects to delegated tasks', async () => {
     seedData({
       projects: [projectWithTasks, projectNoTasks],
       freelancers: [freelancer],
@@ -180,24 +180,6 @@ describe('ServicosContratadosPage', () => {
           item.projectId === 'proj-x' && item.freelancerId === 'freelancer-1' && item.cost === 2500,
       );
       expect(service).toBeDefined();
-
-      const serviceId = service?.id || '';
-      expect(
-        data.manualExpenses.some(
-          (expense) =>
-            expense.freelancerActivityId === serviceId &&
-            expense.category === 'Serviços Terceirizados' &&
-            expense.description.includes('Freelancer Teste'),
-        ),
-      ).toBe(true);
-      expect(
-        data.agendaEvents.some(
-          (event) =>
-            event.freelancerServiceId === serviceId &&
-            event.type === 'Prazo de Entrega' &&
-            event.projectId === 'proj-x',
-        ),
-      ).toBe(true);
 
       const persistedTask = data.projects
         .find((project) => project.id === 'proj-x')
@@ -276,7 +258,7 @@ describe('ServicosContratadosPage', () => {
     expect(screen.getByText('Projeto Desconhecido')).toBeInTheDocument();
   });
 
-  it('deletes linked records only when deletion is confirmed', async () => {
+  it('deletes service only when deletion is confirmed', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
 
     seedData({
@@ -364,10 +346,6 @@ describe('ServicosContratadosPage', () => {
     await waitFor(() => {
       const data = api.getData();
       expect(data.hiredServices.some((service) => service.id === 'service-active')).toBe(false);
-      expect(data.manualExpenses.some((expense) => expense.id === 'exp-linked')).toBe(false);
-      expect(data.agendaEvents.some((event) => event.id === 'evt-linked')).toBe(false);
-      expect(data.manualExpenses.some((expense) => expense.id === 'exp-other')).toBe(true);
-      expect(data.agendaEvents.some((event) => event.id === 'evt-other')).toBe(true);
     });
   });
 });

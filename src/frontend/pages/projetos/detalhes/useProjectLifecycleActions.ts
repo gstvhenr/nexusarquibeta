@@ -3,6 +3,7 @@ import type { NavigateFunction } from 'react-router-dom';
 import { agendaService } from '@/services/agendaService';
 import type { AgendaEvent, ManualIncome, ProfessionalExpense, Project } from '@/types';
 import type { ProjectActionType } from '@/components/projetos';
+import { getTodayDateOnly } from '@/utils/formatters';
 
 interface UseProjectLifecycleActionsParams {
   localProject: Project | null;
@@ -137,7 +138,7 @@ export function useProjectLifecycleActions({
         );
 
         if (shouldReverseRefund) {
-          const reversalDate = new Date().toISOString().split('T')[0];
+          const reversalDate = getTodayDateOnly();
           const reversalIncomes: ManualIncome[] = refundableExpenses.map((expense) => ({
             id: `inc_reversal_${expense.id}`,
             description: `Estorno de reembolso - ${localProject.name}`,

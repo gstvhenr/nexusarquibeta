@@ -115,6 +115,14 @@
 **Correcao aplicada:** Execução de `npx prettier --write docs/PLACEMENT_RULES.md` e rerun de `npm run verify` até `[VERIFY][LOOP][PASS]`.
 **Regra negativa derivada:** Após criar documentos novos em `docs/`, aplicar formatação local antes do primeiro `verify` para evitar falha desnecessária em `format:check`.
 
+### [2026-03-09] - [DATE-ONLY] - Campos `YYYY-MM-DD` tratados como UTC em vez de data civil
+
+**Erro encontrado:** O frontend usava repetidamente `toISOString().split('T')[0]` para montar campos `YYYY-MM-DD` e ainda parseava alguns `date-only` com `new Date('YYYY-MM-DD')`, abrindo espaço para deslocamento de dia por fuso horário.
+**Arquivo(s) afetado(s):** `src/frontend/utils/formatters.ts`, `src/frontend/services/agendaService.ts`, `src/frontend/services/cashBoxService.ts`, `src/frontend/services/dashboardFocusItems.ts`, `src/frontend/hooks/useClientFormHandlers.ts`, `src/frontend/hooks/useClienteMeetings.ts`, `src/frontend/hooks/useProjectFinancials.ts`, `src/frontend/pages/**`, `src/frontend/components/**`, `src/frontend/test/date-only-guard.test.ts`.
+**Causa raiz:** Mistura de dois contratos diferentes: `date-only` de negócio (`YYYY-MM-DD`) foi tratado como `datetime` UTC, usando APIs que serializam instantes em vez de datas civis.
+**Correcao aplicada:** Centralizacao dos helpers `toDateOnlyString()` e `getTodayDateOnly()` em `src/frontend/utils/formatters.ts`, remocao de `timeZone: 'UTC'` da formatacao de `date-only`, sweep das ocorrencias em producao e adicao de um guard automatizado que falha se `toISOString().split('T')[0]` reaparecer fora de testes.
+**Regra negativa derivada:** Nunca usar `toISOString().split('T')[0]` ou `new Date('YYYY-MM-DD')` para campos de negocio `YYYY-MM-DD`; usar `getTodayDateOnly()`, `toDateOnlyString(date)` e `parseDateString()`.
+
 ---
 
 ## Archived (SUPERSEDED — enforced by gates)

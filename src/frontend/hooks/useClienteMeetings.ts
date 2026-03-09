@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Client, ProjectMeeting, AgendaEvent, Project } from '../types';
 import { saveClientAndUpdateState } from '../services/clientService';
 import { v4 as uuidv4 } from 'uuid';
+import { getTodayDateOnly } from '../utils/formatters';
 
 interface UseClienteMeetingsArgs {
   client: Client | null;
@@ -31,7 +32,7 @@ export function useClienteMeetings({
   projects,
 }: UseClienteMeetingsArgs) {
   const [newMeeting, setNewMeeting] = useState<Partial<ProjectMeeting>>({
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayDateOnly(),
     reason: '',
     notes: '',
   });
@@ -57,7 +58,7 @@ export function useClienteMeetings({
 
     const meetingToAdd: ProjectMeeting = {
       id: uuidv4(),
-      date: newMeeting.date || new Date().toISOString(),
+      date: newMeeting.date || getTodayDateOnly(),
       reason: newMeeting.reason || 'Reunião de Acompanhamento',
       notes: newMeeting.notes || '',
       projectId: newMeeting.projectId,
@@ -65,7 +66,7 @@ export function useClienteMeetings({
     };
 
     setClient((c) => (c ? { ...c, meetings: [meetingToAdd, ...(c.meetings || [])] } : null));
-    setNewMeeting({ date: new Date().toISOString().split('T')[0], reason: '', notes: '' });
+    setNewMeeting({ date: getTodayDateOnly(), reason: '', notes: '' });
 
     // Auto-save when adding meeting
     if (!isEditing) {
@@ -115,7 +116,7 @@ export function useClienteMeetings({
     const initialEvent: AgendaEvent = {
       id: '',
       title: `Reunião com ${client.name}`,
-      date: new Date().toISOString().split('T')[0],
+      date: getTodayDateOnly(),
       time: '09:00',
       timeEnd: '10:00',
       type: 'Reunião com Cliente',

@@ -23,11 +23,11 @@ Maintain architectural integrity and delivery safety for Nexus-Arqui (React + Ty
 ## 3. Execution protocol
 
 1. Read context: `AGENTS.md`, `CONTEXT.md`, `NEXT.md`, `.agent/lessons-learned.md`, `ARCHITECTURE.md`.
-1.1. Before creating any file in `src/frontend`, read `docs/PLACEMENT_RULES.md` and resolve target path first.
+   1.1. Before creating any file in `src/frontend`, read `docs/PLACEMENT_RULES.md` and resolve target path first.
 2. Define explicit short plan with scope, risks, and binary criteria.
 3. Implement small, reversible diffs.
 4. Run canonical gates from `AGENTS.md`.
-4.1. After creating/moving files, run `validate:structure` and fix violations before proceeding.
+   4.1. After creating/moving files, run `validate:structure` and fix violations before proceeding.
 5. Provide evidence: executed commands and objective results.
 6. Update `NEXT.md` and decisions/ADR when structural.
 
@@ -99,6 +99,14 @@ Maintain architectural integrity and delivery safety for Nexus-Arqui (React + Ty
 📎 Conceito oficial "You Might Not Need an Effect" (Regra D.4).
 
 ### 6.4 Higiene de Codigo
+
+❌ NAO: Gerar campos de negocio `YYYY-MM-DD` com `toISOString().split('T')[0]`.  
+✅ FACA: Use `getTodayDateOnly()` para "hoje" e `toDateOnlyString(date)` para datas derivadas.  
+📎 Campos `date-only` representam data civil, nao instante UTC.
+
+❌ NAO: Parsear `YYYY-MM-DD` com `new Date('2026-03-08')`.  
+✅ FACA: Use `parseDateString()` ou construa `new Date(ano, mesIndexado, dia)`.  
+📎 O parser nativo trata esse formato como UTC e pode deslocar o dia local.
 
 ❌ NAO: Nomear variaveis de forma generica (data, result, value).  
 ✅ FACA: Nomes que revelam intencao (clientProposals, monthlyRevenue).  

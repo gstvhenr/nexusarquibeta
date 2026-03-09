@@ -4,6 +4,7 @@ import { PageHeader } from '../../components/layout';
 import { useReportData } from '../../hooks/useReportData';
 import { generateReport, ReportFilter } from '../../services/reportService';
 import { NAV_LINKS } from '../../constants';
+import { getTodayDateOnly } from '../../utils/formatters';
 
 // ═══════════════════════════════════════════════════════════════
 // TAB DEFINITIONS
@@ -36,7 +37,7 @@ const RelatoriosLayout: () => React.ReactNode = () => {
     type: 'preset',
     days: 365,
     startDate: '',
-    endDate: new Date().toISOString().split('T')[0],
+    endDate: getTodayDateOnly(),
   });
 
   const reportData = useMemo(() => generateReport(reportInput, filter), [reportInput, filter]);
@@ -47,7 +48,7 @@ const RelatoriosLayout: () => React.ReactNode = () => {
       type: 'preset',
       days,
       startDate: '',
-      endDate: new Date().toISOString().split('T')[0],
+      endDate: getTodayDateOnly(),
     });
   };
 

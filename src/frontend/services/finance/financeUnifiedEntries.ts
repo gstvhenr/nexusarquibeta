@@ -6,6 +6,7 @@ import type {
   FinancialDebit,
   FinancialReceivable,
   Freelancer,
+  HiredService,
   Installment,
   ManualIncome,
   MarketingActivity,
@@ -33,6 +34,7 @@ export const buildUnifiedFinancialEntries = (
   manualIncomes: ManualIncome[],
   marketingActivities: MarketingActivity[],
   freelancers: Freelancer[],
+  hiredServices: HiredService[] = [],
   cashBoxExpenses: CashBoxExpense[] = [],
   cashBoxCredits: CashBoxCredit[] = [],
 ): UnifiedFinancialEntries => {
@@ -83,7 +85,6 @@ export const buildUnifiedFinancialEntries = (
       };
       allReceivables.push(receivable);
       receivableOriginById[receivable.id] = 'Profissional';
-      return;
     }
 
     if (project.financials.paymentType === 'parcelado' && project.financials.installments) {
@@ -99,6 +100,39 @@ export const buildUnifiedFinancialEntries = (
         };
         allReceivables.push(receivable);
         receivableOriginById[receivable.id] = 'Profissional';
+      });
+    }
+
+    if (project.financials.addendums) {
+      project.financials.addendums.forEach((addendum) => {
+        if (addendum.status === 'Aprovado' || addendum.status === 'Faturado') {
+          const dueDateObj = parseDateString(addendum.date);
+          let status: 'Pago' | 'Vencido' | 'Em Aberto' = 'Em Aberto';
+          if (addendum.status === 'Faturado') {
+            status = 'Pago';
+          } else if (dueDateObj && dueDateObj < today) {
+            status = 'Vencido';
+          }
+
+          const receivable: FinancialReceivable = {
+            id: `addon_${project.id}_${addendum.id}`,
+            number: 1,
+            value: addendum.value,
+            dueDate: addendum.date,
+            paid: addendum.status === 'Faturado',
+            paymentDate: addendum.status === 'Faturado' ? addendum.date : null,
+            remuneration: addendum.value,
+            status,
+            projectId: project.id,
+            projectCode: project.code,
+            clientName: project.clientName,
+            clientId: project.clientId,
+            description: `Aditivo: ${addendum.description} (${project.name})`,
+            source: 'Project',
+          };
+          allReceivables.push(receivable);
+          receivableOriginById[receivable.id] = 'Profissional';
+        }
       });
     }
   });
@@ -208,7 +242,27 @@ export const buildUnifiedFinancialEntries = (
       marketingActivityId: activity.id,
     }));
 
-  const freelancerExpenses: ProfessionalExpense[] = [];
+  const freelancerExpenses: ProfessionalExpense[] = hiredServices
+    .filter(
+      (service) =>
+        !service.archived && service.status !== 'Cancelado' && service.cost && service.cost > 0,
+    )
+    .map((service) => {
+      const freelancer = freelancers.find((f) => f.id === service.freelancerId);
+      const project = projects.find((p) => p.id === service.projectId);
+      return {
+        id: `hired_${service.id}`,
+        description: `Subcontratação: ${freelancer?.name || 'Desconhecido'} (${project?.name || 'Projeto Desconhecido'})`,
+        category: 'Serviços Terceirizados',
+        value: service.cost,
+        dueDate: service.deadline,
+        status: service.status === 'Concluído' ? 'Pago' : 'Pendente',
+        paymentDate: service.status === 'Concluído' ? service.deadline : null,
+        isRecurring: false,
+        source: 'Freelancer',
+        freelancerActivityId: service.id,
+      };
+    });
 
   const allDebits: FinancialDebit[] = [
     ...manualExpenses,
