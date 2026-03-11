@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { DataProvider } from '@/context/DataContext';
 import { api, type AppData } from '@/services/infrastructure/api';
 import { createTestProject } from '@/test/factories';
@@ -72,6 +72,11 @@ const ProjectRouteProbe = () => {
   return <p>{`ROUTE_PROJETO:${projectId}`}</p>;
 };
 
+const FinanceHistoryRouteProbe = () => {
+  const location = useLocation();
+  return <p>{`ROUTE_FINANCEIRO_HISTORICO:${location.pathname}${location.search}`}</p>;
+};
+
 const renderHomePage = () =>
   render(
     <MemoryRouter initialEntries={['/']} future={FUTURE_FLAGS}>
@@ -83,7 +88,7 @@ const renderHomePage = () =>
           <Route path="/propostas" element={<p>ROUTE_PROPOSTAS</p>} />
           <Route path="/agenda" element={<p>ROUTE_AGENDA</p>} />
           <Route path="/gestao-marketing" element={<p>ROUTE_GESTAO_MARKETING</p>} />
-          <Route path="/financeiro/recebiveis" element={<p>ROUTE_FINANCEIRO_RECEBIVEIS</p>} />
+          <Route path="/financeiro/historico" element={<FinanceHistoryRouteProbe />} />
         </Routes>
       </DataProvider>
     </MemoryRouter>,
@@ -179,7 +184,9 @@ describe('HomePage — Excellence Integration', () => {
       name: /FINANCEIRO URGENTE/i,
     });
     fireEvent.keyDown(criticalAlert, { key: 'Enter' });
-    expect(await screen.findByText('ROUTE_FINANCEIRO_RECEBIVEIS')).toBeInTheDocument();
+    expect(
+      await screen.findByText('ROUTE_FINANCEIRO_HISTORICO:/financeiro/historico?tipo=credit'),
+    ).toBeInTheDocument();
   });
 
   it('navigates to receivables from critical alert using click', async () => {
@@ -212,7 +219,9 @@ describe('HomePage — Excellence Integration', () => {
         name: /FINANCEIRO URGENTE/i,
       }),
     );
-    expect(await screen.findByText('ROUTE_FINANCEIRO_RECEBIVEIS')).toBeInTheDocument();
+    expect(
+      await screen.findByText('ROUTE_FINANCEIRO_HISTORICO:/financeiro/historico?tipo=credit'),
+    ).toBeInTheDocument();
   });
 
   it('dismisses and restores focus alerts through system state', async () => {

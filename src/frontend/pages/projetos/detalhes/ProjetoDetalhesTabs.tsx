@@ -89,6 +89,8 @@ interface ProjetoDetalhesTabsProps {
   quotations: Quotation[];
   setLinkModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   handleUnlinkQuotation: QuotationsTabProps['onUnlink'];
+  commissionTotal?: number;
+  potentialCommissionTotal?: number;
 }
 
 export function ProjetoDetalhesTabs({
@@ -127,6 +129,8 @@ export function ProjetoDetalhesTabs({
   quotations,
   setLinkModalOpen,
   handleUnlinkQuotation,
+  commissionTotal,
+  potentialCommissionTotal,
 }: ProjetoDetalhesTabsProps) {
   const tabButtonClass = ({ active }: { active: boolean }) =>
     `flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-colors border-b-2 -mb-px ${
@@ -330,6 +334,8 @@ export function ProjetoDetalhesTabs({
               onAddAddendum={handleAddAddendum}
               onUpdateAddendumStatus={handleUpdateAddendumStatus}
               onRemoveAddendum={handleRemoveAddendum}
+              commissionTotal={commissionTotal}
+              potentialCommissionTotal={potentialCommissionTotal}
             />
           </TabPanel>
 

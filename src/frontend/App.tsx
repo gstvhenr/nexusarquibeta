@@ -18,12 +18,11 @@ const CotacaoDetalhesPage = lazy(() => import('./pages/suprimentos/cotacoes/Cota
 const CotacoesPage = lazy(() => import('./pages/suprimentos/cotacoes/CotacoesPage'));
 const DocumentosPessoalPage = lazy(() => import('./pages/documentos'));
 const DocumentosProjetosPage = lazy(() => import('./pages/documentos/DocumentosProjetosPage'));
-const FinanceiroDebitosPage = lazy(() => import('./pages/financeiro/FinanceiroDebitosPage'));
 const FinanceiroGestaoCaixaPage = lazy(() => import('./pages/financeiro/gestao-caixa'));
+const FinanceiroHistoricoPage = lazy(() => import('./pages/financeiro/historico'));
 const FinanceiroPrevisaoCaixaPage = lazy(
   () => import('./pages/financeiro/FinanceiroPrevisaoCaixaPage'),
 );
-const FinanceiroRecebiveisPage = lazy(() => import('./pages/financeiro/FinanceiroRecebiveisPage'));
 const FinanceiroVisaoGeralPage = lazy(() => import('./pages/financeiro'));
 const FornecedoresPage = lazy(() => import('./pages/suprimentos/fornecedores/FornecedoresPage'));
 const GestaoMarketingPainelPage = lazy(() => import('./pages/gestao-marketing'));
@@ -106,8 +105,15 @@ const App: () => React.ReactNode = () => {
                   path="/financeiro/previsao-caixa"
                   element={<FinanceiroPrevisaoCaixaPage />}
                 />
-                <Route path="/financeiro/recebiveis" element={<FinanceiroRecebiveisPage />} />
-                <Route path="/financeiro/debitos" element={<FinanceiroDebitosPage />} />
+                <Route path="/financeiro/historico" element={<FinanceiroHistoricoPage />} />
+                <Route
+                  path="/financeiro/recebiveis"
+                  element={<Navigate to="/financeiro/historico?tipo=credit" replace />}
+                />
+                <Route
+                  path="/financeiro/debitos"
+                  element={<Navigate to="/financeiro/historico?tipo=debit" replace />}
+                />
                 <Route path="/financeiro/gestao-caixa" element={<FinanceiroGestaoCaixaPage />} />
                 <Route path="/documentos" element={<Navigate to="/documentos/pessoal" replace />} />
                 <Route path="/documentos/pessoal" element={<DocumentosPessoalPage />} />

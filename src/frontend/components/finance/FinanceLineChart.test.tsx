@@ -149,6 +149,9 @@ describe('FinanceLineChart', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }));
     expect(onFilterChange).toHaveBeenLastCalledWith({});
+    expect(
+      screen.getByRole('button', { name: 'Limpar filtros' }).querySelector('svg'),
+    ).not.toBeNull();
   });
 
   it('shows empty message only when all points are zero', () => {
@@ -204,5 +207,48 @@ describe('FinanceLineChart', () => {
       screen.queryByText('Nenhum dado encontrado para o período e filtros selecionados.'),
     ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Limpar filtros' })).toBeInTheDocument();
+  });
+
+  it('renders comparison series and movement toggle when provided', () => {
+    const onModeChange = vi.fn();
+
+    render(
+      <FinanceLineChart
+        title="Histórico"
+        dataSeries={[
+          { label: '2026-03', value: 500 },
+          { label: '2026-04', value: 800 },
+        ]}
+        comparisonSeries={{
+          data: [
+            { label: '2026-03', value: 300 },
+            { label: '2026-04', value: 450 },
+          ],
+          label: 'Débitos',
+          colorClassName: 'hsl(var(--color-error))',
+        }}
+        period={BASE_PERIOD}
+        filters={BASE_FILTERS}
+        onPeriodChange={vi.fn()}
+        onFilterChange={vi.fn()}
+        lineColorClassName="var(--line-accent)"
+        lineLabel="Créditos"
+        seriesModeControl={{
+          value: 'all',
+          options: [
+            { value: 'all', label: 'Todos' },
+            { value: 'credit', label: 'Crédito' },
+            { value: 'debit', label: 'Débito' },
+          ],
+          onChange: onModeChange,
+          ariaLabel: 'Filtro por tipo de movimentação',
+        }}
+      />,
+    );
+
+    expect(screen.getByText('Créditos')).toBeInTheDocument();
+    expect(screen.getByText('Débitos')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Débito' }));
+    expect(onModeChange).toHaveBeenCalledWith('debit');
   });
 });

@@ -4,12 +4,19 @@ import {
   getProjectLumpSumValue,
   getProjectTotalContractValue,
 } from '@/utils/projectFinancials';
-import { getTodayDateOnly } from '@/utils/formatters';
+import { formatCurrency, getTodayDateOnly } from '@/utils/formatters';
 import { ProjectFinanceAddendumsSection } from './project-finance/ProjectFinanceAddendumsSection';
 import { ProjectFinanceConfigSection } from './project-finance/ProjectFinanceConfigSection';
-import { ProjectFinanceKPISection } from './project-finance/ProjectFinanceKPISection';
 import { ProjectFinanceTransactionsSection } from './project-finance/ProjectFinanceTransactionsSection';
 import type { FinanceTabProps } from './project-finance/types';
+import { CashIcon, ClipboardDocumentListIcon, GiftIcon, SettingsIcon } from '@/components/ui/icons';
+
+type FinanceSubTab = 'contrato' | 'pagamento';
+
+const SUB_TABS: readonly { id: FinanceSubTab; label: string; icon: React.ReactNode }[] = [
+  { id: 'contrato', label: 'Contrato & Aditivos', icon: <SettingsIcon className="w-4 h-4" /> },
+  { id: 'pagamento', label: 'Pagamento', icon: <ClipboardDocumentListIcon className="w-4 h-4" /> },
+];
 
 export const ProjectFinanceTab: (props: FinanceTabProps) => React.ReactNode = ({
   project,
@@ -23,8 +30,11 @@ export const ProjectFinanceTab: (props: FinanceTabProps) => React.ReactNode = ({
   onAddAddendum,
   onUpdateAddendumStatus,
   onRemoveAddendum,
+  commissionTotal = 0,
+  potentialCommissionTotal = 0,
 }) => {
   const financials = project.financials;
+  const [activeSubTab, setActiveSubTab] = useState<FinanceSubTab>('contrato');
   const [showSettings, setShowSettings] = useState(false);
 
   const [newAddendum, setNewAddendum] = useState({
@@ -122,16 +132,144 @@ export const ProjectFinanceTab: (props: FinanceTabProps) => React.ReactNode = ({
   };
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
-      <ProjectFinanceKPISection
-        totalValue={totalValue}
-        totalAddendums={totalAddendums}
-        totalPaid={totalPaid}
-        totalToPay={totalToPay}
-      />
+    <div className="space-y-6 animate-fade-in-up">
+      {/* ── Sub-navigation ── */}
+      <div className="flex items-center gap-1 bg-background/50 rounded-xl p-1 border border-border-color/50">
+        {SUB_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveSubTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 flex-1 justify-center
+              ${
+                activeSubTab === tab.id
+                  ? 'bg-surface text-primary shadow-sm border border-border-color/50'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface/50'
+              }`}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-4 space-y-6">
+      {/* ── Tab: Pagamento ── */}
+      {activeSubTab === 'pagamento' && (
+        <div className="space-y-6 animate-fade-in-up">
+          {/* Mini KPI row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-surface rounded-xl border border-border-color p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+                <CashIcon className="w-5 h-5 text-success" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-text-secondary uppercase tracking-wide">
+                  Recebido
+                </p>
+                <p className="text-lg font-bold text-success tabular-nums">
+                  {formatCurrency(totalPaid)}
+                </p>
+              </div>
+            </div>
+            <div className="bg-surface rounded-xl border border-border-color p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+                <CashIcon className="w-5 h-5 text-warning" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-text-secondary uppercase tracking-wide">
+                  A Receber
+                </p>
+                <p className="text-lg font-bold text-warning tabular-nums">
+                  {formatCurrency(totalToPay)}
+                </p>
+              </div>
+            </div>
+            <div className="bg-surface rounded-xl border border-border-color p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+                <CashIcon className="w-5 h-5 text-secondary" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-text-secondary uppercase tracking-wide">
+                  Total Contrato
+                </p>
+                <p className="text-lg font-bold text-secondary tabular-nums">
+                  {formatCurrency(totalValue)}
+                </p>
+              </div>
+            </div>
+            <div className="bg-surface rounded-xl border border-border-color p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
+                <SettingsIcon className="w-5 h-5 text-info" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-text-secondary uppercase tracking-wide">
+                  Aditivos
+                </p>
+                <p
+                  className={`text-lg font-bold tabular-nums ${totalAddendums >= 0 ? 'text-success' : 'text-error'}`}
+                >
+                  {totalAddendums >= 0 ? '+' : ''}
+                  {formatCurrency(totalAddendums)}
+                </p>
+              </div>
+            </div>
+            {(commissionTotal > 0 || potentialCommissionTotal > 0) && (
+              <div
+                className={`bg-surface rounded-xl border p-4 flex items-center gap-3 ${commissionTotal > 0 ? 'border-success/30' : 'border-success/20 border-dashed'}`}
+              >
+                <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+                  <GiftIcon className="w-5 h-5 text-success" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-text-secondary uppercase tracking-wide">
+                    Comissões
+                    {commissionTotal === 0 && potentialCommissionTotal > 0 ? ' (Estimado)' : ''}
+                  </p>
+                  <p className="text-lg font-bold text-success tabular-nums">
+                    +
+                    {formatCurrency(
+                      commissionTotal > 0 ? commissionTotal : potentialCommissionTotal,
+                    )}
+                  </p>
+                  {commissionTotal > 0 && potentialCommissionTotal > 0 && (
+                    <p className="text-[10px] text-text-secondary mt-0.5">
+                      + {formatCurrency(potentialCommissionTotal)} em cotações pendentes
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Transactions table (installments or lump-sum) */}
+          <ProjectFinanceTransactionsSection
+            project={project}
+            financials={financials}
+            onFinancialsChange={onFinancialsChange}
+            onInstallmentChange={onInstallmentChange}
+            onGenerateInstallments={onGenerateInstallments}
+            onConfirmPayment={onConfirmPayment}
+            onAddInstallment={onAddInstallment}
+            onRemoveInstallment={onRemoveInstallment}
+          />
+        </div>
+      )}
+
+      {/* ── Tab: Contrato & Aditivos ── */}
+      {activeSubTab === 'contrato' && (
+        <div className="space-y-6 animate-fade-in-up">
+          {/* Step 1: Contract configuration (full width) */}
+          <ProjectFinanceConfigSection
+            financials={financials}
+            baseContractValue={baseContractValue}
+            showSettings={showSettings}
+            onToggleSettings={() => setShowSettings((prev) => !prev)}
+            commonInputClass={commonInputClass}
+            onFinancialsChange={onFinancialsChange}
+            onGenerateInstallments={onGenerateInstallments}
+          />
+
+          {/* Step 2: Addendums management (full width) */}
           <ProjectFinanceAddendumsSection
             financials={financials}
             commonInputClass={commonInputClass}
@@ -152,31 +290,8 @@ export const ProjectFinanceTab: (props: FinanceTabProps) => React.ReactNode = ({
             onUpdateAddendumStatus={onUpdateAddendumStatus}
             onRemoveAddendum={onRemoveAddendum}
           />
-
-          <ProjectFinanceConfigSection
-            financials={financials}
-            baseContractValue={baseContractValue}
-            showSettings={showSettings}
-            onToggleSettings={() => setShowSettings((prev) => !prev)}
-            commonInputClass={commonInputClass}
-            onFinancialsChange={onFinancialsChange}
-            onGenerateInstallments={onGenerateInstallments}
-          />
         </div>
-
-        <div className="lg:col-span-8">
-          <ProjectFinanceTransactionsSection
-            project={project}
-            financials={financials}
-            onFinancialsChange={onFinancialsChange}
-            onInstallmentChange={onInstallmentChange}
-            onGenerateInstallments={onGenerateInstallments}
-            onConfirmPayment={onConfirmPayment}
-            onAddInstallment={onAddInstallment}
-            onRemoveInstallment={onRemoveInstallment}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 };

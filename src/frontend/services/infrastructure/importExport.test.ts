@@ -47,6 +47,7 @@ const makeAppData = (partial: Partial<AppData> = {}): AppData =>
     contractDeadlines: { defaultPreliminarDeadlineDays: 7, defaultExecutiveDeadlineDays: 30 },
     cashBoxExpenses: [],
     cashBoxCredits: [],
+    emergencyFund: { currentValue: 0 },
     reminders: [],
     ...partial,
   }) as AppData;
@@ -143,6 +144,16 @@ describe('importExport', () => {
       const current = { defaultPreliminarDeadlineDays: 7, defaultExecutiveDeadlineDays: 30 };
       const incoming = { defaultPreliminarDeadlineDays: 14, defaultExecutiveDeadlineDays: 60 };
       expect(canAcceptImportedValue('contractDeadlines', incoming, current)).toBe(true);
+    });
+
+    it('accepts a plain object for emergencyFund', () => {
+      expect(
+        canAcceptImportedValue(
+          'emergencyFund',
+          { currentValue: 15000, targetValue: 30000 },
+          { currentValue: 0 },
+        ),
+      ).toBe(true);
     });
 
     it('rejects ContractDeadlinesSettings with missing numeric fields', () => {

@@ -49,6 +49,7 @@ export const SCALAR_KEYS = [
   'customBudgetTemplate',
   'dismissedFocusItems',
   'documentStorage',
+  'emergencyFund',
 ] as const;
 
 /**

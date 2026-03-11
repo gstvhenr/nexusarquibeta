@@ -29,10 +29,43 @@ import type { PersistencePort } from './PersistencePort';
 // Tests
 // ---------------------------------------------------------------------------
 
+type AdapterDouble = PersistencePort & { _type: string };
+
+function buildPersistenceAdapterMock(
+  type: 'sqlite' | 'indexeddb',
+  overrides: Partial<AdapterDouble> = {},
+): AdapterDouble {
+  return {
+    _type: type,
+    isSupported: vi.fn().mockReturnValue(type === 'sqlite'),
+    readSnapshot: vi.fn().mockResolvedValue(null),
+    writeSnapshot: vi.fn().mockResolvedValue(undefined),
+    clearSnapshot: vi.fn().mockResolvedValue(undefined),
+    readEntityState: vi.fn().mockResolvedValue(null),
+    writeEntityState: vi.fn().mockResolvedValue(undefined),
+    readPreference: vi.fn().mockResolvedValue(null),
+    writePreference: vi.fn().mockResolvedValue(undefined),
+    removePreference: vi.fn().mockResolvedValue(undefined),
+    listBackups: vi.fn().mockResolvedValue([]),
+    writeBackup: vi.fn().mockResolvedValue({
+      id: `${type}-backup`,
+      createdAt: Date.now(),
+      sizeBytes: 0,
+      hash: `${type}-hash`,
+      reason: 'manual',
+    }),
+    readBackup: vi.fn().mockResolvedValue(null),
+    clearBackups: vi.fn().mockResolvedValue(undefined),
+    reserveGlobalIdentifier: vi.fn().mockResolvedValue({ reservedValue: 1, nextValue: 2 }),
+    ...overrides,
+  };
+}
+
 describe('createPersistenceAdapter', () => {
   let factory: FactoryModule;
   let SqliteAdapterMock: AdapterModule['SqlitePersistenceAdapter'];
   let IndexedDbAdapterMock: IdbModule['IndexedDbPersistenceAdapter'];
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -41,11 +74,23 @@ describe('createPersistenceAdapter', () => {
     const idbModule = await import('./IndexedDbPersistenceAdapter');
     SqliteAdapterMock = sqModule.SqlitePersistenceAdapter;
     IndexedDbAdapterMock = idbModule.IndexedDbPersistenceAdapter;
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.mocked(SqliteAdapterMock).mockImplementation(
+      () =>
+        buildPersistenceAdapterMock('sqlite') as unknown as InstanceType<typeof SqliteAdapterMock>,
+    );
+    vi.mocked(IndexedDbAdapterMock).mockImplementation(
+      () =>
+        buildPersistenceAdapterMock('indexeddb', {
+          isSupported: vi.fn().mockReturnValue(false),
+        }) as unknown as InstanceType<typeof IndexedDbAdapterMock>,
+    );
     // Make sure the cache is clean
     factory.resetPersistenceAdapter();
   });
 
   afterEach(() => {
+    consoleWarnSpy.mockRestore();
     vi.clearAllMocks();
     // Restore Worker to defined state
     vi.stubGlobal('Worker', class MockWorker {});
@@ -60,6 +105,7 @@ describe('createPersistenceAdapter', () => {
       expect(vi.mocked(SqliteAdapterMock)).toHaveBeenCalledTimes(1);
       expect(vi.mocked(IndexedDbAdapterMock)).not.toHaveBeenCalled();
       expect((adapter as unknown as { _type: string })._type).toBe('sqlite');
+      expect(adapter.isSupported()).toBe(true);
     });
   });
 
@@ -119,22 +165,7 @@ describe('createPersistenceAdapter', () => {
   // ── setPersistenceAdapter ─────────────────────────────────────────────
 
   describe('setPersistenceAdapter', () => {
-    const buildCustomAdapter = (): PersistencePort => ({
-      isSupported: vi.fn().mockReturnValue(true),
-      readSnapshot: vi.fn().mockResolvedValue(null),
-      writeSnapshot: vi.fn().mockResolvedValue(undefined),
-      clearSnapshot: vi.fn().mockResolvedValue(undefined),
-      readEntityState: vi.fn().mockResolvedValue(null),
-      writeEntityState: vi.fn().mockResolvedValue(undefined),
-      readPreference: vi.fn().mockResolvedValue(null),
-      writePreference: vi.fn().mockResolvedValue(undefined),
-      removePreference: vi.fn().mockResolvedValue(undefined),
-      listBackups: vi.fn().mockResolvedValue([]),
-      writeBackup: vi.fn(),
-      readBackup: vi.fn().mockResolvedValue(null),
-      clearBackups: vi.fn().mockResolvedValue(undefined),
-      reserveGlobalIdentifier: vi.fn(),
-    });
+    const buildCustomAdapter = (): PersistencePort => buildPersistenceAdapterMock('indexeddb');
 
     it('overrides the cached adapter with the provided one', () => {
       const custom = buildCustomAdapter();
@@ -161,25 +192,75 @@ describe('createPersistenceAdapter', () => {
       factory.createPersistenceAdapter();
       factory.resetPersistenceAdapter();
 
-      const custom: PersistencePort = {
-        isSupported: () => false,
-        readSnapshot: vi.fn(),
-        writeSnapshot: vi.fn(),
-        clearSnapshot: vi.fn(),
-        readEntityState: vi.fn(),
-        writeEntityState: vi.fn(),
-        readPreference: vi.fn(),
-        writePreference: vi.fn(),
-        removePreference: vi.fn(),
-        listBackups: vi.fn(),
-        writeBackup: vi.fn(),
-        readBackup: vi.fn(),
-        clearBackups: vi.fn(),
-        reserveGlobalIdentifier: vi.fn(),
-      };
+      const custom: PersistencePort = buildPersistenceAdapterMock('indexeddb', {
+        isSupported: vi.fn().mockReturnValue(false),
+      });
 
       factory.setPersistenceAdapter(custom);
       expect(factory.createPersistenceAdapter()).toBe(custom);
+    });
+  });
+
+  // ── runtime fallback ────────────────────────────────────────────────
+
+  describe('runtime fallback', () => {
+    const wasmBootstrapErrors = [
+      "Incorrect response MIME type. Expected 'application/wasm'",
+      'RuntimeError: expected magic word 00 61 73 6d',
+      "failed to load wasm binary file at './wa-sqlite-async.wasm'",
+      'memory access out of bounds',
+      "Cannot read properties of null (reading 'addEventListener')",
+    ];
+
+    it.each(wasmBootstrapErrors)(
+      'falls back to IndexedDB when SQLite fails with "%s"',
+      async (message) => {
+        const sqliteReadSnapshot = vi.fn().mockRejectedValue(new Error(message));
+        const fallbackReadSnapshot = vi.fn().mockResolvedValue({ source: 'indexeddb' });
+
+        vi.mocked(SqliteAdapterMock).mockImplementation(
+          () =>
+            buildPersistenceAdapterMock('sqlite', {
+              readSnapshot: sqliteReadSnapshot,
+            }) as unknown as InstanceType<typeof SqliteAdapterMock>,
+        );
+        vi.mocked(IndexedDbAdapterMock).mockImplementation(
+          () =>
+            buildPersistenceAdapterMock('indexeddb', {
+              isSupported: vi.fn().mockReturnValue(true),
+              readSnapshot: fallbackReadSnapshot,
+            }) as unknown as InstanceType<typeof IndexedDbAdapterMock>,
+        );
+
+        const adapter = factory.createPersistenceAdapter();
+
+        await expect(adapter.readSnapshot()).resolves.toEqual({ source: 'indexeddb' });
+        expect(sqliteReadSnapshot).toHaveBeenCalledTimes(1);
+        expect(fallbackReadSnapshot).toHaveBeenCalledTimes(1);
+        expect(vi.mocked(IndexedDbAdapterMock)).toHaveBeenCalledTimes(1);
+        expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+        expect((factory.createPersistenceAdapter() as unknown as { _type: string })._type).toBe(
+          'indexeddb',
+        );
+      },
+    );
+
+    it('rethrows non-WASM errors without falling back', async () => {
+      const sqliteReadSnapshot = vi.fn().mockRejectedValue(new Error('permission denied'));
+
+      vi.mocked(SqliteAdapterMock).mockImplementation(
+        () =>
+          buildPersistenceAdapterMock('sqlite', {
+            readSnapshot: sqliteReadSnapshot,
+          }) as unknown as InstanceType<typeof SqliteAdapterMock>,
+      );
+
+      const adapter = factory.createPersistenceAdapter();
+
+      await expect(adapter.readSnapshot()).rejects.toThrow('permission denied');
+      expect(sqliteReadSnapshot).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(IndexedDbAdapterMock)).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
     });
   });
 });

@@ -170,17 +170,6 @@ export const PROSPECT_INTEREST_OPTIONS = [
   'Outro',
 ];
 
-export const PROJECT_DOCUMENT_FOLDER_TEMPLATE = [
-  { name: '01 - Administrativo', children: [] },
-  { name: '02 - Levantamento', children: [] },
-  { name: '03 - Estudos Preliminares', children: [] },
-  { name: '04 - Projeto Executivo', children: [] },
-  { name: '05 - Complementares', children: [] },
-  { name: '06 - 3D e Renderizações', children: [] },
-  { name: '07 - Obra', children: [] },
-  { name: '08 - Financeiro', children: [] },
-];
-
 export const initialDocumentStorage: DocumentStorage = {
   personal: {
     id: 'personal-root',

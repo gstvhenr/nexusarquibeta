@@ -107,7 +107,7 @@ describe('determineFocusItems', () => {
       expect(item.iconKey).toBe('cash');
       expect(item.id).toBe('payment_overdue_lump_proj-lump');
       expect(item.title).toContain('Casa Branca');
-      expect(item.path).toBe('/financeiro/recebiveis');
+      expect(item.path).toBe('/financeiro/historico?tipo=credit');
       expect(item.description).toContain('R$');
     });
 

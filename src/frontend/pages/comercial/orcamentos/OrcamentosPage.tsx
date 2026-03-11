@@ -55,70 +55,75 @@ function OrcamentosPage(): JSX.Element {
       saveProposalLockRef.current = true;
       setIsSavingProposal(true);
 
-      const selectedSections: SavedSection[] = sections
-        .map((section) => {
-          const baseUnitPrice = section.billing.value || 0;
+      try {
+        const selectedSections: SavedSection[] = sections
+          .map((section) => {
+            const baseUnitPrice = section.billing.value || 0;
 
-          return {
-            id: section.id,
-            title: section.title,
-            items: section.items
-              .filter((item) => item.included)
-              .map((item) => {
-                const finalUnitPrice = baseUnitPrice * (1 + item.unitPrice / 100);
+            return {
+              id: section.id,
+              title: section.title,
+              items: section.items
+                .filter((item) => item.included)
+                .map((item) => {
+                  const finalUnitPrice = baseUnitPrice * (1 + item.unitPrice / 100);
 
-                return {
-                  id: item.id,
-                  description: item.description,
-                  unit: section.unit,
-                  quantity: item.quantity,
-                  unitPrice: finalUnitPrice,
-                  estimatedHours: item.estimatedHours,
-                };
-              }),
-          };
-        })
-        .filter((section) => section.items.length > 0);
+                  return {
+                    id: item.id,
+                    description: item.description,
+                    unit: section.unit,
+                    quantity: item.quantity,
+                    unitPrice: finalUnitPrice,
+                    estimatedHours: item.estimatedHours,
+                  };
+                }),
+            };
+          })
+          .filter((section) => section.items.length > 0);
 
-      if (selectedSections.length === 0) {
-        alert('Selecione ao menos um item para salvar a proposta.');
+        if (selectedSections.length === 0) {
+          alert('Selecione ao menos um item para salvar a proposta.');
+          return;
+        }
+
+        const newProposalCode = await api.reserveGlobalIdentifier();
+        const newProposal: Proposal = {
+          id: `prop_${newProposalCode}`,
+          code: `#${newProposalCode}`,
+          name: clientInfo.name,
+          clientId: clientInfo.id,
+          status: 'Pendente',
+          date: new Date().toLocaleDateString('pt-BR'),
+          sections: selectedSections,
+          subtotal: calculations.grandTotalBeforeDiscount,
+          discount,
+          total: calculations.grandTotal,
+          remuneration: calculations.totalProfit,
+          archived: false,
+          showItemPrices: true,
+          showSectionTotals: true,
+          showDiscount: discount > 0,
+          showGrandTotal: true,
+          totalsAlignment: 'right',
+          showProposalDate: true,
+        };
+
+        setProposals((previous) => {
+          const alreadyExists = previous.some(
+            (proposal) => proposal.id === newProposal.id || proposal.code === newProposal.code,
+          );
+          if (alreadyExists) return previous;
+          return [...previous, newProposal];
+        });
+
+        setSaveModalOpen(false);
+        navigate('/propostas');
+      } catch {
+        alert('Erro ao salvar a proposta. Tente novamente.');
+      } finally {
         saveProposalLockRef.current = false;
         setIsSavingProposal(false);
-        return;
       }
-
-      const newProposalCode = await api.reserveGlobalIdentifier();
-      const newProposal: Proposal = {
-        id: `prop_${newProposalCode}`,
-        code: `#${newProposalCode}`,
-        name: clientInfo.name,
-        clientId: clientInfo.id,
-        status: 'Pendente',
-        date: new Date().toLocaleDateString('pt-BR'),
-        sections: selectedSections,
-        subtotal: calculations.grandTotalBeforeDiscount,
-        discount,
-        total: calculations.grandTotal,
-        remuneration: calculations.totalProfit,
-        archived: false,
-        showItemPrices: true,
-        showSectionTotals: true,
-        showDiscount: discount > 0,
-        showGrandTotal: true,
-        totalsAlignment: 'right',
-        showProposalDate: true,
-      };
-
-      setProposals((previous) => {
-        const alreadyExists = previous.some(
-          (proposal) => proposal.id === newProposal.id || proposal.code === newProposal.code,
-        );
-        if (alreadyExists) return previous;
-        return [...previous, newProposal];
-      });
-
-      setSaveModalOpen(false);
-      navigate('/propostas');
     },
     [sections, calculations, discount, setProposals, navigate],
   );

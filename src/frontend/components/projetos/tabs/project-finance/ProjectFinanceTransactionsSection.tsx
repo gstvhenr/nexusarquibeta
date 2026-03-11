@@ -4,6 +4,7 @@ import type { Installment, Project, ProjectFinancials } from '@/types';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { getProjectLumpSumValue } from '@/utils/projectFinancials';
 import { getInstallmentStatus } from './helpers';
+import { CurrencyInput } from './CurrencyInput';
 
 interface ProjectFinanceTransactionsSectionProps {
   project: Project;
@@ -134,13 +135,12 @@ export const ProjectFinanceTransactionsSection = ({
                     />
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <input
-                      type="number"
+                    <CurrencyInput
                       value={installment.value}
-                      onChange={(event) =>
-                        onInstallmentChange(installment.id, 'value', parseFloat(event.target.value))
+                      onChange={(newValue) =>
+                        onInstallmentChange(installment.id, 'value', newValue ?? 0)
                       }
-                      className="bg-transparent border-none p-0 text-sm text-right font-bold text-secondary focus:ring-0 w-24"
+                      className="bg-transparent border-none p-0 text-sm text-right font-bold text-secondary focus:ring-0 w-28"
                       aria-label="Valor da Parcela"
                     />
                   </td>

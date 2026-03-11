@@ -61,32 +61,19 @@ const FinanceiroPrevisaoCaixaPage: () => React.ReactNode = () => {
 
   return (
     <div className="animate-fade-in-up h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 min-h-0">
-        <div className="space-y-5">
-          <PageHeader title="Previsão de Caixa" icon={financeiroIcon} />
+      <div className="flex-1 flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 min-h-0 overflow-hidden">
+        <div className="flex flex-col flex-1 min-h-0 gap-3">
+          <PageHeader title="Previsão de Caixa" icon={financeiroIcon} contentGap="none" />
 
-          <CardShell className="p-5 min-h-[480px] flex flex-col">
-            <SectionTitle
-              trailing={
-                <div className="hidden sm:flex items-center gap-3 text-[11px] text-text-secondary">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-success inline-block" /> Receitas
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-error inline-block" /> Despesas
-                  </span>
-                </div>
-              }
-            >
-              Previsão de Caixa — Próximos 12 meses
-            </SectionTitle>
+          <CardShell className="p-5 flex-1 min-h-0 flex flex-col">
+            <SectionTitle>Previsão de Caixa — Próximos 12 meses</SectionTitle>
 
             <div
-              className="flex-1 -ml-2 mt-2"
+              className="flex-1 min-h-0 -ml-2 mt-2"
               role="img"
               aria-label="Gráfico de previsão de caixa mostrando receitas e despesas para os próximos 12 meses"
             >
-              <ResponsiveContainer width="100%" height={380}>
+              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={forecastData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorForecastIncome" x1="0" y1="0" x2="0" y2="1">
@@ -149,13 +136,14 @@ const FinanceiroPrevisaoCaixaPage: () => React.ReactNode = () => {
               </ResponsiveContainer>
             </div>
 
-            {forecastData.every((p) => p.income === 0 && p.expenses === 0) && (
-              <div className="rounded-xl border border-dashed border-border-color bg-background/40 px-4 py-3 mt-2">
-                <p className="text-sm text-text-secondary text-center">
-                  Nenhum lançamento previsto para os próximos 12 meses.
-                </p>
-              </div>
-            )}
+            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-text-secondary">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-success inline-block" /> Receitas
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-error inline-block" /> Despesas
+              </span>
+            </div>
           </CardShell>
         </div>
       </div>

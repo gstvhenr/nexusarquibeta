@@ -116,6 +116,7 @@ export {
   UploadCloudIcon,
   FileTextIcon,
   FileJsonIcon,
+  LockIcon,
 } from './icons-common';
 
 // --- SOCIAL BRANDS (extracted to icons-social.tsx) ---

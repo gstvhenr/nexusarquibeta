@@ -32,3 +32,5 @@ Ficha_Cadastral_Completa_*.pdf
 __pycache__/
 *.pyc
 *.pyo
+
+lint-output.txt

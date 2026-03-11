@@ -24,7 +24,7 @@ const quotations: Quotation[] = [
     name: 'Cotação Estrutural',
     date: '2026-03-01',
     items: [],
-    status: 'Finalizada',
+    status: 'Aceita',
   },
 ];
 

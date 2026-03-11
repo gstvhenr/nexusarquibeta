@@ -73,6 +73,7 @@ const makeSnapshot = (partial: Partial<AppData> = {}): AppData =>
     contractDeadlines: { defaultPreliminarDeadlineDays: 7, defaultExecutiveDeadlineDays: 30 },
     cashBoxExpenses: [],
     cashBoxCredits: [],
+    emergencyFund: { currentValue: 0 },
     reminders: [],
     ...partial,
   }) as AppData;

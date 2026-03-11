@@ -14,6 +14,8 @@ import {
   getExpensesFilterOptions,
   getExpensesSeries,
   getCashFlowForecastSeries,
+  getHistoryFilterOptions,
+  getHistorySeries,
   getFinancialPageData,
   getReceivablesFilterOptions,
   getReceivablesSeries,
@@ -290,6 +292,89 @@ describe('financeService series queries', () => {
     // Then
     expect(series).toHaveLength(12);
     expect(februaryPoint?.value).toBe(220);
+  });
+
+  it('merges filter options from credit and debit sources in all mode', () => {
+    const source = buildSource({
+      manualIncomes: [
+        {
+          id: 'income_personal',
+          description: 'Restituição pessoal',
+          category: 'Reembolso',
+          value: 90,
+          date: '2025-01-15',
+          status: 'Recebido',
+          origin: 'Pessoal',
+        } as ManualIncome,
+      ],
+      cashBoxExpenses: [
+        {
+          id: 'expense_personal',
+          origin: 'Pessoal',
+          category: 'Alimentação',
+          item: 'Mercado',
+          recurrence: 'Única',
+          dueDate: '2025-01-20',
+          paymentDate: null,
+          value: 80,
+          installmentNumber: null,
+          installmentTotal: null,
+          recurringGroupId: null,
+          createdAt: '2025-01-20T09:00:00.000Z',
+        },
+      ],
+    });
+
+    const options = getHistoryFilterOptions('all', source, { origin: 'Pessoal' });
+
+    expect(options.categories).toEqual(['Alimentação', 'Reembolso']);
+    expect(options.items).toEqual(['Mercado', 'Restituição pessoal']);
+  });
+
+  it('aligns credit and debit series to the same latest month in all mode', () => {
+    const source = buildSource({
+      manualIncomes: [
+        {
+          id: 'income_now',
+          description: 'Entrada recebida',
+          category: 'Consultoria',
+          value: 200,
+          date: '2026-02-10',
+          status: 'Recebido',
+        },
+      ],
+      cashBoxExpenses: [
+        {
+          id: 'expense_future',
+          origin: 'Profissional',
+          category: 'Operacional',
+          item: 'Internet',
+          recurrence: 'Única',
+          dueDate: '2026-03-10',
+          paymentDate: null,
+          value: 150,
+          installmentNumber: null,
+          installmentTotal: null,
+          recurringGroupId: null,
+          createdAt: '2026-02-01T09:00:00.000Z',
+        },
+      ],
+    });
+
+    const result = getHistorySeries(
+      'all',
+      { mode: 'LAST_12_MONTHS' },
+      {},
+      source,
+      new Date(2026, 1, 1),
+    );
+
+    expect(result.creditSeries).toHaveLength(12);
+    expect(result.debitSeries).toHaveLength(12);
+    expect(result.creditSeries[result.creditSeries.length - 1]?.label).toBe('2026-03');
+    expect(result.debitSeries[result.debitSeries.length - 1]?.label).toBe('2026-03');
+    expect(result.creditSeries.find((point) => point.label === '2026-02')?.value).toBe(200);
+    expect(result.debitSeries.find((point) => point.label === '2026-03')?.value).toBe(150);
   });
 });
 

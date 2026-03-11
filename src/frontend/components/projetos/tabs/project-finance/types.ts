@@ -27,6 +27,8 @@ export interface FinanceTabProps {
   onAddAddendum: (addendum: Omit<ContractAddendum, 'id' | 'status'>) => void;
   onUpdateAddendumStatus: (id: string, status: ContractAddendum['status']) => void;
   onRemoveAddendum: (id: string) => void;
+  commissionTotal?: number;
+  potentialCommissionTotal?: number;
 }
 
 export interface InstallmentStatusMeta {

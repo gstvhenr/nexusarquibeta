@@ -49,7 +49,7 @@ const BlocoDeNotasPage: () => React.ReactNode = () => {
   }, [activeTabId, tabs]);
 
   const pageIcon = NAV_LINKS.find((l) => l.label === 'Agenda')?.children?.find(
-    (c) => c.label === 'Bloco de Notas',
+    (c) => c.label === 'Anotações',
   )?.icon;
 
   const handleAddTab = useCallback(() => {
@@ -117,7 +117,7 @@ const BlocoDeNotasPage: () => React.ReactNode = () => {
 
   return (
     <div className="animate-fade-in-up h-full flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 overflow-hidden">
-      <PageHeader title="Bloco de Notas" icon={pageIcon}>
+      <PageHeader title="Anotações" icon={pageIcon}>
         <div className="flex items-center gap-2">
           <button
             onClick={handleSave}

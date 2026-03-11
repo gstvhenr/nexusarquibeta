@@ -135,7 +135,7 @@ describe('Sidebar', () => {
     expect(screen.getByText('Calendário')).toBeInTheDocument();
     expect(screen.getByText('Tarefas')).toBeInTheDocument();
     expect(screen.getByText('Lembretes')).toBeInTheDocument();
-    expect(screen.getByText('Bloco de Notas')).toBeInTheDocument();
+    expect(screen.getByText('Anotações')).toBeInTheDocument();
   });
 
   it('collapses an expanded parent link when clicking the parent button again', () => {

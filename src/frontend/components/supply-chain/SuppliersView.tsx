@@ -134,7 +134,7 @@ function SuppliersView({
       .sort((first, second) => new Date(second.date).getTime() - new Date(first.date).getTime());
 
     const totalValue = relevantQuotes
-      .filter((quotation) => quotation.status === 'Finalizada')
+      .filter((quotation) => quotation.status === 'Aceita')
       .reduce((sum, quotation) => {
         const quoteValue = quotation.items.reduce((innerSum, item) => {
           if (quotation.selections?.[item.productId] === selectedSupplier.id) {
@@ -153,7 +153,7 @@ function SuppliersView({
 
     return {
       pending: relevantQuotes.filter((quotation) => quotation.status === 'Em Aberto'),
-      finalized: relevantQuotes.filter((quotation) => quotation.status === 'Finalizada'),
+      finalized: relevantQuotes.filter((quotation) => quotation.status === 'Aceita'),
       totalValue,
     };
   }, [quotations, prices, selectedSupplier]);

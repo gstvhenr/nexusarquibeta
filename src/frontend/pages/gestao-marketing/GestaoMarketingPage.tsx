@@ -206,28 +206,32 @@ function GestaoMarketingPage(): JSX.Element {
   };
 
   return (
-    <div className="animate-fade-in-up h-full flex flex-col">
-      <PageHeader title="Gestão de Marketing" icon={marketingIcon}>
-        {activeView === 'dashboard' && (
-          <Button onClick={() => openProfessionalModal(null)}>
-            <PlusIcon className="w-4 h-4" /> Adicionar Prestador
-          </Button>
-        )}
+    <div className="animate-fade-in-up flex h-full flex-col overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6">
+        <div className="flex h-full min-h-0 flex-col">
+          <PageHeader title="Gestão de Marketing" icon={marketingIcon} contentGap="compact">
+            {activeView === 'dashboard' && (
+              <Button onClick={() => openProfessionalModal(null)}>
+                <PlusIcon className="w-4 h-4" /> Adicionar Prestador
+              </Button>
+            )}
 
-        {activeView === 'content' && (
-          <Button onClick={() => openActivityModal(null, 'edit')}>
-            <PlusIcon className="w-4 h-4" /> Novo Conteúdo
-          </Button>
-        )}
+            {activeView === 'content' && (
+              <Button onClick={() => openActivityModal(null, 'edit')}>
+                <PlusIcon className="w-4 h-4" /> Novo Conteúdo
+              </Button>
+            )}
 
-        {activeView === 'ideas' && (
-          <Button onClick={() => openIdeaModal(null)}>
-            <PlusIcon className="w-4 h-4" /> Nova Ideia
-          </Button>
-        )}
-      </PageHeader>
+            {activeView === 'ideas' && (
+              <Button onClick={() => openIdeaModal(null)}>
+                <PlusIcon className="w-4 h-4" /> Nova Ideia
+              </Button>
+            )}
+          </PageHeader>
 
-      <div className="flex-1 overflow-y-auto">{renderContent()}</div>
+          <div className="min-h-0 flex-1">{renderContent()}</div>
+        </div>
+      </div>
 
       <ProfessionalFormModal
         isOpen={isProfessionalModalOpen}

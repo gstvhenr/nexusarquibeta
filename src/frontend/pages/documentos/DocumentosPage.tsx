@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { PageHeader } from '../../components/layout';
 import { useSystemData } from '../../context/DataContext';
-import { NAV_LINKS, PROJECT_DOCUMENT_FOLDER_TEMPLATE } from '../../constants';
+import { NAV_LINKS } from '../../constants';
 import type { DocumentFolder, DocumentItem, Project } from '../../types';
 import { openDocument } from '../../utils/documents';
 import { addItemToTree } from '../../utils/tree';
@@ -88,19 +88,6 @@ const DocumentosPage: () => React.ReactNode = () => {
     const { id: projectId, code: projectCode, name: projectName } = project;
     const now = new Date().toISOString();
 
-    type ProjectTemplateNode = { name: string; children?: ProjectTemplateNode[] };
-    const templateTree = PROJECT_DOCUMENT_FOLDER_TEMPLATE as ProjectTemplateNode[];
-
-    const createTemplate = (template: ProjectTemplateNode[]): DocumentFolder[] =>
-      template.map((item) => ({
-        id: `folder_${Date.now()}_${Math.random()}`,
-        name: item.name,
-        type: 'folder',
-        children: item.children ? createTemplate(item.children) : [],
-        dateAdded: now,
-        dateModified: now,
-      }));
-
     const folderName = projectName.startsWith(projectCode)
       ? projectName
       : `${projectCode} - ${projectName}`;
@@ -109,7 +96,7 @@ const DocumentosPage: () => React.ReactNode = () => {
       id: `proj-folder_${projectId}`,
       name: folderName,
       type: 'folder',
-      children: createTemplate(templateTree),
+      children: [],
       dateAdded: now,
       dateModified: now,
       projectId,

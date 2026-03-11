@@ -513,7 +513,7 @@ export const indexedDbService = {
     try {
       return await runReadSnapshotTransaction<T>();
     } catch (error) {
-      console.error('Failed to read IndexedDB snapshot:', error);
+      console.warn('Failed to read IndexedDB snapshot:', error);
       return fallbackReadSnapshot<T>();
     }
   },
@@ -526,7 +526,7 @@ export const indexedDbService = {
     try {
       await runWriteSnapshotTransaction(snapshot);
     } catch (error) {
-      console.error('Failed to write IndexedDB snapshot:', error);
+      console.warn('Failed to write IndexedDB snapshot:', error);
       fallbackWriteSnapshot(snapshot);
     }
   },
@@ -540,7 +540,7 @@ export const indexedDbService = {
       await runClearSnapshotTransaction();
       fallbackClearSnapshot();
     } catch (error) {
-      console.error('Failed to clear IndexedDB snapshot:', error);
+      console.warn('Failed to clear IndexedDB snapshot:', error);
       fallbackClearSnapshot();
     }
   },
@@ -552,7 +552,7 @@ export const indexedDbService = {
     try {
       return await runReadEntityStateTransaction<T>(entities);
     } catch (error) {
-      console.error('Failed to read entity state from IndexedDB:', error);
+      console.warn('Failed to read entity state from IndexedDB:', error);
       return fallbackReadEntityState<T>(entities);
     }
   },
@@ -565,7 +565,7 @@ export const indexedDbService = {
     try {
       await runWriteEntityStateTransaction(state);
     } catch (error) {
-      console.error('Failed to write entity state to IndexedDB:', error);
+      console.warn('Failed to write entity state to IndexedDB:', error);
       fallbackWriteEntityState(state);
     }
   },
@@ -577,7 +577,7 @@ export const indexedDbService = {
     try {
       return await runReadPreferenceTransaction<T>(key);
     } catch (error) {
-      console.error('Failed to read UI preference from IndexedDB:', error);
+      console.warn('Failed to read UI preference from IndexedDB:', error);
       return fallbackReadPreference<T>(key);
     }
   },
@@ -590,7 +590,7 @@ export const indexedDbService = {
     try {
       await runWritePreferenceTransaction(key, value);
     } catch (error) {
-      console.error('Failed to write UI preference to IndexedDB:', error);
+      console.warn('Failed to write UI preference to IndexedDB:', error);
       fallbackWritePreference(key, value);
     }
   },
@@ -604,7 +604,7 @@ export const indexedDbService = {
       await runRemovePreferenceTransaction(key);
       fallbackRemovePreference(key);
     } catch (error) {
-      console.error('Failed to remove UI preference from IndexedDB:', error);
+      console.warn('Failed to remove UI preference from IndexedDB:', error);
       fallbackRemovePreference(key);
     }
   },
@@ -620,7 +620,7 @@ export const indexedDbService = {
       const backups = await runListAutomaticBackupsTransaction();
       return mapMetadata(backups);
     } catch (error) {
-      console.error('Failed to list automatic backups from IndexedDB:', error);
+      console.warn('Failed to list automatic backups from IndexedDB:', error);
       return mapMetadata(fallbackReadAutomaticBackups());
     }
   },
@@ -632,7 +632,7 @@ export const indexedDbService = {
     try {
       return await runReadAutomaticBackupTransaction<T>(id);
     } catch (error) {
-      console.error('Failed to read automatic backup from IndexedDB:', error);
+      console.warn('Failed to read automatic backup from IndexedDB:', error);
       return fallbackReadAutomaticBackup<T>(id);
     }
   },
@@ -664,7 +664,7 @@ export const indexedDbService = {
       const { payload: _payload, ...metadata } = record;
       return metadata;
     } catch (error) {
-      console.error('Failed to write automatic backup to IndexedDB:', error);
+      console.warn('Failed to write automatic backup to IndexedDB:', error);
       fallbackWriteAutomaticBackup(record, maxEntries);
       const { payload: _payload, ...metadata } = record;
       return metadata;
@@ -680,7 +680,7 @@ export const indexedDbService = {
       await runClearAutomaticBackupsTransaction();
       fallbackClearAutomaticBackups();
     } catch (error) {
-      console.error('Failed to clear automatic backups from IndexedDB:', error);
+      console.warn('Failed to clear automatic backups from IndexedDB:', error);
       fallbackClearAutomaticBackups();
     }
   },
@@ -705,7 +705,7 @@ export const indexedDbService = {
     try {
       return await runReserveGlobalIdentifierTransaction(defaultCounter);
     } catch (error) {
-      console.error('Failed to reserve global identifier in IndexedDB:', error);
+      console.warn('Failed to reserve global identifier in IndexedDB:', error);
       const persistedCounter = volatileEntityStateFallback[GLOBAL_IDENTIFIER_ENTITY_KEY];
       const reservedValue =
         typeof persistedCounter === 'number' && Number.isFinite(persistedCounter)

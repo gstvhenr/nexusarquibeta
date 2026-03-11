@@ -39,6 +39,7 @@ const makeAppData = (overrides: Partial<AppData> = {}): AppData => ({
   contractDeadlines: {} as AppData['contractDeadlines'],
   cashBoxExpenses: [],
   cashBoxCredits: [],
+  emergencyFund: { currentValue: 0 },
   reminders: [],
   ...overrides,
 });

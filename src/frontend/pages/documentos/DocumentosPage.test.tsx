@@ -251,7 +251,7 @@ describe('DocumentosPage', () => {
     expect(screen.queryByText('Esta pasta está vazia.')).not.toBeInTheDocument();
   });
 
-  it('links projects with and without preformatted name, then opens template folders', async () => {
+  it('links projects with and without preformatted name, then opens empty project folders', async () => {
     const projects: Project[] = [
       buildProject({ id: 'proj-1', code: 'PRJ-100', name: 'Casa da Praia' }),
       buildProject({ id: 'proj-2', code: 'PRJ-200', name: 'PRJ-200 - Loft' }),
@@ -277,8 +277,9 @@ describe('DocumentosPage', () => {
     fireEvent.doubleClick(screen.getByText('PRJ-100 - Casa da Praia'));
 
     await waitFor(() => {
-      expect(screen.getByText('01 - Administrativo')).toBeInTheDocument();
+      expect(screen.getByText('Esta pasta está vazia.')).toBeInTheDocument();
     });
+    expect(screen.queryByText('01 - Administrativo')).not.toBeInTheDocument();
   });
 
   it('keeps rendering when active root is missing in storage snapshot', () => {

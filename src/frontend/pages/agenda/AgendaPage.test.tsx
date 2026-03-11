@@ -53,6 +53,7 @@ vi.mock('../../services/infrastructure/api', () => ({
       },
       cashBoxExpenses: [],
       cashBoxCredits: [],
+      emergencyFund: { currentValue: 0 },
       reminders: [],
     }),
     updateData: vi.fn(),

@@ -14,6 +14,7 @@ import type {
   SeriesFilterOptions,
   FinancialSeriesSource,
 } from '../types';
+import { parseDateString } from '../utils/formatters';
 import {
   applySeriesFilters,
   buildFilterOptions,
@@ -25,9 +26,17 @@ import {
   mapDebitsToSeriesRecords,
   mapReceivablesToSeriesRecords,
   toMonthKey,
+  type SeriesRecord,
 } from './finance/financeShared';
 import { buildUnifiedFinancialEntries } from './finance/financeUnifiedEntries';
 import type { UnifiedFinancialEntries } from './finance/financeUnifiedEntries';
+export {
+  EMERGENCY_FUND_TARGET_MONTHS,
+  getEmergencyFund,
+  getEmergencyFundInsight,
+  updateEmergencyFund,
+  type EmergencyFundInsight,
+} from './finance/emergencyFund';
 
 const buildSourceEntries = (source: FinancialSeriesSource): UnifiedFinancialEntries =>
   buildUnifiedFinancialEntries(
@@ -41,6 +50,46 @@ const buildSourceEntries = (source: FinancialSeriesSource): UnifiedFinancialEntr
     source.cashBoxExpenses ?? [],
     source.cashBoxCredits ?? [],
   );
+
+export type FinancialHistoryMode = 'all' | 'credit' | 'debit';
+
+const startOfMonth = (date: Date): Date => new Date(date.getFullYear(), date.getMonth(), 1);
+
+const sortUniqueStrings = (values: string[]): string[] =>
+  Array.from(new Set(values.filter((value) => value.trim().length > 0))).sort((a, b) =>
+    a.localeCompare(b, 'pt-BR'),
+  );
+
+const getHistoryRecords = (source: FinancialSeriesSource) => {
+  const { allReceivables, receivableOriginById, allDebits, cashBoxOriginById, cashBoxItemById } =
+    buildSourceEntries(source);
+
+  return {
+    receivableRecords: mapReceivablesToSeriesRecords(allReceivables, receivableOriginById),
+    debitRecords: mapDebitsToSeriesRecords(allDebits, cashBoxOriginById, cashBoxItemById),
+  };
+};
+
+const resolveHistoryReferenceDate = (
+  receivableRecords: SeriesRecord[],
+  debitRecords: SeriesRecord[],
+  referenceDate: Date,
+): Date => {
+  const parsedDates = [...receivableRecords, ...debitRecords]
+    .map((record) => parseDateString(record.date || null))
+    .filter((date): date is Date => date !== null);
+
+  if (parsedDates.length === 0) {
+    return startOfMonth(referenceDate);
+  }
+
+  const latestDate = parsedDates.reduce(
+    (currentLatest, currentDate) => (currentDate > currentLatest ? currentDate : currentLatest),
+    parsedDates[0],
+  );
+
+  return latestDate > referenceDate ? startOfMonth(latestDate) : startOfMonth(referenceDate);
+};
 
 /**
  * Input -> Output:
@@ -100,6 +149,69 @@ export const getExpensesFilterOptions = (
 
   const records = mapDebitsToSeriesRecords(allDebits, cashBoxOriginById, cashBoxItemById);
   return buildFilterOptions(records, filters);
+};
+
+export const getHistoryFilterOptions = (
+  mode: FinancialHistoryMode,
+  source: FinancialSeriesSource,
+  filters: Filters = {},
+): SeriesFilterOptions => {
+  if (mode === 'credit') {
+    return getReceivablesFilterOptions(source, filters);
+  }
+
+  if (mode === 'debit') {
+    return getExpensesFilterOptions(source, filters);
+  }
+
+  const receivableOptions = getReceivablesFilterOptions(source, filters);
+  const debitOptions = getExpensesFilterOptions(source, filters);
+
+  return {
+    origins: receivableOptions.origins,
+    categories: sortUniqueStrings([...receivableOptions.categories, ...debitOptions.categories]),
+    items: sortUniqueStrings([...receivableOptions.items, ...debitOptions.items]),
+  };
+};
+
+export const getHistorySeries = (
+  mode: FinancialHistoryMode,
+  period: PeriodSelection,
+  filters: Filters = {},
+  source?: FinancialSeriesSource,
+  referenceDate: Date = new Date(),
+): { creditSeries: SeriesPoint[]; debitSeries: SeriesPoint[] } => {
+  if (!source) {
+    return { creditSeries: [], debitSeries: [] };
+  }
+
+  if (mode === 'credit') {
+    return {
+      creditSeries: getReceivablesSeries(period, filters, source, referenceDate),
+      debitSeries: [],
+    };
+  }
+
+  if (mode === 'debit') {
+    return {
+      creditSeries: [],
+      debitSeries: getExpensesSeries(period, filters, source, referenceDate),
+    };
+  }
+
+  const { receivableRecords, debitRecords } = getHistoryRecords(source);
+  const filteredReceivableRecords = applySeriesFilters(receivableRecords, filters);
+  const filteredDebitRecords = applySeriesFilters(debitRecords, filters);
+  const sharedReferenceDate = resolveHistoryReferenceDate(
+    filteredReceivableRecords,
+    filteredDebitRecords,
+    referenceDate,
+  );
+
+  return {
+    creditSeries: buildSeriesFromRecords(filteredReceivableRecords, period, sharedReferenceDate),
+    debitSeries: buildSeriesFromRecords(filteredDebitRecords, period, sharedReferenceDate),
+  };
 };
 
 /**

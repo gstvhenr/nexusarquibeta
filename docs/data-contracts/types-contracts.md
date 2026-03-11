@@ -71,3 +71,21 @@
   - `getExpensesSeries(period, filters, source)`
   - `getReceivablesFilterOptions(source, filters)`
   - `getExpensesFilterOptions(source, filters)`
+
+## Contrato de proteção de caixa (Financeiro)
+
+- Arquivo: `src/frontend/types/finance.ts`
+- Tipo canônico: `EmergencyFund`
+- Shape:
+  - `currentValue: number`
+  - `targetValue?: number`
+- Persistência:
+  - `AppData.emergencyFund`
+  - default: `{ currentValue: 0 }`
+  - armazenamento escalar em `system_config` no adaptador SQLite/WASM
+- Uso:
+  - `getEmergencyFund()`
+  - `updateEmergencyFund(fund)`
+  - `getEmergencyFundInsight(fund, monthlyExpenseBaseline)`
+- Regra:
+  - `targetValue` continua opcional para permitir acompanhamento por meses de fôlego quando não houver meta explícita.

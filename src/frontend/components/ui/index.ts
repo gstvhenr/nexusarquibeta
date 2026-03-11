@@ -56,6 +56,7 @@ export {
   UploadCloudIcon,
   FileTextIcon,
   FileJsonIcon,
+  LockIcon,
   InstagramIcon,
   FacebookIcon,
   TikTokIcon,

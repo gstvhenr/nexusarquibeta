@@ -16,8 +16,12 @@ const QuotationListItem: (props: {
   onDelete: (id: string) => void;
 }) => React.ReactNode = React.memo(({ quotation, project, onArchive, onDelete }) => {
   const navigate = useNavigate();
-  const statusClass =
-    quotation.status === 'Finalizada' ? 'bg-success/20 text-success' : 'bg-info/20 text-info';
+  const statusClassMap: Record<string, string> = {
+    'Em Aberto': 'bg-info/20 text-info',
+    Aceita: 'bg-success/20 text-success',
+    Rejeitada: 'bg-error/20 text-error',
+  };
+  const statusClass = statusClassMap[quotation.status] || 'bg-info/20 text-info';
 
   return (
     <div
@@ -37,7 +41,7 @@ const QuotationListItem: (props: {
           {quotation.name}
         </p>
         <p className="text-sm text-text-secondary">
-          {project ? `${project.code} - ${project.name}` : 'Sem projeto vinculado'}
+          {project ? `Projeto: ${project.code} - ${project.name}` : 'Sem projeto vinculado'}
         </p>
       </div>
       <div className="flex items-center gap-4 ml-4">
@@ -103,7 +107,7 @@ const CotacoesPage: () => React.ReactNode = () => {
   }, [quotations, showArchived]);
 
   const handleCreate = () => {
-    const newId = `qt_${uuidv4()}`;
+    const newId = `qt_new_${uuidv4()}`;
     navigate(`/cotacoes/${newId}`);
   };
 

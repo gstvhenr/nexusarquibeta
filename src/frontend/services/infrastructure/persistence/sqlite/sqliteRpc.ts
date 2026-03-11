@@ -24,6 +24,9 @@ export interface SqliteRpcResponse {
 let nextId = 0;
 const generateId = (): string => `rpc-${Date.now()}-${nextId++}`;
 
+/** Maximum time (ms) to wait for a Worker RPC response before timing out. */
+const RPC_TIMEOUT_MS = 10_000;
+
 /**
  * Creates an RPC client that wraps a Web Worker.
  *
@@ -46,12 +49,37 @@ export function createSqliteRpc(worker: Worker) {
     }
   });
 
+  worker.addEventListener('error', (event: ErrorEvent) => {
+    const message = event.message || 'Unknown SQLite worker error';
+    for (const [id, entry] of pending) {
+      entry.reject(new Error(message));
+      pending.delete(id);
+    }
+  });
+
   const call = <T = unknown>(request: Omit<SqliteRpcRequest, 'id'>): Promise<T> => {
     const id = generateId();
     return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        if (pending.has(id)) {
+          pending.delete(id);
+          reject(
+            new Error(
+              `[SQLite RPC] timeout after ${RPC_TIMEOUT_MS}ms for method '${request.method}' — cannot read properties of timed-out worker`,
+            ),
+          );
+        }
+      }, RPC_TIMEOUT_MS);
+
       pending.set(id, {
-        resolve: resolve as (v: unknown) => void,
-        reject,
+        resolve: (v: unknown) => {
+          clearTimeout(timer);
+          (resolve as (v: unknown) => void)(v);
+        },
+        reject: (e: Error) => {
+          clearTimeout(timer);
+          reject(e);
+        },
       });
       worker.postMessage({ ...request, id } satisfies SqliteRpcRequest);
     });

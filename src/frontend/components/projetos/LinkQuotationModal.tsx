@@ -61,7 +61,7 @@ export const LinkQuotationModal: (props: {
                       {quotation.name}
                     </p>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-bold ${quotation.status === 'Finalizada' ? 'bg-success/20 text-success' : 'bg-info/20 text-info'}`}
+                      className={`text-xs px-2 py-0.5 rounded-full font-bold ${quotation.status === 'Aceita' ? 'bg-success/20 text-success' : quotation.status === 'Rejeitada' ? 'bg-error/20 text-error' : 'bg-info/20 text-info'}`}
                     >
                       {quotation.status}
                     </span>

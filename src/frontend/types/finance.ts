@@ -52,6 +52,7 @@ export interface Commission {
   paymentDate?: string | null;
   notes?: string;
   expectedPaymentDate?: string | null;
+  quotationId?: string;
   archived?: boolean;
 }
 
@@ -80,4 +81,9 @@ export interface ManualIncome {
   status: 'Recebido' | 'Pendente';
   paymentMethod?: PaymentMethod;
   notes?: string;
+}
+
+export interface EmergencyFund {
+  currentValue: number;
+  targetValue?: number;
 }

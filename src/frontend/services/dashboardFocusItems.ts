@@ -94,7 +94,7 @@ export const determineFocusItems = (
           iconKey: 'cash',
           title: `Pagamento do projeto "${payment.project.name}" está atrasado.`,
           description: `Valor de ${formatCurrency(getProjectLumpSumValue(payment.project))} venceu em ${formatDateDayMonth(financials.lumpSumDueDate)}.`,
-          path: '/financeiro/recebiveis',
+          path: '/financeiro/historico?tipo=credit',
         });
       } else {
         const installment = payment.payment as Installment;
@@ -105,7 +105,7 @@ export const determineFocusItems = (
           iconKey: 'cash',
           title: `Parcela do projeto "${payment.project.name}" está atrasada.`,
           description: `Parcela ${installment.number} de ${formatCurrency(installment.value)} venceu em ${formatDateDayMonth(installment.dueDate)}.`,
-          path: '/financeiro/recebiveis',
+          path: '/financeiro/historico?tipo=credit',
         });
       }
     });

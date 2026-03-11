@@ -6,6 +6,7 @@ import html2canvas from 'html2canvas';
 import { PageHeader } from '@/components/layout';
 import { useCoreData, useSystemData } from '@/context/DataContext';
 import type { ProposalBlock, ProjectAddress } from '@/types';
+import { Modal, Button } from '@/components/ui';
 
 import { proposalService } from '@/services/proposalService';
 import { NAV_LINKS } from '@/constants';
@@ -56,6 +57,8 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isConversionModalOpen, setConversionModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isLinkClientModalOpen, setLinkClientModalOpen] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState('');
 
   // Validation State
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -63,6 +66,14 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
   const [toast, setToast] = useAutoReset<{ message: string; type: 'success' | 'error' } | null>(
     null,
     3500,
+  );
+
+  const eligibleClients = useMemo(
+    () =>
+      clients.filter(
+        (c) => !c.archived && (c.status === 'Cliente Ativo' || c.status === 'Potencial Cliente'),
+      ),
+    [clients],
   );
 
   const projectExists = useMemo(() => {
@@ -111,6 +122,16 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
   // Enhanced Conversion Handler
   const handleConversionClick = () => {
     if (!proposal) return;
+
+    // If no client linked, open the link-client modal first
+    if (!proposal.clientId) {
+      if (eligibleClients.length > 0) {
+        setSelectedClientId(eligibleClients[0].id);
+      }
+      setLinkClientModalOpen(true);
+      return;
+    }
+
     const client = clients.find((c) => c.id === proposal.clientId);
 
     if (!client) {
@@ -128,9 +149,37 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
     }
   };
 
+  const handleLinkClientAndConvert = () => {
+    if (!proposal || !selectedClientId) return;
+
+    const linkedClient = clients.find((c) => c.id === selectedClientId);
+    if (!linkedClient) {
+      setToast({ message: 'Cliente selecionado inválido.', type: 'error' });
+      return;
+    }
+
+    // Link client to proposal
+    setProposals((prev) =>
+      prev.map((p) =>
+        p.id === proposal.id ? { ...p, clientId: selectedClientId, name: linkedClient.name } : p,
+      ),
+    );
+    setLinkClientModalOpen(false);
+
+    // Now validate and proceed with conversion
+    const validation = validateClientForProject(linkedClient);
+    if (!validation.valid) {
+      setValidationErrors(validation.missingFields);
+      setValidationModalOpen(true);
+    } else {
+      setConversionModalOpen(true);
+    }
+  };
+
   const convertProposal = useCallback(
     (useDifferentAddress: boolean, address?: ProjectAddress) => {
       if (!proposal) return;
+      if (!proposal.clientId) return;
       const client = clients.find((c) => c.id === proposal.clientId);
       if (!client) {
         setToast({ message: 'Cliente não encontrado.', type: 'error' });
@@ -234,47 +283,44 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
 
   return (
     <div className="animate-fade-in-up pb-24">
-      <div className="flex justify-between items-start mb-6">
-        <PageHeader title={`${proposal.name} - ${proposal.code}`} icon={propostasIcon} />
-        <div className="flex items-center gap-3 mt-10">
+      <PageHeader title={`${proposal.name} - ${proposal.code}`} icon={propostasIcon}>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-background border border-border-color hover:bg-background/80"
+        >
+          Voltar
+        </button>
+        {isEditMode ? (
           <button
-            onClick={() => navigate(-1)}
-            className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-surface border border-border-color"
+            onClick={saveBlocks}
+            className="px-4 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
           >
-            Voltar
+            Salvar Edição
           </button>
-          {isEditMode ? (
-            <button
-              onClick={saveBlocks}
-              className="px-4 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-            >
-              Salvar Edição
-            </button>
-          ) : (
-            <button
-              onClick={() => setIsEditMode(true)}
-              className="px-4 py-2 rounded-lg font-semibold text-primary bg-primary/10 hover:bg-primary/20"
-            >
-              Editar Documento
-            </button>
-          )}
+        ) : (
           <button
-            onClick={handleExportPdf}
-            disabled={isExportingPdf}
-            className="px-4 py-2 rounded-lg font-semibold text-orange-700 bg-orange-100 hover:bg-orange-200"
+            onClick={() => setIsEditMode(true)}
+            className="px-4 py-2 rounded-lg font-semibold text-primary bg-primary/10 hover:bg-primary/20"
           >
-            {isExportingPdf ? 'Gerando...' : 'PDF'}
+            Editar Documento
           </button>
-          {!projectExists && proposal.clientId && (
-            <button
-              onClick={handleConversionClick}
-              className="px-4 py-2 rounded-lg font-semibold text-primary-content bg-secondary hover:bg-secondary-focus"
-            >
-              Converter para Projeto
-            </button>
-          )}
-        </div>
-      </div>
+        )}
+        <button
+          onClick={handleExportPdf}
+          disabled={isExportingPdf}
+          className="px-4 py-2 rounded-lg font-semibold text-orange-700 bg-orange-100 hover:bg-orange-200"
+        >
+          {isExportingPdf ? 'Gerando...' : 'PDF'}
+        </button>
+        {!projectExists && (
+          <button
+            onClick={handleConversionClick}
+            className="px-4 py-2 rounded-lg font-semibold text-primary-content bg-secondary hover:bg-secondary-focus"
+          >
+            Converter para Projeto
+          </button>
+        )}
+      </PageHeader>
 
       {/* PDF Display Settings & Linked Project Badge */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-surface rounded-xl p-4 border border-border-color/50">
@@ -413,6 +459,57 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
           />
         </>
       )}
+
+      {/* Link Client Modal — shown when converting a proposal without a linked client */}
+      <Modal
+        isOpen={isLinkClientModalOpen}
+        onClose={() => setLinkClientModalOpen(false)}
+        title="Vincular Cliente"
+      >
+        <div className="space-y-4">
+          <p className="text-text-primary">
+            Para converter esta proposta em projeto, é necessário vincular um cliente.
+          </p>
+          {eligibleClients.length > 0 ? (
+            <div>
+              <label
+                htmlFor="linkClientSelect"
+                className="block text-sm font-medium text-text-secondary mb-2"
+              >
+                Selecione o Cliente
+              </label>
+              <select
+                id="linkClientSelect"
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
+                className="w-full bg-background p-3 rounded-md border border-border-color"
+              >
+                {eligibleClients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <p className="text-warning text-sm">
+              Nenhum cliente elegível encontrado. Cadastre um cliente primeiro.
+            </p>
+          )}
+        </div>
+        <div className="flex justify-end space-x-4 mt-8">
+          <Button variant="secondary" onClick={() => setLinkClientModalOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleLinkClientAndConvert}
+            disabled={eligibleClients.length === 0 || !selectedClientId}
+          >
+            Vincular e Converter
+          </Button>
+        </div>
+      </Modal>
 
       {/* Toast notification */}
       {toast && (

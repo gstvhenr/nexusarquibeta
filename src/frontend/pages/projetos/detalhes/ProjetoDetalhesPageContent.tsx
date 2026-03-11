@@ -37,6 +37,7 @@ import {
   ProjectActionModal,
 } from '@/components/projetos';
 import { appendAddendumAuditEntry, recalculateProjectTotals } from '@/utils/addendumUtils';
+import { getLatestPriceFromHistory } from '@/utils/supplierHelpers';
 import { ProjetoDetalhesTabs } from './ProjetoDetalhesTabs';
 import type { BudgetServiceOption, ProjectDetailTabId } from './types';
 import { useProjectLifecycleActions } from './useProjectLifecycleActions';
@@ -45,8 +46,8 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { projects, setProjects } = useCoreData();
-  const { manualExpenses, setManualExpenses, setManualIncomes } = useFinanceData();
-  const { quotations } = useSupplyChainData();
+  const { manualExpenses, setManualExpenses, setManualIncomes, commissions } = useFinanceData();
+  const { quotations, suppliers, supplierProductPrices } = useSupplyChainData();
   const { setAgendaEvents, customBudgetTemplate } = useSystemData();
 
   const project = useMemo(() => projects.find((p) => p.id === id), [id, projects]);
@@ -314,6 +315,45 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
     setPaymentConfirmModalOpen,
   );
 
+  const commissionTotal = useMemo(() => {
+    if (!localProject) return 0;
+    const projectQuotationIds = new Set<string>();
+    quotations
+      .filter(
+        (q) => q.projectId === localProject.id || localProject.linkedQuotationIds?.includes(q.id),
+      )
+      .forEach((q) => projectQuotationIds.add(q.id));
+    if (projectQuotationIds.size === 0) return 0;
+    return commissions
+      .filter((c) => c.quotationId && projectQuotationIds.has(c.quotationId))
+      .reduce((sum, c) => sum + (c.commissionValue || 0), 0);
+  }, [commissions, quotations, localProject]);
+
+  const potentialCommissionTotal = useMemo(() => {
+    if (!localProject) return 0;
+    const projectQuotations = quotations.filter(
+      (q) =>
+        (q.projectId === localProject.id || localProject.linkedQuotationIds?.includes(q.id)) &&
+        q.status !== 'Aceita',
+    );
+    let total = 0;
+    for (const q of projectQuotations) {
+      for (const item of q.items) {
+        const supplierId = q.selections?.[item.productId];
+        if (!supplierId) continue;
+        const supplier = suppliers.find((s) => s.id === supplierId);
+        const priceInfo = supplierProductPrices.find(
+          (p) => p.productId === item.productId && p.supplierId === supplierId,
+        );
+        const price = priceInfo ? getLatestPriceFromHistory(priceInfo.priceHistory) : 0;
+        if (price !== null && supplier) {
+          total += price * item.quantity * ((supplier.commissionPercentage || 0) / 100);
+        }
+      }
+    }
+    return total;
+  }, [quotations, localProject, suppliers, supplierProductPrices]);
+
   if (!project || !localProject) {
     return (
       <div className="text-center p-10">
@@ -371,6 +411,8 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
         quotations={quotations}
         setLinkModalOpen={setLinkModalOpen}
         handleUnlinkQuotation={handleUnlinkQuotation}
+        commissionTotal={commissionTotal}
+        potentialCommissionTotal={potentialCommissionTotal}
       />
 
       {isDirty && (

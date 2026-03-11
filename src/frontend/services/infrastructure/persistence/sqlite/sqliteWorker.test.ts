@@ -3,15 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // ---------------------------------------------------------------------------
 // Hoisted mocks — only the ones actually consumed by vi.mock factories
 // ---------------------------------------------------------------------------
-const { mockGetSchemaSql, mockGetPragmasSql, mockVfsIsReady } = vi.hoisted(() => ({
-  mockGetSchemaSql: vi.fn().mockReturnValue('CREATE TABLE foo (id TEXT)'),
-  mockGetPragmasSql: vi.fn().mockReturnValue('PRAGMA journal_mode=WAL'),
-  mockVfsIsReady: Promise.resolve(),
-}));
+const { mockGetSchemaSql, mockGetPragmasSql, mockSqliteEsmFactory, mockVfsIsReady, mockWasmUrl } =
+  vi.hoisted(() => ({
+    mockGetSchemaSql: vi.fn().mockReturnValue('CREATE TABLE foo (id TEXT)'),
+    mockGetPragmasSql: vi.fn().mockReturnValue('PRAGMA journal_mode=WAL'),
+    mockSqliteEsmFactory: vi.fn().mockResolvedValue({}),
+    mockVfsIsReady: Promise.resolve(),
+    mockWasmUrl: '/assets/wa-sqlite-async.mock.wasm',
+  }));
 
 // Mock wa-sqlite modules
 vi.mock('wa-sqlite/dist/wa-sqlite-async.mjs', () => ({
-  default: vi.fn().mockResolvedValue({}),
+  default: mockSqliteEsmFactory,
 }));
 
 vi.mock('wa-sqlite', () => ({
@@ -30,6 +33,10 @@ vi.mock('wa-sqlite', () => ({
         },
       ),
   }),
+}));
+
+vi.mock('wa-sqlite/dist/wa-sqlite-async.wasm?url', () => ({
+  default: mockWasmUrl,
 }));
 
 vi.mock('wa-sqlite/src/examples/IDBBatchAtomicVFS.js', () => ({
@@ -53,30 +60,40 @@ type WorkerHandler = (event: MessageEvent) => void;
 
 type CapturingGlobal = {
   addEventListener: (type: string, handler: WorkerHandler) => void;
+  location: { href: string };
   postMessage: (data: unknown) => void;
   _handler?: WorkerHandler;
   _messages: unknown[];
 };
 
+type SqliteFactoryConfig = {
+  locateFile?: (file: string, prefix: string) => string;
+  printErr?: (message: unknown) => void;
+};
+
 describe('sqliteWorker — message handler', () => {
   let selfGlobal: CapturingGlobal;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
   let originalSelf: typeof globalThis;
 
   beforeEach(async () => {
     // Reset module state so each test gets a fresh db = null
     vi.resetModules();
+    mockSqliteEsmFactory.mockResolvedValue({});
 
     selfGlobal = {
       _messages: [],
       addEventListener(_type: string, handler: WorkerHandler) {
         this._handler = handler;
       },
+      location: { href: 'https://example.test/workers/sqliteWorker.js' },
       postMessage(data: unknown) {
         this._messages.push(data);
       },
     };
 
     originalSelf = globalThis.self as unknown as typeof globalThis;
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     // @ts-expect-error — override self for Worker simulation
     globalThis.self = selfGlobal;
 
@@ -87,6 +104,7 @@ describe('sqliteWorker — message handler', () => {
   afterEach(() => {
     // @ts-expect-error — restore original self
     globalThis.self = originalSelf;
+    consoleErrorSpy.mockRestore();
     vi.clearAllMocks();
   });
 
@@ -95,17 +113,50 @@ describe('sqliteWorker — message handler', () => {
   };
 
   const lastResponse = () => selfGlobal._messages.at(-1) as Record<string, unknown>;
+  const flushWorker = () => new Promise(process.nextTick);
 
   // ── init ────────────────────────────────────────────────────────────
 
   describe('init', () => {
     it('responds with ok:true after initialising the database', async () => {
       dispatch({ id: 'rpc-1', method: 'init' });
-      // Allow microtasks to settle
-      await new Promise(process.nextTick);
+      await flushWorker();
       const res = lastResponse();
       expect(res.id).toBe('rpc-1');
       expect(res.ok).toBe(true);
+    });
+
+    it('passes locateFile for explicit WASM resolution and suppresses known factory noise', async () => {
+      dispatch({ id: 'rpc-locate', method: 'init' });
+      await flushWorker();
+
+      const [config] = mockSqliteEsmFactory.mock.calls[0] as [SqliteFactoryConfig];
+      expect(config).toBeDefined();
+      expect(config.locateFile?.('wa-sqlite-async.wasm', '/ignored/')).toBe(
+        'https://example.test/assets/wa-sqlite-async.mock.wasm',
+      );
+      expect(config.locateFile?.('other-file.data', '/prefix/')).toBe('/prefix/other-file.data');
+
+      config.printErr?.('wasm streaming compile failed: Incorrect response MIME type');
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+
+      config.printErr?.('unexpected sqlite factory error');
+      expect(consoleErrorSpy).toHaveBeenCalledWith('unexpected sqlite factory error');
+    });
+
+    it('responds ok:false without logging when init hits a known WASM bootstrap failure', async () => {
+      mockSqliteEsmFactory.mockRejectedValueOnce(
+        new Error("Incorrect response MIME type. Expected 'application/wasm'"),
+      );
+
+      dispatch({ id: 'rpc-init-error', method: 'init' });
+      await flushWorker();
+
+      const res = lastResponse();
+      expect(res.id).toBe('rpc-init-error');
+      expect(res.ok).toBe(false);
+      expect(String(res.error)).toContain('Incorrect response MIME type');
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -115,10 +166,10 @@ describe('sqliteWorker — message handler', () => {
     it('responds ok:true for a valid SQL statement', async () => {
       // First initialise
       dispatch({ id: 'rpc-init', method: 'init' });
-      await new Promise(process.nextTick);
+      await flushWorker();
 
       dispatch({ id: 'rpc-2', method: 'exec', sql: 'DELETE FROM foo' });
-      await new Promise(process.nextTick);
+      await flushWorker();
       const res = lastResponse();
       expect(res.id).toBe('rpc-2');
       expect(res.ok).toBe(true);
@@ -126,10 +177,10 @@ describe('sqliteWorker — message handler', () => {
 
     it('responds ok:false when sql is missing', async () => {
       dispatch({ id: 'rpc-init', method: 'init' });
-      await new Promise(process.nextTick);
+      await flushWorker();
 
       dispatch({ id: 'rpc-3', method: 'exec' });
-      await new Promise(process.nextTick);
+      await flushWorker();
       const res = lastResponse();
       expect(res.id).toBe('rpc-3');
       expect(res.ok).toBe(false);
@@ -142,14 +193,14 @@ describe('sqliteWorker — message handler', () => {
   describe('execBatch', () => {
     it('responds ok:true when statements are provided', async () => {
       dispatch({ id: 'rpc-init', method: 'init' });
-      await new Promise(process.nextTick);
+      await flushWorker();
 
       dispatch({
         id: 'rpc-4',
         method: 'execBatch',
         statements: [{ sql: 'DELETE FROM a' }, { sql: 'DELETE FROM b' }],
       });
-      await new Promise(process.nextTick);
+      await flushWorker();
       const res = lastResponse();
       expect(res.id).toBe('rpc-4');
       expect(res.ok).toBe(true);
@@ -157,10 +208,10 @@ describe('sqliteWorker — message handler', () => {
 
     it('responds ok:false when statements are missing', async () => {
       dispatch({ id: 'rpc-init', method: 'init' });
-      await new Promise(process.nextTick);
+      await flushWorker();
 
       dispatch({ id: 'rpc-5', method: 'execBatch' });
-      await new Promise(process.nextTick);
+      await flushWorker();
       const res = lastResponse();
       expect(res.ok).toBe(false);
     });
@@ -171,10 +222,10 @@ describe('sqliteWorker — message handler', () => {
   describe('getAll', () => {
     it('responds ok:true with a result array for a valid query', async () => {
       dispatch({ id: 'rpc-init', method: 'init' });
-      await new Promise(process.nextTick);
+      await flushWorker();
 
       dispatch({ id: 'rpc-6', method: 'getAll', sql: 'SELECT 1' });
-      await new Promise(process.nextTick);
+      await flushWorker();
       const res = lastResponse();
       expect(res.id).toBe('rpc-6');
       expect(res.ok).toBe(true);
@@ -183,10 +234,10 @@ describe('sqliteWorker — message handler', () => {
 
     it('responds ok:false when sql is missing', async () => {
       dispatch({ id: 'rpc-init', method: 'init' });
-      await new Promise(process.nextTick);
+      await flushWorker();
 
       dispatch({ id: 'rpc-7', method: 'getAll' });
-      await new Promise(process.nextTick);
+      await flushWorker();
       const res = lastResponse();
       expect(res.ok).toBe(false);
     });
@@ -197,10 +248,10 @@ describe('sqliteWorker — message handler', () => {
   describe('checkpoint', () => {
     it('responds ok:true and runs PRAGMA wal_checkpoint', async () => {
       dispatch({ id: 'rpc-init', method: 'init' });
-      await new Promise(process.nextTick);
+      await flushWorker();
 
       dispatch({ id: 'rpc-8', method: 'checkpoint' });
-      await new Promise(process.nextTick);
+      await flushWorker();
       const res = lastResponse();
       expect(res.id).toBe('rpc-8');
       expect(res.ok).toBe(true);
@@ -212,10 +263,10 @@ describe('sqliteWorker — message handler', () => {
   describe('unknown method', () => {
     it('responds ok:false with an "Unknown method" error', async () => {
       dispatch({ id: 'rpc-init', method: 'init' });
-      await new Promise(process.nextTick);
+      await flushWorker();
 
       dispatch({ id: 'rpc-9', method: 'nonExistent' });
-      await new Promise(process.nextTick);
+      await flushWorker();
       const res = lastResponse();
       expect(res.ok).toBe(false);
       expect(String(res.error)).toContain('Unknown method');

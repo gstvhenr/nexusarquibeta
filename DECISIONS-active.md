@@ -10,6 +10,27 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-03-09 — Financeiro: histórico consolidado com rota canônica única e redirects legados
+
+- Contexto: `Recebíveis` e `Despesas` eram duas páginas-espelho de série temporal, ambas sustentadas pelo mesmo padrão visual e por lógica quase idêntica, mas com duas rotas/submenus separados. Ao mesmo tempo, os dados exibidos não eram estritamente de “caixa”, pois agregavam projetos, comissões, lançamentos manuais, marketing, freelancers e gestão de caixa.
+- Decisão:
+  1. Consolidar as duas telas em uma rota canônica única: `/financeiro/historico`.
+  2. Substituir os dois submenus por um único item `Histórico Financeiro`.
+  3. Preservar compatibilidade via redirects:
+     - `/financeiro/recebiveis` → `/financeiro/historico?tipo=credit`
+     - `/financeiro/debitos` → `/financeiro/historico?tipo=debit`
+  4. Manter as regras de negócio existentes por modo:
+     - crédito continua refletindo recebimentos confirmados;
+     - débito continua refletindo lançamentos pagos, pendentes e vencidos.
+  5. Representar `Todos` com duas linhas simultâneas no mesmo gráfico, sem alterar persistência nem contratos globais.
+- Consequência: a navegação de Financeiro ficou mais enxuta, a duplicação de páginas foi eliminada e a compatibilidade com links legados foi mantida sem refactor transversal em `DataContext` ou infraestrutura.
+- Reversão:
+  1. Restaurar os submenus `Recebíveis` e `Despesas` em `src/frontend/constants/ui.tsx`.
+  2. Recriar/importar as páginas antigas em `src/frontend/pages/financeiro/`.
+  3. Remover a rota `/financeiro/historico` e os redirects legados de `src/frontend/App.tsx`.
+  4. Reverter a evolução do `FinanceLineChart` ao modo single-line.
+- Referências: `src/frontend/pages/financeiro/historico/FinanceiroHistoricoPage.tsx`, `src/frontend/pages/financeiro/historico/useFinanceHistoryPage.ts`, `src/frontend/components/finance/FinanceLineChart.tsx`, `src/frontend/services/financeService.ts`, `src/frontend/App.tsx`, `src/frontend/constants/ui.tsx`.
+
 ### 2026-03-08 — Blindagem da camada de persistência: `indexedDbService` restrito a `persistence/`
 
 - Contexto: o barrel `src/frontend/services/infrastructure/index.ts` re-exportava `export * from './indexedDbService'`, permitindo qualquer módulo importar `indexedDbService` diretamente sem passar pela abstração `PersistencePort`. Não havia enforcement automatizado.

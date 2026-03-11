@@ -125,10 +125,11 @@ describe('SCALAR_KEYS', () => {
     expect(SCALAR_KEYS).toContain('customBudgetTemplate');
     expect(SCALAR_KEYS).toContain('dismissedFocusItems');
     expect(SCALAR_KEYS).toContain('documentStorage');
+    expect(SCALAR_KEYS).toContain('emergencyFund');
   });
 
-  it('contains exactly 5 entries', () => {
-    expect(SCALAR_KEYS).toHaveLength(5);
+  it('contains exactly 6 entries', () => {
+    expect(SCALAR_KEYS).toHaveLength(6);
   });
 
   it('has no duplicates', () => {

@@ -16,11 +16,12 @@ import type {
   SeriesPoint,
 } from '../../types';
 import { formatCurrency, formatYAxisTick } from '../../utils/formatters';
+import { XIcon } from '../ui';
 import { CardShell } from './CardShell';
 import { SectionTitle } from './SectionTitle';
 
 type FinanceLineChartProps = {
-  title: string;
+  title?: string;
   dataSeries: SeriesPoint[];
   period: PeriodSelection;
   filters: FinanceLineChartFilters;
@@ -29,6 +30,18 @@ type FinanceLineChartProps = {
   isLoading?: boolean;
   emptyMessage?: string;
   lineColorClassName?: string;
+  lineLabel?: string;
+  comparisonSeries?: {
+    data: SeriesPoint[];
+    label: string;
+    colorClassName: string;
+  };
+  seriesModeControl?: {
+    value: string;
+    options: Array<{ value: string; label: string }>;
+    onChange: (value: string) => void;
+    ariaLabel?: string;
+  };
 };
 
 const PERIOD_OPTIONS: Array<{ value: PeriodSelection['mode']; label: string }> = [
@@ -68,18 +81,75 @@ export const FinanceLineChart: (props: FinanceLineChartProps) => React.ReactNode
   onPeriodChange,
   onFilterChange,
   isLoading = false,
-  emptyMessage = 'Nenhum dado encontrado para o período e filtros selecionados.',
+  emptyMessage,
   lineColorClassName = 'hsl(var(--color-success))',
+  lineLabel = 'Total',
+  comparisonSeries,
+  seriesModeControl,
 }) => {
-  const hasNonZeroValue = dataSeries.some((point) => point.value > 0);
   const showYearField = period.mode === 'YEAR';
+  const fieldGroupClass = 'flex min-w-0 flex-col gap-1';
+  const fieldLabelClass = 'block text-xs leading-4 text-text-secondary';
   const inputClass =
-    'w-full bg-background px-3 py-2 rounded-lg border border-border-color text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30';
+    'h-11 w-full rounded-xl border border-border-color bg-background px-3 text-sm text-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30';
   const actionButtonClass =
-    'w-full bg-background px-3 py-2 rounded-lg border border-border-color text-sm font-semibold text-text-secondary hover:text-text-primary hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors';
+    'inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border-color/90 bg-background text-text-secondary shadow-sm transition-all duration-200 hover:border-primary/20 hover:bg-surface hover:text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 active:translate-y-px';
+  const modeButtonClass =
+    'relative z-10 flex h-full min-w-0 items-center justify-center rounded-xl px-3 text-[11px] font-semibold transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:outline-none focus:ring-2 focus:ring-primary/30 sm:text-xs';
   const lineColor = resolveCssVarColor(lineColorClassName);
+  const comparisonLineColor = comparisonSeries
+    ? resolveCssVarColor(comparisonSeries.colorClassName)
+    : null;
   const axisColor = resolveCssVarColor('hsl(var(--color-text-secondary))');
   const gridColor = resolveCssVarColor('hsl(var(--color-border-color) / 0.25)');
+  const hasTitle = Boolean(title?.trim());
+  const filtersGridClassName = showYearField
+    ? 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,0.75fr)_minmax(0,0.95fr)_minmax(0,1fr)_minmax(0,1.3fr)_3.5rem]'
+    : 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(0,1.8fr)_minmax(0,1.1fr)_minmax(0,0.95fr)_minmax(0,1fr)_minmax(0,1.3fr)_3.5rem]';
+  const chartData = React.useMemo(() => {
+    const primaryByLabel = new Map(dataSeries.map((point) => [point.label, point.value]));
+    const comparisonByLabel = new Map(
+      comparisonSeries?.data.map((point) => [point.label, point.value]) ?? [],
+    );
+    const labels = Array.from(
+      new Set([...primaryByLabel.keys(), ...(comparisonSeries ? comparisonByLabel.keys() : [])]),
+    ).sort((left, right) => left.localeCompare(right));
+
+    return labels.map((label) => ({
+      label,
+      primaryValue: primaryByLabel.get(label) ?? 0,
+      secondaryValue: comparisonSeries ? (comparisonByLabel.get(label) ?? 0) : undefined,
+    }));
+  }, [comparisonSeries, dataSeries]);
+  const hasNonZeroValue = chartData.some(
+    (point) => (point.primaryValue ?? 0) > 0 || (point.secondaryValue ?? 0) > 0,
+  );
+  const showEmptyState = !hasNonZeroValue && Boolean(emptyMessage?.trim());
+  const legendItems = [
+    { label: lineLabel, color: lineColor },
+    ...(comparisonSeries
+      ? [
+          {
+            label: comparisonSeries.label,
+            color: comparisonLineColor ?? lineColor,
+          },
+        ]
+      : []),
+  ];
+  const loadingIndicator = isLoading ? (
+    <span className="animate-pulse text-xs text-text-secondary">Atualizando...</span>
+  ) : null;
+  const movementOptionCount = seriesModeControl?.options.length ?? 0;
+  const activeMovementIndex =
+    seriesModeControl?.options.findIndex((option) => option.value === seriesModeControl.value) ??
+    -1;
+  const movementIndicatorStyle =
+    seriesModeControl && movementOptionCount > 0 && activeMovementIndex >= 0
+      ? {
+          width: `calc((100% - 0.5rem - ${(movementOptionCount - 1) * 0.25}rem) / ${movementOptionCount})`,
+          transform: `translateX(calc(${activeMovementIndex * 100}% + ${activeMovementIndex * 0.25}rem))`,
+        }
+      : undefined;
 
   const handlePeriodModeChange = (mode: PeriodSelection['mode']) => {
     if (mode === 'YEAR') {
@@ -90,22 +160,53 @@ export const FinanceLineChart: (props: FinanceLineChartProps) => React.ReactNode
   };
 
   return (
-    <CardShell className="p-5 min-h-[540px] flex flex-col gap-2">
-      <SectionTitle
-        trailing={
-          isLoading ? (
-            <span className="text-xs text-text-secondary animate-pulse">Atualizando...</span>
-          ) : null
-        }
-      >
-        {title}
-      </SectionTitle>
+    <CardShell className="flex h-full min-h-0 flex-col gap-4 p-5">
+      {hasTitle ? (
+        <SectionTitle trailing={loadingIndicator}>{title}</SectionTitle>
+      ) : loadingIndicator ? (
+        <div className="flex items-center justify-end">{loadingIndicator}</div>
+      ) : null}
 
-      <div
-        className={`grid grid-cols-1 gap-2 ${showYearField ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}
-      >
-        <div>
-          <label htmlFor="field-periodo" className="block text-xs text-text-secondary mb-0.5">
+      <div className={filtersGridClassName}>
+        {seriesModeControl ? (
+          <div className={fieldGroupClass}>
+            <span id="field-movimentacao-label" className={fieldLabelClass}>
+              Movimentação
+            </span>
+            <div
+              className="relative grid h-11 w-full min-w-0 grid-cols-3 items-center gap-1 rounded-2xl border border-border-color bg-background/70 p-1 shadow-sm"
+              role="group"
+              aria-labelledby="field-movimentacao-label"
+              aria-label={seriesModeControl.ariaLabel ?? 'Filtro por movimentação'}
+            >
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-1 left-1 rounded-xl bg-primary shadow-soft transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+                style={movementIndicatorStyle}
+              />
+              {seriesModeControl.options.map((option) => {
+                const isActive = option.value === seriesModeControl.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => seriesModeControl.onChange(option.value)}
+                    aria-pressed={isActive}
+                    className={`${modeButtonClass} ${
+                      isActive
+                        ? 'text-primary-content'
+                        : 'text-text-secondary hover:text-text-primary'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+        <div className={fieldGroupClass}>
+          <label htmlFor="field-periodo" className={fieldLabelClass}>
             Período
           </label>
           <select
@@ -126,8 +227,8 @@ export const FinanceLineChart: (props: FinanceLineChartProps) => React.ReactNode
         </div>
 
         {showYearField && (
-          <div>
-            <label htmlFor="field-ano" className="block text-xs text-text-secondary mb-0.5">
+          <div className={fieldGroupClass}>
+            <label htmlFor="field-ano" className={fieldLabelClass}>
               Ano
             </label>
             <input
@@ -148,8 +249,8 @@ export const FinanceLineChart: (props: FinanceLineChartProps) => React.ReactNode
           </div>
         )}
 
-        <div>
-          <label htmlFor="field-origem" className="block text-xs text-text-secondary mb-0.5">
+        <div className={fieldGroupClass}>
+          <label htmlFor="field-origem" className={fieldLabelClass}>
             Origem
           </label>
           <select
@@ -173,8 +274,8 @@ export const FinanceLineChart: (props: FinanceLineChartProps) => React.ReactNode
           </select>
         </div>
 
-        <div>
-          <label htmlFor="field-categoria" className="block text-xs text-text-secondary mb-0.5">
+        <div className={fieldGroupClass}>
+          <label htmlFor="field-categoria" className={fieldLabelClass}>
             Categoria
           </label>
           <select
@@ -199,8 +300,8 @@ export const FinanceLineChart: (props: FinanceLineChartProps) => React.ReactNode
           </select>
         </div>
 
-        <div>
-          <label htmlFor="field-item" className="block text-xs text-text-secondary mb-0.5">
+        <div className={fieldGroupClass}>
+          <label htmlFor="field-item" className={fieldLabelClass}>
             Item
           </label>
           <select
@@ -224,17 +325,25 @@ export const FinanceLineChart: (props: FinanceLineChartProps) => React.ReactNode
           </select>
         </div>
 
-        <div>
-          <span className="block text-xs text-text-secondary mb-0.5">Ações</span>
-          <button type="button" onClick={() => onFilterChange({})} className={actionButtonClass}>
-            Limpar filtros
-          </button>
+        <div className={fieldGroupClass}>
+          <span className={fieldLabelClass}>Ações</span>
+          <div className="flex h-11 items-center xl:justify-center">
+            <button
+              type="button"
+              onClick={() => onFilterChange({})}
+              className={actionButtonClass}
+              aria-label="Limpar filtros"
+              title="Limpar filtros"
+            >
+              <XIcon className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="w-full h-[350px] md:h-[400px]">
+      <div className="min-h-[220px] flex-1 sm:min-h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={dataSeries} margin={{ top: 12, right: 12, left: 0, bottom: 6 }}>
+          <LineChart data={chartData} margin={{ top: 12, right: 12, left: 0, bottom: 6 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
             <XAxis
               dataKey="label"
@@ -254,23 +363,51 @@ export const FinanceLineChart: (props: FinanceLineChartProps) => React.ReactNode
               tickFormatter={formatYAxisTick}
             />
             <Tooltip
-              formatter={(value) => formatCurrency(Number(value))}
+              formatter={(value, name) => [formatCurrency(Number(value)), name]}
               labelFormatter={(label) => formatMonthLabel(String(label))}
             />
             <Line
               type="monotone"
-              dataKey="value"
+              dataKey="primaryValue"
               stroke={lineColor}
               strokeWidth={2.5}
               dot={{ r: 2, strokeWidth: 0, fill: lineColor }}
               activeDot={{ r: 5 }}
-              name="Total"
+              name={lineLabel}
             />
+            {comparisonSeries ? (
+              <Line
+                type="monotone"
+                dataKey="secondaryValue"
+                stroke={comparisonLineColor ?? lineColor}
+                strokeWidth={2.5}
+                dot={{ r: 2, strokeWidth: 0, fill: comparisonLineColor ?? lineColor }}
+                activeDot={{ r: 5 }}
+                name={comparisonSeries.label}
+              />
+            ) : null}
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      {!hasNonZeroValue && (
+      {legendItems.length > 0 ? (
+        <div className="flex items-center justify-center gap-4 pt-1">
+          {legendItems.map((item) => (
+            <span
+              key={item.label}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-text-secondary"
+            >
+              <span
+                className="inline-block h-2 w-2 rounded-full opacity-80"
+                style={{ backgroundColor: item.color }}
+              />
+              {item.label}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {showEmptyState && (
         <div className="rounded-xl border border-dashed border-border-color bg-background/40 px-4 py-3">
           <p className="text-sm text-text-secondary text-center">{emptyMessage}</p>
         </div>

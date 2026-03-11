@@ -6,6 +6,16 @@ import type { CashBoxCredit, CashBoxExpense } from '@/types';
 import { createTestProject, createTestFinancials } from '@/test/factories';
 import FinanceiroVisaoGeralPage from './FinanceiroVisaoGeralPage';
 
+vi.mock('../../components/finance', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../components/finance')>();
+  return {
+    ...actual,
+    EmergencyFundCard: ({ monthlyExpenseBaseline }: { monthlyExpenseBaseline: number }) => (
+      <div data-testid="emergency-fund-card">{`Fundo de Reserva ${monthlyExpenseBaseline}`}</div>
+    ),
+  };
+});
+
 class ResizeObserverMock {
   observe() {}
   unobserve() {}
@@ -48,6 +58,7 @@ describe('FinanceiroVisaoGeralPage', () => {
     // Then — page structure renders
     expect(screen.getByText('Visão Geral')).toBeInTheDocument();
     expect(screen.getByText('Mês Vigente')).toBeInTheDocument();
+    expect(screen.getByText('Fundo de Reserva')).toBeInTheDocument();
     expect(screen.getByText('Saúde Financeira')).toBeInTheDocument();
     expect(screen.getByText('Nenhuma despesa registrada neste mês.')).toBeInTheDocument();
 

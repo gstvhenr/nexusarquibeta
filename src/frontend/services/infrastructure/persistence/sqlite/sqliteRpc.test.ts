@@ -7,24 +7,39 @@ import type { SqliteRpcResponse, SqliteRpcRequest } from './sqliteRpc';
 // ---------------------------------------------------------------------------
 
 type WorkerMessageListener = (event: MessageEvent<SqliteRpcResponse>) => void;
+type WorkerErrorListener = (event: ErrorEvent) => void;
 
 function buildFakeWorker() {
-  let listener: WorkerMessageListener | null = null;
+  const listeners: Record<string, ((...args: unknown[]) => void)[]> = {};
   const posted: SqliteRpcRequest[] = [];
 
   const worker = {
-    addEventListener: vi.fn((_: string, cb: WorkerMessageListener) => {
-      listener = cb;
+    addEventListener: vi.fn((type: string, cb: (...args: unknown[]) => void) => {
+      if (!listeners[type]) listeners[type] = [];
+      listeners[type].push(cb);
     }),
     postMessage: vi.fn((msg: SqliteRpcRequest) => {
       posted.push(msg);
     }),
     // Simulates the worker responding synchronously in the same tick
     replyOk: (id: string, result?: unknown) => {
-      listener?.({ data: { id, ok: true, result } } as MessageEvent<SqliteRpcResponse>);
+      for (const cb of listeners['message'] ?? []) {
+        (cb as WorkerMessageListener)({
+          data: { id, ok: true, result },
+        } as MessageEvent<SqliteRpcResponse>);
+      }
     },
     replyErr: (id: string, error: string) => {
-      listener?.({ data: { id, ok: false, error } } as MessageEvent<SqliteRpcResponse>);
+      for (const cb of listeners['message'] ?? []) {
+        (cb as WorkerMessageListener)({
+          data: { id, ok: false, error },
+        } as MessageEvent<SqliteRpcResponse>);
+      }
+    },
+    triggerError: (message: string) => {
+      for (const cb of listeners['error'] ?? []) {
+        (cb as WorkerErrorListener)({ message } as ErrorEvent);
+      }
     },
     posted,
   };
@@ -215,9 +230,30 @@ describe('createSqliteRpc', () => {
     it('uses "Unknown SQLite worker error" when worker sends no error message', async () => {
       const promise = rpc.exec('SELECT 1');
       const id = fakeWorker.posted[0].id;
-      // Manually simulate a failed response with no error field
-      const fakeListener = fakeWorker.addEventListener.mock.calls[0][1] as WorkerMessageListener;
-      fakeListener({ data: { id, ok: false } } as MessageEvent<SqliteRpcResponse>);
+      // Find the 'message' listener registered on the worker
+      const messageCall = fakeWorker.addEventListener.mock.calls.find(
+        (call) => call[0] === 'message',
+      );
+      const messageListener = messageCall![1] as WorkerMessageListener;
+      messageListener({ data: { id, ok: false } } as MessageEvent<SqliteRpcResponse>);
+      await expect(promise).rejects.toThrow('Unknown SQLite worker error');
+    });
+  });
+
+  // ── Worker error event ────────────────────────────────────────────────
+
+  describe('worker error event', () => {
+    it('rejects all pending promises when the worker fires an error event', async () => {
+      const p1 = rpc.exec('SELECT 1');
+      const p2 = rpc.getAll('SELECT * FROM foo');
+      fakeWorker.triggerError('memory access out of bounds');
+      await expect(p1).rejects.toThrow('memory access out of bounds');
+      await expect(p2).rejects.toThrow('memory access out of bounds');
+    });
+
+    it('uses fallback message when ErrorEvent has no message', async () => {
+      const promise = rpc.init();
+      fakeWorker.triggerError('');
       await expect(promise).rejects.toThrow('Unknown SQLite worker error');
     });
   });

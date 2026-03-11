@@ -9,23 +9,12 @@ import type {
   ProjectAddress,
   AdditionalDeadline,
 } from '../types';
-import { PROJECT_DOCUMENT_FOLDER_TEMPLATE } from '../constants';
 import { agendaService } from './agendaService';
 import { v4 as uuidv4 } from 'uuid';
 
 const createProjectDocumentFolder = (project: Project): DocumentFolder => {
   const { id: projectId, code: projectCode, name: projectName } = project;
   const now = new Date().toISOString();
-  type ProjectTemplateNode = { name: string; children?: ProjectTemplateNode[] };
-  const createTemplate = (template: ProjectTemplateNode[]): DocumentFolder[] =>
-    template.map((item) => ({
-      id: uuidv4(),
-      name: item.name,
-      type: 'folder',
-      children: item.children ? createTemplate(item.children) : [],
-      dateAdded: now,
-      dateModified: now,
-    }));
 
   // Check if projectName already starts with projectCode to avoid duplication (e.g. "#2500 - #2500 - Name")
   const folderName = projectName.startsWith(projectCode)
@@ -36,7 +25,7 @@ const createProjectDocumentFolder = (project: Project): DocumentFolder => {
     id: `proj-folder_${projectId}`,
     name: folderName,
     type: 'folder',
-    children: createTemplate(PROJECT_DOCUMENT_FOLDER_TEMPLATE),
+    children: [],
     dateAdded: now,
     dateModified: now,
     projectId: projectId,

@@ -1,4 +1,4 @@
-import type { Commission, Project, ProjectFinancials } from '../types';
+import type { Commission, Project, ProjectFinancials, Proposal } from '../types';
 import type { FinancialReceivable, FinancialDebit } from '../types/financial-views';
 import type { DocumentFolder, DocumentFile } from '../types/document';
 import type { CashBoxExpense } from '../types/cashBox';
@@ -175,5 +175,39 @@ export const createTestCashBoxExpense = (
   installmentTotal: null,
   recurringGroupId: null,
   createdAt: '2026-01-01T00:00:00.000Z',
+  ...overrides,
+});
+
+/**
+ * Input -> Output:
+ * - input: partial overrides for Proposal fields.
+ * - output: a fully typed Proposal with sensible test defaults.
+ * Example:
+ * const proposal = createTestProposal({ clientId: undefined });
+ */
+export const createTestProposal = (overrides: Partial<Proposal> = {}): Proposal => ({
+  id: 'prop_101',
+  code: '#2601',
+  name: 'Proposta Teste',
+  date: '13/02/2026',
+  status: 'Pendente',
+  sections: [
+    {
+      id: 1,
+      title: 'Arquitetura',
+      items: [{ id: 1, description: 'Estudo preliminar', unit: 'm²', quantity: 1, unitPrice: 100 }],
+    },
+  ],
+  discount: 0,
+  subtotal: 100,
+  total: 100,
+  clientId: 'client-1',
+  archived: false,
+  showItemPrices: true,
+  showSectionTotals: true,
+  showDiscount: false,
+  showGrandTotal: true,
+  showProposalDate: true,
+  totalsAlignment: 'right',
   ...overrides,
 });

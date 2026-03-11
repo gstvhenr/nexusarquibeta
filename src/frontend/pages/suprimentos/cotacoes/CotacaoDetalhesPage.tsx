@@ -2,12 +2,19 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/layout';
 import { Button, FormField, IconButton, Input, Modal } from '@/components/ui';
-import { useCoreData, useSupplyChainData } from '@/context/DataContext';
-import type { Quotation, Product, QuotationItem } from '@/types';
+import { useCoreData, useSupplyChainData, useFinanceData } from '@/context/DataContext';
+import type { Quotation, Product, QuotationItem, Commission } from '@/types';
 import { formatCurrency, getTodayDateOnly } from '@/utils/formatters';
 import { getLatestPriceFromHistory } from '@/utils/supplierHelpers';
 import { NAV_LINKS, SUPPLIER_CATEGORY_OPTIONS } from '@/constants';
-import { PlusIcon, TrashIcon, GiftIcon } from '@/components/ui';
+import {
+  PlusIcon,
+  TrashIcon,
+  GiftIcon,
+  ChevronDownIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from '@/components/ui';
 
 const getInitialQuotation = (id: string): Quotation => ({
   id,
@@ -145,6 +152,12 @@ const QuotationItemRow: (props: {
       .sort((a, b) => a.price - b.price);
   }, [product.id, item.quantity, supplierProductPrices, suppliers]);
 
+  const selectedPrice = useMemo(() => {
+    if (!selectedSupplierId) return null;
+    const entry = availablePrices.find((p) => p.supplier.id === selectedSupplierId);
+    return entry || null;
+  }, [availablePrices, selectedSupplierId]);
+
   return (
     <div className="bg-surface rounded-lg shadow-soft">
       <div
@@ -159,11 +172,25 @@ const QuotationItemRow: (props: {
         role="button"
         tabIndex={0}
       >
-        <div className="flex-1">
-          <p className="font-bold text-lg text-text-primary">{product.name}</p>
-          <p className="text-xs text-text-secondary">{product.category}</p>
+        <ChevronDownIcon
+          className={`w-5 h-5 text-text-secondary transition-transform duration-200 shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
+        />
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-lg text-text-primary truncate">{product.name}</p>
+          <p className="text-xs text-text-secondary">
+            {product.category}
+            {selectedPrice ? (
+              <span className="ml-2 text-secondary font-semibold">
+                — {selectedPrice.supplier.name}: {formatCurrency(selectedPrice.total)}
+              </span>
+            ) : (
+              <span className="ml-2 text-primary/70 text-[11px]">
+                ▼ expandir para selecionar fornecedor
+              </span>
+            )}
+          </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 shrink-0">
           <input
             type="number"
             value={item.quantity}
@@ -173,6 +200,11 @@ const QuotationItemRow: (props: {
             aria-label={`Quantidade para ${product.name}`}
           />
           <span className="w-8 text-text-secondary">{product.unit}</span>
+          {selectedPrice && (
+            <span className="text-xs text-success font-semibold whitespace-nowrap flex items-center gap-1">
+              <GiftIcon className="w-3.5 h-3.5" /> {formatCurrency(selectedPrice.commission)}
+            </span>
+          )}
           <IconButton
             variant="danger"
             onClick={(e) => {
@@ -233,9 +265,10 @@ const QuotationItemRow: (props: {
 const CotacaoDetalhesPage: () => React.ReactNode = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { projects } = useCoreData();
+  const { projects, clients } = useCoreData();
   const { quotations, setQuotations, products, suppliers, supplierProductPrices } =
     useSupplyChainData();
+  const { setCommissions } = useFinanceData();
   const [isProductModalOpen, setProductModalOpen] = useState(false);
 
   const [quotation, setQuotation] = useState<Quotation | null>(() => {
@@ -275,15 +308,95 @@ const CotacaoDetalhesPage: () => React.ReactNode = () => {
     return { totalCost: cost, totalCommission: commission };
   }, [quotation, products, supplierProductPrices, suppliers]);
 
+  const persistQuotation = (q: Quotation) => {
+    setQuotations((prev) => {
+      const exists = prev.some((existing) => existing.id === q.id);
+      if (exists) return prev.map((existing) => (existing.id === q.id ? q : existing));
+      return [...prev, q];
+    });
+  };
+
   const handleSave = () => {
     if (!quotation) return;
-    setQuotations((prev) => {
-      const exists = prev.some((q) => q.id === quotation.id);
-      if (exists) return prev.map((q) => (q.id === quotation.id ? quotation : q));
-      return [...prev, quotation];
-    });
+    persistQuotation(quotation);
     navigate('/cotacoes');
   };
+
+  const generateCommissions = (acceptedQuotation: Quotation): Commission[] => {
+    const supplierTotals = new Map<string, { saleValue: number; percentage: number }>();
+
+    acceptedQuotation.items.forEach((item) => {
+      const selectedSupplierId = acceptedQuotation.selections?.[item.productId];
+      if (!selectedSupplierId) return;
+
+      const product = products.find((p) => p.id === item.productId);
+      const supplier = suppliers.find((s) => s.id === selectedSupplierId);
+      if (!product || !supplier) return;
+
+      const priceInfo = supplierProductPrices.find(
+        (p) => p.productId === item.productId && p.supplierId === selectedSupplierId,
+      );
+      const price = priceInfo ? getLatestPriceFromHistory(priceInfo.priceHistory) : 0;
+      if (price === null) return;
+
+      const itemTotal = price * item.quantity;
+      const existing = supplierTotals.get(selectedSupplierId);
+      if (existing) {
+        existing.saleValue += itemTotal;
+      } else {
+        supplierTotals.set(selectedSupplierId, {
+          saleValue: itemTotal,
+          percentage: supplier.commissionPercentage || 0,
+        });
+      }
+    });
+
+    const linkedProject = projects.find((p) => p.id === acceptedQuotation.projectId);
+    const linkedClient = linkedProject
+      ? clients.find((c) => c.id === linkedProject.clientId)
+      : undefined;
+
+    const newCommissions: Commission[] = [];
+    supplierTotals.forEach((data, supplierId) => {
+      const supplier = suppliers.find((s) => s.id === supplierId);
+      if (!supplier) return;
+      newCommissions.push({
+        id: `comm_qt_${acceptedQuotation.id}_${supplierId}`,
+        saleDate: getTodayDateOnly(),
+        supplierId,
+        supplierName: supplier.name,
+        clientId: linkedClient?.id || '',
+        clientName: linkedClient?.name || 'Cliente não vinculado',
+        saleValue: data.saleValue,
+        commissionPercentage: data.percentage,
+        commissionValue: (data.saleValue * data.percentage) / 100,
+        status: 'Pendente',
+        quotationId: acceptedQuotation.id,
+        notes: `Gerado automaticamente da cotação "${acceptedQuotation.name}"`,
+      });
+    });
+    return newCommissions;
+  };
+
+  const handleAccept = () => {
+    if (!quotation) return;
+    const accepted = { ...quotation, status: 'Aceita' as const };
+    persistQuotation(accepted);
+    const newCommissions = generateCommissions(accepted);
+    if (newCommissions.length > 0) {
+      setCommissions((prev) => [...newCommissions, ...prev]);
+    }
+    navigate('/cotacoes');
+  };
+
+  const handleReject = () => {
+    if (!quotation) return;
+    const rejected = { ...quotation, status: 'Rejeitada' as const };
+    persistQuotation(rejected);
+    navigate('/cotacoes');
+  };
+
+  const isEditable = quotation?.status === 'Em Aberto';
 
   const handleUpdate = (field: keyof Quotation, value: Quotation[keyof Quotation]) =>
     setQuotation((q) => (q ? { ...q, [field]: value } : null));
@@ -331,7 +444,19 @@ const CotacaoDetalhesPage: () => React.ReactNode = () => {
 
   return (
     <div className="animate-fade-in-up pb-24">
-      <PageHeader title="Detalhes da Cotação" subtitle="" icon={cotacoesIcon} />
+      <PageHeader title="Detalhes da Cotação" subtitle="" icon={cotacoesIcon}>
+        {quotation.status !== 'Em Aberto' && (
+          <span
+            className={`px-4 py-1.5 text-sm font-bold rounded-full ${
+              quotation.status === 'Aceita'
+                ? 'bg-success/20 text-success'
+                : 'bg-error/20 text-error'
+            }`}
+          >
+            {quotation.status === 'Aceita' ? '✓ Cotação Aceita' : '✗ Cotação Rejeitada'}
+          </span>
+        )}
+      </PageHeader>
 
       <div className="bg-surface rounded-xl shadow-soft p-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -340,6 +465,8 @@ const CotacaoDetalhesPage: () => React.ReactNode = () => {
               type="text"
               value={quotation.name}
               onChange={(e) => handleUpdate('name', e.target.value)}
+              readOnly={!isEditable}
+              className={!isEditable ? 'opacity-70 cursor-not-allowed' : ''}
             />
           </FormField>
           <div>
@@ -353,8 +480,9 @@ const CotacaoDetalhesPage: () => React.ReactNode = () => {
               id="field-vincular-ao-projeto"
               value={quotation.projectId || ''}
               onChange={(e) => handleUpdate('projectId', e.target.value || undefined)}
-              className="w-full bg-background p-2 rounded-md border border-border-color"
+              className={`w-full bg-background p-2 rounded-md border border-border-color ${!isEditable ? 'opacity-70 cursor-not-allowed' : ''}`}
               aria-label="Projeto"
+              disabled={!isEditable}
             >
               <option value="">Nenhum</option>
               {projects
@@ -398,23 +526,62 @@ const CotacaoDetalhesPage: () => React.ReactNode = () => {
 
       <div className="fixed bottom-0 right-0 left-0 md:left-64 lg:left-80 bg-background/80 backdrop-blur-sm p-4 border-t border-border-color z-10">
         <div className="max-w-7xl mx-auto flex justify-between items-center px-6">
-          <div className="flex gap-6 text-sm">
+          <div className="flex gap-8 text-sm">
             <div>
-              <span className="text-text-secondary">Custo Total (Cliente):</span>
-              <p className="font-bold text-2xl text-secondary">{formatCurrency(totalCost)}</p>
+              <span className="text-text-secondary text-xs uppercase tracking-wide">
+                Custo Total (Cliente)
+              </span>
+              <p className="font-bold text-xl text-secondary tabular-nums">
+                {formatCurrency(totalCost)}
+              </p>
             </div>
             <div>
-              <span className="text-text-secondary">Comissão Potencial:</span>
-              <p className="font-bold text-2xl text-success">{formatCurrency(totalCommission)}</p>
+              <span className="text-text-secondary text-xs uppercase tracking-wide">
+                Comissão Potencial
+              </span>
+              <p className="font-bold text-xl text-success tabular-nums">
+                {formatCurrency(totalCommission)}
+              </p>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="secondary" onClick={() => navigate('/cotacoes')}>
-              Cancelar
-            </Button>
-            <Button variant="primary" onClick={handleSave}>
-              Salvar Cotação
-            </Button>
+          <div className="flex items-center gap-3">
+            {isEditable ? (
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate('/cotacoes')}
+                  className="px-5 py-2.5 text-sm"
+                >
+                  Cancelar
+                </Button>
+                <Button variant="primary" onClick={handleSave} className="px-5 py-2.5 text-sm">
+                  Salvar Cotação
+                </Button>
+                <div className="w-px h-8 bg-border-color mx-1" />
+                <Button
+                  variant="danger"
+                  onClick={handleReject}
+                  className="flex items-center gap-2 px-5 py-2.5 text-sm"
+                >
+                  <XCircleIcon className="w-4 h-4" /> Rejeitar
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleAccept}
+                  className="flex items-center gap-2 px-5 py-2.5 text-sm !bg-success hover:!bg-success/90"
+                >
+                  <CheckCircleIcon className="w-4 h-4" /> Aceitar
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={() => navigate('/cotacoes')}
+                className="px-5 py-2.5 text-sm"
+              >
+                Voltar
+              </Button>
+            )}
           </div>
         </div>
       </div>

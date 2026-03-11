@@ -29,6 +29,7 @@ import type {
   ManualIncome,
   CashBoxExpense,
   CashBoxCredit,
+  EmergencyFund,
   Reminder,
 } from '../../types';
 import { initialDocumentStorage, PAYMENT_METHODS } from '../../constants';
@@ -65,6 +66,7 @@ const KEYS = {
   CONTRACTDEADLINES: 'contract_deadlines',
   CASHBOXEXPENSES: 'cash_box_expenses',
   CASHBOXCREDITS: 'cash_box_credits',
+  EMERGENCYFUND: 'emergency_fund',
   REMINDERS: 'reminders',
 };
 
@@ -75,10 +77,33 @@ const DEFAULT_CONTRACT_DEADLINES: ContractDeadlinesSettings = {
   defaultExecutiveDeadlineDays: 30,
 };
 
+const DEFAULT_EMERGENCY_FUND: EmergencyFund = {
+  currentValue: 0,
+};
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const asList = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
+
+const asNonNegativeNumber = (value: unknown, fallback = 0): number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
+
+const normalizeEmergencyFund = (value: unknown): EmergencyFund => {
+  if (!isRecord(value)) {
+    return { ...DEFAULT_EMERGENCY_FUND };
+  }
+
+  const currentValue = asNonNegativeNumber(value.currentValue, DEFAULT_EMERGENCY_FUND.currentValue);
+  const targetValue =
+    typeof value.targetValue === 'number' &&
+    Number.isFinite(value.targetValue) &&
+    value.targetValue > 0
+      ? value.targetValue
+      : undefined;
+
+  return targetValue === undefined ? { currentValue } : { currentValue, targetValue };
+};
 
 const cloneSnapshot = (snapshot: AppData): AppData => {
   if (typeof structuredClone === 'function') {
@@ -114,6 +139,7 @@ const createDefaultAppData = (): AppData => ({
   contractDeadlines: { ...DEFAULT_CONTRACT_DEADLINES },
   cashBoxExpenses: [],
   cashBoxCredits: [],
+  emergencyFund: { ...DEFAULT_EMERGENCY_FUND },
   reminders: [],
 });
 
@@ -185,6 +211,7 @@ const normalizePersistedSnapshot = (snapshot: unknown): AppData => {
         : defaults.contractDeadlines,
     cashBoxExpenses: asList<CashBoxExpense>(snapshot.cashBoxExpenses),
     cashBoxCredits: asList<CashBoxCredit>(snapshot.cashBoxCredits),
+    emergencyFund: normalizeEmergencyFund(snapshot.emergencyFund),
     reminders: asList<Reminder>(snapshot.reminders),
   };
 
@@ -318,6 +345,7 @@ const storageKeyMap: { [P in keyof AppData]: string } = {
   contractDeadlines: KEYS.CONTRACTDEADLINES,
   cashBoxExpenses: KEYS.CASHBOXEXPENSES,
   cashBoxCredits: KEYS.CASHBOXCREDITS,
+  emergencyFund: KEYS.EMERGENCYFUND,
   reminders: KEYS.REMINDERS,
 };
 

@@ -33,7 +33,7 @@ const useLocalStorage = <T>(key: string, initialValue: T): [T, Dispatch<SetState
         setHydrated(true);
       })
       .catch((error) => {
-        console.error(`Error reading persisted UI preference key "${key}":`, error);
+        console.warn(`Error reading persisted UI preference key "${key}":`, error);
         if (!isMounted) return;
         setStoredValue(initialValueRef.current);
         setHydrated(true);
@@ -47,7 +47,7 @@ const useLocalStorage = <T>(key: string, initialValue: T): [T, Dispatch<SetState
   useEffect(() => {
     if (!isHydrated) return;
     void uiPreferenceService.setItem(key, storedValue).catch((error) => {
-      console.error(`Error setting persisted UI preference key "${key}":`, error);
+      console.warn(`Error setting persisted UI preference key "${key}":`, error);
     });
   }, [isHydrated, key, storedValue]);
 

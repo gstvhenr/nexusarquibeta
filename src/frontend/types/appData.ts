@@ -2,7 +2,13 @@ import type { AgendaEvent, ContractDeadlinesSettings, Reminder } from './agenda'
 import type { CashBoxCredit, CashBoxExpense } from './cashBox';
 import type { Client, Prospect } from './client';
 import type { DocumentStorage } from './document';
-import type { Commission, ManualIncome, PaymentMethod, ProfessionalExpense } from './finance';
+import type {
+  Commission,
+  EmergencyFund,
+  ManualIncome,
+  PaymentMethod,
+  ProfessionalExpense,
+} from './finance';
 import type { Freelancer, HiredService } from './freelancer';
 import type {
   MarketingActivity,
@@ -42,5 +48,6 @@ export interface AppData {
   contractDeadlines: ContractDeadlinesSettings;
   cashBoxExpenses: CashBoxExpense[];
   cashBoxCredits: CashBoxCredit[];
+  emergencyFund: EmergencyFund;
   reminders: Reminder[];
 }

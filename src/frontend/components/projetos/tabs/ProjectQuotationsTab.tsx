@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TrashIcon } from '../../ui/icons';
 import { IconButton } from '../../ui';
 import { Project, Quotation } from '@/types';
@@ -17,11 +18,16 @@ export const ProjectQuotationsTab: (props: QuotationsTabProps) => React.ReactNod
   onLink,
   onUnlink,
 }) => {
+  const navigate = useNavigate();
   const linkedQuotations = useMemo(() => {
-    return (project.linkedQuotationIds || [])
+    const linkedById = (project.linkedQuotationIds || [])
       .map((id) => allQuotations.find((q) => q.id === id))
       .filter((q): q is Quotation => !!q);
-  }, [project.linkedQuotationIds, allQuotations]);
+    const linkedByProjectId = allQuotations.filter(
+      (q) => q.projectId === project.id && !(project.linkedQuotationIds || []).includes(q.id),
+    );
+    return [...linkedById, ...linkedByProjectId];
+  }, [project.id, project.linkedQuotationIds, allQuotations]);
 
   return (
     <div className="space-y-4">
@@ -38,22 +44,36 @@ export const ProjectQuotationsTab: (props: QuotationsTabProps) => React.ReactNod
         linkedQuotations.map((q) => (
           <div
             key={q.id}
-            className="bg-background/50 p-4 rounded-lg flex justify-between items-center group"
+            onClick={() => navigate(`/cotacoes/${q.id}`)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate(`/cotacoes/${q.id}`);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            className="bg-background/50 p-4 rounded-lg flex justify-between items-center group cursor-pointer hover:bg-primary/5 transition-colors"
           >
             <div>
-              <h4 className="font-semibold text-text-primary">{q.name}</h4>
+              <h4 className="font-semibold text-text-primary group-hover:text-primary transition-colors">
+                {q.name}
+              </h4>
               <p className="text-xs text-text-secondary mt-1">Data: {formatDate(q.date)}</p>
             </div>
             <div className="flex items-center gap-4">
               <span
-                className={`px-2 py-1 text-xs font-bold rounded-full ${q.status === 'Finalizada' ? 'bg-success/20 text-success' : 'bg-info/20 text-info'}`}
+                className={`px-2 py-1 text-xs font-bold rounded-full ${q.status === 'Aceita' ? 'bg-success/20 text-success' : q.status === 'Rejeitada' ? 'bg-error/20 text-error' : 'bg-info/20 text-info'}`}
               >
                 {q.status}
               </span>
               <IconButton
                 variant="danger"
                 size="sm"
-                onClick={() => onUnlink(q.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnlink(q.id);
+                }}
                 aria-label="Desvincular cotação"
                 className="opacity-0 group-hover:opacity-100"
               >

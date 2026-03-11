@@ -9,6 +9,7 @@
  */
 
 import SQLiteESMFactory from 'wa-sqlite/dist/wa-sqlite-async.mjs';
+import wasmUrl from 'wa-sqlite/dist/wa-sqlite-async.wasm?url';
 import * as SQLite from 'wa-sqlite';
 // @ts-expect-error — wa-sqlite VFS modules lack TS declarations
 import { IDBBatchAtomicVFS } from 'wa-sqlite/src/examples/IDBBatchAtomicVFS.js';
@@ -16,14 +17,79 @@ import type { SqliteRpcRequest, SqliteRpcResponse } from './sqliteRpc';
 import { getSchemaStatements, getDurabilityPragmas } from './sqliteSchema';
 
 const DB_NAME = 'nexus_arqui';
+const WASM_FILE_NAME = 'wa-sqlite-async.wasm';
+const RESOLVED_WASM_URL = new URL(wasmUrl, self.location.href).href;
+const WASM_BOOTSTRAP_FAILURE_PATTERNS = [
+  'incorrect response mime type',
+  'application/wasm',
+  'magic word',
+  'failed to load wasm binary file',
+  'wasm streaming compile failed',
+  'falling back to arraybuffer instantiation',
+  'failed to asynchronously prepare wasm',
+  'both async and sync fetching of the wasm failed',
+  'aborted(',
+  'memory access out of bounds',
+  'cannot read properties of',
+  'unable to open database file',
+];
 
 let sqlite3: ReturnType<typeof SQLite.Factory> | null = null;
 let db: number | null = null;
 
+/** Tracks the current in-flight RPC id so unhandled rejections can respond. */
+let currentRpcId: string | null = null;
+
+// Catch stray promise rejections from wa-sqlite VFS internals (e.g. IDBBatchAtomicVFS)
+// that escape the main try/catch in the message handler.
+self.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+  const message = event.reason instanceof Error ? event.reason.message : String(event.reason);
+  const isKnown = isKnownWasmBootstrapFailure(message);
+
+  if (isKnown) {
+    event.preventDefault();
+  } else {
+    console.error('[SQLite Worker] unhandled rejection:', event.reason);
+  }
+
+  // Forward the error to the main thread so the pending RPC promise rejects
+  // and the fallback to IndexedDB can activate.
+  if (currentRpcId) {
+    const rpcId = currentRpcId;
+    currentRpcId = null;
+    self.postMessage({
+      id: rpcId,
+      ok: false,
+      error: `[VFS internal] ${message}`,
+    } satisfies SqliteRpcResponse);
+  }
+});
+
+function isKnownWasmBootstrapFailure(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return WASM_BOOTSTRAP_FAILURE_PATTERNS.some((pattern) => normalized.includes(pattern));
+}
+
+function locateSqliteWasm(file: string, prefix: string): string {
+  if (file === WASM_FILE_NAME) {
+    return RESOLVED_WASM_URL;
+  }
+  return `${prefix}${file}`;
+}
+
+function logSqliteFactoryError(message: unknown): void {
+  const text = String(message);
+  if (isKnownWasmBootstrapFailure(text)) return;
+  console.error(text);
+}
+
 async function initDatabase(): Promise<void> {
   if (db !== null) return;
 
-  const module = await SQLiteESMFactory();
+  const module = await SQLiteESMFactory({
+    locateFile: locateSqliteWasm,
+    printErr: logSqliteFactoryError,
+  });
   sqlite3 = SQLite.Factory(module);
 
   const vfs = new IDBBatchAtomicVFS(DB_NAME);
@@ -87,7 +153,12 @@ async function execBatch(statements: Array<{ sql: string }>): Promise<void> {
 // ── Message Handler ────────────────────────────────────────────────
 
 self.addEventListener('message', async (event: MessageEvent<SqliteRpcRequest>) => {
+  if (!event.data || typeof event.data.id !== 'string') {
+    console.warn('[SQLite Worker] received malformed message, ignoring.');
+    return;
+  }
   const { id, method, sql, statements } = event.data;
+  currentRpcId = id;
 
   const respond = (ok: boolean, result?: unknown, error?: string) => {
     self.postMessage({ id, ok, result, error } satisfies SqliteRpcResponse);
@@ -122,8 +193,13 @@ self.addEventListener('message', async (event: MessageEvent<SqliteRpcRequest>) =
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const isKnownFailure = isKnownWasmBootstrapFailure(message);
 
-    console.error(`[SQLite Worker] ${method} failed:`, error);
+    if (!isKnownFailure) {
+      console.error(`[SQLite Worker] ${method} failed:`, error);
+    }
     respond(false, undefined, message);
+  } finally {
+    currentRpcId = null;
   }
 });

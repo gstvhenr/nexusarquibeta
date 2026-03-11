@@ -193,7 +193,7 @@ const HomePage: () => React.ReactNode = () => {
           icon={<CashIcon className="w-6 h-6" />}
           color="bg-success text-success"
           subtext="Previsão de entrada"
-          onClick={() => navigate('/financeiro/recebiveis')}
+          onClick={() => navigate('/financeiro/historico?tipo=credit')}
         />
         <KPIBigCard
           label="Propostas"

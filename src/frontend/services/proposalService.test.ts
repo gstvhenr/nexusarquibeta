@@ -103,7 +103,7 @@ describe('proposalService.convertProposalToProject', () => {
     expect(result.newProject.code).toBe(proposal.code);
     expect(result.newProject.sections).toHaveLength(1);
     expect(result.newProjectFolder.projectId).toBe(result.newProject.id);
-    expect(result.newProjectFolder.children.length).toBeGreaterThan(0);
+    expect(result.newProjectFolder.children).toEqual([]);
 
     expect(result.updatedProposal.status).toBe('Concluído');
     expect(result.updatedProposal.archived).toBe(true);

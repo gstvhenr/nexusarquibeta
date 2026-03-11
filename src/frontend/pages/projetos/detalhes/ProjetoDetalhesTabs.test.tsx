@@ -61,7 +61,7 @@ function renderTabs(overrides: Partial<React.ComponentProps<typeof ProjetoDetalh
         id: 'qt-1',
         name: 'Cotação Estrutural',
         date: '2026-03-01',
-        status: 'Finalizada',
+        status: 'Aceita',
         items: [],
       },
     ],

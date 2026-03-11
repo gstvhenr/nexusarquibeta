@@ -18,6 +18,7 @@ import {
   KPICard,
   MarginBar,
   HealthBar,
+  EmergencyFundCard,
   DonutTooltip,
 } from '../../components/finance';
 import { ArrowUpCircleIcon, ArrowDownCircleIcon } from '../../components/ui';
@@ -25,7 +26,10 @@ import { ArrowUpCircleIcon, ArrowDownCircleIcon } from '../../components/ui';
 const DEFAULT_CATEGORY_COLOR = 'hsl(0, 0%, 55%)';
 const DEFAULT_RECEIVABLE_COLOR = 'hsl(160, 40%, 50%)';
 
-type DonutView = 'expenses' | 'income';
+type DonutView = 'all' | 'expenses' | 'income';
+
+const ALL_EXPENSES_COLOR = 'hsl(0, 72%, 56%)';
+const ALL_INCOME_COLOR = 'hsl(142, 64%, 44%)';
 
 /** Builds a Date set to the 1st of the month offset from today. */
 const getOffsetDate = (offset: number): Date => {
@@ -129,14 +133,35 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
     [receivablesBySource],
   );
 
-  const activeDonutData = donutView === 'expenses' ? expensesWithColors : receivablesWithColors;
+  const combinedAllData = useMemo(() => {
+    const totalExpenses = expensesByCategory.reduce((s, c) => s + c.value, 0);
+    const totalIncome = receivablesBySource.reduce((s, c) => s + c.value, 0);
+    const items: Array<{ category: string; value: number; color: string }> = [];
+    if (totalExpenses > 0)
+      items.push({ category: 'Despesas', value: totalExpenses, color: ALL_EXPENSES_COLOR });
+    if (totalIncome > 0)
+      items.push({ category: 'Recebidos', value: totalIncome, color: ALL_INCOME_COLOR });
+    return items;
+  }, [expensesByCategory, receivablesBySource]);
+
+  const activeDonutData =
+    donutView === 'all'
+      ? combinedAllData
+      : donutView === 'expenses'
+        ? expensesWithColors
+        : receivablesWithColors;
   const totalDonutValue = activeDonutData.reduce((s, c) => s + c.value, 0);
 
   return (
     <div className="animate-fade-in-up h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 min-h-0">
-        <div className="space-y-5">
-          <PageHeader title="Visão Geral" subtitle={monthLabel} icon={financeiroIcon}>
+      <div className="flex-1 flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 min-h-0 overflow-hidden">
+        <div className="flex flex-col flex-1 min-h-0 gap-3">
+          <PageHeader
+            title="Visão Geral"
+            subtitle={monthLabel}
+            icon={financeiroIcon}
+            contentGap="none"
+          >
             <div className="flex items-center bg-surface border border-border-color/50 rounded-lg p-1 shadow-sm">
               <button
                 type="button"
@@ -190,8 +215,8 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
             </button>
           </PageHeader>
 
-          {/* ── ROW 1: KPI Cards + Margin Bar ────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* ── ROW 1: KPI Cards + Margin Bar + Reserve ────────── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <KPICard
               title="Receita (Mês)"
               value={formatCurrency(kpis.receitaMensal)}
@@ -218,14 +243,15 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
               despesa={kpis.despesaMensal}
               margin={profitMargin}
             />
+            <EmergencyFundCard monthlyExpenseBaseline={kpis.despesaMensal} />
           </div>
 
           {/* ── ROW 2: Saúde Financeira + Valores Mensais (Donut) ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-[5fr_7fr] gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-[5fr_7fr] gap-3 flex-1 min-h-0">
             {/* Saúde Financeira */}
-            <CardShell className="p-5 flex flex-col">
+            <CardShell className="p-4 flex flex-col min-h-0 overflow-hidden">
               <SectionTitle>Saúde Financeira</SectionTitle>
-              <div className="space-y-5 flex-1">
+              <div className="space-y-3 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-1 h-4 rounded-full bg-gradient-to-b from-success to-emerald-400" />
@@ -252,7 +278,7 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                     />
                   </div>
                 </div>
-                <div className="border-t border-border-color/30 pt-4">
+                <div className="border-t border-border-color/30 pt-3">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-1 h-4 rounded-full bg-gradient-to-b from-error to-rose-400" />
                     <p className="text-xs font-semibold text-text-primary">Débitos</p>
@@ -282,11 +308,23 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
             </CardShell>
 
             {/* Valores Mensais Donut */}
-            <CardShell className="p-5 flex flex-col">
+            <CardShell className="p-4 flex flex-col min-h-0 overflow-hidden">
               {/* Header: title + toggle */}
               <div className="flex items-center justify-between mb-3">
                 <SectionTitle>Valores Mensais</SectionTitle>
                 <div className="flex gap-1 bg-background/60 rounded-lg p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setDonutView('all')}
+                    className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all duration-200
+                      ${
+                        donutView === 'all'
+                          ? 'bg-primary/15 text-primary shadow-sm'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-background/80'
+                      }`}
+                  >
+                    Todos
+                  </button>
                   <button
                     type="button"
                     onClick={() => setDonutView('expenses')}
@@ -319,12 +357,14 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                     className="flex justify-center relative my-1"
                     role="img"
                     aria-label={
-                      donutView === 'expenses'
-                        ? 'Gráfico de rosca mostrando a distribuição de despesas por categoria no mês atual'
-                        : 'Gráfico de rosca mostrando a distribuição de receitas recebidas por fonte no mês atual'
+                      donutView === 'all'
+                        ? 'Gráfico de rosca mostrando despesas e receitas do mês atual'
+                        : donutView === 'expenses'
+                          ? 'Gráfico de rosca mostrando a distribuição de despesas por categoria no mês atual'
+                          : 'Gráfico de rosca mostrando a distribuição de receitas recebidas por fonte no mês atual'
                     }
                   >
-                    <ResponsiveContainer width={180} height={180}>
+                    <ResponsiveContainer width={150} height={150}>
                       <PieChart>
                         <Pie
                           data={activeDonutData}
@@ -332,8 +372,8 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                           nameKey="category"
                           cx="50%"
                           cy="50%"
-                          innerRadius={55}
-                          outerRadius={82}
+                          innerRadius={45}
+                          outerRadius={68}
                           paddingAngle={3}
                           stroke="none"
                           cornerRadius={4}
@@ -355,7 +395,7 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 mt-2">
+                  <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-1 mt-1">
                     {activeDonutData.slice(0, 6).map((cat, i) => {
                       const pct =
                         totalDonutValue > 0
@@ -391,9 +431,11 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
               ) : (
                 <div className="flex-1 flex items-center justify-center">
                   <p className="text-text-secondary text-xs">
-                    {donutView === 'expenses'
-                      ? 'Nenhuma despesa registrada neste mês.'
-                      : 'Nenhum recebimento registrado neste mês.'}
+                    {donutView === 'all'
+                      ? 'Nenhum registro financeiro neste mês.'
+                      : donutView === 'expenses'
+                        ? 'Nenhuma despesa registrada neste mês.'
+                        : 'Nenhum recebimento registrado neste mês.'}
                   </p>
                 </div>
               )}

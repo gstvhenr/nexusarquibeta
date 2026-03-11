@@ -15,7 +15,7 @@ describe('constants/ui', () => {
     const expectedChildrenCountByLabel: Record<string, number> = {
       Agenda: 4,
       Comercial: 3,
-      Financeiro: 5,
+      Financeiro: 4,
       Documentos: 2,
       Suprimentos: 4,
       Marketing: 4,

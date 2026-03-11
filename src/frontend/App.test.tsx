@@ -9,7 +9,7 @@ import { FinancialSecurityProvider } from './context/FinancialSecurityContext';
 
 const LocationProbe: () => React.ReactNode = () => {
   const location = useLocation();
-  return <div data-testid="location">{location.pathname}</div>;
+  return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
 };
 
 const renderApp = (initialPath: string) =>
@@ -100,6 +100,22 @@ describe('App entrypoint', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/relatorios/financeiro');
+    }, REDIRECT_WAIT_OPTIONS);
+  });
+
+  it('redirects legacy receivables route to unified history with credit mode', async () => {
+    renderApp('/financeiro/recebiveis');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).toHaveTextContent('/financeiro/historico?tipo=credit');
+    }, REDIRECT_WAIT_OPTIONS);
+  });
+
+  it('redirects legacy debits route to unified history with debit mode', async () => {
+    renderApp('/financeiro/debitos');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).toHaveTextContent('/financeiro/historico?tipo=debit');
     }, REDIRECT_WAIT_OPTIONS);
   });
 });

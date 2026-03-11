@@ -27,7 +27,7 @@ vi.mock('@/constants', () => ({
   NAV_LINKS: [
     {
       label: 'Agenda',
-      children: [{ label: 'Bloco de Notas', icon: null }],
+      children: [{ label: 'Anotações', icon: null }],
     },
   ],
 }));
@@ -46,12 +46,12 @@ describe('BlocoDeNotasPage', () => {
   });
 
   describe('initial state', () => {
-    it('renders the page title "Bloco de Notas"', () => {
+    it('renders the page title "Anotações"', () => {
       // Arrange / Act
       render(<BlocoDeNotasPage />);
 
       // Assert
-      expect(screen.getByText('Bloco de Notas')).toBeInTheDocument();
+      expect(screen.getByText('Anotações')).toBeInTheDocument();
     });
 
     it('renders the initial default tab with title "Sem título"', () => {

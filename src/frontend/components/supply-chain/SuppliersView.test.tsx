@@ -78,7 +78,7 @@ const makeQuotation = (overrides: Partial<Quotation> = {}): Quotation => ({
   date: '2026-02-20',
   items: [{ productId: 'prod-1', quantity: 2 }],
   selections: { 'prod-1': 'sup-1' },
-  status: 'Finalizada',
+  status: 'Aceita',
   ...overrides,
 });
 
@@ -175,7 +175,7 @@ describe('SuppliersView', () => {
         quotations={[
           makeQuotation({
             id: 'q1',
-            status: 'Finalizada',
+            status: 'Aceita',
             selections: { 'prod-1': 'sup-a' },
             items: [{ productId: 'prod-1', quantity: 2 }],
           }),
@@ -187,7 +187,7 @@ describe('SuppliersView', () => {
           }),
           makeQuotation({
             id: 'q3',
-            status: 'Finalizada',
+            status: 'Aceita',
             selections: { 'prod-1': 'sup-b' },
             items: [{ productId: 'prod-1', quantity: 5 }],
           }),

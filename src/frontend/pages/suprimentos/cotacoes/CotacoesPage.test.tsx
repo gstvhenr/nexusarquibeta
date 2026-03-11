@@ -47,7 +47,7 @@ describe('CotacoesPage', () => {
           projectId: 'proj-1',
           items: [],
           selections: {},
-          status: 'Finalizada',
+          status: 'Aceita',
           archived: true,
         },
       ],

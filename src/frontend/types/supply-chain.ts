@@ -59,6 +59,6 @@ export interface Quotation {
   projectId?: string;
   items: QuotationItem[];
   selections?: { [productId: string]: string };
-  status: 'Em Aberto' | 'Finalizada';
+  status: 'Em Aberto' | 'Aceita' | 'Rejeitada';
   archived?: boolean;
 }
