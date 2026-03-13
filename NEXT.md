@@ -1,35 +1,37 @@
 # NEXT.md
 
-## Regra de sessão (obrigatória)
-
-- Atualizar este arquivo ao final de toda sessão de agente.
-- Se houver mudança estrutural, registrar também em `DECISIONS-active.md` e/ou ADR.
-
 ## Regra de archival
 
 - Quando este arquivo ultrapassar ~100 linhas, mover sessões antigas para `docs/changelog/session-log-YYYY-MM.md`.
-- Manter aqui apenas: última sessão + próximo passo + bloqueios.
-- Histórico completo até 2026-02-16: `docs/changelog/session-log-2026-02.md`.
-- Histórico de sessões 36-56 (2026-03-04 a 2026-03-06): `docs/changelog/session-log-2026-03.md`.
 
-## Último estado conhecido (2026-03-11, Suspensão de testes na fase beta)
+## Último estado conhecido (2026-03-13)
 
-- Removidos todos os 70 arquivos `*.test.ts` e `*.test.tsx` de `src/frontend/`.
-- Infraestrutura de teste preservada: `vitest.config.ts`, `src/frontend/test/setup.ts`, `src/frontend/test/fixtures/*`.
-- Decisão registrada em `DECISIONS-active.md` com contexto, consequências e plano de reversão.
-- Motivação: testes desatualizados bloqueavam `npm run typecheck` e causavam conflitos frequentes durante desenvolvimento rápido em fase beta.
+Segunda rodada de auditoria de `docs/`. Cruzamento completo dos ~30 arquivos em `docs/` contra a árvore real de `src/frontend/`. Correção dos 4 últimos arquivos com paths legados.
 
-### O que mudou
+### Checklist desta sessão
 
-- 70 arquivos `*.test.*` removidos de `src/frontend/`.
-- `DECISIONS-active.md`: nova entrada documentando a suspensão.
-- `NEXT.md`: atualizado com o status desta sessão.
+- [x] Auditoria completa de ~30 arquivos em `docs/` contra árvore real
+- [x] Correção de `docs/design-system/design-tokens.md` (2 paths: theme.ts e ThemeContext)
+- [x] Correção de `docs/process/continuous-update-policy.md` (2 paths: test/fixtures)
+- [x] Correção de `docs/examples/canonical-component-client-row.md` (FinanceiroRecebiveisPage → FinanceiroVisaoGeralPage)
+- [x] Correção de `docs/examples/hook-extraction.md` (ProjetoDetalhesPageContent path completo)
+- [x] Prettier + `npm run verify:quick` → PASS
 
-### Bloqueios e dúvidas
+### Concluído nesta sessão
 
-- Nenhum bloqueio. Pipeline deve estar desbloqueado com a remoção dos testes.
+- `docs/design-system/design-tokens.md` — paths corrigidos para `src/frontend/constants/theme.ts` e `src/frontend/context/ThemeContext.tsx`.
+- `docs/process/continuous-update-policy.md` — paths corrigidos para `src/frontend/test/`.
+- `docs/examples/canonical-component-client-row.md` — referência a página inexistente substituída.
+- `docs/examples/hook-extraction.md` — path completo para `projetos/detalhes/`.
+
+## Evidências da sessão
+
+- `npm run verify:quick` → PASS (typecheck + lint + format:check + check:docs:governance)
 
 ## Próximo passo exato
 
-- Executar `npm run verify` para confirmar pipeline verde sem testes.
-- Reintroduzir testes quando contratos de dados estabilizarem, priorizando `services/` e `utils/`.
+1. Aguardar direcionamento do usuário para novas tarefas de engenharia, features, ou auditorias de outros escopos críticos.
+
+## Bloqueios e dúvidas
+
+- Sem bloqueios.

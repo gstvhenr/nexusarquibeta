@@ -13,6 +13,7 @@ Nexus-Arqui é um ERP web para escritório de arquitetura (clientes, propostas, 
 ## Regra de sessão (memória zero)
 
 - Ler no início: `AGENTS.md`, `CONTEXT.md`, `NEXT.md`, `.agent/lessons-learned.md`.
+- Se tarefa envolver arquitetura/estrutura: ler também `ARCHITECTURE.md`.
 - Em `.agent/lessons-learned.md`, ignorar entradas com `## Status: SUPERSEDED`.
 - Usar `DECISIONS-active.md` como registro de decisões vigente.
 - Atualizar `NEXT.md` ao final de toda sessão.

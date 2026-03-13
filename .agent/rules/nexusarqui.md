@@ -3,8 +3,10 @@ trigger: always_on
 ---
 
 <!-- SOURCE OF TRUTH: este arquivo é a versão canônica das regras negativas.
-     O MEMORY[nexusarqui.md] nas user rules do Antigravity deve conter apenas
-     um ponteiro para este arquivo, nunca uma cópia do conteúdo completo. -->
+     As user rules do Antigravity (RULE[nexusarqui.md]) contêm uma cópia
+     sincronizada deste conteúdo. Ao alterar este arquivo, a cópia nas
+     user rules DEVE ser atualizada manualmente pelo usuário para manter
+     consistência. Última sincronização: 2026-03-12. -->
 
 # NEXUS-ARQUI AGENT RULES (aligned with AGENTS.md)
 
@@ -35,7 +37,7 @@ Maintain architectural integrity and delivery safety for Nexus-Arqui (React + Ty
 
 - Public services must keep short JSDoc (`input -> output` + example).
 - Contract shape changes must update `docs/data-contracts/types-contracts.md`.
-- Contract shape changes must update `src/test/fixtures/*` and `src/test/golden-fixtures.test.ts`.
+- Contract shape changes must update test fixtures when reintroduced (currently removed — see NEXT.md).
 
 ## 5. Output discipline
 
@@ -138,7 +140,7 @@ Maintain architectural integrity and delivery safety for Nexus-Arqui (React + Ty
 
 ❌ NAO: Snapshot tests para validar logica de negocio.  
 ✅ FACA: Assertions explicitas (expect(result).toBe(expected)).  
-📎 AGENTS.md recomenda "evitar snapshots frageis" (Regra G.3).
+📎 Snapshots frageis sao anti-pattern para logica de negocio (Regra G.3).
 
 ### 6.7 Divida-Primeiro + Prova de Higiene
 

@@ -48,7 +48,7 @@ Ponteiros hierárquicos para o agente. **Não carregar todos os arquivos no iní
 
 ### Workflows e prompts do agente
 
-- `.agent/workflows/*` — Playbooks ativos (24 workflows; ver diretório para lista completa).
+- `.agent/workflows/*` — Playbooks ativos (30 workflows; ver diretório para lista completa).
 
 **Stack**: React + TypeScript strict + Vite + Vitest + TailwindCSS.
 **Storage**: IndexedDB snapshot store (fallback volátil em memória para ambientes sem IDB).

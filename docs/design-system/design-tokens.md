@@ -2,8 +2,8 @@
 
 Referência formal dos tokens do design system Nexus-Arqui.
 
-**Fonte de verdade**: [`src/theme.ts`](file:///c:/Users/gustavo.geraldo/Documents/05.%20Nexus-Arqui%20%28Beta%29/src/theme.ts)
-**Consumo**: [`ThemeContext.tsx`](file:///c:/Users/gustavo.geraldo/Documents/05.%20Nexus-Arqui%20%28Beta%29/src/context/ThemeContext.tsx) injeta CSS variables em `:root` (light) e `html.dark` (dark).
+**Fonte de verdade**: [`src/frontend/constants/theme.ts`](file:///c:/Users/gustavo.geraldo/Documents/05.%20Nexus-Arqui%20%28Beta%29/src/frontend/constants/theme.ts)
+**Consumo**: [`ThemeContext.tsx`](file:///c:/Users/gustavo.geraldo/Documents/05.%20Nexus-Arqui%20%28Beta%29/src/frontend/context/ThemeContext.tsx) injeta CSS variables em `:root` (light) e `html.dark` (dark).
 **Tailwind**: [`tailwind.config.cjs`](file:///c:/Users/gustavo.geraldo/Documents/05.%20Nexus-Arqui%20%28Beta%29/tailwind.config.cjs) mapeia CSS variables para classes utilitárias.
 
 ---
@@ -12,7 +12,7 @@ Referência formal dos tokens do design system Nexus-Arqui.
 
 ```mermaid
 graph LR
-    A["src/theme.ts<br/>(tokens object)"] --> B["ThemeContext.tsx<br/>(CSS variables :root)"]
+    A["src/frontend/theme.ts<br/>(tokens object)"] --> B["ThemeContext.tsx<br/>(CSS variables :root)"]
     B --> C["tailwind.config.cjs<br/>(utility classes)"]
     C --> D["Componentes<br/>(className)"]
     B --> E["index.css<br/>(custom components)"]

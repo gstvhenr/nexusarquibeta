@@ -6,8 +6,8 @@ Modelo de decomposição de página monolítica, baseado em caso real.
 
 ## Arquivos de referência
 
-- Orquestrador: `src/pages/FornecedoresPage.tsx`
-- Componentes extraídos: `src/components/supply-chain/*`
+- Orquestrador: `src/frontend/pages/FornecedoresPage.tsx`
+- Componentes extraídos: `src/frontend/components/supply-chain/*`
 - Checklist: `docs/checklists/refactor-hotspot.md`
 
 ## Contexto: por que decompor

@@ -8,7 +8,7 @@
 
 ## Execução
 
-- [ ] Extrair lógica pura para `src/services` ou `src/utils`.
+- [ ] Extrair lógica pura para `src/frontend/services` ou `src/frontend/utils`.
 - [ ] Reduzir a página/componente para composição.
 - [ ] Evitar mudanças visuais acidentais junto do refactor.
 

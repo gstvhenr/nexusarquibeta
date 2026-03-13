@@ -22,7 +22,7 @@
 ### [2026-02-16] - [TYPECHECK] - Incompatibilidade de RefObject em props de subcomponente
 
 **Erro encontrado:** `npm run typecheck` falhou com `TS2322` ao passar `dropdownRef` para componente de formulario (`RefObject<HTMLDivElement | null>` nao atribuivel a `LegacyRef<HTMLDivElement>`).
-**Arquivo(s) afetado(s):** `src/components/clientes/client-form/types.ts`, `src/components/clientes/client-form/ClientFormInfoAddressStatus.tsx`.
+**Arquivo(s) afetado(s):** `src/frontend/components/clientes/client-form/types.ts`, `src/frontend/components/clientes/client-form/ClientFormInfoAddressStatus.tsx`.
 **Causa raiz:** Assinatura de props usou `React.RefObject<HTMLDivElement | null>` em vez de `React.RefObject<HTMLDivElement>`, gerando mismatch com a tipagem esperada no atributo `ref`.
 **Correcao aplicada:** Padronizacao dos props para `React.RefObject<HTMLDivElement>` e rerun de `npm run typecheck` + `npm run verify` ate `[VERIFY][LOOP][PASS]`.
 **Regra negativa derivada:** Ao propagar refs para elementos JSX, manter o mesmo contrato de `RefObject<T>` do elemento-alvo e evitar incluir `null` no parametro generico da prop.
@@ -30,7 +30,7 @@
 ### [2026-02-16] - [TYPECHECK] - Import type usado como valor em JSX fragmentado
 
 **Erro encontrado:** `TS1361` em `GanttTimeline`: `React` foi importado com `import type` e depois usado como valor em `<React.Fragment>`.
-**Arquivo(s) afetado(s):** `src/components/projetos/tabs/project-gantt/GanttTimeline.tsx`.
+**Arquivo(s) afetado(s):** `src/frontend/components/projetos/tabs/project-gantt/GanttTimeline.tsx`.
 **Causa raiz:** Refatoracao para subcomponentes preservou `React.Fragment`, mas o import foi alterado para tipo-only.
 **Correcao aplicada:** Troca para `import React from 'react'` e rerun de `npm run typecheck` + `npm run verify` ate `[VERIFY][LOOP][PASS]`.
 **Regra negativa derivada:** Se o arquivo usa `React.*` em runtime (ex.: `React.Fragment`), nao usar `import type React`; preferir import de valor ou fragmento curto `<>...</>`.
@@ -38,7 +38,7 @@
 ### [2026-02-16] - [TYPECHECK] - Assumir formato incorreto de retorno em helper de status
 
 **Erro encontrado:** `TS2551/TS2339` ao iterar retorno de `getStatusSelectionOptions`, tratando itens como objetos (`value/label/disabled`) quando o helper retorna `ContractAddendumStatus[]`.
-**Arquivo(s) afetado(s):** `src/components/projetos/tabs/project-finance/ProjectFinanceAddendumsSection.tsx`.
+**Arquivo(s) afetado(s):** `src/frontend/components/projetos/tabs/project-finance/ProjectFinanceAddendumsSection.tsx`.
 **Causa raiz:** Durante a extração para subcomponente, o select de status foi copiado com contrato de dados divergente do utilitário real.
 **Correcao aplicada:** Ajuste para mapear status simples (`<option key={status} value={status}>`) e fallback de status para `Pendente`.
 **Regra negativa derivada:** Antes de extrair UI baseada em utilitários, validar assinatura/retorno real do helper no arquivo de origem para não introduzir contratos implícitos incorretos.
@@ -46,7 +46,7 @@
 ### [2026-02-16] - [TEST:COVERAGE] - Timeout intermitente em teste de modal
 
 **Erro encontrado:** `npm run verify` falhou em `test:coverage` com timeout (`5000ms`) em `DeleteConfirmationModal.test.tsx`.
-**Arquivo(s) afetado(s):** `src/components/ui/DeleteConfirmationModal.test.tsx`.
+**Arquivo(s) afetado(s):** `src/frontend/components/ui/DeleteConfirmationModal.test.tsx`.
 **Causa raiz:** Teste de UI suscetivel a variacao de performance do ambiente de execucao, sem margem de timeout dedicada.
 **Correcao aplicada:** Simplificacao para `fireEvent` + cleanup deterministico do `modal-root` e timeout explicito do caso (`15000ms`); rerun de `npm run verify` ate `[VERIFY][LOOP][PASS]`.
 **Regra negativa derivada:** Para testes unitarios de modal via portal em pipeline compartilhado, definir cleanup explicito e timeout local quando houver historico de flake por latencia.
@@ -54,7 +54,7 @@
 ### [2026-02-28] - [ARCHITECTURE] - Estado global mutável em singleton quebra isolamento read/write
 
 **Erro encontrado:** `loadData()` retornava referência viva ao singleton `appData` e `updateData()` fazia mutação in-place (`memoryData[key] = data`). Chamadas "de leitura" observavam efeitos colaterais sem transação explícita. `replaceData()` aceitava referência externa sem clone.
-**Arquivo(s) afetado(s):** `src/services/infrastructure/loadData.ts`.
+**Arquivo(s) afetado(s):** `src/frontend/services/infrastructure/loadData.ts`.
 **Causa raiz:** Otimização prematura — evitar custo de clone em leitura — sacrificou isolamento semântico entre operações de leitura e escrita no singleton.
 **Correção aplicada:** (1) `loadData()` retorna `cloneSnapshot(appData)` (clone-on-read); (2) `updateData()` cria novo snapshot via spread `{ ...appData, [key]: data }` (immutable-update); (3) `replaceData()` clona entrada via `cloneSnapshot(snapshot)` (clone-on-write). 8/8 gates verdes.
 **Regra negativa derivada:** Nunca expor referência viva a estado singleton mutável. Toda leitura deve retornar clone defensivo; toda escrita deve criar novo objeto em vez de mutar in-place.
@@ -62,7 +62,7 @@
 ### [2026-02-16] - [TYPECHECK] - Type assertion direta em fixture parcial de dominio
 
 **Erro encontrado:** `npm run typecheck` falhou com `TS2352` ao converter objeto parcial diretamente para `Project` em `agendaService.test.ts`.
-**Arquivo(s) afetado(s):** `src/services/agendaService.test.ts`.
+**Arquivo(s) afetado(s):** `src/frontend/services/agendaService.test.ts`.
 **Causa raiz:** Novo cenário de teste usou fixture reduzida com cast direto `as Project`/`as Commission`, sem compatibilidade estrutural minima.
 **Correcao aplicada:** Ajuste de assertions para `as unknown as Project` e `as unknown as Commission`, seguido de rerun de `npm run typecheck` + `npm run verify` ate `[VERIFY][LOOP][PASS]`.
 **Regra negativa derivada:** Em testes com fixtures parciais de entidades complexas, nao usar cast direto para tipo de dominio; usar `unknown` intermediario ou builder tipado completo.
@@ -78,7 +78,7 @@
 ### [2026-03-01] - [TYPECHECK] - Paths relativos quebrados apos move de utilitario
 
 **Erro encontrado:** No micro-batch P7.1, `npm run verify` falhou no `typecheck` com `TS2307` em `src/utils/budgetHelpers.ts` (`Cannot find module '../../types'` e `../../constants/budget`) logo após mover o arquivo de `pages` para `utils`.
-**Arquivo(s) afetado(s):** `src/utils/budgetHelpers.ts`.
+**Arquivo(s) afetado(s):** `src/frontend/utils/budgetHelpers.ts`.
 **Causa raiz:** O move preservou imports relativos do diretório antigo (`src/pages/orcamentos`), que ficaram um nível acima no novo destino (`src/utils`).
 **Correcao aplicada:** Ajuste imediato dos imports para `../types` e `../constants/budget`, seguido de novo `npm run verify` até `[VERIFY][LOOP][PASS]`.
 **Regra negativa derivada:** Em qualquer move de arquivo `.ts/.tsx`, validar primeiro os imports internos do próprio arquivo movido (antes do gate) para garantir correção do nível relativo.
@@ -86,7 +86,7 @@
 ### [2026-03-01] - [FORMAT] - Arquivo movido sem formatacao final do Prettier
 
 **Erro encontrado:** No micro-batch P8, `npm run verify` falhou no gate `format:check` com warning em `src/utils/addendumUtils.ts`.
-**Arquivo(s) afetado(s):** `src/utils/addendumUtils.ts`.
+**Arquivo(s) afetado(s):** `src/frontend/utils/addendumUtils.ts`.
 **Causa raiz:** Ajustes de imports após move deixaram o arquivo fora do estilo final esperado, sem rodar formatador local antes do gate.
 **Correcao aplicada:** Execução de `npx prettier --write src/utils/addendumUtils.ts` e rerun de `npm run verify` até `[VERIFY][LOOP][PASS]`.
 **Regra negativa derivada:** Após mover e editar utilitários, rodar formatação local no arquivo alterado antes do `verify` para evitar falha desnecessária no gate `format:check`.

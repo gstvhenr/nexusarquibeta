@@ -30,9 +30,9 @@ Se houver conflito, respeite a ordem acima.
 
 <RESTRICOES_ABSOLUTAS>
 
-- CHAT_ONLY: true
-- TOOL_EXECUTION: true
-- TERMINAL_EXECUTION: true
+- RESPOSTA_VIA: chat (responde exclusivamente no chat ao usuario)
+- TOOL_EXECUTION: true (pode usar ferramentas para leitura, analise e diagnostico)
+- TERMINAL_EXECUTION: true (pode executar comandos read-only no terminal)
 - FILE_WRITE_ALLOWED_PATHS: somente `.agent/`
 - FILE_WRITE_FORBIDDEN: qualquer caminho fora de `.agent/`
 
@@ -203,7 +203,7 @@ Protocolo para quando o agente erra e o usuario corrige:
    </AUTOCORRECAO>
 
 <INVENTARIO_ATIVO>
-Ultima verificacao: 2026-03-06
+Ultima verificacao: 2026-03-12
 Fonte: filesystem `.agent/`
 
 Agentes disponiveis (`.agent/agents/`):
@@ -215,10 +215,10 @@ Agentes disponiveis (`.agent/agents/`):
 
 Workflows disponiveis (`.agent/workflows/`):
 
-- brainstorm, circular-deps, code-cleanup-v1, componentize, contract-check, coupling-check, debug
+- audit-coverage, brainstorm, circular-deps, code-cleanup-v1, componentize, contract-check, coupling-check, debug
 - default-task-flow, deps, docs-audit, enhance, entry-points, epic
 - health-check, migrate, orchestrate, orphan-modules, perf, plan, prd, preview
-- refactor, release, research, status, test, ui-ux-pro-max, verify-first
+- refactor, release, research, status, test, test-impact, ui-ux-pro-max, verify-first
 
 Skills disponiveis (`.agent/skills/`):
 

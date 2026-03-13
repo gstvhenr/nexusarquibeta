@@ -7,9 +7,9 @@ Este exemplo é a REFERÊNCIA OFICIAL para novos services e testes.
 
 ## Arquivos de referência
 
-- Serviço: `src/services/clientService.ts`
-- Teste: `src/services/clientService.test.ts`
-- Fixture: `src/test/fixtures/client.fixture.json`
+- Serviço: `src/frontend/services/clientService.ts`
+- Teste: `src/frontend/services/clientService.test.ts`
+- Fixture: `src/frontend/test/fixtures/client.fixture.json`
 
 ## Padrão mínimo obrigatório
 

@@ -2,14 +2,14 @@
 
 ## Estado atual
 
-- Migração completa: todos os tipos vivem em `src/types/*` (módulos de domínio).
-- `src/types.ts` é um barrel puro que re-exporta de `src/types/index.ts`.
-- Contratos de séries financeiras adicionados em `src/types/financial-series.ts` para padronizar período/filtros/agregação mensal.
+- Migração completa: todos os tipos vivem em `src/frontend/types/*` (módulos de domínio).
+- `src/frontend/types.ts` é um barrel puro que re-exporta de `src/frontend/types/index.ts`.
+- Contratos de séries financeiras adicionados em `src/frontend/types/financial-series.ts` para padronizar período/filtros/agregação mensal.
 
 ## Fonte de verdade de contratos
 
-- Tipos canônicos vivem em `src/types/*` (módulos de domínio).
-- `src/types.ts` e `src/types/index.ts` são barrels puros — não contêm definições.
+- Tipos canônicos vivem em `src/frontend/types/*` (módulos de domínio).
+- `src/frontend/types.ts` e `src/frontend/types/index.ts` são barrels puros — não contêm definições.
 - Este documento rastreia decisões de shape e fixtures canônicas.
 - Mudança em contrato público sem atualização deste documento é considerada incompleta.
 
@@ -22,43 +22,43 @@
 
 ## Golden fixtures (anti-regressão de shape)
 
-- Local: `src/test/fixtures/`.
+- Local: `src/frontend/test/fixtures/`.
 - Domínios canônicos iniciais:
   - `client.fixture.json`
   - `project.fixture.json`
   - `proposal.fixture.json`
-- Teste de contrato: `src/test/golden-fixtures.test.ts`.
+- Teste de contrato: `src/frontend/test/golden-fixtures.test.ts`.
 
 ## Checklist de alteração de contrato
 
 - [ ] Tipo alterado mapeado (quem consome).
 - [ ] Impacto em services/pages identificado.
-- [ ] Fixtures canônicas atualizadas (`src/test/fixtures/*`) quando houver mudança de shape.
-- [ ] Golden tests atualizados (`src/test/golden-fixtures.test.ts`).
+- [ ] Fixtures canônicas atualizadas (`src/frontend/test/fixtures/*`) quando houver mudança de shape.
+- [ ] Golden tests atualizados (`src/frontend/test/golden-fixtures.test.ts`).
 - [ ] Testes atualizados.
 - [ ] Gate canônico de `AGENTS.md` verde.
 
 ## Subtask (Agenda / Projeto)
 
-- Arquivo: `src/types/project.ts`
+- Arquivo: `src/frontend/types/project.ts`
 - Campos: `id`, `title`, `completed`, `completedAt?` (ISO datetime de conclusão), `taskId?`
 - Usada em `AgendaEvent.subtasks` e `ProjectTask.subtasks`
 - `completedAt` é gravado automaticamente ao marcar como concluída e limpo ao desmarcar.
 
 ## Contrato de navegação (UI-agnostic)
 
-- Arquivo: `src/types/common.ts`
+- Arquivo: `src/frontend/types/common.ts`
 - Tipo: `NavLinkItem`
 - Campos canônicos:
   - `icon: JSX.Element`
   - `iconName: NavIconName`
 - `NavIconName` é definido como union por template literal:
   - `` `${string}Icon` | `${string}IconNew` ``
-- Objetivo: manter o contrato de tipos desacoplado de `src/components/ui/icons.tsx` para evitar dependência de camada de implementação em `src/types/*`.
+- Objetivo: manter o contrato de tipos desacoplado de `src/frontend/components/ui/icons.tsx` para evitar dependência de camada de implementação em `src/frontend/types/*`.
 
 ## Contratos de séries financeiras (Financeiro)
 
-- Arquivo: `src/types/financial-series.ts`
+- Arquivo: `src/frontend/types/financial-series.ts`
 - Tipos canônicos:
   - `PeriodMode`: `LAST_12_MONTHS | QUARTER | SEMESTER | YEAR`
   - `PeriodSelection`: `{ mode, year? }`

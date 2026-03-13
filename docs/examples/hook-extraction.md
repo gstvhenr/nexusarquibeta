@@ -6,9 +6,9 @@ Mostrar como extrair lógica de componente para hook customizado mantendo UI foc
 
 ## Arquivos de referência
 
-- Hook: `src/hooks/useProjectChecklist.ts`
-- Componente consumidor: `src/components/projetos/tabs/ProjectChecklistTab.tsx`
-- Página orquestradora: `src/pages/ProjetoDetalhesPageContent.tsx`
+- Hook: `src/frontend/hooks/useProjectChecklist.ts`
+- Componente consumidor: `src/frontend/components/projetos/tabs/ProjectChecklistTab.tsx`
+- Página orquestradora: `src/frontend/pages/projetos/detalhes/ProjetoDetalhesPageContent.tsx`
 
 ## Contexto
 
@@ -59,7 +59,7 @@ const ProjectChecklistTab = ({ localProject, setLocalProject }) => {
 ## Depois (extração para hook)
 
 ```tsx
-// src/hooks/useProjectChecklist.ts
+// src/frontend/hooks/useProjectChecklist.ts
 export function useProjectChecklist(setLocalProject: ProjectSetter) {
   const handleAddTask = (sectionId: string) =>
     setLocalProject((p) =>

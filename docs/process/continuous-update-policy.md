@@ -16,7 +16,7 @@
 - Execução repetível: `docs/checklists/*`
 - Auditoria de consistência: `docs/audits/*`
 - Exemplos canônicos: `docs/examples/*`
-- Contratos de shape: `src/test/fixtures/*` e `src/test/golden-fixtures.test.ts`
+- Contratos de shape: `src/frontend/test/fixtures/*` e `src/frontend/test/golden-fixtures.test.ts`
 
 ## Definição prática
 

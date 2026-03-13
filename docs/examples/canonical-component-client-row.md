@@ -4,7 +4,7 @@ Objetivo: oferecer um modelo de componente de apresentação com Tailwind e padr
 
 ## Arquivo de referência
 
-- `src/components/clientes/ClientTableRow.tsx`
+- `src/frontend/components/clientes/ClientTableRow.tsx`
 
 ## Padrão mínimo obrigatório
 
@@ -56,8 +56,8 @@ Se o padrão mudar, atualizar este exemplo e registrar em `DECISIONS-active.md`/
 
 ## Exemplo avançado
 
-Referências reais: `src/components/finance/FinanceLineChart.tsx` e
-`src/pages/FinanceiroRecebiveisPage.tsx`.
+Referências reais: `src/frontend/components/finance/FinanceLineChart.tsx` e
+`src/frontend/pages/financeiro/FinanceiroVisaoGeralPage.tsx`.
 
 ```tsx
 import { forwardRef, useMemo, type ReactNode } from 'react';

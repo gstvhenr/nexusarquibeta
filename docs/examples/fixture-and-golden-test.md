@@ -6,14 +6,14 @@ Documentar como criar e manter fixtures canônicas com teste de contrato (golden
 
 ## Arquivos de referência
 
-- Teste de contrato: `src/test/golden-fixtures.test.ts`
-- Fixtures canônicas: `src/test/fixtures/client.fixture.json`, `src/test/fixtures/project.fixture.json`, `src/test/fixtures/proposal.fixture.json`
+- Teste de contrato: `src/frontend/test/golden-fixtures.test.ts`
+- Fixtures canônicas: `src/frontend/test/fixtures/client.fixture.json`, `src/frontend/test/fixtures/project.fixture.json`, `src/frontend/test/fixtures/proposal.fixture.json`
 - Contratos de tipos: `docs/data-contracts/types-contracts.md`
 
 ## Fluxo recomendado (create/update)
 
-1. Atualizar a fixture alvo em `src/test/fixtures/*` com shape final esperado.
-2. Atualizar o teste em `src/test/golden-fixtures.test.ts` com `expectExactKeys(...)` para refletir o contrato oficial.
+1. Atualizar a fixture alvo em `src/frontend/test/fixtures/*` com shape final esperado.
+2. Atualizar o teste em `src/frontend/test/golden-fixtures.test.ts` com `expectExactKeys(...)` para refletir o contrato oficial.
 3. Rodar `npm run test` para validar a suíte rápida.
 4. Rodar `npm run verify` para garantir loop completo de qualidade.
 5. Se o shape mudou por regra de domínio, atualizar `docs/data-contracts/types-contracts.md`.
@@ -21,7 +21,7 @@ Documentar como criar e manter fixtures canônicas com teste de contrato (golden
 ## Exemplo canônico
 
 ```ts
-// src/test/golden-fixtures.test.ts
+// src/frontend/test/golden-fixtures.test.ts
 const expectExactKeys = (value: unknown, expectedKeys: string[]): Record<string, unknown> => {
   expect(value).not.toBeNull();
   expect(typeof value).toBe('object');
