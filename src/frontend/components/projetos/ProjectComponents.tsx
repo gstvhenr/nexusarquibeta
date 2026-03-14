@@ -8,6 +8,13 @@ import { IconButton } from '../ui';
 import { getDeadlineInfo } from '../../utils/formatters';
 import { calculateProjectProgress } from '../../services/dashboardService';
 
+const DEADLINE_STATUS_CLASS = {
+  overdue: 'text-error font-bold',
+  soon: 'text-warning font-bold',
+  ok: 'text-text-primary',
+  none: 'text-text-secondary',
+} as const;
+
 export const ProjectStatusSummaryPanel: (props: {
   counts: Record<ProjectStatus, number>;
 }) => React.ReactNode = React.memo(({ counts }) => (
@@ -137,7 +144,9 @@ export const ProjectListItem: (props: {
       {/* Status & Actions Section */}
       <div className="flex items-center justify-between sm:justify-end gap-4 sm:ml-auto border-t sm:border-t-0 border-border-color pt-3 sm:pt-0 shrink-0">
         <div className="text-left sm:text-right">
-          <p className={`font-bold text-xs ${deadlineInfo.className}`}>{deadlineInfo.text}</p>
+          <p className={`font-bold text-xs ${DEADLINE_STATUS_CLASS[deadlineInfo.status]}`}>
+            {deadlineInfo.text}
+          </p>
           <p className="text-[9px] uppercase tracking-wider text-text-secondary mt-0.5">
             Prazo Final
           </p>

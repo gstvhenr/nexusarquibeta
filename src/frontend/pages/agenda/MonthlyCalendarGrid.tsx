@@ -52,10 +52,10 @@ function MonthlyCalendarGrid({
             .sort((a, b) => (typeof b === 'number' ? b : 0) - (typeof a === 'number' ? a : 0))
             .slice(0, 8)
             .map((p, i) => {
-              let dotClass = 'bg-gray-300';
-              if (p === 'deadline') dotClass = 'bg-purple-500';
-              else if (p === 'income') dotClass = 'bg-emerald-400';
-              else if (p === 'expense') dotClass = 'bg-rose-400';
+              let dotClass = 'bg-text-secondary/40';
+              if (p === 'deadline') dotClass = 'bg-error';
+              else if (p === 'income') dotClass = 'bg-success';
+              else if (p === 'expense') dotClass = 'bg-error/70';
               else if (typeof p === 'number') dotClass = priorityColors[p]?.dotClass || dotClass;
               return <div key={i} className={`w-2 h-2 rounded-full ${dotClass}`} />;
             })}
@@ -82,8 +82,8 @@ function MonthlyCalendarGrid({
 
       if (isWeekend && !isSelected && !isDifferentMonth) {
         bgClass = isPast
-          ? 'bg-gray-100/60 dark:bg-gray-800/25'
-          : 'bg-gray-100/60 dark:bg-gray-800/30';
+          ? 'bg-background/60 dark:bg-background/25'
+          : 'bg-background/60 dark:bg-background/30';
         textClass = 'text-text-secondary';
       }
 

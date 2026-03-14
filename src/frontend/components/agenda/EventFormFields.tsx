@@ -121,6 +121,7 @@ function EventFormFields({
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <input
+                id={`${formId}-time-start`}
                 type="time"
                 value={editedEvent.time || ''}
                 onChange={(e) => onChange('time', e.target.value)}
@@ -130,6 +131,7 @@ function EventFormFields({
               />
               <span className="text-text-secondary">-</span>
               <input
+                id={`${formId}-time-end`}
                 type="time"
                 value={editedEvent.timeEnd || ''}
                 onChange={(e) => onChange('timeEnd', e.target.value)}
@@ -141,6 +143,7 @@ function EventFormFields({
             <div className="flex items-center gap-4 mt-1">
               <label className={checkboxLabelClass}>
                 <input
+                  id={`${formId}-all-day`}
                   type="checkbox"
                   checked={!!editedEvent.isAllDay}
                   onChange={(e) => onChange('isAllDay', e.target.checked)}
@@ -150,6 +153,7 @@ function EventFormFields({
               </label>
               <label className={checkboxLabelClass}>
                 <input
+                  id={`${formId}-no-end-time`}
                   type="checkbox"
                   checked={noEndTime}
                   onChange={(e) => onNoEndTimeChange(e.target.checked)}
@@ -186,6 +190,7 @@ function EventFormFields({
               ))}
           </select>
           <select
+            id={`${formId}-project`}
             value={editedEvent.projectId || ''}
             onChange={(e) => onProjectChange(e.target.value)}
             className={inputClass}

@@ -21,6 +21,31 @@ type TaskCardProps = {
   onDragStart?: (event: React.DragEvent, id: string) => void;
 };
 
+type TaskTone = (typeof priorityConfig)[number]['tone'];
+
+const TASK_TONE_CLASS: Record<TaskTone, { card: string; pill: string }> = {
+  info: {
+    card: 'bg-info/10 border-info/20 dark:bg-info/10 dark:border-info/20',
+    pill: 'bg-surface/50 text-info dark:text-info',
+  },
+  success: {
+    card: 'bg-success/10 border-success/20 dark:bg-success/10 dark:border-success/20',
+    pill: 'bg-surface/50 text-success dark:text-success',
+  },
+  warning: {
+    card: 'bg-warning/10 border-warning/20 dark:bg-warning/10 dark:border-warning/20',
+    pill: 'bg-surface/50 text-warning dark:text-warning',
+  },
+  accent: {
+    card: 'bg-warning/15 border-warning/25 dark:bg-warning/12 dark:border-warning/20',
+    pill: 'bg-surface/50 text-warning dark:text-warning',
+  },
+  danger: {
+    card: 'bg-error/10 border-error/20 dark:bg-error/10 dark:border-error/20',
+    pill: 'bg-surface/50 text-error dark:text-error',
+  },
+};
+
 export function TaskCard({
   task,
   isArchivedView = false,
@@ -31,7 +56,8 @@ export function TaskCard({
   onArchiveToggle,
   onDragStart,
 }: TaskCardProps): JSX.Element {
-  const style = priorityConfig[task.priority] || priorityConfig[3];
+  const priority = priorityConfig[task.priority] || priorityConfig[3];
+  const toneClass = TASK_TONE_CLASS[priority.tone];
   const isOverdue = new Date(task.date) < new Date() && !task.completed;
   const subtasks = task.subtasks || [];
   const completedSubs = subtasks.filter((subtask) => subtask.completed).length;
@@ -53,15 +79,15 @@ export function TaskCard({
       className={`
         relative group p-4 rounded-xl shadow-sm border cursor-pointer
         transition-all duration-300 hover:shadow-md hover:scale-[1.02]
-        ${style.bg} ${style.border}
+        ${toneClass.card}
         ${isArchivedView ? 'opacity-75 hover:opacity-100' : task.completed ? 'opacity-60 grayscale-[0.5]' : ''}
       `}
     >
       <div className="flex justify-between items-start mb-2">
         <span
-          className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide bg-surface/50 ${style.text}`}
+          className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${toneClass.pill}`}
         >
-          {style.label}
+          {priority.label}
         </span>
         <div className="flex items-center gap-1">
           <IconButton
@@ -120,14 +146,14 @@ export function TaskCard({
             <div className="flex items-center gap-2 mb-1.5">
               <div className="flex-1 bg-black/5 dark:bg-white/5 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ease-out ${completedSubs === subtasks.length ? 'bg-emerald-500' : 'bg-primary/70'}`}
+                  className={`h-full rounded-full transition-all duration-500 ease-out ${completedSubs === subtasks.length ? 'bg-success' : 'bg-primary/70'}`}
                   style={{
                     width: `${(completedSubs / subtasks.length) * 100}%`,
                   }}
                 />
               </div>
               <span
-                className={`text-[10px] font-bold tabular-nums ${completedSubs === subtasks.length ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-secondary'}`}
+                className={`text-[10px] font-bold tabular-nums ${completedSubs === subtasks.length ? 'text-success dark:text-success' : 'text-text-secondary'}`}
               >
                 {completedSubs}/{subtasks.length}
               </span>

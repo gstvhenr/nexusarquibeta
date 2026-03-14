@@ -1,4 +1,4 @@
-import { Modal } from '../../components/ui';
+import { Input, Modal } from '../../components/ui';
 
 type ClearDataModalProps = {
   isOpen: boolean;
@@ -27,11 +27,11 @@ export function ClearDataModal({
           abaixo.
         </p>
         <div>
-          <input
+          <Input
             type="text"
             value={clearConfirmationText}
             onChange={(event) => onChangeConfirmationText(event.target.value)}
-            className="w-full bg-background p-2 rounded-md border border-border-color text-center font-mono"
+            className="text-center font-mono"
             aria-label="Digite EXCLUIR para confirmar"
           />
         </div>

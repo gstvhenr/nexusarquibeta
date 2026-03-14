@@ -19,6 +19,16 @@
 
 ---
 
+### [2026-03-13] - [A11Y] - `aria-selected` em tabs deve receber booleano sem serializacao manual
+
+**Erro encontrado:** Microsoft Edge Tools (`axe/aria`) sinalizou `Invalid ARIA attribute value: aria-selected="{expression}"` em tabs renderizadas por botao com `role="tab"`.
+**Arquivo(s) afetado(s):** `src/frontend/pages/agenda/bloco-de-notas/BlocoDeNotasPage.tsx`, `src/frontend/components/ui/Tabs.tsx`.
+**Causa raiz:** O atributo foi passado como string derivada (`'true'` / `'false'`) em vez do booleano JSX original, o que gerou interpretacao invalida no validador de acessibilidade usado no browser.
+**Correcao aplicada:** Troca de `aria-selected={active ? 'true' : 'false'}` para `aria-selected={active}` nos gatilhos de aba afetados.
+**Regra negativa derivada:** Em JSX para atributos ARIA booleanos/booleanish, nao serializar manualmente `true/false` como string quando o valor de estado booleano ja existe; passar o booleano diretamente.
+
+---
+
 ### [2026-02-16] - [TYPECHECK] - Incompatibilidade de RefObject em props de subcomponente
 
 **Erro encontrado:** `npm run typecheck` falhou com `TS2322` ao passar `dropdownRef` para componente de formulario (`RefObject<HTMLDivElement | null>` nao atribuivel a `LegacyRef<HTMLDivElement>`).

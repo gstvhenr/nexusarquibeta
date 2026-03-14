@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 
 import {
   ArchiveIcon,
@@ -12,10 +12,11 @@ import { useCoreData } from '@/context/DataContext';
 import { NAV_LINKS } from '@/constants';
 import { PageHeader } from '@/components/layout';
 import { ProposalListItem } from '@/components/propostas';
+import { useDisclosure } from '@/hooks';
 
-const PropostasPage: () => React.ReactNode = () => {
+function PropostasPage(): JSX.Element {
   const { proposals, setProposals, projects } = useCoreData();
-  const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const deleteDisclosure = useDisclosure();
   const [proposalToInteract, setProposalToInteract] = useState<Proposal | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
@@ -51,16 +52,19 @@ const PropostasPage: () => React.ReactNode = () => {
     [sortedProposals, showArchived],
   );
 
-  const handleDeleteRequest = useCallback((proposal: Proposal) => {
-    setProposalToInteract(proposal);
-    setDeleteConfirmOpen(true);
-  }, []);
+  const handleDeleteRequest = useCallback(
+    (proposal: Proposal) => {
+      setProposalToInteract(proposal);
+      deleteDisclosure.open();
+    },
+    [deleteDisclosure],
+  );
 
   const handleDeleteConfirm = () => {
     if (proposalToInteract) {
       setProposals((prev) => prev.filter((p) => p.id !== proposalToInteract.id));
     }
-    setDeleteConfirmOpen(false);
+    deleteDisclosure.close();
     setProposalToInteract(null);
   };
 
@@ -129,14 +133,14 @@ const PropostasPage: () => React.ReactNode = () => {
       )}
 
       <DeleteConfirmationModal
-        isOpen={isDeleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
+        isOpen={deleteDisclosure.isOpen}
+        onClose={deleteDisclosure.close}
         onConfirm={handleDeleteConfirm}
         itemName={proposalToInteract?.name || ''}
         itemType="Proposta"
       />
     </div>
   );
-};
+}
 
 export default PropostasPage;

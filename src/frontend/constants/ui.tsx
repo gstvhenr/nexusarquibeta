@@ -285,7 +285,7 @@ export const SOCIAL_NETWORKS_SUPPORTED: {
     id: 'Instagram',
     name: 'Instagram',
     icon: <InstagramIcon />,
-    color: 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500',
+    color: 'bg-gradient-to-tr from-yellow-400 via-red-500 to-pink-500',
     placeholder: 'https://instagram.com/seu_usuario',
   },
   {

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { useSystemData } from '@/context/DataContext';
 import { PageHeader } from '@/components/layout';
 import {
@@ -28,8 +29,8 @@ import type { Reminder } from '@/types';
 const LembretesPage: () => React.ReactNode = () => {
   const { reminders, setReminders } = useSystemData();
 
-  const [isFormOpen, setFormOpen] = useState(false);
-  const [isDeleteOpen, setDeleteOpen] = useState(false);
+  const formModal = useDisclosure();
+  const deleteModal = useDisclosure();
   const [selected, setSelected] = useState<Reminder | null>(null);
   const [toDelete, setToDelete] = useState<Reminder | null>(null);
   const [rescheduleMode, setRescheduleMode] = useState(false);
@@ -63,21 +64,21 @@ const LembretesPage: () => React.ReactNode = () => {
   const openAdd = () => {
     setSelected(null);
     setRescheduleMode(false);
-    setFormOpen(true);
+    formModal.open();
   };
   const openEdit = (r: Reminder) => {
     setSelected(r);
     setRescheduleMode(false);
-    setFormOpen(true);
+    formModal.open();
   };
   const openReschedule = (r: Reminder) => {
     setSelected(r);
     setRescheduleMode(true);
-    setFormOpen(true);
+    formModal.open();
   };
   const confirmDelete = (r: Reminder) => {
     setToDelete(r);
-    setDeleteOpen(true);
+    deleteModal.open();
   };
 
   const handleSave = useCallback(
@@ -93,7 +94,7 @@ const LembretesPage: () => React.ReactNode = () => {
   const handleDelete = () => {
     if (!toDelete) return;
     setReminders((prev) => prev.filter((x) => x.id !== toDelete.id));
-    setDeleteOpen(false);
+    deleteModal.close();
     setToDelete(null);
   };
 
@@ -139,17 +140,18 @@ const LembretesPage: () => React.ReactNode = () => {
       <PageHeader title="Lembretes" icon={pageIcon}>
         <div className="flex items-center gap-3">
           {completedReminders.length > 0 && (
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setShowCompleted((v) => !v)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-colors flex items-center gap-2 ${
+              className={`px-4 py-2 text-sm font-semibold border gap-2 ${
                 showCompleted
-                  ? 'bg-emerald-500/10 text-emerald-600 border-emerald-300 dark:border-emerald-600'
+                  ? 'bg-success/10 text-success border-success/30 dark:border-success/50'
                   : 'bg-surface text-text-secondary border-border-color hover:bg-background'
               }`}
             >
               <ArchiveIcon className="w-4 h-4" />
               Concluídos ({completedReminders.length})
-            </button>
+            </Button>
           )}
           <Button
             variant="primary"
@@ -192,8 +194,8 @@ const LembretesPage: () => React.ReactNode = () => {
                         {/* Sticky tape / pin at top */}
                         {reminder.pinned ? (
                           <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
-                            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-red-400 to-red-500 shadow-sm border border-red-300/50 flex items-center justify-center">
-                              <div className="w-1.5 h-1.5 rounded-full bg-red-700/50" />
+                            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-error/70 to-error shadow-sm border border-error/30 flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 rounded-full bg-error/50" />
                             </div>
                           </div>
                         ) : (
@@ -209,11 +211,12 @@ const LembretesPage: () => React.ReactNode = () => {
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault();
-                              (() => openEdit(reminder))();
+                              openEdit(reminder);
                             }
                           }}
                           role="button"
                           tabIndex={0}
+                          aria-label={`Editar lembrete: ${reminder.title}`}
                         >
                           {/* Title */}
                           <h3 className="font-bold text-text-primary text-sm leading-snug mb-2 line-clamp-2">
@@ -227,57 +230,64 @@ const LembretesPage: () => React.ReactNode = () => {
                             </p>
                           )}
 
-                          {/* Date badge + URL */}
-                          {(reminder.remindAt || reminder.externalUrl) && (
+                          {/* Date badge (no interactive children) */}
+                          {reminder.remindAt && (
                             <div className="mt-auto pt-3 border-t border-black/[0.06] dark:border-white/[0.06] border-dashed flex flex-wrap items-center gap-2">
-                              {reminder.remindAt && (
-                                <span
-                                  className={`
-                                      inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full
-                                      ${
-                                        past
-                                          ? 'bg-error/10 text-error'
-                                          : 'bg-surface/60 text-text-secondary'
-                                      }
-                                    `}
-                                >
-                                  <ClockIcon />
-                                  {formatDateTime(reminder.remindAt)}
-                                </span>
-                              )}
-                              {reminder.externalUrl && (
-                                <a
-                                  href={reminder.externalUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                                >
-                                  <LinkIcon />
-                                  Link
-                                </a>
-                              )}
+                              <span
+                                className={`
+                                    inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full
+                                    ${
+                                      past
+                                        ? 'bg-error/10 text-error'
+                                        : 'bg-surface/60 text-text-secondary'
+                                    }
+                                  `}
+                              >
+                                <ClockIcon />
+                                {formatDateTime(reminder.remindAt)}
+                              </span>
                             </div>
                           )}
                         </div>
 
+                        {/* External URL link - outside role=button to avoid nested interactive controls */}
+                        {reminder.externalUrl && (
+                          <div className="px-5 pb-3">
+                            {!reminder.remindAt && (
+                              <div className="border-t border-black/[0.06] dark:border-white/[0.06] border-dashed mb-2" />
+                            )}
+                            <a
+                              href={reminder.externalUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                            >
+                              <LinkIcon />
+                              Link
+                            </a>
+                          </div>
+                        )}
+
                         {/* ── Action buttons (on hover) ── */}
                         <div className="absolute top-1.5 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                           {/* Pin */}
-                          <button
+                          <IconButton
+                            variant="default"
+                            size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               togglePin(reminder.id);
                             }}
-                            className={`p-1.5 rounded-full transition-all ${
+                            className={`p-1.5 rounded-full ${
                               reminder.pinned
-                                ? 'text-red-600 bg-red-100/80 dark:bg-red-400/20'
-                                : 'text-gray-500 hover:text-amber-700 hover:bg-amber-100/80 dark:hover:bg-amber-400/20'
+                                ? 'text-error bg-error/10 dark:bg-error/20'
+                                : 'text-text-secondary hover:text-warning hover:bg-warning/10 dark:hover:bg-warning/20'
                             }`}
                             title={reminder.pinned ? 'Desafixar' : 'Fixar'}
+                            aria-label={reminder.pinned ? 'Desafixar' : 'Fixar'}
                           >
                             <PinIcon className="w-3.5 h-3.5" filled={!!reminder.pinned} />
-                          </button>
+                          </IconButton>
                           {/* Complete */}
                           <IconButton
                             variant="default"
@@ -288,7 +298,7 @@ const LembretesPage: () => React.ReactNode = () => {
                             }}
                             aria-label="Concluir"
                             title="Concluir"
-                            className="hover:text-emerald-600 hover:bg-emerald-100/80 dark:hover:bg-emerald-400/20"
+                            className="hover:text-success hover:bg-success/10 dark:hover:bg-success/20"
                           >
                             <CheckCircleIcon className="w-3.5 h-3.5" />
                           </IconButton>
@@ -302,7 +312,7 @@ const LembretesPage: () => React.ReactNode = () => {
                             }}
                             aria-label="Reagendar"
                             title="Reagendar"
-                            className="hover:text-sky-600 hover:bg-sky-100/80 dark:hover:bg-sky-400/20"
+                            className="hover:text-info hover:bg-info/10 dark:hover:bg-info/20"
                           >
                             <CalendarIcon className="w-3.5 h-3.5" />
                           </IconButton>
@@ -379,9 +389,9 @@ const LembretesPage: () => React.ReactNode = () => {
 
       {/* ── Modals ── */}
       <ReminderFormModal
-        isOpen={isFormOpen}
+        isOpen={formModal.isOpen}
         onClose={() => {
-          setFormOpen(false);
+          formModal.close();
           setRescheduleMode(false);
         }}
         onSave={handleSave}
@@ -391,8 +401,8 @@ const LembretesPage: () => React.ReactNode = () => {
       />
 
       <DeleteConfirmationModal
-        isOpen={isDeleteOpen}
-        onClose={() => setDeleteOpen(false)}
+        isOpen={deleteModal.isOpen}
+        onClose={deleteModal.close}
         onConfirm={handleDelete}
         itemName={toDelete?.title || ''}
         itemType="Lembrete"

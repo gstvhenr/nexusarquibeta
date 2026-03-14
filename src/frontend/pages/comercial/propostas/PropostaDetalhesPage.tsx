@@ -1,12 +1,13 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAutoReset } from '@/hooks/useAutoReset';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { useParams, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { PageHeader } from '@/components/layout';
 import { useCoreData, useSystemData } from '@/context/DataContext';
 import type { ProposalBlock, ProjectAddress } from '@/types';
-import { Modal, Button } from '@/components/ui';
+import { Modal, Button, Select, LinkIcon, CheckCircleIcon, AlertIcon } from '@/components/ui';
 
 import { proposalService } from '@/services/proposalService';
 import { NAV_LINKS } from '@/constants';
@@ -17,7 +18,7 @@ import { validateClientForProject } from '@/services/clientService';
 
 // --- PAGE COMPONENT ---
 
-const PropostaDetalhesPage: () => React.ReactNode = () => {
+function PropostaDetalhesPage(): JSX.Element | null {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { proposals, setProposals, projects, setProjects, clients, setClients } = useCoreData();
@@ -55,14 +56,15 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
   }, [proposal]);
 
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const [isConversionModalOpen, setConversionModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isLinkClientModalOpen, setLinkClientModalOpen] = useState(false);
+  const conversionDisclosure = useDisclosure();
+  const closeConversionModal = conversionDisclosure.close;
+  const linkClientDisclosure = useDisclosure();
   const [selectedClientId, setSelectedClientId] = useState('');
 
   // Validation State
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [isValidationModalOpen, setValidationModalOpen] = useState(false);
+  const validationDisclosure = useDisclosure();
   const [toast, setToast] = useAutoReset<{ message: string; type: 'success' | 'error' } | null>(
     null,
     3500,
@@ -128,7 +130,7 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
       if (eligibleClients.length > 0) {
         setSelectedClientId(eligibleClients[0].id);
       }
-      setLinkClientModalOpen(true);
+      linkClientDisclosure.open();
       return;
     }
 
@@ -143,9 +145,9 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
 
     if (!validation.valid) {
       setValidationErrors(validation.missingFields);
-      setValidationModalOpen(true);
+      validationDisclosure.open();
     } else {
-      setConversionModalOpen(true);
+      conversionDisclosure.open();
     }
   };
 
@@ -164,15 +166,15 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
         p.id === proposal.id ? { ...p, clientId: selectedClientId, name: linkedClient.name } : p,
       ),
     );
-    setLinkClientModalOpen(false);
+    linkClientDisclosure.close();
 
     // Now validate and proceed with conversion
     const validation = validateClientForProject(linkedClient);
     if (!validation.valid) {
       setValidationErrors(validation.missingFields);
-      setValidationModalOpen(true);
+      validationDisclosure.open();
     } else {
-      setConversionModalOpen(true);
+      conversionDisclosure.open();
     }
   };
 
@@ -206,7 +208,7 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
       }));
       setAgendaEvents(result.updatedAgendaEvents);
 
-      setConversionModalOpen(false);
+      closeConversionModal();
       setToast({ message: 'Projeto criado com sucesso!', type: 'success' });
       navigate(`/projetos/${result.newProject.id}`);
     },
@@ -220,6 +222,7 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
       setAgendaEvents,
       navigate,
       contractDeadlines,
+      closeConversionModal,
       setToast,
     ],
   );
@@ -284,41 +287,36 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
   return (
     <div className="animate-fade-in-up pb-24">
       <PageHeader title={`${proposal.name} - ${proposal.code}`} icon={propostasIcon}>
-        <button
-          onClick={() => navigate(-1)}
-          className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-background border border-border-color hover:bg-background/80"
-        >
+        <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
           Voltar
-        </button>
+        </Button>
         {isEditMode ? (
-          <button
-            onClick={saveBlocks}
-            className="px-4 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-          >
+          <Button type="button" variant="primary" onClick={saveBlocks}>
             Salvar Edição
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
+            type="button"
+            variant="secondary"
             onClick={() => setIsEditMode(true)}
-            className="px-4 py-2 rounded-lg font-semibold text-primary bg-primary/10 hover:bg-primary/20"
+            className="bg-primary/10 text-primary border-primary/10 hover:bg-primary/20"
           >
             Editar Documento
-          </button>
+          </Button>
         )}
-        <button
+        <Button
+          type="button"
+          variant="secondary"
           onClick={handleExportPdf}
           disabled={isExportingPdf}
-          className="px-4 py-2 rounded-lg font-semibold text-orange-700 bg-orange-100 hover:bg-orange-200"
+          className="bg-warning/10 text-warning border-warning/20 hover:bg-warning/20"
         >
           {isExportingPdf ? 'Gerando...' : 'PDF'}
-        </button>
+        </Button>
         {!projectExists && (
-          <button
-            onClick={handleConversionClick}
-            className="px-4 py-2 rounded-lg font-semibold text-primary-content bg-secondary hover:bg-secondary-focus"
-          >
+          <Button type="button" variant="primary" onClick={handleConversionClick}>
             Converter para Projeto
-          </button>
+          </Button>
         )}
       </PageHeader>
 
@@ -335,7 +333,7 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
                 type="checkbox"
                 checked={showItemPrices}
                 onChange={toggleShowItemPrices}
-                className="w-4 h-4 rounded border-gray-300 accent-primary/70 focus:ring-primary/70"
+                className="w-4 h-4 rounded border-border-color accent-primary/70 focus:ring-primary/70"
               />
               <span className="text-sm text-text-primary group-hover:text-primary transition-colors">
                 Valores individuais
@@ -346,7 +344,7 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
                 type="checkbox"
                 checked={showSectionTotals}
                 onChange={toggleShowSectionTotals}
-                className="w-4 h-4 rounded border-gray-300 accent-primary/70 focus:ring-primary/70"
+                className="w-4 h-4 rounded border-border-color accent-primary/70 focus:ring-primary/70"
               />
               <span className="text-sm text-text-primary group-hover:text-primary transition-colors">
                 Subtotais de seção
@@ -360,7 +358,7 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
                 checked={showDiscount}
                 onChange={toggleShowDiscount}
                 disabled={!hasDiscount}
-                className="w-4 h-4 rounded border-gray-300 accent-primary/70 focus:ring-primary/70"
+                className="w-4 h-4 rounded border-border-color accent-primary/70 focus:ring-primary/70"
               />
               <span className="text-sm text-text-primary group-hover:text-primary transition-colors">
                 Desconto
@@ -372,7 +370,7 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
               type="checkbox"
               checked={showGrandTotal}
               onChange={toggleShowGrandTotal}
-              className="w-4 h-4 rounded border-gray-300 accent-primary/70 focus:ring-primary/70"
+              className="w-4 h-4 rounded border-border-color accent-primary/70 focus:ring-primary/70"
             />
             <span className="text-sm text-text-primary group-hover:text-primary transition-colors">
               Total geral
@@ -383,7 +381,7 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
               type="checkbox"
               checked={showProposalDate}
               onChange={toggleShowProposalDate}
-              className="w-4 h-4 rounded border-gray-300 accent-primary/70 focus:ring-primary/70"
+              className="w-4 h-4 rounded border-border-color accent-primary/70 focus:ring-primary/70"
             />
             <span className="text-sm text-text-primary group-hover:text-primary transition-colors">
               Data
@@ -393,39 +391,30 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
             <label htmlFor="totals-alignment" className="text-sm text-text-primary">
               Alinhamento dos totais
             </label>
-            <select
+            <Select
               id="totals-alignment"
               value={totalsAlignment}
               onChange={(e) => handleTotalsAlignmentChange(e.target.value as 'right' | 'left')}
-              className="bg-background p-2 rounded-md border border-border-color text-sm text-text-primary"
-            >
-              <option value="right">Direita</option>
-              <option value="left">Esquerda</option>
-            </select>
+              options={[
+                { value: 'right', label: 'Direita' },
+                { value: 'left', label: 'Esquerda' },
+              ]}
+              className="text-sm"
+              wrapperClassName="min-w-[9rem]"
+            />
           </div>
         </div>
 
         {linkedProject && (
-          <button
+          <Button
+            type="button"
+            variant="secondary"
             onClick={() => navigate(`/projetos/${linkedProject.id}`)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20"
+            className="flex items-center gap-2 text-sm bg-accent/10 text-accent border-accent/20 hover:bg-accent/20"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.06a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.34 8.636"
-              />
-            </svg>
+            <LinkIcon className="w-4 h-4" />
             Vinculado ao {linkedProject.code}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -446,14 +435,14 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
       {client && (
         <>
           <ConversionModal
-            isOpen={isConversionModalOpen}
-            onClose={() => setConversionModalOpen(false)}
+            isOpen={conversionDisclosure.isOpen}
+            onClose={conversionDisclosure.close}
             onConfirm={convertProposal}
             clientAddress={client.address}
           />
           <ValidationModal
-            isOpen={isValidationModalOpen}
-            onClose={() => setValidationModalOpen(false)}
+            isOpen={validationDisclosure.isOpen}
+            onClose={validationDisclosure.close}
             errors={validationErrors}
             onRedirect={() => navigate(`/clientes/${client.id}`)}
           />
@@ -462,8 +451,8 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
 
       {/* Link Client Modal — shown when converting a proposal without a linked client */}
       <Modal
-        isOpen={isLinkClientModalOpen}
-        onClose={() => setLinkClientModalOpen(false)}
+        isOpen={linkClientDisclosure.isOpen}
+        onClose={linkClientDisclosure.close}
         title="Vincular Cliente"
       >
         <div className="space-y-4">
@@ -472,24 +461,16 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
           </p>
           {eligibleClients.length > 0 ? (
             <div>
-              <label
-                htmlFor="linkClientSelect"
-                className="block text-sm font-medium text-text-secondary mb-2"
-              >
-                Selecione o Cliente
-              </label>
-              <select
+              <Select
                 id="linkClientSelect"
+                label="Selecione o Cliente"
                 value={selectedClientId}
                 onChange={(e) => setSelectedClientId(e.target.value)}
-                className="w-full bg-background p-3 rounded-md border border-border-color"
-              >
-                {eligibleClients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                options={eligibleClients.map((c) => ({
+                  value: c.id,
+                  label: c.name,
+                }))}
+              />
             </div>
           ) : (
             <p className="text-warning text-sm">
@@ -498,7 +479,7 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
           )}
         </div>
         <div className="flex justify-end space-x-4 mt-8">
-          <Button variant="secondary" onClick={() => setLinkClientModalOpen(false)}>
+          <Button variant="secondary" onClick={linkClientDisclosure.close}>
             Cancelar
           </Button>
           <Button
@@ -516,38 +497,14 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
           <div
             className={`flex items-center gap-3 px-5 py-3 rounded-xl bg-surface border shadow-lg backdrop-blur-sm ${
-              toast.type === 'success' ? 'border-emerald-500/30' : 'border-error/30'
+              toast.type === 'success' ? 'border-success/30' : 'border-error/30'
             }`}
           >
-            <span className={toast.type === 'success' ? 'text-emerald-500' : 'text-error'}>
+            <span className={toast.type === 'success' ? 'text-success' : 'text-error'}>
               {toast.type === 'success' ? (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <CheckCircleIcon className="w-5 h-5" />
               ) : (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
-                  />
-                </svg>
+                <AlertIcon className="w-5 h-5" />
               )}
             </span>
             <span className="text-sm font-medium text-text-primary">{toast.message}</span>
@@ -556,6 +513,6 @@ const PropostaDetalhesPage: () => React.ReactNode = () => {
       )}
     </div>
   );
-};
+}
 
 export default PropostaDetalhesPage;

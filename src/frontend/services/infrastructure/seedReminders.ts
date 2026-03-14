@@ -2,7 +2,7 @@ import type { Reminder } from '../../types';
 
 /**
  * 14 canonical seed reminders for the Lembretes board.
- * Colors cycle: yellow, green, blue, pink, orange, purple.
+ * Colors cycle: yellow, green, blue, pink, orange, teal.
  */
 const SEED_REMINDERS: Reminder[] = [
   {
@@ -62,7 +62,7 @@ const SEED_REMINDERS: Reminder[] = [
     title: 'Concreto com fermento',
     comment: 'Misturar fermento no cimento e avaliar com o decorrer do tempo se a casa se expande.',
     remindAt: '2026-02-15T22:00',
-    color: 'purple',
+    color: 'teal',
     createdAt: '2026-02-15T22:00:00.000Z',
     pinned: false,
     completedAt: null,
@@ -127,7 +127,7 @@ const SEED_REMINDERS: Reminder[] = [
     title: 'Projeto Verde',
     comment: 'Projeto com a vegetação funcional. Pisos internos subsistidos por grama.',
     remindAt: '2026-02-25T19:15',
-    color: 'purple',
+    color: 'teal',
     createdAt: '2026-02-25T19:15:00.000Z',
     pinned: false,
     completedAt: null,

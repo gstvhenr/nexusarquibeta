@@ -2,7 +2,15 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useAutoReset } from '@/hooks/useAutoReset';
 import { PageHeader } from '@/components/layout';
 import { NAV_LINKS } from '@/constants';
-import { PlusIcon, TrashIcon, CheckCircleIcon, XIcon, EditIcon } from '@/components/ui';
+import {
+  Button,
+  IconButton,
+  PlusIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  XIcon,
+  EditIcon,
+} from '@/components/ui';
 import useLocalStorage from '@/hooks/useLocalStorage';
 
 // ─── TYPES ───────────────────────────────────────────────────
@@ -17,6 +25,7 @@ interface NoteTab {
 // ─── CONSTANTS ───────────────────────────────────────────────
 const STORAGE_KEY = 'nexus-bloco-de-notas';
 const MAX_TITLE_LENGTH = 30;
+const TABLIST_LABEL = 'Abas do bloco de notas';
 
 const generateId = (): string => `note-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -36,6 +45,10 @@ const BlocoDeNotasPage: () => React.ReactNode = () => {
   const [saveFlash, setSaveFlash] = useAutoReset(false, 1200);
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
+  const editingTab = tabs.find((tab) => tab.id === editingTitleId) ?? null;
+
+  const getTabId = useCallback((tabId: string) => `note-tab-${tabId}`, []);
+  const getPanelId = useCallback((tabId: string) => `note-panel-${tabId}`, []);
 
   useEffect(() => {
     if (tabs.length > 0) return;
@@ -58,6 +71,11 @@ const BlocoDeNotasPage: () => React.ReactNode = () => {
     setActiveTabId(newTab.id);
   }, [setTabs]);
 
+  const handleStartEditingTitle = useCallback((tabId: string) => {
+    setActiveTabId(tabId);
+    setEditingTitleId(tabId);
+  }, []);
+
   const handleCloseTab = useCallback(
     (tabId: string) => {
       setTabs((prev) => {
@@ -76,6 +94,36 @@ const BlocoDeNotasPage: () => React.ReactNode = () => {
       });
     },
     [activeTabId, setTabs],
+  );
+
+  const handleTabListKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || tabs.length === 0) {
+        return;
+      }
+
+      const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId);
+      if (currentIndex < 0) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (event.key === 'Home') {
+        setActiveTabId(tabs[0].id);
+        return;
+      }
+
+      if (event.key === 'End') {
+        setActiveTabId(tabs[tabs.length - 1].id);
+        return;
+      }
+
+      const step = event.key === 'ArrowRight' ? 1 : -1;
+      const nextIndex = (currentIndex + step + tabs.length) % tabs.length;
+      setActiveTabId(tabs[nextIndex].id);
+    },
+    [activeTabId, tabs],
   );
 
   const handleContentChange = useCallback(
@@ -115,132 +163,157 @@ const BlocoDeNotasPage: () => React.ReactNode = () => {
     );
   }, [activeTabId, setTabs]);
 
+  const handleTitleInputSubmit = useCallback(
+    (newTitle: string) => {
+      if (!editingTitleId) {
+        return;
+      }
+
+      handleTitleChange(editingTitleId, newTitle);
+      setEditingTitleId(null);
+    },
+    [editingTitleId, handleTitleChange],
+  );
+
   return (
     <div className="animate-fade-in-up h-full flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 overflow-hidden">
       <PageHeader title="Anotações" icon={pageIcon}>
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="ghost"
             onClick={handleSave}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 text-xs font-semibold border transition-all duration-200 gap-1.5 ${
               saveFlash
-                ? 'bg-emerald-500/20 text-emerald-500 border-emerald-400/50'
-                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-400/30 hover:bg-emerald-500/20 hover:border-emerald-400/50'
+                ? 'bg-success/20 text-success border-success/50'
+                : 'bg-success/10 text-success dark:text-success border-success/30 hover:bg-success/20 hover:border-success/50'
             }`}
           >
             <CheckCircleIcon className="w-3.5 h-3.5" />
             {saveFlash ? 'Salvo!' : 'Salvar'}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={handleClear}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold border bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-400/30 hover:bg-rose-500/20 hover:border-rose-400/50 transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 text-xs font-semibold border bg-error/10 text-error dark:text-error border-error/30 hover:bg-error/20 hover:border-error/50 gap-1.5"
           >
             <TrashIcon className="w-3.5 h-3.5" />
             Limpar
-          </button>
+          </Button>
         </div>
       </PageHeader>
 
       {/* Main content area — no page scroll */}
       <div className="flex-1 min-h-0 flex flex-col bg-surface rounded-2xl shadow-soft border border-border-color/50 overflow-hidden focus-within:border-border-color/50">
         {/* Tab bar */}
-        <div className="flex items-center shrink-0 border-b border-border-color/50 bg-background/40 px-2 pt-2 gap-1 overflow-hidden">
-          {tabs.map((tab) => (
+        <div className="shrink-0 border-b border-border-color/50 bg-background/40">
+          <div className="flex items-start gap-2 px-2 pt-2">
             <div
-              key={tab.id}
-              className={`group flex items-center gap-1.5 px-3 py-2 rounded-t-lg text-xs font-medium cursor-pointer transition-all border border-b-0 min-w-0 ${
-                tab.id === activeTabId
-                  ? 'bg-surface text-text-primary border-border-color/50 shadow-sm -mb-px z-10'
-                  : 'bg-transparent text-text-secondary border-transparent hover:bg-surface/60 hover:text-text-primary'
-              }`}
-              onClick={() => setActiveTabId(tab.id)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setActiveTabId(tab.id);
-                }
-              }}
-              role="tab"
+              role="tablist"
+              aria-label={TABLIST_LABEL}
               tabIndex={0}
-              aria-selected={tab.id === activeTabId}
+              className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden"
+              onKeyDown={handleTabListKeyDown}
             >
-              {editingTitleId === tab.id ? (
-                <input
-                  type="text"
-                  defaultValue={tab.title}
-                  ref={(el) => el?.focus()}
-                  maxLength={MAX_TITLE_LENGTH}
-                  className="bg-transparent border-b border-primary/50 outline-none text-xs w-24 text-text-primary"
-                  onBlur={(e) => {
-                    handleTitleChange(tab.id, e.target.value);
-                    setEditingTitleId(null);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleTitleChange(tab.id, (e.target as HTMLInputElement).value);
-                      setEditingTitleId(null);
-                    }
-                    if (e.key === 'Escape') setEditingTitleId(null);
-                    e.stopPropagation();
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ) : (
-                <>
-                  <span
-                    className="truncate max-w-[120px]"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      setEditingTitleId(tab.id);
-                    }}
-                    title={`${tab.title} (duplo clique para renomear)`}
-                  >
-                    {tab.title}
-                  </span>
-                  {tab.id === activeTabId && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingTitleId(tab.id);
-                      }}
-                      className="p-0.5 rounded text-text-secondary/40 hover:text-primary transition-colors"
-                      aria-label={`Renomear aba ${tab.title}`}
-                      title="Renomear"
-                    >
-                      <EditIcon className="w-3 h-3" />
-                    </button>
-                  )}
-                </>
-              )}
+              {tabs.map((tab) => {
+                const active = tab.id === activeTabId;
 
-              {/* Close tab button */}
-              {tabs.length > 1 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCloseTab(tab.id);
-                  }}
-                  className="p-0.5 rounded text-text-secondary/40 hover:text-error hover:bg-error/10 transition-colors opacity-0 group-hover:opacity-100"
-                  aria-label={`Fechar aba ${tab.title}`}
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    id={getTabId(tab.id)}
+                    aria-controls={getPanelId(tab.id)}
+                    aria-selected={active}
+                    tabIndex={active ? 0 : -1}
+                    className={`flex min-w-0 items-center gap-1.5 rounded-t-lg border border-b-0 px-3 py-2 text-xs font-medium transition-all ${
+                      active
+                        ? 'bg-surface text-text-primary border-border-color/50 shadow-sm -mb-px z-10'
+                        : 'bg-transparent text-text-secondary border-transparent hover:bg-surface/60 hover:text-text-primary'
+                    }`}
+                    onClick={() => setActiveTabId(tab.id)}
+                    onDoubleClick={() => handleStartEditingTitle(tab.id)}
+                  >
+                    <span
+                      className="truncate max-w-[120px]"
+                      title={`${tab.title} (duplo clique para renomear)`}
+                    >
+                      {tab.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1 pb-2">
+              {activeTab && (
+                <IconButton
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleStartEditingTitle(activeTab.id)}
+                  className="p-0.5 text-text-secondary/40 hover:text-primary"
+                  aria-label={`Renomear aba ${activeTab.title}`}
+                  title="Renomear"
+                >
+                  <EditIcon className="w-3 h-3" />
+                </IconButton>
+              )}
+              {tabs.length > 1 && activeTab && (
+                <IconButton
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleCloseTab(activeTab.id)}
+                  className="p-0.5 text-text-secondary/40 hover:text-error hover:bg-error/10"
+                  aria-label={`Fechar aba ${activeTab.title}`}
                 >
                   <XIcon className="w-3 h-3" />
-                </button>
+                </IconButton>
               )}
+              <IconButton
+                variant="default"
+                size="sm"
+                onClick={handleAddTab}
+                className="p-1.5 text-text-secondary/50 hover:text-primary hover:bg-primary/10"
+                aria-label="Nova aba"
+                title="Nova aba"
+              >
+                <PlusIcon className="w-4 h-4" />
+              </IconButton>
             </div>
-          ))}
+          </div>
 
-          {/* Add tab button */}
-          <button
-            onClick={handleAddTab}
-            className="shrink-0 p-1.5 rounded-lg text-text-secondary/50 hover:text-primary hover:bg-primary/10 transition-colors ml-1"
-            aria-label="Nova aba"
-            title="Nova aba"
-          >
-            <PlusIcon className="w-4 h-4" />
-          </button>
+          {editingTab && (
+            <div className="border-t border-border-color/30 bg-surface/60 px-3 py-2">
+              {/* eslint-disable jsx-a11y/no-autofocus -- Intentional: user-initiated rename action */}
+              <input
+                type="text"
+                defaultValue={editingTab.title}
+                autoFocus
+                maxLength={MAX_TITLE_LENGTH}
+                className="w-full rounded-md border border-border-color/50 bg-background/70 px-3 py-2 text-xs text-text-primary outline-none transition-colors focus:border-primary/50"
+                aria-label={`Renomear aba ${editingTab.title}`}
+                onBlur={(e) => handleTitleInputSubmit(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleTitleInputSubmit((e.target as HTMLInputElement).value);
+                  }
+                  if (e.key === 'Escape') {
+                    setEditingTitleId(null);
+                  }
+                }}
+              />
+              {/* eslint-enable jsx-a11y/no-autofocus */}
+            </div>
+          )}
         </div>
 
         {/* Notepad textarea — scrollable */}
-        <div className="flex-1 min-h-0 p-1">
+        <div
+          role="tabpanel"
+          id={activeTab ? getPanelId(activeTab.id) : undefined}
+          aria-labelledby={activeTab ? getTabId(activeTab.id) : undefined}
+          className="flex-1 min-h-0 p-1"
+        >
           <textarea
             value={activeTab?.content ?? ''}
             onChange={(e) => handleContentChange(e.target.value)}

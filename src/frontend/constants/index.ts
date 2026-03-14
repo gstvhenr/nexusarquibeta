@@ -40,10 +40,10 @@ export const IDEA_COLORS: { [key: string]: { bg: string; border: string; hover: 
     border: 'border-error/30',
     hover: 'hover:border-error/50',
   },
-  purple: {
-    bg: 'bg-violet/10 dark:bg-violet/20',
-    border: 'border-violet/30',
-    hover: 'hover:border-violet/50',
+  teal: {
+    bg: 'bg-teal-100/50 dark:bg-teal-900/20',
+    border: 'border-teal-300/30',
+    hover: 'hover:border-teal-400/50',
   },
 };
 

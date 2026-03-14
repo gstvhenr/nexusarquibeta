@@ -122,14 +122,12 @@ export const getDeadlineInfo = (
   isCompleted?: boolean,
 ): {
   text: string;
-  className: string;
   diffDays: number;
   status: 'overdue' | 'soon' | 'ok' | 'none';
 } => {
   if (!deadline)
     return {
       text: 'Sem prazo',
-      className: 'text-text-secondary',
       diffDays: Infinity,
       status: 'none',
     };
@@ -138,8 +136,7 @@ export const getDeadlineInfo = (
   today.setHours(0, 0, 0, 0);
 
   const deadlineDate = parseDateString(deadline);
-  if (!deadlineDate)
-    return { text: 'Data inválida', className: 'text-error', diffDays: Infinity, status: 'none' };
+  if (!deadlineDate) return { text: 'Data inválida', diffDays: Infinity, status: 'none' };
 
   const diffTime = deadlineDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -147,7 +144,6 @@ export const getDeadlineInfo = (
   if (isCompleted) {
     return {
       text: formatDateDayMonth(deadline),
-      className: 'text-text-secondary',
       diffDays,
       status: 'ok',
     };
@@ -156,22 +152,18 @@ export const getDeadlineInfo = (
   if (diffDays < 0)
     return {
       text: `Atrasado há ${Math.abs(diffDays)} dias`,
-      className: 'text-error font-bold',
       diffDays,
       status: 'overdue',
     };
-  if (diffDays === 0)
-    return { text: `Entrega hoje!`, className: 'text-warning font-bold', diffDays, status: 'soon' };
+  if (diffDays === 0) return { text: `Entrega hoje!`, diffDays, status: 'soon' };
   if (diffDays <= 7)
     return {
       text: `Em ${diffDays} dias`,
-      className: 'text-amber-500 font-semibold',
       diffDays,
       status: 'soon',
     };
   return {
     text: formatDateDayMonth(deadline),
-    className: 'text-text-primary',
     diffDays,
     status: 'ok',
   };

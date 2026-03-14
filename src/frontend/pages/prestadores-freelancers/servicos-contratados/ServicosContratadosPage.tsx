@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/layout';
-import { Button, FormField, Input, Modal } from '@/components/ui';
+import { Button, FormField, IconButton, Input, Modal, Select } from '@/components/ui';
 import { useCoreData, useSupplyChainData, useSystemData } from '@/context/DataContext';
 import { NAV_LINKS } from '@/constants';
 import type { HiredService } from '@/types';
@@ -14,6 +14,13 @@ import {
 } from '@/components/ui';
 import { formatCurrency, formatDate, getDeadlineInfo, getTodayDateOnly } from '@/utils/formatters';
 import { v4 as uuidv4 } from 'uuid';
+
+const DEADLINE_STATUS_CLASS = {
+  overdue: 'text-error font-bold',
+  soon: 'text-warning font-semibold',
+  ok: 'text-text-primary',
+  none: 'text-text-secondary',
+} as const;
 
 const ServicosContratadosPage: () => React.ReactNode = () => {
   const { projects, setProjects } = useCoreData();
@@ -141,9 +148,6 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
     (child) => child.path === '/prestadores-freelancers/servicos-contratados',
   )?.icon;
 
-  const selectClass =
-    'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-text-primary transition';
-
   return (
     <div className="animate-fade-in-up h-full flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6">
       <PageHeader title="Serviços Contratados" icon={pageIcon}>
@@ -206,7 +210,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-text-secondary">Prazo:</span>
-                  <span className={`font-semibold ${deadlineInfo.className}`}>
+                  <span className={`font-semibold ${DEADLINE_STATUS_CLASS[deadlineInfo.status]}`}>
                     {formatDate(service.deadline)}
                   </span>
                 </div>
@@ -219,22 +223,26 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
               </div>
 
               <div className="pt-3 border-t border-border-color flex justify-between items-center">
-                <select
+                <Select
                   value={service.status}
                   onChange={(e) =>
                     handleStatusChange(service.id, e.target.value as HiredService['status'])
                   }
-                  className="bg-background border border-border-color text-xs rounded p-1.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  size="sm"
                   aria-label="Status do serviço"
-                >
-                  <option value="Em Andamento">Em Andamento</option>
-                  <option value="Concluído">Concluído</option>
-                  <option value="Cancelado">Cancelado</option>
-                </select>
+                  options={[
+                    { value: 'Em Andamento', label: 'Em Andamento' },
+                    { value: 'Concluído', label: 'Concluído' },
+                    { value: 'Cancelado', label: 'Cancelado' },
+                  ]}
+                  wrapperClassName="min-w-[10rem]"
+                  className="bg-background"
+                />
                 <div className="flex gap-2">
-                  <button
+                  <IconButton
                     onClick={() => handleArchive(service.id, !service.archived)}
-                    className="text-text-secondary hover:text-primary p-1.5 rounded-full hover:bg-background transition-colors"
+                    variant="primary"
+                    className="bg-background"
                     title={service.archived ? 'Desarquivar' : 'Arquivar'}
                     aria-label={service.archived ? 'Desarquivar serviço' : 'Arquivar serviço'}
                   >
@@ -243,14 +251,16 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
                     ) : (
                       <ArchiveIcon className="w-4 h-4" />
                     )}
-                  </button>
-                  <button
+                  </IconButton>
+                  <IconButton
                     onClick={() => handleDelete(service.id)}
-                    className="text-text-secondary hover:text-error p-1.5 rounded-full hover:bg-background transition-colors"
+                    variant="danger"
+                    className="bg-background"
                     title="Excluir"
+                    aria-label="Excluir serviço"
                   >
                     <TrashIcon className="w-4 h-4" />
-                  </button>
+                  </IconButton>
                 </div>
               </div>
             </div>
@@ -272,50 +282,36 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
       >
         <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="field-projeto"
-                className="block text-sm font-medium text-text-secondary mb-1"
-              >
-                Projeto
-              </label>
-              <select
+            <FormField label="Projeto" htmlFor="field-projeto">
+              <Select
                 id="field-projeto"
                 value={selectedProjectId}
                 onChange={(e) => setSelectedProjectId(e.target.value)}
-                className={selectClass}
                 aria-label="Projeto"
-              >
-                <option value="">Selecione o Projeto...</option>
-                {activeProjects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name.startsWith(p.code) ? p.name : `${p.code} - ${p.name}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="field-freelancer"
-                className="block text-sm font-medium text-text-secondary mb-1"
-              >
-                Freelancer
-              </label>
-              <select
+                placeholder="Selecione o Projeto..."
+                options={activeProjects.map((project) => ({
+                  value: project.id,
+                  label: project.name.startsWith(project.code)
+                    ? project.name
+                    : `${project.code} - ${project.name}`,
+                }))}
+                className="bg-background"
+              />
+            </FormField>
+            <FormField label="Freelancer" htmlFor="field-freelancer">
+              <Select
                 id="field-freelancer"
                 value={selectedFreelancerId}
                 onChange={(e) => setSelectedFreelancerId(e.target.value)}
-                className={selectClass}
                 aria-label="Freelancer"
-              >
-                <option value="">Selecione o Profissional...</option>
-                {activeFreelancers.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name} ({f.specialties[0]})
-                  </option>
-                ))}
-              </select>
-            </div>
+                placeholder="Selecione o Profissional..."
+                options={activeFreelancers.map((freelancer) => ({
+                  value: freelancer.id,
+                  label: `${freelancer.name} (${freelancer.specialties[0]})`,
+                }))}
+                className="bg-background"
+              />
+            </FormField>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

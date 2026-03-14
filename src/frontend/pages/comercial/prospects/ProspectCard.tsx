@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   ArchiveIcon,
   Badge,
+  Button,
   CheckCircleIcon,
   ClockIcon,
   EditIcon,
@@ -29,6 +30,18 @@ const PRIORITY_BADGE_CLASS: Record<ProspectPriority, string> = {
   Alta: 'ring-1 ring-error/20',
   Média: 'ring-1 ring-warning/20',
   Baixa: 'ring-1 ring-info/20',
+};
+
+const PRIORITY_AVATAR_GRADIENT: Record<ProspectPriority, string> = {
+  Alta: 'from-error to-error/70',
+  Média: 'from-warning to-warning/70',
+  Baixa: 'from-info to-info/70',
+};
+
+const PRIORITY_SIDEBAR_GRADIENT: Record<ProspectPriority, string> = {
+  Alta: 'from-error to-error/60',
+  Média: 'from-warning to-warning/60',
+  Baixa: 'from-info to-info/60',
 };
 
 const STATUS_BADGE_VARIANT: Record<ProspectStatus, 'info' | 'success' | 'default'> = {
@@ -75,12 +88,8 @@ export function ProspectCard({
   const dimmed = prospect.status === 'Convertido' || prospect.status === 'Perdido';
 
   const initial = prospect.name.charAt(0).toUpperCase();
-  const avatarColors = {
-    Alta: 'from-red-500 to-rose-600',
-    Média: 'from-amber-400 to-orange-500',
-    Baixa: 'from-sky-400 to-blue-500',
-  };
-  const avatarGradient = avatarColors[prospect.priority] || 'from-gray-400 to-gray-500';
+  const avatarGradient =
+    PRIORITY_AVATAR_GRADIENT[prospect.priority] ?? 'from-text-secondary/40 to-text-secondary/60';
 
   return (
     <div
@@ -94,13 +103,7 @@ export function ProspectCard({
     >
       <div className="flex">
         <div
-          className={`w-1 shrink-0 bg-gradient-to-b ${
-            prospect.priority === 'Alta'
-              ? 'from-red-500 to-rose-400'
-              : prospect.priority === 'Média'
-                ? 'from-amber-400 to-orange-400'
-                : 'from-sky-400 to-blue-400'
-          }`}
+          className={`w-1 shrink-0 bg-gradient-to-b ${PRIORITY_SIDEBAR_GRADIENT[prospect.priority]}`}
         />
 
         <div className="flex-1 p-4 md:p-5">
@@ -169,25 +172,22 @@ export function ProspectCard({
                 </div>
                 <div className="w-full bg-border-color/20 rounded-full h-1.5 overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-700 ease-out bg-gradient-to-r ${prospect.status === 'Em Aberto' ? getProgressGradient(daysRemaining) : 'from-gray-300 to-gray-300'}`}
+                    className={`h-full rounded-full transition-all duration-700 ease-out bg-gradient-to-r ${prospect.status === 'Em Aberto' ? getProgressGradient(daysRemaining) : 'from-border-color to-border-color'}`}
                     style={{ width: `${prospect.status === 'Em Aberto' ? progressPercent : 0}%` }}
                   />
                 </div>
               </div>
 
-              <button
-                type="button"
+              <IconButton
+                variant="primary"
+                size="sm"
                 onClick={() => setShowDetails((prev) => !prev)}
-                className={`p-1.5 rounded-lg transition-all duration-200 shrink-0 ${
-                  showDetails
-                    ? 'text-primary bg-primary/10'
-                    : 'text-text-secondary/40 hover:text-primary hover:bg-primary/10'
-                }`}
+                className={showDetails ? 'text-primary bg-primary/10' : ''}
                 aria-label="Visualizar dados cadastrais"
                 title="Visualizar dados cadastrais"
               >
                 <EyeIcon className="w-4 h-4" />
-              </button>
+              </IconButton>
 
               <div className="flex items-center gap-1.5 shrink-0">
                 {prospect.status === 'Em Aberto' ? (
@@ -222,12 +222,10 @@ export function ProspectCard({
                     </IconButton>
                   </>
                 ) : (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => onAction(prospect.id, 'archive')}
-                    className="inline-flex items-center justify-center gap-1 py-1.5 px-2.5
-                  text-xs font-semibold text-text-secondary
-                  bg-background hover:bg-primary/10 hover:text-primary
-                  rounded-lg transition-all duration-200"
                     title={prospect.archived ? 'Desarquivar' : 'Arquivar'}
                   >
                     {prospect.archived ? (
@@ -241,7 +239,7 @@ export function ProspectCard({
                         <span className="hidden sm:inline">Arquivar</span>
                       </>
                     )}
-                  </button>
+                  </Button>
                 )}
 
                 <div className="flex items-center gap-0.5 ml-1 pl-1.5 border-l border-border-color/30">

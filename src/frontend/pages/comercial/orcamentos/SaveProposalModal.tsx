@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button, FormField, Input, Modal } from '@/components/ui';
+import { Button, FormField, Input, Modal, Select } from '@/components/ui';
 import type { Client } from '@/types';
 
 type SaveProposalModalProps = {
@@ -65,8 +65,6 @@ export function SaveProposalModal({
     onSave({ name: client.name, id: client.id });
   };
 
-  const selectClass = 'w-full bg-background p-3 rounded-md border border-border-color';
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Salvar como Proposta">
       <div className="space-y-4">
@@ -79,7 +77,7 @@ export function SaveProposalModal({
             id="unlinkedProposal"
             checked={isUnlinked}
             onChange={(event) => setIsUnlinked(event.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 accent-primary/70 focus:ring-primary/70"
+            className="h-4 w-4 rounded border-border-color accent-primary/70 focus:ring-primary/70"
           />
           <label htmlFor="unlinkedProposal" className="text-sm font-medium text-text-primary">
             Salvar Proposta Sem Vínculo
@@ -97,30 +95,22 @@ export function SaveProposalModal({
           </FormField>
         ) : (
           <div>
-            <label
-              htmlFor="clientSelect"
-              className="block text-sm font-medium text-text-secondary mb-2"
-            >
-              Selecione o Cliente
-            </label>
-            <select
+            <Select
               id="clientSelect"
+              label="Selecione o Cliente"
               value={selectedClientId}
               onChange={(event) => setSelectedClientId(event.target.value)}
-              className={selectClass}
+              options={
+                eligibleClients.length === 0
+                  ? [{ value: '', label: 'Nenhum cliente elegível' }]
+                  : eligibleClients.map((client) => ({
+                      value: client.id,
+                      label: client.name,
+                    }))
+              }
               disabled={eligibleClients.length === 0}
               aria-label="Selecione o cliente"
-            >
-              {eligibleClients.length === 0 ? (
-                <option disabled>Nenhum cliente elegível</option>
-              ) : (
-                eligibleClients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                  </option>
-                ))
-              )}
-            </select>
+            />
           </div>
         )}
 

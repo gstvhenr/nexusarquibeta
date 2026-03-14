@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { BudgetSection, BudgetItem, BillingMethod } from '../../types';
 import { formatCurrency } from '../../utils/formatters';
-import { ChevronDownIcon } from '../ui';
+import { Button, ChevronDownIcon, IconButton, Input, Select, TrashIcon } from '../ui';
 import { BudgetItemRow } from './BudgetItemRow';
 
 type BudgetSectionProps = {
@@ -75,23 +75,26 @@ export const BudgetSectionComponent = React.memo<BudgetSectionProps>(
 
     return (
       <div className="bg-surface rounded-2xl shadow-soft transition-all duration-300 ease-in-out">
-        <header
-          className="p-5 cursor-pointer"
-          onClick={() => setIsExpanded(!isExpanded)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setIsExpanded(!isExpanded);
-            }
-          }}
-          role="button"
-          tabIndex={0}
-        >
+        <header className="p-5">
           <div className="flex flex-wrap gap-4 justify-between items-start">
             <div className="flex items-center gap-3 flex-grow min-w-[200px]">
-              <ChevronDownIcon
-                className={`w-6 h-6 text-text-secondary transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
-              />
+              <div
+                className="cursor-pointer shrink-0"
+                onClick={() => setIsExpanded(!isExpanded)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setIsExpanded(!isExpanded);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={isExpanded ? 'Recolher seção' : 'Expandir seção'}
+              >
+                <ChevronDownIcon
+                  className={`w-6 h-6 text-text-secondary transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                />
+              </div>
               <input
                 type="text"
                 value={section.title}
@@ -99,7 +102,6 @@ export const BudgetSectionComponent = React.memo<BudgetSectionProps>(
                   e.stopPropagation();
                   onSectionChange(section.id, 'title', e.target.value);
                 }}
-                onClick={(e) => e.stopPropagation()}
                 className="font-serif text-2xl font-semibold text-secondary bg-transparent border-0 border-b-2 border-transparent focus:ring-0 focus:border-accent transition-all w-full p-1 -ml-1"
                 placeholder="Nome da Seção"
                 aria-label="Nome da seção"
@@ -107,91 +109,84 @@ export const BudgetSectionComponent = React.memo<BudgetSectionProps>(
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="text-right">
-                <span className="text-sm text-success font-medium">Lucro</span>
-                <p className="font-sans text-lg font-semibold text-success">
-                  {formatCurrency(sectionCalculations.profit)}
-                </p>
-              </div>
-              <div className="text-right">
-                <span className="text-sm text-text-secondary">Total da Seção</span>
-                <p className="font-sans text-2xl font-bold text-secondary">
-                  {formatCurrency(sectionCalculations.total)}
-                </p>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemoveSection(section.id);
+              <div
+                className="flex items-center gap-4 cursor-pointer"
+                onClick={() => setIsExpanded(!isExpanded)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setIsExpanded(!isExpanded);
+                  }
                 }}
-                className="text-gray-400 hover:text-error p-2 rounded-full transition-colors self-center"
+                role="button"
+                tabIndex={0}
+                aria-label={isExpanded ? 'Recolher seção' : 'Expandir seção'}
+              >
+                <div className="text-right">
+                  <span className="text-sm text-success font-medium">Lucro</span>
+                  <p className="font-sans text-lg font-semibold text-success">
+                    {formatCurrency(sectionCalculations.profit)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm text-text-secondary">Total da Seção</span>
+                  <p className="font-sans text-2xl font-bold text-secondary">
+                    {formatCurrency(sectionCalculations.total)}
+                  </p>
+                </div>
+              </div>
+              <IconButton
+                variant="danger"
+                size="sm"
+                onClick={() => onRemoveSection(section.id)}
                 aria-label="Remover seção"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
+                <TrashIcon className="w-5 h-5" />
+              </IconButton>
             </div>
           </div>
-
           {isExpanded && (
-            /* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
-            <div
-              className="mt-4 pt-4 border-t border-border-color/50 flex flex-wrap items-end gap-3"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* eslint-enable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+            <div className="mt-4 pt-4 border-t border-border-color/50 flex flex-wrap items-end gap-3">
               <p className="text-sm font-semibold text-text-secondary w-full">
                 Configurações da Seção
               </p>
               <div className="w-24">
-                <span className="text-xs text-text-secondary block mb-1">Unidade Padrão</span>
-                <select
+                <Select
+                  label="Unidade Padrão"
                   value={section.unit}
                   onChange={(e) => onSectionChange(section.id, 'unit', e.target.value)}
-                  className="w-full bg-background px-2 h-9 rounded-md border border-border-color focus:border-accent focus:ring-accent/50 transition font-semibold text-sm"
+                  options={[
+                    { value: 'un', label: 'un' },
+                    { value: 'm²', label: 'm²' },
+                    { value: 'h', label: 'h' },
+                    { value: 'vb', label: 'vb' },
+                  ]}
+                  size="sm"
                   aria-label="Unidade padrão"
-                >
-                  <option value="un">un</option>
-                  <option value="m²">m²</option>
-                  <option value="h">h</option>
-                  <option value="vb">vb</option>
-                </select>
+                />
               </div>
               <div className="w-60">
-                <span className="text-xs text-text-secondary block mb-1">Método de Cobrança</span>
-                <select
+                <Select
+                  label="Método de Cobrança"
                   value={section.billing.method}
                   onChange={(e) => onSectionChange(section.id, 'billingMethod', e.target.value)}
-                  className="w-full bg-background px-2 h-9 rounded-md border border-border-color focus:border-accent focus:ring-accent/50 transition font-semibold text-sm"
+                  options={Object.entries(billingMethodLabels).map(([key, label]) => ({
+                    value: key,
+                    label,
+                  }))}
+                  size="sm"
                   aria-label="Método de cobrança"
-                >
-                  {Object.entries(billingMethodLabels).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
               <div className="w-28">
-                <label className="text-xs text-text-secondary block mb-1">
+                <span className="text-xs font-medium text-text-secondary">
                   {getBillingValueLabel(section.billing.method)}
-                </label>
-                <input
+                </span>
+                <Input
                   type="number"
                   value={section.billing.value || ''}
                   onChange={(e) => onSectionChange(section.id, 'billingValue', e.target.value)}
-                  className="w-full bg-background text-right px-2 h-9 rounded-md border border-border-color focus:border-accent focus:ring-accent/50 transition font-semibold"
+                  className="text-right font-semibold"
                   placeholder="0"
                   aria-label={getBillingValueLabel(section.billing.method)}
                 />
@@ -246,12 +241,13 @@ export const BudgetSectionComponent = React.memo<BudgetSectionProps>(
                 </tbody>
               </table>
               <div className="p-3 border-t border-border-color">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => onAddItem(section.id)}
-                  className="w-full text-sm font-semibold text-primary hover:bg-primary/10 transition-colors py-2 rounded-md"
+                  className="w-full text-primary"
                 >
                   + Adicionar Serviço
-                </button>
+                </Button>
               </div>
             </div>
           </div>

@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useDisclosure } from '../../hooks/useDisclosure';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/layout';
-import { Modal } from '../../components/ui';
 import { ClientFormModal } from '../../components/clientes';
-import { DeleteConfirmationModal } from '../../components/ui';
+import { Button, DeleteConfirmationModal, Modal } from '../../components/ui';
 import { useCoreData, useSystemData } from '../../context/DataContext';
 import { api } from '../../services/infrastructure/api';
 import type { Client, PaymentStatus } from '../../types';
@@ -26,11 +26,15 @@ const ClientesPage: () => React.ReactNode = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(30);
 
-  const [isFormModalOpen, setFormModalOpen] = useState(false);
-  const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [isDuplicateErrorOpen, setDuplicateErrorOpen] = useState(false);
-  const [isExportModalOpen, setExportModalOpen] = useState(false);
-  const [isSelectionModalOpen, setSelectionModalOpen] = useState(false);
+  const formDisclosure = useDisclosure();
+  const deleteDisclosure = useDisclosure();
+  const duplicateErrorDisclosure = useDisclosure();
+  const exportDisclosure = useDisclosure();
+  const selectionDisclosure = useDisclosure();
+  const openFormModal = formDisclosure.open;
+  const closeFormModal = formDisclosure.close;
+  const closeDeleteModal = deleteDisclosure.close;
+  const openDuplicateErrorModal = duplicateErrorDisclosure.open;
   const [activeModalTab, setActiveModalTab] = useState<DataModalTab>('export');
   const [exportMode, setExportMode] = useState<ExportMode>('all');
   const [exportStatusFilter, setExportStatusFilter] = useState<ExportStatusFilter>('active');
@@ -155,8 +159,8 @@ const ClientesPage: () => React.ReactNode = () => {
 
   const openAddModal = useCallback(() => {
     setCurrentClient(null);
-    setFormModalOpen(true);
-  }, []);
+    openFormModal();
+  }, [openFormModal]);
 
   const openClientPage = useCallback(
     (client: Client) => {
@@ -169,7 +173,7 @@ const ClientesPage: () => React.ReactNode = () => {
     (clientToSave: Client, originalClient: Client | null) => {
       const result = saveClientAndUpdateState(clientToSave, originalClient, clients);
       if (result.error === 'duplicate_cpf_cnpj') {
-        setDuplicateErrorOpen(true);
+        openDuplicateErrorModal();
         return;
       }
       if (result.error === 'invalid_cpf_cnpj') {
@@ -177,17 +181,17 @@ const ClientesPage: () => React.ReactNode = () => {
         return;
       }
       setClients(result.updatedClients);
-      setFormModalOpen(false);
+      closeFormModal();
     },
-    [clients, setClients],
+    [clients, openDuplicateErrorModal, closeFormModal, setClients],
   );
   const handleDeleteConfirm = useCallback(() => {
     if (currentClient) {
       setClients((prev) => prev.filter((c) => c.id !== currentClient.id));
     }
-    setDeleteConfirmOpen(false);
+    closeDeleteModal();
     setCurrentClient(null);
-  }, [currentClient, setClients]);
+  }, [currentClient, closeDeleteModal, setClients]);
 
   const toggleClientProp = useCallback(
     (id: string, prop: keyof Client) =>
@@ -267,7 +271,7 @@ const ClientesPage: () => React.ReactNode = () => {
     return filtered.sort((a, b) => a.name.localeCompare(b.name));
   }, [clients, exportStatusFilter, manualSearch]);
   useEffect(() => {
-    if (isExportModalOpen) {
+    if (exportDisclosure.isOpen) {
       if (selectedClientIds.size > 0) {
         setExportMode('selected');
         setExportStatusFilter('both');
@@ -280,7 +284,7 @@ const ClientesPage: () => React.ReactNode = () => {
       setManualSearch('');
       setImportFile(null);
     }
-  }, [isExportModalOpen, selectedClientIds]);
+  }, [exportDisclosure.isOpen, selectedClientIds]);
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.[0]) {
       setImportFile(event.target.files[0]);
@@ -331,7 +335,7 @@ const ClientesPage: () => React.ReactNode = () => {
       dataToExport = clientsForExportList.filter((c) => manualSelectionIds.has(c.id));
     }
     await exportClients(dataToExport, projects, format);
-    setExportModalOpen(false);
+    exportDisclosure.close();
   };
   const clientesIcon = NAV_LINKS.find((link) => link.path === '/clientes')?.icon;
 
@@ -339,10 +343,11 @@ const ClientesPage: () => React.ReactNode = () => {
     <div className="animate-fade-in-up">
       <PageHeader title="Clientes" icon={clientesIcon}>
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => setShowArchived(!showArchived)}
-            className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-background border border-border-color hover:bg-border-color/50 transition-colors text-sm flex items-center gap-2"
+            className="text-sm flex items-center gap-2"
           >
             {showArchived ? (
               <UnarchiveIcon className="w-4 h-4" />
@@ -350,25 +355,27 @@ const ClientesPage: () => React.ReactNode = () => {
               <ArchiveIcon className="w-4 h-4" />
             )}
             {showArchived ? 'Ver Ativos' : 'Ver Arquivados'}
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
-            onClick={() => setExportModalOpen(true)}
-            className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-background border border-border-color hover:bg-border-color/50 hover:text-primary transition-colors text-sm flex items-center gap-2 group"
+            variant="secondary"
+            onClick={exportDisclosure.open}
+            className="text-sm flex items-center gap-2"
           >
-            <DownloadIcon className="w-4 h-4 text-text-secondary group-hover:text-primary transition-colors" />
+            <DownloadIcon className="w-4 h-4" />
             Dados
-          </button>
+          </Button>
 
           {!showArchived && (
-            <button
+            <Button
               type="button"
+              variant="primary"
               onClick={openAddModal}
-              className="px-5 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft flex items-center gap-2 transition-colors text-sm"
+              className="text-sm flex items-center gap-2"
             >
               <PlusIcon className="w-5 h-5" /> Adicionar Cliente
-            </button>
+            </Button>
           )}
         </div>
       </PageHeader>
@@ -398,8 +405,8 @@ const ClientesPage: () => React.ReactNode = () => {
       />
 
       <ClientFormModal
-        isOpen={isFormModalOpen}
-        onClose={() => setFormModalOpen(false)}
+        isOpen={formDisclosure.isOpen}
+        onClose={formDisclosure.close}
         onSave={handleSaveClient}
         initialClient={currentClient}
         isReadOnly={false}
@@ -407,16 +414,16 @@ const ClientesPage: () => React.ReactNode = () => {
       />
 
       <DeleteConfirmationModal
-        isOpen={isDeleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
+        isOpen={deleteDisclosure.isOpen}
+        onClose={deleteDisclosure.close}
         onConfirm={handleDeleteConfirm}
         itemName={currentClient?.name || ''}
         itemType="Cliente"
       />
 
       <Modal
-        isOpen={isDuplicateErrorOpen}
-        onClose={() => setDuplicateErrorOpen(false)}
+        isOpen={duplicateErrorDisclosure.isOpen}
+        onClose={duplicateErrorDisclosure.close}
         title="Cliente Duplicado"
       >
         <p className="text-text-primary mb-6">
@@ -424,19 +431,15 @@ const ClientesPage: () => React.ReactNode = () => {
           arquivados.
         </p>
         <div className="flex justify-end space-x-4">
-          <button
-            type="button"
-            onClick={() => setDuplicateErrorOpen(false)}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color transition-colors"
-          >
+          <Button type="button" variant="secondary" onClick={duplicateErrorDisclosure.close}>
             Entendi
-          </button>
+          </Button>
         </div>
       </Modal>
 
       <ClientesDataManagementModal
-        isOpen={isExportModalOpen}
-        onClose={() => setExportModalOpen(false)}
+        isOpen={exportDisclosure.isOpen}
+        onClose={exportDisclosure.close}
         activeModalTab={activeModalTab}
         onActiveModalTabChange={setActiveModalTab}
         exportMode={exportMode}
@@ -444,9 +447,9 @@ const ClientesPage: () => React.ReactNode = () => {
         exportStatusFilter={exportStatusFilter}
         onExportStatusFilterChange={setExportStatusFilter}
         manualSelectionIds={manualSelectionIds}
-        onOpenSelectionModal={() => setSelectionModalOpen(true)}
-        isSelectionModalOpen={isSelectionModalOpen}
-        onCloseSelectionModal={() => setSelectionModalOpen(false)}
+        onOpenSelectionModal={selectionDisclosure.open}
+        isSelectionModalOpen={selectionDisclosure.isOpen}
+        onCloseSelectionModal={selectionDisclosure.close}
         manualSearch={manualSearch}
         onManualSearchChange={setManualSearch}
         clientsForExportList={clientsForExportList}

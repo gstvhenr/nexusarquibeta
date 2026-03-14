@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal } from '../ui';
+import { Modal, Button } from '../ui';
 import { AlertIcon } from '../ui';
 
 /**
@@ -37,18 +37,12 @@ export const ValidationModal: (props: {
         </div>
       </div>
       <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-        <button
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          onClick={onRedirect}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-        >
+        </Button>
+        <Button variant="primary" onClick={onRedirect}>
           Corrigir Cadastro
-        </button>
+        </Button>
       </div>
     </Modal>
   );

@@ -56,12 +56,12 @@ function DayDetailSidebar({
                 className={`
                                     p-4 rounded-xl border border-border-color/60 bg-background/50 transition-colors group shadow-sm
                                     ${isEditableEvent ? 'hover:bg-background cursor-pointer' : 'cursor-default'}
-                                    ${event.isDeadlineEvent ? 'border-l-4 border-l-purple-500' : ''}
+                                    ${event.isDeadlineEvent ? 'border-l-4 border-l-rose-500' : ''}
                                 `}
               >
                 <div className="flex justify-between items-start mb-2">
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${event.priority ? priorityColors[event.priority].bg + ' ' + priorityColors[event.priority].text : 'bg-gray-100 text-gray-600'}`}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${event.priority ? priorityColors[event.priority].bg + ' ' + priorityColors[event.priority].text : 'bg-background text-text-secondary'}`}
                   >
                     {event.time}
                   </span>
@@ -92,7 +92,7 @@ function DayDetailSidebar({
                     </div>
                   )}
                   {event.isDeadlineEvent && (
-                    <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded uppercase tracking-wide">
+                    <span className="text-[9px] font-bold text-error bg-error/10 dark:text-error dark:bg-error/10 px-1.5 py-0.5 rounded uppercase tracking-wide">
                       Prazo do Projeto
                     </span>
                   )}

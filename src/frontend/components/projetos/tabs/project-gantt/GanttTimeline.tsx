@@ -1,6 +1,5 @@
 import React from 'react';
 import { CalendarPlusIcon, CheckCircleIcon } from '@/components/ui/icons';
-import { ROW_H, SECTION_ROW_H, NAME_COL_W } from './helpers';
 import type { GroupHeader, TimeColumn, TimelineRow, TooltipData } from './types';
 import { GanttBarRenderer } from './GanttBarRenderer';
 
@@ -25,6 +24,10 @@ interface GanttTimelineProps {
   onTooltipChange: (tooltip: TooltipData | null) => void;
 }
 
+const HEADER_GROUP_ROW_H = 24;
+const HEADER_COLUMN_ROW_H = 32;
+const HEADER_TOTAL_H = HEADER_GROUP_ROW_H + HEADER_COLUMN_ROW_H;
+
 export const GanttTimeline = ({
   hasTasks,
   groups,
@@ -44,196 +47,236 @@ export const GanttTimeline = ({
   getBarStyle,
   getBarClasses,
   onTooltipChange,
-}: GanttTimelineProps) => (
-  <div className="bg-surface rounded-xl shadow-lifted overflow-hidden border border-border-color">
-    {hasTasks ? (
-      <div className="flex flex-col">
-        <div className="flex border-b border-border-color">
-          <div
-            className="shrink-0 bg-surface border-r border-border-color px-4 flex items-end pb-2"
-            style={{ width: NAME_COL_W, minWidth: NAME_COL_W }}
-          >
-            <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">
-              Tarefas
-            </span>
-          </div>
+}: GanttTimelineProps) => {
+  let groupOffset = 0;
 
-          <div ref={headerRef} className="flex-1 overflow-hidden">
-            <div style={{ width: totalWidth }}>
-              <div className="flex border-b border-border-color/30">
-                {groups.map((group, index) => (
-                  <div
-                    key={`${group.label}-${index}`}
-                    className="text-[11px] font-bold text-text-primary uppercase tracking-wide px-2 py-1.5 border-r border-border-color/20"
-                    style={{ width: group.span * colWidth }}
-                  >
-                    {group.label}
-                  </div>
-                ))}
-              </div>
-              <div className="flex">
-                {columns.map((column, index) => (
-                  <div
-                    key={index}
-                    className={`shrink-0 border-r text-center py-1.5 transition-colors ${
-                      column.isToday
-                        ? 'bg-primary/10 border-r-primary/20'
-                        : column.isWeekend
-                          ? 'bg-background/40 border-r-border-color/20'
-                          : 'border-r-border-color/20'
-                    }`}
-                    style={{ width: colWidth }}
-                  >
-                    {colWidth >= 25 && (
-                      <div
-                        className={`text-[10px] leading-tight capitalize overflow-hidden whitespace-nowrap ${
-                          column.isToday
-                            ? 'font-bold text-primary'
-                            : column.isWeekend
-                              ? 'text-text-secondary/60'
-                              : 'font-medium text-text-secondary'
-                        }`}
+  return (
+    <div className="overflow-hidden rounded-xl border border-border-color bg-surface shadow-lifted">
+      {hasTasks ? (
+        <div className="flex flex-col">
+          <div className="flex border-b border-border-color">
+            <div className="flex h-[56px] w-60 min-w-60 items-end border-r border-border-color bg-surface px-4 pb-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">
+                Tarefas
+              </span>
+            </div>
+
+            <div ref={headerRef} className="flex-1 overflow-hidden">
+              <svg width={totalWidth} height={HEADER_TOTAL_H} className="block">
+                {groups.map((group, index) => {
+                  const width = group.span * colWidth;
+                  const x = groupOffset;
+                  groupOffset += width;
+
+                  return (
+                    <g key={`${group.label}-${index}`}>
+                      <rect
+                        x={x}
+                        y={0}
+                        width={width}
+                        height={HEADER_GROUP_ROW_H}
+                        fill="transparent"
+                        stroke="hsl(var(--color-border-color) / 0.2)"
+                        strokeWidth={1}
+                      />
+                      <text
+                        x={x + 8}
+                        y={15}
+                        fill="currentColor"
+                        className="text-[11px] font-bold uppercase tracking-wide text-text-primary"
                       >
-                        {column.label}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                        {group.label}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {columns.map((column, index) => {
+                  const x = index * colWidth;
+                  const fill = column.isToday
+                    ? 'hsl(var(--color-primary) / 0.1)'
+                    : column.isWeekend
+                      ? 'hsl(var(--color-background) / 0.4)'
+                      : 'transparent';
+                  const stroke = column.isToday
+                    ? 'hsl(var(--color-primary) / 0.2)'
+                    : 'hsl(var(--color-border-color) / 0.2)';
+
+                  return (
+                    <g key={index}>
+                      <rect
+                        x={x}
+                        y={HEADER_GROUP_ROW_H}
+                        width={colWidth}
+                        height={HEADER_COLUMN_ROW_H}
+                        fill={fill}
+                        stroke={stroke}
+                        strokeWidth={1}
+                      />
+                      {colWidth >= 25 && (
+                        <text
+                          x={x + colWidth / 2}
+                          y={HEADER_GROUP_ROW_H + 19}
+                          textAnchor="middle"
+                          fill="currentColor"
+                          className={`text-[10px] capitalize ${
+                            column.isToday
+                              ? 'font-bold text-primary'
+                              : column.isWeekend
+                                ? 'text-text-secondary/60'
+                                : 'font-medium text-text-secondary'
+                          }`}
+                        >
+                          {column.label}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+              </svg>
             </div>
           </div>
-        </div>
 
-        <div className="flex overflow-hidden" style={{ maxHeight: 520 }}>
-          <div
-            ref={nameColRef}
-            className="shrink-0 border-r border-border-color overflow-y-auto bg-surface"
-            style={{ width: NAME_COL_W, minWidth: NAME_COL_W, maxHeight: 520 }}
-            onScroll={onNameScroll}
-          >
-            {rows.map((row) => {
-              const isSection = row.type === 'section';
-              const isCollapsed = collapsedSections.has(row.id);
-              const height = isSection ? SECTION_ROW_H : ROW_H;
+          <div className="flex overflow-hidden max-h-[520px]">
+            <div
+              ref={nameColRef}
+              className="w-60 min-w-60 overflow-y-auto border-r border-border-color bg-surface"
+              onScroll={onNameScroll}
+            >
+              {rows.map((row) => {
+                const isSection = row.type === 'section';
+                const isCollapsed = collapsedSections.has(row.id);
+                const rowHeightClass = isSection ? 'h-[38px]' : 'h-[42px]';
 
-              return (
-                <div
-                  key={row.id}
-                  className={`flex items-center gap-2 px-3 border-b transition-colors ${
-                    isSection
-                      ? 'bg-border-color/15 border-b-border-color/50 cursor-pointer hover:bg-border-color/25'
-                      : 'border-b-border-color/30 hover:bg-background/20'
-                  }`}
-                  style={{ height }}
-                  onClick={isSection ? () => onToggleSection(row.id) : undefined}
-                  onKeyDown={
-                    isSection
-                      ? (e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            onToggleSection(row.id);
-                          }
-                        }
-                      : undefined
-                  }
-                  role={isSection ? 'button' : undefined}
-                  tabIndex={isSection ? 0 : undefined}
-                >
-                  {isSection ? (
-                    <>
+                if (isSection) {
+                  return (
+                    <button
+                      key={row.id}
+                      type="button"
+                      className={`flex w-full items-center gap-2 border-b border-b-border-color/50 bg-border-color/15 px-3 transition-colors hover:bg-border-color/25 ${rowHeightClass}`}
+                      onClick={() => onToggleSection(row.id)}
+                    >
                       <span
-                        className={`text-[9px] text-text-secondary transition-transform duration-200 select-none ${isCollapsed ? '' : 'rotate-90'}`}
+                        className={`select-none text-[9px] text-text-secondary transition-transform duration-200 ${
+                          isCollapsed ? '' : 'rotate-90'
+                        }`}
                       >
                         ▶
                       </span>
-                      <span className="text-[12px] font-bold text-secondary truncate flex-1">
+                      <span className="flex-1 truncate text-left text-[12px] font-bold text-secondary">
                         {row.name}
                       </span>
-                      <span className="text-[10px] text-text-secondary bg-background/60 px-1.5 py-0.5 rounded-md whitespace-nowrap">
+                      <span className="whitespace-nowrap rounded-md bg-background/60 px-1.5 py-0.5 text-[10px] text-text-secondary">
                         {row.completedCount}/{row.taskCount}
                       </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="ml-3.5 shrink-0">
-                        {row.isCompleted ? (
-                          <CheckCircleIcon className="w-3.5 h-3.5 text-success" />
-                        ) : (
-                          <span
-                            className={`block w-2 h-2 rounded-full ${row.isLate ? 'bg-error' : 'bg-primary'}`}
-                          />
-                        )}
-                      </span>
-                      <span
-                        className={`text-[12px] truncate ${row.isCompleted ? 'text-text-secondary line-through' : 'text-text-primary'}`}
-                      >
-                        {row.name}
-                      </span>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                    </button>
+                  );
+                }
 
-          <div
-            ref={timelineRef}
-            className="flex-1 overflow-auto custom-scrollbar relative"
-            style={{ maxHeight: 520 }}
-            onScroll={onTimelineScroll}
-          >
-            <div className="relative" style={{ width: totalWidth, height: totalHeight }}>
-              <div
-                className="absolute inset-0 flex pointer-events-none"
-                style={{ height: totalHeight }}
-              >
-                {columns.map((column, index) => (
+                return (
                   <div
-                    key={index}
-                    className={`shrink-0 border-r h-full ${
-                      column.isToday
-                        ? 'bg-primary/[0.04] border-r-border-color/15'
-                        : column.isWeekend
-                          ? 'bg-background/25 border-r-border-color/10'
-                          : 'border-r-border-color/10'
-                    }`}
-                    style={{ width: colWidth }}
-                  />
-                ))}
-              </div>
-
-              {todayOffset !== null && (
-                <div
-                  className="absolute top-0 w-[2px] z-10 pointer-events-none"
-                  style={{ left: todayOffset, height: totalHeight }}
-                >
-                  <div className="w-full h-full bg-error/50" />
-                  <div className="absolute -top-0.5 left-1/2 -translate-x-1/2">
-                    <div className="w-2 h-2 rounded-full bg-error border-[1.5px] border-surface shadow-sm" />
+                    key={row.id}
+                    className={`flex items-center gap-2 border-b border-b-border-color/30 px-3 transition-colors hover:bg-background/20 ${rowHeightClass}`}
+                  >
+                    <span className="ml-3.5 shrink-0">
+                      {row.isCompleted ? (
+                        <CheckCircleIcon className="h-3.5 w-3.5 text-success" />
+                      ) : (
+                        <span
+                          className={`block h-2 w-2 rounded-full ${
+                            row.isLate ? 'bg-error' : 'bg-primary'
+                          }`}
+                        />
+                      )}
+                    </span>
+                    <span
+                      className={`truncate text-[12px] ${
+                        row.isCompleted ? 'text-text-secondary line-through' : 'text-text-primary'
+                      }`}
+                    >
+                      {row.name}
+                    </span>
                   </div>
-                </div>
-              )}
+                );
+              })}
+            </div>
 
-              <GanttBarRenderer
-                rows={rows}
-                getBarStyle={getBarStyle}
-                getBarClasses={getBarClasses}
-                onTooltipChange={onTooltipChange}
-              />
+            <div
+              ref={timelineRef}
+              className="relative flex-1 overflow-auto custom-scrollbar"
+              onScroll={onTimelineScroll}
+            >
+              <svg width={totalWidth} height={totalHeight} className="block">
+                <g pointerEvents="none">
+                  {columns.map((column, index) => {
+                    const x = index * colWidth;
+                    const fill = column.isToday
+                      ? 'hsl(var(--color-primary) / 0.04)'
+                      : column.isWeekend
+                        ? 'hsl(var(--color-background) / 0.25)'
+                        : 'transparent';
+                    const stroke = column.isToday
+                      ? 'hsl(var(--color-border-color) / 0.15)'
+                      : 'hsl(var(--color-border-color) / 0.1)';
+
+                    return (
+                      <rect
+                        key={index}
+                        x={x}
+                        y={0}
+                        width={colWidth}
+                        height={totalHeight}
+                        fill={fill}
+                        stroke={stroke}
+                        strokeWidth={1}
+                      />
+                    );
+                  })}
+
+                  {todayOffset !== null && (
+                    <g>
+                      <line
+                        x1={todayOffset}
+                        y1={0}
+                        x2={todayOffset}
+                        y2={totalHeight}
+                        stroke="hsl(var(--color-error) / 0.5)"
+                        strokeWidth={2}
+                      />
+                      <circle
+                        cx={todayOffset}
+                        cy={4}
+                        r={4}
+                        fill="hsl(var(--color-error))"
+                        stroke="hsl(var(--color-surface))"
+                        strokeWidth={1.5}
+                      />
+                    </g>
+                  )}
+                </g>
+
+                <GanttBarRenderer
+                  rows={rows}
+                  totalWidth={totalWidth}
+                  getBarStyle={getBarStyle}
+                  getBarClasses={getBarClasses}
+                  onTooltipChange={onTooltipChange}
+                />
+              </svg>
             </div>
           </div>
         </div>
-      </div>
-    ) : (
-      <div className="h-[400px] flex flex-col items-center justify-center text-text-secondary">
-        <div className="bg-background/50 p-8 rounded-full mb-4 ring-1 ring-border-color">
-          <CalendarPlusIcon className="w-16 h-16 opacity-30" />
+      ) : (
+        <div className="flex h-[400px] flex-col items-center justify-center text-text-secondary">
+          <div className="mb-4 rounded-full bg-background/50 p-8 ring-1 ring-border-color">
+            <CalendarPlusIcon className="h-16 w-16 opacity-30" />
+          </div>
+          <p className="text-lg font-semibold">O cronograma está vazio.</p>
+          <p className="mt-2 max-w-xs text-center text-sm opacity-70">
+            Adicione tarefas com datas na aba "Etapas" para visualizar o gráfico.
+          </p>
         </div>
-        <p className="font-semibold text-lg">O cronograma está vazio.</p>
-        <p className="text-sm opacity-70 mt-2 max-w-xs text-center">
-          Adicione tarefas com datas na aba "Etapas" para visualizar o gráfico.
-        </p>
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
+};

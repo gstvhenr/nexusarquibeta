@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Modal, Input, Textarea, FormField, Button, RadarIcon } from '@/components/ui';
+import { Modal, Input, Textarea, FormField, Button, RadarIcon, Select } from '@/components/ui';
 import { PROSPECT_INTEREST_OPTIONS, PROSPECT_ORIGIN_OPTIONS } from '@/constants';
 import type { Prospect } from '@/types';
 import { formatPhone, getTodayDateOnly, parseDateString } from '@/utils/formatters';
@@ -154,48 +154,28 @@ export function ProspectFormModal({
         </FormField>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="field-origem"
-              className="block text-xs font-medium text-text-secondary mb-1"
-            >
-              Origem
-            </label>
-            <select
-              id="field-origem"
-              value={prospect.origin}
-              onChange={(event) => handleChange('origin', event.target.value)}
-              className={`w-full bg-background p-2 rounded-md border border-border-color text-sm transition ${inputOverride}`}
-              aria-label="Origem"
-            >
-              {PROSPECT_ORIGIN_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label
-              htmlFor="field-interesse"
-              className="block text-xs font-medium text-text-secondary mb-1"
-            >
-              Interesse
-            </label>
-            <select
-              id="field-interesse"
-              value={prospect.interest}
-              onChange={(event) => handleChange('interest', event.target.value)}
-              className={`w-full bg-background p-2 rounded-md border border-border-color text-sm transition ${inputOverride}`}
-              aria-label="Interesse"
-            >
-              {PROSPECT_INTEREST_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            id="field-origem"
+            label="Origem"
+            value={prospect.origin}
+            onChange={(event) => handleChange('origin', event.target.value)}
+            options={PROSPECT_ORIGIN_OPTIONS.map((option) => ({
+              value: option,
+              label: option,
+            }))}
+            aria-label="Origem"
+          />
+          <Select
+            id="field-interesse"
+            label="Interesse"
+            value={prospect.interest}
+            onChange={(event) => handleChange('interest', event.target.value)}
+            options={PROSPECT_INTEREST_OPTIONS.map((option) => ({
+              value: option,
+              label: option,
+            }))}
+            aria-label="Interesse"
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -222,25 +202,18 @@ export function ProspectFormModal({
               </p>
             </FormField>
           </div>
-          <div>
-            <label
-              htmlFor="field-prioridade"
-              className="block text-xs font-medium text-text-secondary mb-1"
-            >
-              Prioridade
-            </label>
-            <select
-              id="field-prioridade"
-              value={prospect.priority}
-              onChange={(event) => handleChange('priority', event.target.value)}
-              className={`w-full bg-background p-2 rounded-md border border-border-color text-sm transition ${inputOverride}`}
-              aria-label="Prioridade"
-            >
-              <option value="Baixa">Baixa</option>
-              <option value="Média">Média</option>
-              <option value="Alta">Alta</option>
-            </select>
-          </div>
+          <Select
+            id="field-prioridade"
+            label="Prioridade"
+            value={prospect.priority}
+            onChange={(event) => handleChange('priority', event.target.value)}
+            options={[
+              { value: 'Baixa', label: 'Baixa' },
+              { value: 'Média', label: 'Média' },
+              { value: 'Alta', label: 'Alta' },
+            ]}
+            aria-label="Prioridade"
+          />
         </div>
 
         <FormField label="Anotações">

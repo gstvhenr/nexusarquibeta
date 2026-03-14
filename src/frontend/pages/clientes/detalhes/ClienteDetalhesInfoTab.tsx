@@ -1,11 +1,13 @@
 import React from 'react';
 import { ClienteAddressFieldset } from './ClienteAddressFieldset';
 import {
+  Button,
   ChevronDownIcon,
   FormField,
   IconButton,
   Input,
   PlusIcon,
+  Select,
   TrashIcon,
 } from '@/components/ui';
 import {
@@ -61,8 +63,8 @@ export function ClienteDetalhesInfoTab({
   handleServiceInterestChange,
   getModifiedClass,
 }: ClienteDetalhesInfoTabProps) {
-  const commonSelectClass =
-    'w-full bg-background p-2 rounded-md border focus:border-accent text-text-primary transition disabled:opacity-100 disabled:cursor-default disabled:bg-background/50';
+  const DISABLED_SELECT_OVERRIDE =
+    'disabled:opacity-100 disabled:cursor-default disabled:bg-background/50';
 
   return (
     <>
@@ -184,7 +186,7 @@ export function ClienteDetalhesInfoTab({
                     onBlur={(e) =>
                       handleContactChange(contact.id, 'phone', formatPhone(e.target.value))
                     }
-                    className={`${DISABLED_OVERRIDE} ${originalClient?.contacts?.find((c) => c.id === contact.id)?.phone !== contact.phone ? 'border-yellow-500 ring-1 ring-yellow-500/20' : 'border-border-color'}`}
+                    className={`${DISABLED_OVERRIDE} ${originalClient?.contacts?.find((c) => c.id === contact.id)?.phone !== contact.phone ? 'border-warning ring-1 ring-warning/20' : 'border-border-color'}`}
                     placeholder={`Telefone ${index + 1}`}
                     disabled={!isEditing}
                     aria-label={`Telefone ${index + 1}`}
@@ -226,13 +228,14 @@ export function ClienteDetalhesInfoTab({
                 </div>
               ))}
               {isEditing && (client.contacts?.length || 0) < 3 && (
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={handleAddContact}
-                  className="text-sm font-semibold text-primary py-2 hover:underline flex items-center gap-1"
+                  className="flex items-center gap-1"
                 >
                   <PlusIcon className="w-4 h-4" /> Adicionar Telefone
-                </button>
+                </Button>
               )}
               <FormField label="Email">
                 <Input
@@ -267,20 +270,15 @@ export function ClienteDetalhesInfoTab({
                 >
                   Status do Cliente
                 </label>
-                <select
+                <Select
                   id="field-status-do-cliente"
                   value={client.status}
                   onChange={(e) => handleChange('status', e.target.value)}
-                  className={`${commonSelectClass} ${getModifiedClass(client.status, originalClient?.status)}`}
+                  options={clientStatuses.map((s) => ({ value: s, label: s }))}
+                  className={`${DISABLED_SELECT_OVERRIDE} ${getModifiedClass(client.status, originalClient?.status)}`}
                   disabled={!isEditing}
                   aria-label="Status do cliente"
-                >
-                  {clientStatuses.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
               <div>
                 <label
@@ -289,20 +287,15 @@ export function ClienteDetalhesInfoTab({
                 >
                   Status no Pipeline
                 </label>
-                <select
+                <Select
                   id="field-status-no-pipeline"
                   value={client.pipelineStatus}
                   onChange={(e) => handleChange('pipelineStatus', e.target.value)}
-                  className={`${commonSelectClass} ${getModifiedClass(client.pipelineStatus, originalClient?.pipelineStatus)}`}
+                  options={PIPELINE_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+                  className={`${DISABLED_SELECT_OVERRIDE} ${getModifiedClass(client.pipelineStatus, originalClient?.pipelineStatus)}`}
                   disabled={!isEditing}
                   aria-label="Status no pipeline"
-                >
-                  {PIPELINE_STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
               <div>
                 <label
@@ -311,20 +304,15 @@ export function ClienteDetalhesInfoTab({
                 >
                   Fonte do Lead
                 </label>
-                <select
+                <Select
                   id="field-fonte-do-lead"
                   value={client.leadSource}
                   onChange={(e) => handleChange('leadSource', e.target.value)}
-                  className={`${commonSelectClass} ${getModifiedClass(client.leadSource, originalClient?.leadSource)}`}
+                  options={LEAD_SOURCE_OPTIONS.map((s) => ({ value: s, label: s }))}
+                  className={`${DISABLED_SELECT_OVERRIDE} ${getModifiedClass(client.leadSource, originalClient?.leadSource)}`}
                   disabled={!isEditing}
                   aria-label="Fonte do lead"
-                >
-                  {LEAD_SOURCE_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div className="col-span-full">
@@ -332,10 +320,10 @@ export function ClienteDetalhesInfoTab({
                   <span className="block text-sm font-medium text-text-secondary mb-1">
                     Serviços de Interesse
                   </span>
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
                     onClick={() => isEditing && setInterestsDropdownOpen(!isInterestsDropdownOpen)}
-                    className={`w-full bg-background p-2 rounded-md border focus:border-accent text-text-primary transition text-left flex justify-between items-center ${!isEditing ? 'opacity-100 cursor-default' : 'cursor-pointer'} ${JSON.stringify(client.serviceInterests) !== JSON.stringify(originalClient?.serviceInterests) ? 'border-yellow-500 ring-1 ring-yellow-500/20' : 'border-border-color'}`}
+                    className={`w-full bg-background p-2 rounded-md border text-left flex justify-between items-center ${!isEditing ? 'opacity-100 cursor-default' : 'cursor-pointer'} ${JSON.stringify(client.serviceInterests) !== JSON.stringify(originalClient?.serviceInterests) ? 'border-warning ring-1 ring-warning/20' : 'border-border-color'}`}
                     disabled={!isEditing}
                   >
                     <span className="truncate block">
@@ -346,7 +334,7 @@ export function ClienteDetalhesInfoTab({
                     <ChevronDownIcon
                       className={`w-4 h-4 transition-transform ${isInterestsDropdownOpen ? 'rotate-180' : ''}`}
                     />
-                  </button>
+                  </Button>
 
                   {isInterestsDropdownOpen && (
                     <div className="absolute z-20 bottom-full left-0 right-0 mb-1 bg-surface border border-border-color rounded-lg shadow-lifted max-h-60 overflow-y-auto custom-scrollbar p-1">

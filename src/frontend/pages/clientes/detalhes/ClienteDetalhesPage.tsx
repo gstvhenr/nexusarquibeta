@@ -197,31 +197,63 @@ const ClienteDetalhesPage = () => {
 
       <div className="bg-surface rounded-xl shadow-soft">
         <nav className="flex border-b border-border-color px-6 overflow-x-auto no-scrollbar">
-          <button onClick={() => setActiveTab('info')} className={tabButtonClass('info')}>
+          <Button
+            variant="secondary"
+            onClick={() => setActiveTab('info')}
+            className={tabButtonClass('info')}
+          >
             <UsersIcon className="w-4 h-4" /> Informações Gerais
-          </button>
-          <button onClick={() => setActiveTab('projects')} className={tabButtonClass('projects')}>
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setActiveTab('projects')}
+            className={tabButtonClass('projects')}
+          >
             <ProjetosIcon className="w-4 h-4" /> Projetos
-          </button>
-          <button onClick={() => setActiveTab('addresses')} className={tabButtonClass('addresses')}>
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setActiveTab('addresses')}
+            className={tabButtonClass('addresses')}
+          >
             <MapPinIcon className="w-4 h-4" /> Endereços
-          </button>
-          <button onClick={() => setActiveTab('finance')} className={tabButtonClass('finance')}>
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setActiveTab('finance')}
+            className={tabButtonClass('finance')}
+          >
             <DollarSignIcon className="w-4 h-4" /> Financeiro
-          </button>
-          <button onClick={() => setActiveTab('meetings')} className={tabButtonClass('meetings')}>
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setActiveTab('meetings')}
+            className={tabButtonClass('meetings')}
+          >
             <ClockIcon className="w-4 h-4" /> Reuniões
-          </button>
-          <button onClick={() => setActiveTab('notes')} className={tabButtonClass('notes')}>
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setActiveTab('notes')}
+            className={tabButtonClass('notes')}
+          >
             <FileTextIcon className="w-4 h-4" /> Observações
-          </button>
-          <button onClick={() => setActiveTab('links')} className={tabButtonClass('links')}>
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setActiveTab('links')}
+            className={tabButtonClass('links')}
+          >
             <LinkIcon className="w-4 h-4" /> Links
-          </button>
+          </Button>
           {(originalClient?.auditLog || []).length > 0 && (
-            <button onClick={() => setActiveTab('audit')} className={tabButtonClass('audit')}>
+            <Button
+              variant="secondary"
+              onClick={() => setActiveTab('audit')}
+              className={tabButtonClass('audit')}
+            >
               <TagIcon className="w-4 h-4" /> Histórico
-            </button>
+            </Button>
           )}
         </nav>
 

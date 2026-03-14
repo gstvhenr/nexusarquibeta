@@ -1,7 +1,15 @@
 import React from 'react';
 import type { Proposal, ProposalBlock } from '../../types';
 import { BudgetTableBlock } from './BudgetTableBlock';
-import { IconButton, PlusIcon, TrashIcon, ArrowUpCircleIcon, ArrowDownCircleIcon } from '../ui';
+import {
+  IconButton,
+  PlusIcon,
+  TrashIcon,
+  ArrowUpCircleIcon,
+  ArrowDownCircleIcon,
+  Button,
+  Textarea,
+} from '../ui';
 import { v4 as uuidv4 } from 'uuid';
 
 // --- Internal sub-component ---
@@ -15,7 +23,7 @@ const TextBlockEditor: (props: {
   return (
     <div className="relative group mb-4">
       {isEditing ? (
-        <textarea
+        <Textarea
           value={content}
           onChange={(e) => onChange(e.target.value)}
           className="w-full bg-background p-4 rounded-lg border border-border-color focus:border-accent text-base leading-relaxed min-h-[100px]"
@@ -183,13 +191,14 @@ export const ProposalDocumentEditor: (props: {
 
       {/* Initial Add Button if empty */}
       {!readOnly && blocks.length === 0 && (
-        <button
+        <Button
+          variant="ghost"
           onClick={() => addTextBlock(0)}
           className="w-full py-8 border-2 border-dashed border-border-color rounded-lg text-text-secondary hover:border-primary hover:text-primary transition-colors flex flex-col items-center justify-center"
         >
           <PlusIcon className="w-8 h-8 mb-2" />
           <span>Começar a escrever a proposta</span>
-        </button>
+        </Button>
       )}
     </div>
   );

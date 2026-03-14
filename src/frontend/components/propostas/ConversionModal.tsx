@@ -69,9 +69,10 @@ export const ConversionModal: (props: {
             </div>
 
             <div className="grid grid-cols-1 gap-3">
-              <button
+              <Button
+                variant="ghost"
                 onClick={handleConfirmStep1}
-                className="flex items-center p-3 border border-border-color rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                className="flex items-center p-3 border border-border-color rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left group w-full justify-start"
               >
                 <div className="flex-1">
                   <span className="block font-semibold text-text-primary group-hover:text-primary">
@@ -82,11 +83,12 @@ export const ConversionModal: (props: {
                   </span>
                 </div>
                 <div className="w-4 h-4 rounded-full border border-border-color group-hover:border-primary"></div>
-              </button>
+              </Button>
 
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setIsStep2(true)}
-                className="flex items-center p-3 border border-border-color rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                className="flex items-center p-3 border border-border-color rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left group w-full justify-start"
               >
                 <div className="flex-1">
                   <span className="block font-semibold text-text-primary group-hover:text-primary">
@@ -97,7 +99,7 @@ export const ConversionModal: (props: {
                   </span>
                 </div>
                 <div className="w-4 h-4 rounded-full border border-border-color group-hover:border-primary"></div>
-              </button>
+              </Button>
             </div>
           </div>
         ) : (

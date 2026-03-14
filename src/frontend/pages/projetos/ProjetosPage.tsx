@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { PageHeader } from '../../components/layout';
-import { Button, Modal } from '../../components/ui';
+import { Button, Modal, EmptyState } from '../../components/ui';
 import type { Project, ProjectStatus, ProjectSection, ProjectTask, Installment } from '../../types';
 import { projectStatuses } from '../../types';
 import { NAV_LINKS } from '../../constants';
 import { useCoreData, useSystemData } from '../../context/DataContext';
+import { useDisclosure } from '../../hooks/useDisclosure';
 import { agendaService } from '../../services/agendaService';
 import { ProjectStatusSummaryPanel, ProjectListItem } from '../../components/projetos';
 import { ArchiveIcon, UnarchiveIcon } from '../../components/ui';
@@ -13,7 +14,7 @@ const ProjetosPage: () => React.ReactNode = () => {
   const { projects, setProjects } = useCoreData();
   const { setAgendaEvents } = useSystemData();
   const [showArchived, setShowArchived] = useState(false);
-  const [isFinalizeConfirmOpen, setFinalizeConfirmOpen] = useState(false);
+  const finalizeConfirm = useDisclosure();
   const [projectToFinalize, setProjectToFinalize] = useState<Project | null>(null);
 
   const sortedProjects = useMemo(() => {
@@ -58,10 +59,13 @@ const ProjetosPage: () => React.ReactNode = () => {
     [setProjects, setAgendaEvents],
   );
 
-  const handleFinalizeRequest = useCallback((project: Project) => {
-    setProjectToFinalize(project);
-    setFinalizeConfirmOpen(true);
-  }, []);
+  const handleFinalizeRequest = useCallback(
+    (project: Project) => {
+      setProjectToFinalize(project);
+      finalizeConfirm.open();
+    },
+    [finalizeConfirm],
+  );
 
   const handleFinalizeConfirm = useCallback(() => {
     if (!projectToFinalize) return;
@@ -102,9 +106,9 @@ const ProjetosPage: () => React.ReactNode = () => {
       agendaService.syncProjectEventsWithAgenda(finalizedProject, prevEvents),
     );
 
-    setFinalizeConfirmOpen(false);
+    finalizeConfirm.close();
     setProjectToFinalize(null);
-  }, [projectToFinalize, setProjects, setAgendaEvents]);
+  }, [projectToFinalize, setProjects, setAgendaEvents, finalizeConfirm]);
 
   const projetosIcon = NAV_LINKS.find((link) => link.path === '/projetos')?.icon;
 
@@ -139,34 +143,19 @@ const ProjetosPage: () => React.ReactNode = () => {
       </div>
 
       {projectsToDisplay.length === 0 && (
-        <div className="p-10 bg-surface rounded-xl shadow-soft text-center mt-6">
-          <svg
-            className="mx-auto h-16 w-16 text-gray-400"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 8.25V6ZM3.75 14.625A2.25 2.25 0 0 1 6 12.375h2.25A2.25 2.25 0 0 1 10.5 14.625v2.25A2.25 2.25 0 0 1 8.25 19.125H6A2.25 2.25 0 0 1 3.75 16.875v-2.25ZM13.5 6A2.25 2.25 0 0 1 15.75 3.75h2.25A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25A2.25 2.25 0 0 1 13.5 8.25V6Z"
-            />
-          </svg>
-          <h3 className="mt-2 text-lg font-medium text-text-primary">
-            {showArchived ? 'Nenhum projeto arquivado' : 'Nenhum projeto encontrado'}
-          </h3>
-          <p className="mt-1 text-sm text-text-secondary">
-            {showArchived
+        <EmptyState
+          title={showArchived ? 'Nenhum projeto arquivado' : 'Nenhum projeto encontrado'}
+          description={
+            showArchived
               ? 'Você ainda não arquivou nenhum projeto.'
-              : 'Converta uma proposta em projeto para começar.'}
-          </p>
-        </div>
+              : 'Converta uma proposta em projeto para começar.'
+          }
+          className="mt-6"
+        />
       )}
       <Modal
-        isOpen={isFinalizeConfirmOpen}
-        onClose={() => setFinalizeConfirmOpen(false)}
+        isOpen={finalizeConfirm.isOpen}
+        onClose={finalizeConfirm.close}
         title="Finalizar o Projeto?"
       >
         <p className="text-text-primary mb-6">
@@ -182,14 +171,10 @@ const ProjetosPage: () => React.ReactNode = () => {
           </ul>
         </p>
         <div className="flex justify-end space-x-4">
-          <Button variant="secondary" onClick={() => setFinalizeConfirmOpen(false)}>
+          <Button variant="secondary" onClick={finalizeConfirm.close}>
             Cancelar
           </Button>
-          <Button
-            variant="primary"
-            onClick={handleFinalizeConfirm}
-            className="bg-success hover:opacity-90"
-          >
+          <Button variant="success" onClick={handleFinalizeConfirm}>
             Sim, Finalizar
           </Button>
         </div>

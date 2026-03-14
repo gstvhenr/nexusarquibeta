@@ -1,6 +1,7 @@
 import React from 'react';
 import { ClientProjectsTab } from '@/components/clientes/ClientProjectsTab';
 import {
+  Button,
   FormField,
   IconButton,
   Input,
@@ -8,6 +9,7 @@ import {
   MapPinIcon,
   PlusIcon,
   ProjetosIcon,
+  Select,
   Textarea,
   TrashIcon,
 } from '@/components/ui';
@@ -194,20 +196,17 @@ export function ClienteDetalhesSecondaryTabs({
           <div className="bg-surface border border-border-color p-6 rounded-xl shadow-sm space-y-4">
             <h4 className="font-semibold text-text-primary text-lg">Registrar Nova Reunião</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <select
+              <Select
                 value={newMeeting.projectId || ''}
                 onChange={(e) => setNewMeeting((m) => ({ ...m, projectId: e.target.value }))}
-                className="w-full bg-background p-2 rounded-md border focus:border-accent text-text-primary transition disabled:opacity-100 disabled:cursor-default disabled:bg-background/50"
+                options={[
+                  { value: '', label: 'Vincular Projeto (Opcional)' },
+                  ...clientProjects.map((p) => ({ value: p.id, label: p.name })),
+                ]}
+                className="disabled:opacity-100 disabled:cursor-default disabled:bg-background/50"
                 disabled={!isEditing}
                 aria-label="Projeto da reunião"
-              >
-                <option value="">Vincular Projeto (Opcional)</option>
-                {clientProjects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+              />
               <Input
                 type="date"
                 value={newMeeting.date}
@@ -237,13 +236,9 @@ export function ClienteDetalhesSecondaryTabs({
             />
             {isEditing ? (
               <div className="text-right">
-                <button
-                  type="button"
-                  onClick={handleAddMeeting}
-                  className="px-6 py-2 rounded-lg text-sm font-semibold bg-secondary text-secondary-content hover:bg-secondary-focus transition-colors"
-                >
+                <Button variant="secondary" onClick={handleAddMeeting}>
                   Adicionar Registro
-                </button>
+                </Button>
               </div>
             ) : (
               <p className="text-sm text-text-secondary italic text-right">
@@ -387,12 +382,13 @@ export function ClienteDetalhesSecondaryTabs({
                   </FormField>
                 </div>
                 <div className="md:col-span-2">
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={handleAddLink}
-                    className="w-full py-2 bg-secondary text-secondary-content rounded-lg font-semibold text-sm hover:bg-secondary-focus transition-colors flex items-center justify-center gap-2"
+                    className="w-full flex items-center justify-center gap-2"
                   >
                     <PlusIcon className="w-4 h-4" /> Adicionar
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

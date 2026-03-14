@@ -1,3 +1,4 @@
+import { Textarea } from '../../ui';
 import type { ClientFormNotesTabProps } from './types';
 
 export const ClientFormNotesTab = ({
@@ -16,7 +17,7 @@ export const ClientFormNotesTab = ({
     >
       Observações Gerais
     </label>
-    <textarea
+    <Textarea
       id={fieldId('generalNotes')}
       value={client.generalNotes || ''}
       onChange={(e) => onChange('generalNotes', e.target.value)}

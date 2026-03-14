@@ -18,7 +18,8 @@ export function useProjectFinancials(
   localProject: Project | null,
   paymentToConfirm: PaymentTarget | null,
   setPaymentToConfirm: React.Dispatch<React.SetStateAction<PaymentTarget | null>>,
-  setPaymentConfirmModalOpen: React.Dispatch<React.SetStateAction<boolean>>,
+  openPaymentConfirmModal: () => void,
+  closePaymentConfirmModal: () => void,
 ) {
   const handleGenerateInstallments = () => {
     setLocalProject((p) => {
@@ -104,7 +105,7 @@ export function useProjectFinancials(
     payment: { type: 'lump' } | { type: 'installment'; id: string },
   ) => {
     setPaymentToConfirm(payment);
-    setPaymentConfirmModalOpen(true);
+    openPaymentConfirmModal();
   };
 
   const handleConfirmPayment = (paymentDate: string, paymentMethod: PaymentMethod) => {
@@ -122,7 +123,7 @@ export function useProjectFinancials(
       );
     }
     setLocalProject({ ...localProject, financials: newFinancials });
-    setPaymentConfirmModalOpen(false);
+    closePaymentConfirmModal();
     setPaymentToConfirm(null);
   };
 

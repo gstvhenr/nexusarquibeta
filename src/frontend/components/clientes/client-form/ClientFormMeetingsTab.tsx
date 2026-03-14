@@ -1,5 +1,5 @@
 import { TrashIcon } from '../../ui/icons';
-import { IconButton } from '../../ui';
+import { Button, IconButton, Input, Select, Textarea } from '../../ui';
 import { formatDateWithTime } from '@/utils/formatters';
 import type { ClientFormMeetingsTabProps } from './types';
 
@@ -18,23 +18,20 @@ export const ClientFormMeetingsTab = ({
       <div className="bg-background/50 p-4 rounded-lg space-y-3">
         <h4 className="font-semibold text-text-primary">Registrar Nova Reunião</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <select
+          <Select
             value={newMeeting.projectId || ''}
             onChange={(e) => {
               const val = e.target.value;
               onNewMeetingChange((meeting) => ({ ...meeting, projectId: val }));
             }}
+            options={[
+              { value: '', label: 'Vincular Projeto (Opcional)' },
+              ...clientProjects.map((project) => ({ value: project.id, label: project.name })),
+            ]}
             className={commonInputClass}
             aria-label="Projeto da reunião"
-          >
-            <option value="">Vincular Projeto (Opcional)</option>
-            {clientProjects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-          <input
+          />
+          <Input
             type="date"
             value={newMeeting.date}
             onChange={(e) => {
@@ -44,7 +41,7 @@ export const ClientFormMeetingsTab = ({
             className={commonInputClass}
             aria-label="Data da reunião"
           />
-          <input
+          <Input
             type="text"
             placeholder="Motivo da Reunião"
             value={newMeeting.reason || ''}
@@ -56,7 +53,7 @@ export const ClientFormMeetingsTab = ({
             aria-label="Motivo da reunião"
           />
         </div>
-        <textarea
+        <Textarea
           value={newMeeting.notes || ''}
           onChange={(e) => {
             const val = e.target.value;
@@ -66,15 +63,11 @@ export const ClientFormMeetingsTab = ({
           placeholder="Descreva o que foi discutido..."
           className={commonInputClass}
           aria-label="Anotações da reunião"
-        ></textarea>
+        />
         <div className="text-right">
-          <button
-            type="button"
-            onClick={onAddMeeting}
-            className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-secondary text-secondary-content hover:bg-secondary-focus"
-          >
+          <Button variant="secondary" onClick={onAddMeeting}>
             Adicionar
-          </button>
+          </Button>
         </div>
       </div>
     )}

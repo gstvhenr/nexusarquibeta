@@ -9,6 +9,7 @@ export { FormField } from './FormField';
 export { IconButton } from './IconButton';
 export { Select } from './Select';
 export { EmptyState } from './EmptyState';
+export { Tabs, TabList, Tab, TabPanel } from './Tabs';
 export {
   AgendaIcon,
   ProjetosIcon,
@@ -28,6 +29,8 @@ export {
   UnarchiveIcon,
   SearchIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   XIcon,
   CheckCircleIcon,
   XCircleIcon,

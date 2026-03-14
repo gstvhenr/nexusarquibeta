@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BudgetSectionComponent } from '@/components/orcamentos';
 import { PageHeader } from '@/components/layout';
-import { Button, Modal } from '@/components/ui';
+import { Button, Input, Modal } from '@/components/ui';
 import { NAV_LINKS } from '@/constants';
 import { useCoreData, useSystemData } from '@/context/DataContext';
 import { api } from '@/services/infrastructure/api';
@@ -16,6 +16,7 @@ import type {
 } from '@/types';
 import { formatCurrency } from '@/utils/formatters';
 import { calculateBudgetTotals, initializeSections } from '@/utils/budgetHelpers';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { SaveProposalModal } from './SaveProposalModal';
 
 function OrcamentosPage(): JSX.Element {
@@ -26,8 +27,8 @@ function OrcamentosPage(): JSX.Element {
     initializeSections(customBudgetTemplate),
   );
   const [discount, setDiscount] = useState<number>(0);
-  const [isClearConfirmOpen, setClearConfirmOpen] = useState(false);
-  const [isSaveModalOpen, setSaveModalOpen] = useState(false);
+  const clearConfirm = useDisclosure();
+  const saveModal = useDisclosure();
   const [isSavingProposal, setIsSavingProposal] = useState(false);
 
   const saveProposalLockRef = useRef(false);
@@ -116,7 +117,7 @@ function OrcamentosPage(): JSX.Element {
           return [...previous, newProposal];
         });
 
-        setSaveModalOpen(false);
+        saveModal.close();
         navigate('/propostas');
       } catch {
         alert('Erro ao salvar a proposta. Tente novamente.');
@@ -125,13 +126,13 @@ function OrcamentosPage(): JSX.Element {
         setIsSavingProposal(false);
       }
     },
-    [sections, calculations, discount, setProposals, navigate],
+    [sections, calculations, discount, setProposals, navigate, saveModal],
   );
 
   const handleClearBudget = () => {
     setSections(initializeSections(null));
     setDiscount(0);
-    setClearConfirmOpen(false);
+    clearConfirm.close();
   };
 
   const handleItemChange = useCallback(
@@ -257,11 +258,7 @@ function OrcamentosPage(): JSX.Element {
     <>
       <div className="pb-32 animate-fade-in-up">
         <PageHeader title="Orçamentos" icon={orcamentosIcon}>
-          <Button
-            variant="primary"
-            onClick={handleSaveDefaults}
-            className="bg-secondary hover:bg-secondary-focus"
-          >
+          <Button variant="secondary" onClick={handleSaveDefaults}>
             Salvar
           </Button>
         </PageHeader>
@@ -308,13 +305,14 @@ function OrcamentosPage(): JSX.Element {
                 <label htmlFor="discount" className="text-text-secondary">
                   Desconto (%)
                 </label>
-                <input
+                <Input
                   id="discount"
                   type="number"
                   value={discount === 0 ? '' : discount}
                   onChange={(event) => setDiscount(parseFloat(event.target.value) || 0)}
                   placeholder="0"
-                  className="w-24 bg-surface text-right p-2 rounded-md border border-border-color focus:border-accent transition font-semibold"
+                  variant="filled"
+                  className="w-24 text-right font-semibold"
                 />
               </div>
               <div className="flex justify-between items-center text-lg border-t border-border-color pt-4">
@@ -339,7 +337,7 @@ function OrcamentosPage(): JSX.Element {
         <div className="flex justify-end items-center gap-4 px-4 md:px-8">
           <Button
             variant="secondary"
-            onClick={() => setClearConfirmOpen(true)}
+            onClick={clearConfirm.open}
             className="text-text-secondary hover:text-error hover:bg-error/10 hover:border-error/20"
           >
             Limpar Orçamento
@@ -349,7 +347,7 @@ function OrcamentosPage(): JSX.Element {
             onClick={() => {
               saveProposalLockRef.current = false;
               setIsSavingProposal(false);
-              setSaveModalOpen(true);
+              saveModal.open();
             }}
             className="shadow-lg shadow-primary/30 transform hover:-translate-y-0.5"
           >
@@ -358,33 +356,25 @@ function OrcamentosPage(): JSX.Element {
         </div>
       </div>
 
-      <Modal
-        isOpen={isClearConfirmOpen}
-        onClose={() => setClearConfirmOpen(false)}
-        title="Confirmar Limpeza"
-      >
+      <Modal isOpen={clearConfirm.isOpen} onClose={clearConfirm.close} title="Confirmar Limpeza">
         <p className="text-text-primary mb-6">
           Tem certeza que deseja limpar a página e remover todas as seleções? Esta ação não pode ser
           desfeita.
         </p>
         <div className="flex justify-end space-x-4">
-          <Button variant="secondary" onClick={() => setClearConfirmOpen(false)}>
+          <Button variant="secondary" onClick={clearConfirm.close}>
             Cancelar
           </Button>
-          <Button
-            variant="primary"
-            onClick={handleClearBudget}
-            className="bg-error hover:opacity-90"
-          >
+          <Button variant="danger" onClick={handleClearBudget}>
             Limpar
           </Button>
         </div>
       </Modal>
 
       <SaveProposalModal
-        isOpen={isSaveModalOpen}
+        isOpen={saveModal.isOpen}
         onClose={() => {
-          setSaveModalOpen(false);
+          saveModal.close();
           saveProposalLockRef.current = false;
           setIsSavingProposal(false);
         }}

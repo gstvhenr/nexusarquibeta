@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { PageHeader } from '../../components/layout';
 import { useSystemData } from '../../context/DataContext';
+import { useDisclosure } from '../../hooks/useDisclosure';
 import { NAV_LINKS } from '../../constants';
 import type { DocumentFolder, DocumentItem, Project } from '../../types';
 import { openDocument } from '../../utils/documents';
@@ -17,7 +18,7 @@ const DocumentosPage: () => React.ReactNode = () => {
   const location = useLocation();
 
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const [isAddModalOpen, setAddModalOpen] = useState(false);
+  const addModal = useDisclosure();
 
   const activeSection = useMemo(
     () => (location.pathname.includes('/projetos') ? 'projects' : 'personal'),
@@ -115,7 +116,7 @@ const DocumentosPage: () => React.ReactNode = () => {
         <DocumentsToolbar
           viewMode={viewMode}
           onViewModeChange={setViewMode}
-          onAdd={() => setAddModalOpen(true)}
+          onAdd={addModal.open}
         />
       </PageHeader>
 
@@ -149,8 +150,8 @@ const DocumentosPage: () => React.ReactNode = () => {
       </main>
 
       <AddModal
-        isOpen={isAddModalOpen}
-        onClose={() => setAddModalOpen(false)}
+        isOpen={addModal.isOpen}
+        onClose={addModal.close}
         onSave={handleAddItem}
         onLinkProject={handleLinkProject}
         parentId={currentFolderId}

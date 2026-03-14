@@ -76,6 +76,7 @@ export const ProjectActionModal: (props: {
         <div className="p-4 bg-background/50 rounded-lg border border-border-color/50">
           <label className="flex items-center gap-2 cursor-pointer mb-2">
             <input
+              id="action-has-refund"
               type="checkbox"
               checked={hasRefund}
               onChange={(e) => setHasRefund(e.target.checked)}

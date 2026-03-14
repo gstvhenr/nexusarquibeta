@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Client, PaymentStatus } from '../../types';
 import { PAYMENT_STATUS_DOT_COLORS } from '../../constants';
-import { Badge } from '../ui';
+import { Badge, IconButton } from '../ui';
 import { SirenIcon, ClockIcon, AlertIcon } from '../ui/icons';
 import { formatDateDayMonth } from '../../utils/formatters';
 import { getInitials } from '../../utils/supplierHelpers';
@@ -62,15 +62,14 @@ export const ClientTableRow: (props: ClientTableRowProps) => React.ReactNode = R
         </td>
         <td className="p-4 text-center">
           <div className="flex flex-col items-center gap-2">
-            <button
-              type="button"
+            <IconButton
+              variant="danger"
               onClick={() => onToggleUrgent(client.id)}
-              className="text-gray-300 hover:text-error transition-colors"
               aria-label="Marcar Urgência"
               title="Urgente"
             >
               <SirenIcon className={`w-5 h-5 ${isUrgent ? 'text-error' : ''}`} />
-            </button>
+            </IconButton>
           </div>
         </td>
         <th scope="row" className="px-6 py-4 font-semibold text-text-primary whitespace-nowrap">
@@ -121,7 +120,7 @@ export const ClientTableRow: (props: ClientTableRowProps) => React.ReactNode = R
         </td>
         <td className="px-6 py-4">
           <div className="font-medium text-text-primary">{primaryContact?.phone || 'N/A'}</div>
-          <div className="text-gray-600">{client.email}</div>
+          <div className="text-text-secondary">{client.email}</div>
         </td>
         <td className="px-6 py-4">
           <div className="font-medium">{client.address?.city || 'N/A'}</div>

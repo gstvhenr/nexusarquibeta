@@ -21,6 +21,7 @@ export function SuppliersSidebar({
       <div className="p-4 border-b border-border-color shrink-0 bg-background/30">
         <div className="relative">
           <input
+            id="supplier-search"
             type="search"
             placeholder="Buscar fornecedor..."
             value={filter}

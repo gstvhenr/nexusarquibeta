@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { PageHeader } from '../../components/layout';
 import {
   useCoreData,
@@ -11,7 +11,7 @@ import {
 import { formatCurrency } from '../../utils/formatters';
 import { getFinancialPageData } from '../../services/financeService';
 import { NAV_LINKS, EXPENSE_CATEGORY_COLORS, RECEIVABLE_SOURCE_COLORS } from '../../constants';
-import { KeyIcon } from '../../components/ui';
+import { ArrowLeftIcon, Button, IconButton, KeyIcon } from '../../components/ui';
 import {
   CardShell,
   SectionTitle,
@@ -163,56 +163,41 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
             contentGap="none"
           >
             <div className="flex items-center bg-surface border border-border-color/50 rounded-lg p-1 shadow-sm">
-              <button
+              <IconButton
                 type="button"
+                variant="default"
+                size="sm"
                 onClick={() => setMonthOffset((o) => o - 1)}
-                className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-background/80 transition-colors"
+                className="rounded-md"
                 aria-label="Mês anterior"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="w-5 h-5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
+                <ArrowLeftIcon className="w-5 h-5" />
+              </IconButton>
               <div className="w-28 text-center px-2 py-1 text-sm font-semibold capitalize text-text-primary">
                 {viewDate
                   .toLocaleString('pt-BR', { month: 'short', year: 'numeric' })
                   .replace(' de ', '/')}
               </div>
-              <button
+              <IconButton
                 type="button"
+                variant="default"
+                size="sm"
                 onClick={() => setMonthOffset((o) => o + 1)}
-                className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-background/80 transition-colors"
+                className="rounded-md"
                 aria-label="Próximo mês"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="w-5 h-5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
+                <ArrowLeftIcon className="w-5 h-5 rotate-180" />
+              </IconButton>
             </div>
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setMonthOffset(0)}
-              className="px-3 py-1.5 text-xs font-semibold text-text-secondary hover:text-primary transition-colors hover:bg-primary/5 rounded-lg border border-transparent hover:border-primary/20"
+              className="text-xs border border-transparent hover:border-primary/20"
             >
               Hoje
-            </button>
+            </Button>
           </PageHeader>
 
           {/* ── ROW 1: KPI Cards + Margin Bar + Reserve ────────── */}
@@ -313,10 +298,12 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
               <div className="flex items-center justify-between mb-3">
                 <SectionTitle>Valores Mensais</SectionTitle>
                 <div className="flex gap-1 bg-background/60 rounded-lg p-0.5">
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setDonutView('all')}
-                    className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all duration-200
+                    className={`text-[11px] rounded-md transition-all duration-200
                       ${
                         donutView === 'all'
                           ? 'bg-primary/15 text-primary shadow-sm'
@@ -324,11 +311,13 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                       }`}
                   >
                     Todos
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setDonutView('expenses')}
-                    className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all duration-200
+                    className={`text-[11px] rounded-md transition-all duration-200
                       ${
                         donutView === 'expenses'
                           ? 'bg-error/15 text-error shadow-sm'
@@ -336,11 +325,13 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                       }`}
                   >
                     Despesas
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setDonutView('income')}
-                    className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all duration-200
+                    className={`text-[11px] rounded-md transition-all duration-200
                       ${
                         donutView === 'income'
                           ? 'bg-success/15 text-success shadow-sm'
@@ -348,7 +339,7 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                       }`}
                   >
                     Recebidos
-                  </button>
+                  </Button>
                 </div>
               </div>
               {activeDonutData.length > 0 ? (
@@ -364,27 +355,25 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                           : 'Gráfico de rosca mostrando a distribuição de receitas recebidas por fonte no mês atual'
                     }
                   >
-                    <ResponsiveContainer width={150} height={150}>
-                      <PieChart>
-                        <Pie
-                          data={activeDonutData}
-                          dataKey="value"
-                          nameKey="category"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={45}
-                          outerRadius={68}
-                          paddingAngle={3}
-                          stroke="none"
-                          cornerRadius={4}
-                        >
-                          {activeDonutData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<DonutTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <PieChart width={150} height={150}>
+                      <Pie
+                        data={activeDonutData}
+                        dataKey="value"
+                        nameKey="category"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={68}
+                        paddingAngle={3}
+                        stroke="none"
+                        cornerRadius={4}
+                      >
+                        {activeDonutData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<DonutTooltip />} />
+                    </PieChart>
                     {/* Center label */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="text-center">

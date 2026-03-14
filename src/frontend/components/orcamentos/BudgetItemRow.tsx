@@ -1,7 +1,7 @@
 import React from 'react';
 import type { BudgetItem } from '../../types';
 import { formatCurrency } from '../../utils/formatters';
-import { TrashIcon } from '../ui';
+import { IconButton, TrashIcon } from '../ui';
 
 interface BudgetItemRowProps {
   item: BudgetItem;
@@ -97,13 +97,14 @@ export const BudgetItemRow: (props: BudgetItemRowProps) => React.ReactNode = ({
       </td>
       <td className="px-6 py-4 font-semibold text-right">{formatCurrency(itemTotal)}</td>
       <td className="p-4 text-center">
-        <button
+        <IconButton
+          variant="danger"
+          size="sm"
           onClick={() => onRemoveItem(sectionId, item.id)}
-          className="text-gray-400 hover:text-error p-1 rounded-full opacity-50 hover:opacity-100 transition-opacity"
           aria-label={`Remover ${item.description}`}
         >
           <TrashIcon className="w-4 h-4" />
-        </button>
+        </IconButton>
       </td>
     </tr>
   );

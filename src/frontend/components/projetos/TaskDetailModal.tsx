@@ -182,6 +182,7 @@ export const TaskDetailModal: (props: TaskDetailModalProps) => React.ReactNode =
                 className="flex items-center gap-3 p-2 bg-background/50 rounded-md hover:bg-background transition-colors group"
               >
                 <input
+                  id={`subtask-${sub.id}`}
                   type="checkbox"
                   checked={sub.completed}
                   onChange={() => toggleSubtask(sub.id)}

@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'success';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   children: ReactNode;
@@ -12,6 +12,7 @@ const VARIANT_STYLES: Record<Required<ButtonProps>['variant'], string> = {
   secondary: 'bg-surface text-text-primary border border-border-color hover:bg-background',
   danger: 'bg-error text-white hover:bg-error/90',
   ghost: 'bg-transparent text-text-primary hover:bg-surface',
+  success: 'bg-success text-white hover:bg-success/90 shadow-soft',
 };
 
 const SIZE_STYLES: Record<Required<ButtonProps>['size'], string> = {

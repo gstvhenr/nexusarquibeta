@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { agendaService } from '../../services/agendaService';
 import type { EventIndex } from '../../services/agendaService';
 import type { AgendaEvent } from '../../types';
-import { EditIcon, CheckCircleIcon } from '../../components/ui';
+import { EditIcon, CheckCircleIcon, IconButton } from '../../components/ui';
 import { DAYS, HOURS, HOUR_HEIGHT_PX, priorityColors } from './agendaConstants';
 
 interface WeeklyTimeGridProps {
@@ -60,7 +60,7 @@ function WeeklyTimeGrid({
               <div
                 key={date.toISOString()}
                 className={`text-center py-3 border-l border-border-color/30 bg-surface ${
-                  isWeekend ? 'bg-gray-100 dark:bg-gray-800' : ''
+                  isWeekend ? 'bg-background dark:bg-background' : ''
                 } ${isPastDay && !isToday ? 'opacity-50' : ''}`}
               >
                 <span className="text-[10px] font-bold text-text-secondary uppercase">
@@ -119,7 +119,7 @@ function WeeklyTimeGrid({
 
                   let cellBg = '';
                   if (isWeekend) {
-                    cellBg = 'bg-gray-100/60 dark:bg-gray-800/25';
+                    cellBg = 'bg-background/60 dark:bg-background/25';
                   } else if (isPastCell) {
                     cellBg = 'bg-amber-50/60 dark:bg-amber-950/25';
                   }
@@ -153,16 +153,16 @@ function WeeklyTimeGrid({
                   height: 0,
                 }}
               >
-                <div className="absolute inset-x-0 h-[1px] bg-red-400/30" />
+                <div className="absolute inset-x-0 h-[1px] bg-error/30" />
                 <div
-                  className="absolute h-[2px] bg-red-500"
+                  className="absolute h-[2px] bg-error"
                   style={{
                     left: `calc(${(todayIndex / 7) * 100}%)`,
                     width: `${(1 / 7) * 100}%`,
                   }}
                 />
                 <div
-                  className="absolute w-2.5 h-2.5 bg-red-500 rounded-full -translate-y-[4px] -translate-x-[3px]"
+                  className="absolute w-2.5 h-2.5 bg-error rounded-full -translate-y-[4px] -translate-x-[3px]"
                   style={{
                     left: `calc(${(todayIndex / 7) * 100}%)`,
                   }}
@@ -202,16 +202,16 @@ function WeeklyTimeGrid({
                   const pColor = priorityColors[event.priority];
                   if (event.completed) {
                     cardBg =
-                      'bg-gray-100 border-gray-300 text-gray-400 dark:bg-gray-800/40 dark:border-gray-600 dark:text-gray-500 line-through';
+                      'bg-background border-border-color text-text-secondary dark:bg-background/40 dark:border-border-color dark:text-text-secondary line-through';
                   } else if (event.isFinancialEvent === 'income') {
                     cardBg =
-                      'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-600 dark:text-emerald-300';
+                      'bg-success/10 border-success/30 text-success dark:bg-success/10 dark:border-success/30 dark:text-success';
                   } else if (event.isFinancialEvent === 'expense') {
                     cardBg =
-                      'bg-rose-50 border-rose-300 text-rose-700 dark:bg-rose-900/30 dark:border-rose-600 dark:text-rose-300';
+                      'bg-error/10 border-error/30 text-error dark:bg-error/10 dark:border-error/30 dark:text-error';
                   } else if (event.isDeadlineEvent) {
                     cardBg =
-                      'bg-purple-50 border-purple-300 text-purple-700 dark:bg-purple-900/30 dark:border-purple-600 dark:text-purple-300';
+                      'bg-error/10 border-error/30 text-error dark:bg-error/10 dark:border-error/30 dark:text-error';
                   } else if (pColor) {
                     cardBg = `${pColor.bg} ${pColor.text} border-current/30`;
                   } else {
@@ -253,9 +253,10 @@ function WeeklyTimeGrid({
                         </div>
                         {!event.isDeadlineEvent && !event.isFinancialEvent && (
                           <div className="flex items-center gap-0.5 shrink-0">
-                            <button
-                              type="button"
-                              className="p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10"
+                            <IconButton
+                              variant="default"
+                              size="sm"
+                              className="p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
                               aria-label="Editar evento"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -263,11 +264,12 @@ function WeeklyTimeGrid({
                               }}
                             >
                               <EditIcon className="w-3 h-3" />
-                            </button>
-                            <button
-                              type="button"
-                              className={`p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 ${
-                                event.completed ? 'text-emerald-500' : ''
+                            </IconButton>
+                            <IconButton
+                              variant="default"
+                              size="sm"
+                              className={`p-0.5 hover:bg-black/10 dark:hover:bg-white/10 ${
+                                event.completed ? 'text-success' : ''
                               }`}
                               aria-label={
                                 event.completed ? 'Marcar como pendente' : 'Marcar como concluída'
@@ -278,7 +280,7 @@ function WeeklyTimeGrid({
                               }}
                             >
                               <CheckCircleIcon className="w-3 h-3" />
-                            </button>
+                            </IconButton>
                           </div>
                         )}
                       </div>

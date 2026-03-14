@@ -5,6 +5,7 @@ import { useSystemData } from '../../context/DataContext';
 import { useFinancialSecurity } from '../../context/FinancialSecurityContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAutoReset } from '../../hooks/useAutoReset';
+import { useDisclosure } from '../../hooks/useDisclosure';
 import { api } from '../../services/infrastructure/api';
 import { ClearDataModal } from './ClearDataModal';
 import { ImportDataModal } from './ImportDataModal';
@@ -18,11 +19,11 @@ function ConfiguracoesPage(): JSX.Element {
   const { contractDeadlines, setContractDeadlines } = useSystemData();
   const { isLockEnabled, toggleLock, changePassword } = useFinancialSecurity();
 
-  const [isImportModalOpen, setImportModalOpen] = useState(false);
-  const [isClearModalOpen, setClearModalOpen] = useState(false);
+  const importModal = useDisclosure();
+  const clearModal = useDisclosure();
   const [clearConfirmationText, setClearConfirmationText] = useState('');
 
-  const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
+  const passwordModal = useDisclosure();
   const [pwdStep, setPwdStep] = useState<'current' | 'new'>('current');
   const [currentPwd, setCurrentPwd] = useState('');
   const [newPwd, setNewPwd] = useState('');
@@ -40,13 +41,13 @@ function ConfiguracoesPage(): JSX.Element {
 
   const openPasswordModal = useCallback(() => {
     resetPasswordModal();
-    setPasswordModalOpen(true);
-  }, [resetPasswordModal]);
+    passwordModal.open();
+  }, [resetPasswordModal, passwordModal]);
 
   const closePasswordModal = useCallback(() => {
-    setPasswordModalOpen(false);
+    passwordModal.close();
     resetPasswordModal();
-  }, [resetPasswordModal]);
+  }, [resetPasswordModal, passwordModal]);
 
   const handleValidateCurrentPassword = useCallback(() => {
     const result = changePassword(currentPwd, currentPwd);
@@ -115,7 +116,7 @@ function ConfiguracoesPage(): JSX.Element {
         );
         console.error('Import error:', error);
       } finally {
-        setImportModalOpen(false);
+        importModal.close();
       }
     };
     reader.readAsText(file);
@@ -296,7 +297,7 @@ function ConfiguracoesPage(): JSX.Element {
               </div>
               <Button
                 variant="secondary"
-                onClick={() => setImportModalOpen(true)}
+                onClick={importModal.open}
                 className="text-primary bg-primary/10 hover:bg-primary/20"
               >
                 Importar
@@ -311,7 +312,7 @@ function ConfiguracoesPage(): JSX.Element {
               </div>
               <Button
                 variant="secondary"
-                onClick={() => setClearModalOpen(true)}
+                onClick={clearModal.open}
                 className="text-error bg-error/10 hover:bg-error/20"
               >
                 Limpar Dados
@@ -322,21 +323,21 @@ function ConfiguracoesPage(): JSX.Element {
       </div>
 
       <ImportDataModal
-        isOpen={isImportModalOpen}
-        onClose={() => setImportModalOpen(false)}
+        isOpen={importModal.isOpen}
+        onClose={importModal.close}
         onImportData={handleImportData}
       />
 
       <ClearDataModal
-        isOpen={isClearModalOpen}
-        onClose={() => setClearModalOpen(false)}
+        isOpen={clearModal.isOpen}
+        onClose={clearModal.close}
         clearConfirmationText={clearConfirmationText}
         onChangeConfirmationText={setClearConfirmationText}
         onConfirmClear={handleClearData}
       />
 
       <PasswordResetModal
-        isOpen={isPasswordModalOpen}
+        isOpen={passwordModal.isOpen}
         onClose={closePasswordModal}
         pwdSuccess={pwdSuccess}
         pwdStep={pwdStep}

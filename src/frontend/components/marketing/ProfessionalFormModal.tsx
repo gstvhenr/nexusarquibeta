@@ -85,6 +85,7 @@ const ProfessionalFormModal: (props: ProfessionalFormModalProps) => React.ReactN
               {photoPreview ? 'Alterar' : 'Adicionar Foto'}
             </button>
             <input
+              id="professional-photo-upload"
               type="file"
               ref={fileInputRef}
               onChange={handlePhotoChange}

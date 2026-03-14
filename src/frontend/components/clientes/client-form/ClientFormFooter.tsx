@@ -1,3 +1,4 @@
+import { Button } from '../../ui';
 import type { ClientFormFooterProps } from './types';
 
 export const ClientFormFooter = ({
@@ -9,37 +10,21 @@ export const ClientFormFooter = ({
   <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
     {isReadOnly ? (
       <>
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color transition-colors"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Fechar
-        </button>
-        <button
-          type="button"
-          onClick={onSwitchToEdit}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus transition-colors"
-        >
+        </Button>
+        <Button variant="primary" onClick={onSwitchToEdit}>
           Editar Cliente
-        </button>
+        </Button>
       </>
     ) : (
       <>
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color transition-colors"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          type="button"
-          onClick={onSave}
-          className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus transition-colors"
-        >
+        </Button>
+        <Button variant="primary" onClick={onSave}>
           Salvar Alterações
-        </button>
+        </Button>
       </>
     )}
   </div>

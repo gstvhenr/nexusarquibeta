@@ -1,6 +1,7 @@
 import React, { useId, useMemo, useState } from 'react';
 import { useCoreData } from '../../context/DataContext';
 import { calculateProjectFinancialSummary } from '../../services/clientFinancialSummaryService';
+import { Button } from '../ui';
 import Modal from '../ui/Modal';
 import {
   ClientFormAuditTab,
@@ -84,42 +85,42 @@ export const ClientFormModal: (props: ClientFormModalProps) => React.ReactNode =
       {initialClient && (
         <div className="border-b border-border-color mb-4">
           <nav className="-mb-px flex space-x-6">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={() => setActiveTab('info')}
               className={tabButtonClass('info')}
             >
               Informações Gerais
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="secondary"
               onClick={() => setActiveTab('finance')}
               className={tabButtonClass('finance')}
             >
               Financeiro
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="secondary"
               onClick={() => setActiveTab('meetings')}
               className={tabButtonClass('meetings')}
             >
               Reuniões
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="secondary"
               onClick={() => setActiveTab('notes')}
               className={tabButtonClass('notes')}
             >
               Observações
-            </button>
+            </Button>
             {(initialClient.auditLog || []).length > 0 && (
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={() => setActiveTab('audit')}
                 className={tabButtonClass('audit')}
               >
                 Histórico
-              </button>
+              </Button>
             )}
           </nav>
         </div>

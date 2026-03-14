@@ -1,6 +1,6 @@
 import React from 'react';
 import { ClockIcon, TrashIcon, UserCircleIcon, PencilIcon } from '../../ui/icons';
-import { IconButton } from '../../ui';
+import { IconButton, Input } from '../../ui';
 import type { ProjectTask, TaskStatus } from '@/types';
 import { getDeadlineInfo } from '@/utils/formatters';
 
@@ -32,6 +32,7 @@ export const ChecklistTaskRow: (props: ChecklistTaskRowProps) => React.ReactNode
     <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-background transition-colors group border border-transparent hover:border-border-color/50">
       <div className="pt-1 relative flex items-center">
         <input
+          id={`checklist-task-${task.id}`}
           type="checkbox"
           checked={task.completed}
           onChange={(e) => onTaskChange(sectionId, task.id, 'completed', e.target.checked)}
@@ -56,7 +57,7 @@ export const ChecklistTaskRow: (props: ChecklistTaskRowProps) => React.ReactNode
       </div>
 
       <div className="flex-1 min-w-0 pt-0.5">
-        <input
+        <Input
           value={task.name}
           onChange={(e) => onTaskChange(sectionId, task.id, 'name', e.target.value)}
           className={`w-full bg-transparent border-none p-0 focus:ring-0 text-sm ${task.completed ? 'line-through text-text-secondary' : 'text-text-primary font-medium'}`}
@@ -111,7 +112,7 @@ export const ChecklistTaskRow: (props: ChecklistTaskRowProps) => React.ReactNode
 
       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <div className="relative group/tooltip">
-          <input
+          <Input
             type="number"
             value={task.hours}
             onChange={(e) => onTaskChange(sectionId, task.id, 'hours', e.target.value)}

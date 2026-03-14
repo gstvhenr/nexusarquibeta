@@ -1,8 +1,28 @@
 import { ClientTableRow } from '../../components/clientes';
-import { ArchiveIcon, IconButton, Input, TrashIcon, UnarchiveIcon } from '../../components/ui';
+import {
+  ArchiveIcon,
+  Button,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  IconButton,
+  Input,
+  Select,
+  TrashIcon,
+  UnarchiveIcon,
+} from '../../components/ui';
 import { clientStatuses, paymentStatuses } from '../../types';
 import type { Client, PaymentStatus } from '../../types';
 import type { ClientesFilterState } from './types';
+
+const CLIENT_STATUS_OPTIONS = [
+  { value: 'Todos', label: 'Status' },
+  ...clientStatuses.map((s) => ({ value: s, label: s })),
+];
+
+const PAYMENT_STATUS_OPTIONS = [
+  { value: 'Todos', label: 'Situação Financeira' },
+  ...paymentStatuses.map((s) => ({ value: s, label: s })),
+];
 
 interface ClientesTablePanelProps {
   showArchived: boolean;
@@ -65,20 +85,13 @@ export const ClientesTablePanel = ({
 
         {!showArchived && (
           <>
-            <select
+            <Select
               value={filter.status}
               onChange={(e) => onFilterChange((prev) => ({ ...prev, status: e.target.value }))}
-              className="bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm"
+              options={CLIENT_STATUS_OPTIONS}
               aria-label="Filtrar por status"
-            >
-              <option value="Todos">Status</option>
-              {clientStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-            <select
+            />
+            <Select
               value={filter.paymentStatus}
               onChange={(e) =>
                 onFilterChange((prev) => ({
@@ -86,16 +99,9 @@ export const ClientesTablePanel = ({
                   paymentStatus: e.target.value as PaymentStatus | 'Todos',
                 }))
               }
-              className="bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm"
+              options={PAYMENT_STATUS_OPTIONS}
               aria-label="Filtrar por situação financeira"
-            >
-              <option value="Todos">Situação Financeira</option>
-              {paymentStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
+            />
           </>
         )}
       </div>
@@ -212,19 +218,15 @@ export const ClientesTablePanel = ({
         <div className="flex items-center gap-2">
           <span className="text-sm text-text-secondary">Exibir</span>
           {[10, 30, 50].map((size) => (
-            <button
+            <Button
               key={size}
-              type="button"
+              variant={pageSize === size ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => onPageSizeChange(size)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                pageSize === size
-                  ? 'bg-primary text-primary-content shadow-sm'
-                  : 'bg-background text-text-secondary hover:bg-border-color/50 hover:text-text-primary border border-border-color/50'
-              }`}
               aria-label={`Exibir ${size} por página`}
             >
               {size}
-            </button>
+            </Button>
           ))}
           <span className="text-sm text-text-secondary">por página</span>
         </div>
@@ -236,43 +238,27 @@ export const ClientesTablePanel = ({
             <span className="font-semibold text-text-primary">{totalFilteredCount}</span>
           </span>
           <div className="flex items-center gap-1">
-            <button
-              type="button"
+            <IconButton
+              variant="default"
+              size="sm"
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage <= 1}
-              className="p-1.5 rounded-md text-text-secondary hover:bg-border-color/50 hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               aria-label="Página anterior"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
+              <ChevronLeftIcon className="w-5 h-5" />
+            </IconButton>
             <span className="text-sm font-medium text-text-primary px-2">
               {currentPage} / {totalPages}
             </span>
-            <button
-              type="button"
+            <IconButton
+              variant="default"
+              size="sm"
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
-              className="p-1.5 rounded-md text-text-secondary hover:bg-border-color/50 hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               aria-label="Próxima página"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+              <ChevronRightIcon className="w-5 h-5" />
+            </IconButton>
           </div>
         </div>
       </div>

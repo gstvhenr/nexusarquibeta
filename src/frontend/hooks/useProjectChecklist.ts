@@ -17,7 +17,7 @@ export function useProjectChecklist(
   setLocalProject: ProjectSetter,
   editingTask: EditingTask | null,
   setEditingTask: React.Dispatch<React.SetStateAction<EditingTask | null>>,
-  setTaskDetailModalOpen: React.Dispatch<React.SetStateAction<boolean>>,
+  openTaskDetailModal: () => void,
 ) {
   const handleAddSection = () =>
     setLocalProject((p) =>
@@ -203,7 +203,7 @@ export function useProjectChecklist(
 
   const handleEditTaskDetails = (sectionId: string, task: ProjectTask) => {
     setEditingTask({ sectionId, task });
-    setTaskDetailModalOpen(true);
+    openTaskDetailModal();
   };
 
   const handleSaveTaskDetails = (updatedTask: ProjectTask) => {

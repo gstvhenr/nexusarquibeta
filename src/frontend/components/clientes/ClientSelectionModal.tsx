@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal } from '../ui';
+import { Button, Input, Modal } from '../ui';
 import { SearchIcon, TrashIcon } from '../ui/icons';
 import type { Client } from '../../types';
 
@@ -31,24 +31,20 @@ export const ClientSelectionModal: (props: ClientSelectionModalProps) => React.R
       <div className="flex flex-col h-[50vh]">
         <div className="p-1 mb-4 flex gap-3 items-center">
           <div className="relative flex-1">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
-            <input
+            <Input
               type="text"
               placeholder="Buscar por nome ou CPF..."
               value={manualSearch}
               onChange={(e) => onManualSearchChange(e.target.value)}
-              className="w-full bg-background pl-10 pr-4 py-3 rounded-xl border border-border-color text-sm focus:border-primary outline-none shadow-sm"
-              // eslint-disable-next-line jsx-a11y/no-autofocus
+              leftIcon={<SearchIcon className="w-5 h-5" />}
+              className="py-3"
               autoFocus
               aria-label="Buscar cliente para seleção"
             />
           </div>
-          <button
-            onClick={onToggleSelectAll}
-            className="px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/5 border border-border-color bg-surface rounded-xl transition-colors whitespace-nowrap"
-          >
+          <Button variant="secondary" onClick={onToggleSelectAll}>
             {selectedIds.size === clients.length ? 'Desmarcar Todos' : 'Marcar Todos'}
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar border border-border-color rounded-xl bg-background/30 p-2">
@@ -95,19 +91,18 @@ export const ClientSelectionModal: (props: ClientSelectionModalProps) => React.R
           </div>
           <div className="flex gap-3">
             {selectedIds.size > 0 && (
-              <button
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={onClearSelection}
-                className="px-4 py-2 text-sm font-semibold text-error hover:bg-error/10 rounded-lg transition-colors border border-transparent hover:border-error/20 flex items-center gap-2"
+                className="flex items-center gap-2"
               >
                 <TrashIcon className="w-4 h-4" /> Limpar Seleção
-              </button>
+              </Button>
             )}
-            <button
-              onClick={onClose}
-              className="px-6 py-2 bg-primary text-primary-content font-bold rounded-lg hover:bg-primary-focus shadow-soft transition-colors"
-            >
+            <Button variant="primary" onClick={onClose}>
               Confirmar
-            </button>
+            </Button>
           </div>
         </div>
       </div>

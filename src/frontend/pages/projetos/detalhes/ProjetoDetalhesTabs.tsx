@@ -15,11 +15,15 @@ import {
   ClipboardDocumentListIcon,
   ClockIcon,
   IconButton,
+  Input,
   PencilIcon,
   PlusIcon,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
   TrashIcon,
 } from '@/components/ui';
-import { Tab, TabList, TabPanel, Tabs } from '@/components/ui/Tabs';
 import {
   ProjectChecklistTab,
   ProjectFinanceTab,
@@ -87,7 +91,7 @@ interface ProjetoDetalhesTabsProps {
   handleUpdateAddendumStatus: (id: string, status: ContractAddendumStatus) => void;
   handleRemoveAddendum: (id: string) => void;
   quotations: Quotation[];
-  setLinkModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  openLinkModal: () => void;
   handleUnlinkQuotation: QuotationsTabProps['onUnlink'];
   commissionTotal?: number;
   potentialCommissionTotal?: number;
@@ -127,7 +131,7 @@ export function ProjetoDetalhesTabs({
   handleUpdateAddendumStatus,
   handleRemoveAddendum,
   quotations,
-  setLinkModalOpen,
+  openLinkModal,
   handleUnlinkQuotation,
   commissionTotal,
   potentialCommissionTotal,
@@ -138,9 +142,6 @@ export function ProjetoDetalhesTabs({
         ? 'border-primary text-primary'
         : 'border-transparent text-text-secondary hover:text-text-primary'
     }`;
-
-  const commonInputClass =
-    'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-text-primary transition';
 
   const handleTabChange = (value: string) => {
     if (isProjectDetailTabId(value)) {
@@ -180,9 +181,7 @@ export function ProjetoDetalhesTabs({
         <div className="p-6">
           <TabPanel value="overview">
             <ProjetoDetalhesOverviewTab
-              activeTab={activeTab}
               localProject={localProject}
-              commonInputClass={commonInputClass}
               isEditingAddress={isEditingAddress}
               setIsEditingAddress={setIsEditingAddress}
               handleLocalChange={handleLocalChange}
@@ -220,12 +219,12 @@ export function ProjetoDetalhesTabs({
                   >
                     Data Final de Entrega do Projeto
                   </label>
-                  <input
+                  <Input
                     id="field-data-final-de-entrega-do-projeto"
                     type="date"
                     value={localProject.deadline?.split('T')[0] || ''}
                     onChange={(e) => handleLocalChange('deadline', e.target.value || null)}
-                    className={commonInputClass}
+                    className="max-w-md"
                     aria-label="Prazo final do projeto"
                   />
                   <p className="text-xs text-text-secondary mt-2">
@@ -264,13 +263,13 @@ export function ProjetoDetalhesTabs({
                     >
                       <div className="flex-1">
                         <label
-                          htmlFor="field-titulo-do-marco"
+                          htmlFor={`field-titulo-do-marco-${deadline.id}`}
                           className="block text-xs font-bold text-text-secondary uppercase mb-1"
                         >
                           Título do Marco
                         </label>
-                        <input
-                          id="field-titulo-do-marco"
+                        <Input
+                          id={`field-titulo-do-marco-${deadline.id}`}
                           value={deadline.title}
                           onChange={(e) =>
                             handleDeadlineChange(deadline.id, 'title', e.target.value)
@@ -283,13 +282,13 @@ export function ProjetoDetalhesTabs({
                       <div className="h-8 w-px bg-border-color"></div>
                       <div>
                         <label
-                          htmlFor="field-data"
+                          htmlFor={`field-data-${deadline.id}`}
                           className="block text-xs font-bold text-text-secondary uppercase mb-1"
                         >
                           Data
                         </label>
-                        <input
-                          id="field-data"
+                        <Input
+                          id={`field-data-${deadline.id}`}
                           type="date"
                           value={deadline.date.split('T')[0]}
                           onChange={(e) =>
@@ -343,7 +342,7 @@ export function ProjetoDetalhesTabs({
             <ProjectQuotationsTab
               project={localProject}
               allQuotations={quotations}
-              onLink={() => setLinkModalOpen(true)}
+              onLink={openLinkModal}
               onUnlink={handleUnlinkQuotation}
             />
           </TabPanel>

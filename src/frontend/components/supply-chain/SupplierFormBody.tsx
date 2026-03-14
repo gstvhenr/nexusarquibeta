@@ -142,6 +142,7 @@ function SupplierFormBody({
               />
               <label className="flex items-center gap-1.5 text-xs font-medium cursor-pointer select-none bg-background border border-border-color px-2 py-2.5 rounded-md hover:border-primary transition-colors">
                 <input
+                  id="supplier-has-whatsapp"
                   type="checkbox"
                   checked={supplier.mainContact.hasWhatsApp}
                   onChange={(e) => onContactChange('hasWhatsApp', e.target.checked)}
@@ -185,6 +186,7 @@ function SupplierFormBody({
             </span>
             <div className="relative">
               <input
+                id="supplier-commission"
                 type="number"
                 value={supplier.commissionPercentage || ''}
                 onChange={(e) =>
@@ -208,6 +210,7 @@ function SupplierFormBody({
                   className="flex items-center gap-2 text-xs cursor-pointer hover:bg-surface p-1 rounded"
                 >
                   <input
+                    id={`supplier-category-${cat.replace(/\s+/g, '-').toLowerCase()}`}
                     type="checkbox"
                     checked={supplier.categories.includes(cat)}
                     onChange={(e) => onCategoryChange(cat, e.target.checked)}

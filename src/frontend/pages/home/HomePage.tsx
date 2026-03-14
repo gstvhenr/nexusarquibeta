@@ -22,6 +22,13 @@ import { formatCurrency } from '../../utils/formatters';
 
 import { useUnifiedEvents } from '../../hooks/useUnifiedEvents';
 
+const DEADLINE_STATUS_CLASS = {
+  overdue: 'text-error font-bold',
+  soon: 'text-warning font-bold',
+  ok: 'text-text-primary',
+  none: 'text-text-secondary',
+} as const;
+
 const KPIBigCard: (props: {
   label: string;
   value: string | number;
@@ -362,7 +369,7 @@ const HomePage: () => React.ReactNode = () => {
                   <li key={task.id} className="text-sm flex justify-between items-center">
                     <span className="truncate pr-2 text-text-secondary">{task.title}</span>
                     <span
-                      className={`text-[10px] font-bold whitespace-nowrap ${task.deadlineInfo.className}`}
+                      className={`text-[10px] font-bold whitespace-nowrap ${DEADLINE_STATUS_CLASS[task.deadlineInfo.status]}`}
                     >
                       {task.deadlineInfo.text}
                     </span>

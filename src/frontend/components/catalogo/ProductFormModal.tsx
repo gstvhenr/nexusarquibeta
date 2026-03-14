@@ -201,6 +201,7 @@ export const ProductFormModal: (props: {
                   <div className="relative mb-3">
                     <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
                     <input
+                      id="product-supplier-search"
                       type="text"
                       placeholder="Buscar fornecedor..."
                       value={supplierSearch}
@@ -216,6 +217,7 @@ export const ProductFormModal: (props: {
                           className="flex items-center gap-3 p-2 hover:bg-surface rounded-lg cursor-pointer transition-colors group"
                         >
                           <input
+                            id={`product-supplier-${supplier.id}`}
                             type="checkbox"
                             checked={selectedSupplierIds.includes(supplier.id)}
                             onChange={() => handleSupplierToggle(supplier.id)}

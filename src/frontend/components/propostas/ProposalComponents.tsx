@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Proposal } from '../../types';
 import { formatCurrency } from '../../utils/formatters';
-import { IconButton, TrashIcon, ArchiveIcon, UnarchiveIcon } from '../ui';
+import { IconButton, TrashIcon, ArchiveIcon, UnarchiveIcon, LinkIcon } from '../ui';
 import { PROPOSAL_STATUS_CLASSES } from '../../constants';
 
 export const ProposalListItem: (props: {
@@ -47,20 +47,7 @@ export const ProposalListItem: (props: {
                 </p>
                 {linkedProjectCode && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-3 h-3"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.06a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.34 8.636"
-                      />
-                    </svg>
+                    <LinkIcon className="w-3 h-3" />
                     {linkedProjectCode}
                   </span>
                 )}

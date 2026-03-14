@@ -92,6 +92,7 @@ const SupplierFormModal: (props: {
         onCategoryChange={handleCategoryChange}
       />
       <input
+        id="supplier-logo-upload"
         type="file"
         ref={fileInputRef}
         onChange={handlePhotoChange}

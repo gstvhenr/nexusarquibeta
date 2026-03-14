@@ -52,6 +52,20 @@ export const ChevronDownIcon: (props: { className?: string }) => React.ReactNode
     <path d="m6 9 6 6 6-6" />
   </Icon>
 );
+export const ChevronLeftIcon: (props: { className?: string }) => React.ReactNode = ({
+  className,
+}) => (
+  <Icon className={className}>
+    <path d="m15 18-6-6 6-6" />
+  </Icon>
+);
+export const ChevronRightIcon: (props: { className?: string }) => React.ReactNode = ({
+  className,
+}) => (
+  <Icon className={className}>
+    <path d="m9 18 6-6-6-6" />
+  </Icon>
+);
 export const MenuIcon: (props: { className?: string }) => React.ReactNode = ({ className }) => (
   <Icon className={className}>
     <line x1="4" x2="20" y1="12" y2="12" />

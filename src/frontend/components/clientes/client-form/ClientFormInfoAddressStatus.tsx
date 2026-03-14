@@ -1,4 +1,4 @@
-import { ChevronDownIcon } from '../../ui/icons';
+import { Button, ChevronDownIcon, Select } from '../../ui';
 import { clientStatuses, type Client } from '@/types';
 import {
   LEAD_SOURCE_OPTIONS,
@@ -168,19 +168,14 @@ export const ClientFormInfoAddressStatus = ({
           >
             Status do Cliente
           </label>
-          <select
+          <Select
             id={fieldId('status')}
             value={client.status}
             onChange={(e) => onChange('status', e.target.value)}
+            options={clientStatuses.map((status) => ({ value: status, label: status }))}
             className={`${commonInputClass} ${getModifiedClass(client.status, initialClient?.status)}`}
             disabled={isReadOnly}
-          >
-            {clientStatuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
+          />
         </div>
         <div>
           <label
@@ -189,19 +184,14 @@ export const ClientFormInfoAddressStatus = ({
           >
             Status no Pipeline
           </label>
-          <select
+          <Select
             id={fieldId('pipelineStatus')}
             value={client.pipelineStatus}
             onChange={(e) => onChange('pipelineStatus', e.target.value)}
+            options={PIPELINE_STATUS_OPTIONS.map((status) => ({ value: status, label: status }))}
             className={`${commonInputClass} ${getModifiedClass(client.pipelineStatus, initialClient?.pipelineStatus)}`}
             disabled={isReadOnly}
-          >
-            {PIPELINE_STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
+          />
         </div>
         <div>
           <label
@@ -210,19 +200,14 @@ export const ClientFormInfoAddressStatus = ({
           >
             Fonte do Lead
           </label>
-          <select
+          <Select
             id={fieldId('leadSource')}
             value={client.leadSource}
             onChange={(e) => onChange('leadSource', e.target.value)}
+            options={LEAD_SOURCE_OPTIONS.map((source) => ({ value: source, label: source }))}
             className={`${commonInputClass} ${getModifiedClass(client.leadSource, initialClient?.leadSource)}`}
             disabled={isReadOnly}
-          >
-            {LEAD_SOURCE_OPTIONS.map((source) => (
-              <option key={source} value={source}>
-                {source}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         <div className="relative" ref={dropdownRef}>
@@ -232,11 +217,11 @@ export const ClientFormInfoAddressStatus = ({
           >
             Serviços de Interesse
           </label>
-          <button
+          <Button
             id={fieldId('serviceInterests')}
-            type="button"
+            variant="secondary"
             onClick={() => !isReadOnly && onToggleInterestsDropdown()}
-            className={`${commonInputClass} text-left flex justify-between items-center ${isReadOnly ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'} ${JSON.stringify(client.serviceInterests) !== JSON.stringify(initialClient?.serviceInterests) ? 'border-yellow-500 ring-1 ring-yellow-500/20' : 'border-border-color'}`}
+            className={`${commonInputClass} text-left flex justify-between items-center ${isReadOnly ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'} ${JSON.stringify(client.serviceInterests) !== JSON.stringify(initialClient?.serviceInterests) ? 'border-warning ring-1 ring-warning/20' : 'border-border-color'}`}
             disabled={isReadOnly}
           >
             <span className="truncate block">
@@ -247,7 +232,7 @@ export const ClientFormInfoAddressStatus = ({
             <ChevronDownIcon
               className={`w-4 h-4 transition-transform ${isInterestsDropdownOpen ? 'rotate-180' : ''}`}
             />
-          </button>
+          </Button>
 
           {isInterestsDropdownOpen && (
             <div className="absolute z-20 bottom-full left-0 right-0 mb-1 bg-surface border border-border-color rounded-lg shadow-lifted max-h-60 overflow-y-auto custom-scrollbar p-1">

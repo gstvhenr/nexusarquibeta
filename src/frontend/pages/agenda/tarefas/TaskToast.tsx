@@ -6,7 +6,7 @@ export function TaskToast({ message }: TaskToastProps): JSX.Element {
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
       <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-surface border border-border-color shadow-lg backdrop-blur-sm">
-        <span className="text-orange-500">
+        <span className="text-warning">
           <svg
             className="w-5 h-5"
             fill="none"

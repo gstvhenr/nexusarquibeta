@@ -1,8 +1,15 @@
 import { useMemo, useState } from 'react';
 import { useAutoReset } from '@/hooks/useAutoReset';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { EventFormModal, SubtaskDetailModal } from '@/components/agenda';
 import { PageHeader } from '@/components/layout';
-import { ArchiveIcon, DeleteConfirmationModal, PlusIcon, UnarchiveIcon } from '@/components/ui';
+import {
+  ArchiveIcon,
+  Button,
+  DeleteConfirmationModal,
+  PlusIcon,
+  UnarchiveIcon,
+} from '@/components/ui';
 import { NAV_LINKS } from '@/constants';
 import { useSystemData } from '@/context/DataContext';
 import type { AgendaEvent, KanbanStatus } from '@/types';
@@ -11,12 +18,20 @@ import { KanbanColumn } from './KanbanColumn';
 import { TaskToast } from './TaskToast';
 import { allSubtasksDone, KANBAN_COLUMNS } from '@/utils/taskUtils';
 
+const KANBAN_COLUMN_ACCENT_CLASS = {
+  info: 'border-info',
+  success: 'border-success',
+  warning: 'border-warning',
+  accent: 'border-warning',
+  danger: 'border-error',
+} as const;
+
 function TarefasPage(): JSX.Element {
   const { agendaEvents, setAgendaEvents } = useSystemData();
 
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isDetailModalOpen, setDetailModalOpen] = useState(false);
+  const taskModal = useDisclosure();
+  const deleteModal = useDisclosure();
+  const detailModal = useDisclosure();
   const [eventToEdit, setEventToEdit] = useState<AgendaEvent | null>(null);
   const [eventToDelete, setEventToDelete] = useState<AgendaEvent | null>(null);
   const [eventToView, setEventToView] = useState<AgendaEvent | null>(null);
@@ -88,13 +103,13 @@ function TarefasPage(): JSX.Element {
         : [...previous, taskEvent],
     );
 
-    setModalOpen(false);
+    taskModal.close();
   };
 
   const handleDeleteEvent = (id: string) => {
     setAgendaEvents((previous) => previous.filter((event) => event.id !== id));
-    setDeleteModalOpen(false);
-    setModalOpen(false);
+    deleteModal.close();
+    taskModal.close();
   };
 
   const handleSubtaskUpdate = (updated: AgendaEvent) => {
@@ -107,23 +122,23 @@ function TarefasPage(): JSX.Element {
   const openAddModal = (targetStatus: KanbanStatus = 'todo') => {
     setEventToEdit(null);
     setInitialKanbanStatus(targetStatus);
-    setModalOpen(true);
+    taskModal.open();
   };
 
   const openEditModal = (event: AgendaEvent) => {
     setEventToEdit(event);
     setInitialKanbanStatus(event.kanbanStatus || 'todo');
-    setModalOpen(true);
+    taskModal.open();
   };
 
   const openDetailModal = (event: AgendaEvent) => {
     setEventToView(event);
-    setDetailModalOpen(true);
+    detailModal.open();
   };
 
   const confirmDelete = (event: AgendaEvent) => {
     setEventToDelete(event);
-    setDeleteModalOpen(true);
+    deleteModal.open();
   };
 
   const pageIcon = NAV_LINKS.find((link) => link.label === 'Agenda')?.children?.find(
@@ -134,10 +149,10 @@ function TarefasPage(): JSX.Element {
     <div className="animate-fade-in-up h-full flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6">
       <PageHeader title="Quadro de Tarefas" icon={pageIcon}>
         <div className="flex items-center gap-3">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={() => setShowArchived(!showArchived)}
-            className="px-4 py-2 rounded-lg font-semibold text-text-primary bg-surface border border-border-color hover:bg-background transition-colors text-sm flex items-center gap-2"
+            className="flex items-center gap-2"
           >
             {showArchived ? (
               <UnarchiveIcon className="w-4 h-4" />
@@ -145,13 +160,15 @@ function TarefasPage(): JSX.Element {
               <ArchiveIcon className="w-4 h-4" />
             )}
             {showArchived ? 'Ver Ativas' : 'Ver Arquivadas'}
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
             onClick={() => openAddModal('todo')}
-            className="px-5 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft flex items-center gap-2 transition-colors text-sm hover:translate-y-px hover:shadow-none"
+            className="flex items-center gap-2 hover:translate-y-px hover:shadow-none"
           >
             <PlusIcon className="w-5 h-5" /> Nova Tarefa
-          </button>
+          </Button>
         </div>
       </PageHeader>
 
@@ -177,7 +194,7 @@ function TarefasPage(): JSX.Element {
                 key={column.id}
                 status={column.id}
                 title={column.title}
-                accentColor={column.color}
+                accentColor={KANBAN_COLUMN_ACCENT_CLASS[column.tone]}
                 tasks={filteredTasks.filter((task) => task.kanbanStatus === column.id)}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
@@ -200,8 +217,8 @@ function TarefasPage(): JSX.Element {
       </div>
 
       <EventFormModal
-        isOpen={isModalOpen}
-        onClose={() => setModalOpen(false)}
+        isOpen={taskModal.isOpen}
+        onClose={taskModal.close}
         onSave={handleSaveEvent}
         onDelete={handleDeleteEvent}
         event={eventToEdit}
@@ -210,15 +227,15 @@ function TarefasPage(): JSX.Element {
       />
 
       <SubtaskDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setDetailModalOpen(false)}
+        isOpen={detailModal.isOpen}
+        onClose={detailModal.close}
         task={eventToView}
         onUpdate={handleSubtaskUpdate}
       />
 
       <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
+        isOpen={deleteModal.isOpen}
+        onClose={deleteModal.close}
         onConfirm={() => eventToDelete && handleDeleteEvent(eventToDelete.id)}
         itemName={eventToDelete?.title || ''}
         itemType="Tarefa"

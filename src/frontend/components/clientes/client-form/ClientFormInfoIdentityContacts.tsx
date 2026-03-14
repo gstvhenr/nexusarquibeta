@@ -1,5 +1,5 @@
 import { PlusIcon, TrashIcon } from '../../ui/icons';
-import { IconButton } from '../../ui';
+import { Button, IconButton } from '../../ui';
 import { formatCpfCnpj, formatPhone } from '@/utils/formatters';
 import type {
   ClientChangeHandler,
@@ -179,7 +179,7 @@ export const ClientFormInfoIdentityContacts = ({
               value={contact.phone}
               onChange={(e) => onContactChange(contact.id, 'phone', e.target.value)}
               onBlur={(e) => onContactChange(contact.id, 'phone', formatPhone(e.target.value))}
-              className={`${commonInputClass} ${initialClient?.contacts?.find((c) => c.id === contact.id)?.phone !== contact.phone ? 'border-yellow-500 ring-1 ring-yellow-500/20' : 'border-border-color'}`}
+              className={`${commonInputClass} ${initialClient?.contacts?.find((c) => c.id === contact.id)?.phone !== contact.phone ? 'border-warning ring-1 ring-warning/20' : 'border-border-color'}`}
               placeholder={`Telefone ${index + 1}`}
               aria-label={`Telefone ${index + 1}`}
               disabled={isReadOnly}
@@ -219,13 +219,14 @@ export const ClientFormInfoIdentityContacts = ({
         ))}
 
         {!isReadOnly && (client.contacts?.length || 0) < 3 && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={onAddContact}
-            className="w-full text-sm font-semibold text-primary p-2 rounded-md hover:bg-primary/10 transition-colors"
+            className="w-full flex items-center justify-center gap-1"
           >
-            <PlusIcon className="w-4 h-4 inline mr-1" /> Adicionar Telefone
-          </button>
+            <PlusIcon className="w-4 h-4" /> Adicionar Telefone
+          </Button>
         )}
 
         <div className="mt-4">

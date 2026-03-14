@@ -59,6 +59,7 @@ export const ProjectFinanceTransactionsSection = ({
               <span className="flex items-center gap-1">
                 <ClockIcon className="w-4 h-4" /> Vencimento:{' '}
                 <input
+                  id="field-lump-sum-due-date"
                   type="date"
                   value={financials.lumpSumDueDate?.split('T')[0] || ''}
                   onChange={(event) =>
@@ -113,6 +114,7 @@ export const ProjectFinanceTransactionsSection = ({
                   </td>
                   <td className="px-6 py-4">
                     <input
+                      name={`installment-desc-${installment.id}`}
                       type="text"
                       value={installment.description || ''}
                       onChange={(event) =>
@@ -125,6 +127,7 @@ export const ProjectFinanceTransactionsSection = ({
                   </td>
                   <td className="px-6 py-4">
                     <input
+                      name={`installment-date-${installment.id}`}
                       type="date"
                       value={installment.dueDate.split('T')[0]}
                       onChange={(event) =>

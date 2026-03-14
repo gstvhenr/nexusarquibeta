@@ -358,6 +358,7 @@ export const ProjectFinanceAddendumsSection = ({
 
                   {/* Status select */}
                   <select
+                    id={`addendum-status-${addendum.id}`}
                     value={addendum.status || 'Pendente'}
                     onChange={(event) =>
                       onUpdateAddendumStatus(

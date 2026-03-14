@@ -11,6 +11,7 @@ import { EventFormModal, SubtaskDetailModal } from '../../components/agenda';
 import { DeleteConfirmationModal } from '../../components/ui';
 import { useUnifiedEvents } from '../../hooks/useUnifiedEvents';
 import useLocalStorage from '../../hooks/useLocalStorage';
+import { useDisclosure } from '../../hooks/useDisclosure';
 
 import type { CalendarViewMode } from './agendaConstants';
 import { MONTHS, CELL_HEIGHT_STORAGE_KEY } from './agendaConstants';
@@ -38,12 +39,12 @@ const AgendaPage: () => React.ReactNode = () => {
   );
 
   // Modals
-  const [isEventModalOpen, setEventModalOpen] = useState(false);
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const eventModal = useDisclosure();
+  const deleteModal = useDisclosure();
+  const detailModal = useDisclosure();
   const [eventToEdit, setEventToEdit] = useState<AgendaEvent | null>(null);
   const [eventToDelete, setEventToDelete] = useState<AgendaEvent | null>(null);
   const [eventToView, setEventToView] = useState<AgendaEvent | null>(null);
-  const [isDetailModalOpen, setDetailModalOpen] = useState(false);
 
   const daysInMonth = useMemo(() => {
     const year = currentDate.getFullYear();
@@ -98,13 +99,13 @@ const AgendaPage: () => React.ReactNode = () => {
 
   const handleSaveEvent = (event: AgendaEvent) => {
     setAgendaEvents((prev) => agendaService.saveEvent(prev, event));
-    setEventModalOpen(false);
+    eventModal.close();
   };
 
   const handleDeleteEvent = () => {
     if (eventToDelete) {
       setAgendaEvents((prev) => agendaService.deleteEvent(prev, eventToDelete.id));
-      setDeleteModalOpen(false);
+      deleteModal.close();
       setEventToDelete(null);
     }
   };
@@ -157,15 +158,21 @@ const AgendaPage: () => React.ReactNode = () => {
     (c) => c.label === 'Calendário',
   )?.icon;
 
-  const handleEventView = useCallback((event: AgendaEvent) => {
-    setEventToView(event);
-    setDetailModalOpen(true);
-  }, []);
+  const handleEventView = useCallback(
+    (event: AgendaEvent) => {
+      setEventToView(event);
+      detailModal.open();
+    },
+    [detailModal],
+  );
 
-  const handleEventEdit = useCallback((event: AgendaEvent) => {
-    setEventToEdit(event);
-    setEventModalOpen(true);
-  }, []);
+  const handleEventEdit = useCallback(
+    (event: AgendaEvent) => {
+      setEventToEdit(event);
+      eventModal.open();
+    },
+    [eventModal],
+  );
 
   const handleToggleCompleted = useCallback(
     (eventId: string) => {
@@ -174,10 +181,13 @@ const AgendaPage: () => React.ReactNode = () => {
     [setAgendaEvents],
   );
 
-  const handleEventDeleteRequest = useCallback((event: AgendaEvent) => {
-    setEventToDelete(event);
-    setDeleteModalOpen(true);
-  }, []);
+  const handleEventDeleteRequest = useCallback(
+    (event: AgendaEvent) => {
+      setEventToDelete(event);
+      deleteModal.open();
+    },
+    [deleteModal],
+  );
 
   return (
     <div className="animate-fade-in-up flex flex-col h-full max-h-full px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 overflow-hidden">
@@ -204,7 +214,7 @@ const AgendaPage: () => React.ReactNode = () => {
           variant="primary"
           onClick={() => {
             setEventToEdit(null);
-            setEventModalOpen(true);
+            eventModal.open();
           }}
           className="h-9 shadow-soft flex items-center gap-2 text-sm"
         >
@@ -223,53 +233,58 @@ const AgendaPage: () => React.ReactNode = () => {
             <div className="flex items-center gap-3">
               {/* View Mode Toggle */}
               <div className="flex rounded-lg border border-border-color overflow-hidden">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => setViewMode('monthly')}
-                  className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`rounded-none px-4 py-2 text-sm font-semibold ${
                     viewMode === 'monthly'
-                      ? 'bg-primary text-primary-content'
+                      ? 'bg-primary text-primary-content hover:bg-primary'
                       : 'bg-surface text-text-secondary hover:bg-background'
                   }`}
                 >
                   Mês
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={() => setViewMode('weekly')}
-                  className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`rounded-none px-4 py-2 text-sm font-semibold ${
                     viewMode === 'weekly'
-                      ? 'bg-primary text-primary-content'
+                      ? 'bg-primary text-primary-content hover:bg-primary'
                       : 'bg-surface text-text-secondary hover:bg-background'
                   }`}
                 >
                   Semana
-                </button>
+                </Button>
               </div>
 
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() =>
                     viewMode === 'monthly' ? handleMonthChange(-1) : handleWeekChange(-1)
                   }
-                  className="p-2 rounded-lg hover:bg-background border border-border-color"
+                  className="p-2 rounded-lg border border-border-color"
                   aria-label={viewMode === 'monthly' ? 'Mês anterior' : 'Semana anterior'}
                 >
                   <ChevronDownIcon className="w-5 h-5 rotate-90" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={() => setCurrentDate(new Date())}
-                  className="px-4 py-2 rounded-lg hover:bg-background border border-border-color text-sm font-semibold"
+                  className="px-4 py-2 rounded-lg border border-border-color text-sm font-semibold"
                 >
                   Hoje
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={() =>
                     viewMode === 'monthly' ? handleMonthChange(1) : handleWeekChange(1)
                   }
-                  className="p-2 rounded-lg hover:bg-background border border-border-color"
+                  className="p-2 rounded-lg border border-border-color"
                   aria-label={viewMode === 'monthly' ? 'Próximo mês' : 'Próxima semana'}
                 >
                   <ChevronDownIcon className="w-5 h-5 -rotate-90" />
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -308,25 +323,25 @@ const AgendaPage: () => React.ReactNode = () => {
       </div>
 
       <EventFormModal
-        isOpen={isEventModalOpen}
-        onClose={() => setEventModalOpen(false)}
+        isOpen={eventModal.isOpen}
+        onClose={eventModal.close}
         onSave={handleSaveEvent}
-        onDelete={() => eventToEdit && setDeleteModalOpen(true)}
+        onDelete={() => eventToEdit && deleteModal.open()}
         event={eventToEdit}
         dateForNewEvent={selectedDate}
       />
 
       <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
+        isOpen={deleteModal.isOpen}
+        onClose={deleteModal.close}
         onConfirm={handleDeleteEvent}
         itemName={eventToDelete?.title || ''}
         itemType="Evento"
       />
 
       <SubtaskDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setDetailModalOpen(false)}
+        isOpen={detailModal.isOpen}
+        onClose={detailModal.close}
         task={eventToView}
         onUpdate={(updated) => {
           setAgendaEvents((prev) => agendaService.updateEvent(prev, updated));

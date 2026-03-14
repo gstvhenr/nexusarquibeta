@@ -43,11 +43,11 @@ export const POST_IT_COLORS: ReminderColorOption[] = [
     label: 'Laranja',
   },
   {
-    key: 'purple',
-    bg: 'bg-violet-50 dark:bg-violet-500/15',
-    border: 'border-violet-200/60 dark:border-violet-600/40',
-    shadow: 'shadow-violet-200/40 dark:shadow-violet-900/20',
-    label: 'Roxo',
+    key: 'teal',
+    bg: 'bg-teal-50 dark:bg-teal-500/15',
+    border: 'border-teal-200/60 dark:border-teal-600/40',
+    shadow: 'shadow-teal-200/40 dark:shadow-teal-900/20',
+    label: 'Verde-água',
   },
 ];
 

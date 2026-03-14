@@ -1,8 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useAutoReset } from '@/hooks/useAutoReset';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/layout';
-import { Modal } from '@/components/ui';
+import { Button, Modal } from '@/components/ui';
 import {
   useCoreData,
   useFinanceData,
@@ -56,11 +57,11 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
   );
 
   const [activeTab, setActiveTab] = useState<ProjectDetailTabId>('overview');
-  const [isLinkModalOpen, setLinkModalOpen] = useState(false);
-  const [isConfirmValueChangeOpen, setConfirmValueChangeOpen] = useState(false);
-  const [isMeetingModalOpen, setMeetingModalOpen] = useState(false);
-  const [isPaymentConfirmModalOpen, setPaymentConfirmModalOpen] = useState(false);
-  const [isTaskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
+  const linkDisclosure = useDisclosure();
+  const confirmValueDisclosure = useDisclosure();
+  const meetingDisclosure = useDisclosure();
+  const paymentConfirmDisclosure = useDisclosure();
+  const taskDetailDisclosure = useDisclosure();
 
   const [paymentToConfirm, setPaymentToConfirm] = useState<PaymentTarget | null>(null);
   const [tempFinancialValue, setTempFinancialValue] = useState<number | undefined>(undefined);
@@ -143,7 +144,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
     if (field === 'baseContractValue') {
       if (value === undefined) return;
       setTempFinancialValue(value as number);
-      setConfirmValueChangeOpen(true);
+      confirmValueDisclosure.open();
       return;
     }
     setLocalProject((p) => (p ? { ...p, financials: { ...p.financials, [field]: value } } : null));
@@ -151,7 +152,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
 
   const confirmFinancialValueChange = () => {
     if (tempFinancialValue === undefined) {
-      setConfirmValueChangeOpen(false);
+      confirmValueDisclosure.close();
       return;
     }
     setLocalProject((p) => {
@@ -172,7 +173,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
         },
       };
     });
-    setConfirmValueChangeOpen(false);
+    confirmValueDisclosure.close();
     setTempFinancialValue(undefined);
   };
 
@@ -263,7 +264,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
 
   const handleSaveLinkedQuotations = (quotationIds: string[]) => {
     handleLocalChange('linkedQuotationIds', quotationIds);
-    setLinkModalOpen(false);
+    linkDisclosure.close();
   };
   const handleUnlinkQuotation = (quotationId: string) => {
     if (localProject?.linkedQuotationIds) {
@@ -279,7 +280,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
         ? prev.map((e) => (e.id === event.id ? event : e))
         : [...prev, event],
     );
-    setMeetingModalOpen(false);
+    meetingDisclosure.close();
   };
 
   // --- Checklist Handlers (extracted to useProjectChecklist) ---
@@ -293,7 +294,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
     handleGanttTaskUpdate,
     handleEditTaskDetails,
     handleSaveTaskDetails,
-  } = useProjectChecklist(setLocalProject, editingTask, setEditingTask, setTaskDetailModalOpen);
+  } = useProjectChecklist(setLocalProject, editingTask, setEditingTask, taskDetailDisclosure.open);
 
   // --- Financials Handlers (extracted to useProjectFinancials) ---
   const {
@@ -312,7 +313,8 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
     localProject,
     paymentToConfirm,
     setPaymentToConfirm,
-    setPaymentConfirmModalOpen,
+    paymentConfirmDisclosure.open,
+    paymentConfirmDisclosure.close,
   );
 
   const commissionTotal = useMemo(() => {
@@ -358,13 +360,14 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
     return (
       <div className="text-center p-10">
         <h2 className="text-2xl font-bold">Projeto não encontrado</h2>
-        <button
+        <Button
           type="button"
+          variant="primary"
           onClick={() => navigate('/projetos')}
-          className="mt-6 px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary"
+          className="mt-6"
         >
           Voltar
-        </button>
+        </Button>
       </div>
     );
   }
@@ -409,7 +412,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
         handleUpdateAddendumStatus={handleUpdateAddendumStatus}
         handleRemoveAddendum={handleRemoveAddendum}
         quotations={quotations}
-        setLinkModalOpen={setLinkModalOpen}
+        openLinkModal={linkDisclosure.open}
         handleUnlinkQuotation={handleUnlinkQuotation}
         commissionTotal={commissionTotal}
         potentialCommissionTotal={potentialCommissionTotal}
@@ -418,20 +421,16 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
       {isDirty && (
         <div className="fixed bottom-0 left-0 md:left-64 lg:left-80 right-0 bg-background/80 backdrop-blur-sm p-4 border-t border-border-color z-20">
           <div className="max-w-7xl mx-auto flex justify-end items-center gap-4">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => setLocalProject(JSON.parse(JSON.stringify(project)))}
-              className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-surface border border-border-color"
             >
               Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-            >
+            </Button>
+            <Button type="button" variant="primary" onClick={handleSave}>
               Salvar Alterações
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -444,8 +443,8 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
       )}
 
       <LinkQuotationModal
-        isOpen={isLinkModalOpen}
-        onClose={() => setLinkModalOpen(false)}
+        isOpen={linkDisclosure.isOpen}
+        onClose={linkDisclosure.close}
         onSave={handleSaveLinkedQuotations}
         project={project}
       />
@@ -457,16 +456,16 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
         actionType={currentActionType}
       />
       <EventFormModal
-        isOpen={isMeetingModalOpen}
-        onClose={() => setMeetingModalOpen(false)}
+        isOpen={meetingDisclosure.isOpen}
+        onClose={meetingDisclosure.close}
         onSave={handleSaveMeeting}
         onDelete={() => {}}
         event={null}
         dateForNewEvent={new Date()}
       />
       <Modal
-        isOpen={isConfirmValueChangeOpen}
-        onClose={() => setConfirmValueChangeOpen(false)}
+        isOpen={confirmValueDisclosure.isOpen}
+        onClose={confirmValueDisclosure.close}
         title="Confirmar Alteração de Valor"
       >
         <p className="text-text-primary mb-6">
@@ -475,30 +474,22 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
           do projeto será recalculado com os aditivos aprovados.
         </p>
         <div className="flex justify-end space-x-4">
-          <button
-            type="button"
-            onClick={() => setConfirmValueChangeOpen(false)}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-          >
+          <Button type="button" variant="secondary" onClick={confirmValueDisclosure.close}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={confirmFinancialValueChange}
-            className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-          >
+          </Button>
+          <Button type="button" variant="primary" onClick={confirmFinancialValueChange}>
             Confirmar
-          </button>
+          </Button>
         </div>
       </Modal>
       <ConfirmPaymentModal
-        isOpen={isPaymentConfirmModalOpen}
-        onClose={() => setPaymentConfirmModalOpen(false)}
+        isOpen={paymentConfirmDisclosure.isOpen}
+        onClose={paymentConfirmDisclosure.close}
         onConfirm={handleConfirmPayment}
       />
       <TaskDetailModal
-        isOpen={isTaskDetailModalOpen}
-        onClose={() => setTaskDetailModalOpen(false)}
+        isOpen={taskDetailDisclosure.isOpen}
+        onClose={taskDetailDisclosure.close}
         task={editingTask?.task || null}
         onSave={handleSaveTaskDetails}
       />

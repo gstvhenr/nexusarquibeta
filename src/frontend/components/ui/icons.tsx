@@ -81,6 +81,8 @@ export {
   UnarchiveIcon,
   SearchIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   MenuIcon,
   XIcon,
   CheckCircleIcon,

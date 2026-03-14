@@ -4,6 +4,7 @@ import { PageHeader } from '../../components/layout';
 import { useReportData } from '../../hooks/useReportData';
 import { generateReport, ReportFilter } from '../../services/reportService';
 import { NAV_LINKS } from '../../constants';
+import { Input } from '../../components/ui';
 import { getTodayDateOnly } from '../../utils/formatters';
 
 // ═══════════════════════════════════════════════════════════════
@@ -100,19 +101,21 @@ const RelatoriosLayout: () => React.ReactNode = () => {
             ))}
           </div>
           <div className="flex items-center gap-2 border-l border-border-color pl-3">
-            <input
+            <Input
               type="date"
               value={filter.startDate}
               onChange={(e) => handleDateChange(e, 'startDate')}
-              className="bg-surface p-1.5 rounded-md border border-border-color text-xs text-text-primary focus:border-accent focus:ring-0"
+              variant="filled"
+              size="sm"
               aria-label="Data de início"
             />
             <span className="text-text-secondary text-xs">até</span>
-            <input
+            <Input
               type="date"
               value={filter.endDate}
               onChange={(e) => handleDateChange(e, 'endDate')}
-              className="bg-surface p-1.5 rounded-md border border-border-color text-xs text-text-primary focus:border-accent focus:ring-0"
+              variant="filled"
+              size="sm"
               aria-label="Data de fim"
             />
           </div>

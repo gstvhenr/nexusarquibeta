@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDownIcon, CheckCircleIcon, ClockIcon, TrashIcon, PlusIcon } from '../../ui/icons';
-import { Button, IconButton } from '../../ui';
+import { Button, IconButton, Input } from '../../ui';
 import { ProjectSection, ProjectTask, TaskStatus } from '@/types';
 import { ChecklistTaskRow } from './ChecklistTaskRow';
 
@@ -121,7 +121,7 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
 
                   <div className="flex-1">
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-1">
-                      <input
+                      <Input
                         value={section.name}
                         onChange={(e) => onSectionChange(section.id, 'name', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -180,13 +180,14 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
                         />
                       ))}
                     </div>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => onAddTask(section.id)}
-                      className="text-sm font-semibold text-primary hover:text-primary-focus hover:bg-primary/5 px-3 py-2 rounded-lg transition-colors flex items-center gap-2 w-full"
+                      className="text-sm font-semibold text-primary hover:text-primary-focus hover:bg-primary/5 px-3 py-2 rounded-lg transition-colors flex items-center gap-2 w-full justify-start"
                     >
                       <PlusIcon className="w-4 h-4" /> Adicionar Tarefa
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

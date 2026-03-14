@@ -10,6 +10,7 @@ import { DeleteConfirmationModal, PlusIcon, Button } from '../../components/ui';
 import { NAV_LINKS } from '../../constants';
 import { useCoreData, useMarketingData } from '../../context/DataContext';
 import type { MarketingActivity, MarketingIdea, MarketingProfessional } from '../../types';
+import { useDisclosure } from '../../hooks/useDisclosure';
 import { MarketingContentListView } from './MarketingContentListView';
 import { MarketingDashboardView } from './MarketingDashboardView';
 import { MarketingIdeasView } from './MarketingIdeasView';
@@ -38,10 +39,10 @@ function GestaoMarketingPage(): JSX.Element {
     return 'dashboard';
   }, [location.pathname]);
 
-  const [isProfessionalModalOpen, setProfessionalModalOpen] = useState(false);
-  const [isActivityModalOpen, setActivityModalOpen] = useState(false);
-  const [isIdeaModalOpen, setIdeaModalOpen] = useState(false);
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const professionalModal = useDisclosure();
+  const activityModal = useDisclosure();
+  const ideaModal = useDisclosure();
+  const deleteModal = useDisclosure();
 
   const [itemToInteract, setItemToInteract] = useState<
     MarketingActivity | MarketingProfessional | MarketingIdea | null
@@ -57,7 +58,7 @@ function GestaoMarketingPage(): JSX.Element {
       }
       return [...previous, professional];
     });
-    setProfessionalModalOpen(false);
+    professionalModal.close();
   };
 
   const handleDeleteProfessional = (id: string) => {
@@ -72,7 +73,7 @@ function GestaoMarketingPage(): JSX.Element {
       }
       return [...previous, activity];
     });
-    setActivityModalOpen(false);
+    activityModal.close();
   };
 
   const handleDeleteActivity = (id: string) => {
@@ -87,7 +88,7 @@ function GestaoMarketingPage(): JSX.Element {
       }
       return [idea, ...previous];
     });
-    setIdeaModalOpen(false);
+    ideaModal.close();
   };
 
   const handleDeleteIdea = (id: string) => {
@@ -116,7 +117,7 @@ function GestaoMarketingPage(): JSX.Element {
 
   const openProfessionalModal = (professional: MarketingProfessional | null) => {
     setItemToInteract(professional);
-    setProfessionalModalOpen(true);
+    professionalModal.open();
   };
 
   const openActivityModal = (
@@ -125,12 +126,12 @@ function GestaoMarketingPage(): JSX.Element {
   ) => {
     setItemToInteract(activity);
     setActivityModalMode(mode);
-    setActivityModalOpen(true);
+    activityModal.open();
   };
 
   const openIdeaModal = (idea: MarketingIdea | null) => {
     setItemToInteract(idea);
-    setIdeaModalOpen(true);
+    ideaModal.open();
   };
 
   const handleDeleteRequest = (
@@ -139,7 +140,7 @@ function GestaoMarketingPage(): JSX.Element {
   ) => {
     setItemToInteract(item);
     setItemTypeToDelete(type);
-    setDeleteModalOpen(true);
+    deleteModal.open();
   };
 
   const handleDeleteConfirm = () => {
@@ -155,7 +156,7 @@ function GestaoMarketingPage(): JSX.Element {
       handleDeleteIdea(itemToInteract.id);
     }
 
-    setDeleteModalOpen(false);
+    deleteModal.close();
     setItemToInteract(null);
     setItemTypeToDelete(null);
   };
@@ -234,16 +235,16 @@ function GestaoMarketingPage(): JSX.Element {
       </div>
 
       <ProfessionalFormModal
-        isOpen={isProfessionalModalOpen}
-        onClose={() => setProfessionalModalOpen(false)}
+        isOpen={professionalModal.isOpen}
+        onClose={professionalModal.close}
         onSave={handleSaveProfessional}
         onDelete={(id) => handleDeleteRequest({ id } as MarketingProfessional, 'professional')}
         initialProfessional={itemToInteract as MarketingProfessional | null}
       />
 
       <ActivityFormModal
-        isOpen={isActivityModalOpen}
-        onClose={() => setActivityModalOpen(false)}
+        isOpen={activityModal.isOpen}
+        onClose={activityModal.close}
         onSave={handleSaveActivity}
         onDelete={(id) => handleDeleteRequest({ id } as MarketingActivity, 'activity')}
         initialActivity={itemToInteract as MarketingActivity | null}
@@ -253,16 +254,16 @@ function GestaoMarketingPage(): JSX.Element {
       />
 
       <IdeaFormModal
-        isOpen={isIdeaModalOpen}
-        onClose={() => setIdeaModalOpen(false)}
+        isOpen={ideaModal.isOpen}
+        onClose={ideaModal.close}
         onSave={handleSaveIdea}
         onDelete={(id) => handleDeleteRequest({ id } as MarketingIdea, 'idea')}
         initialIdea={itemToInteract as MarketingIdea | null}
       />
 
       <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
+        isOpen={deleteModal.isOpen}
+        onClose={deleteModal.close}
         onConfirm={handleDeleteConfirm}
         itemName={getDeleteItemName(itemToInteract)}
         itemType={itemTypeToDelete || ''}

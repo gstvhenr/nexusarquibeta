@@ -4,6 +4,7 @@ import { PROJECT_STATUS_COLORS } from '../../constants';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { getProjectTotalContractValue } from '../../utils/projectFinancials';
 import { ArrowUpCircleIcon, BriefcaseIcon, ProjetosIcon } from '../ui/icons';
+import { Button } from '../ui';
 
 type ClientProjectsTabProps = {
   projects: Project[];
@@ -55,12 +56,13 @@ export const ClientProjectsTab: (props: ClientProjectsTabProps) => React.ReactNo
                     </div>
                   )}
                 </div>
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => onOpenProject(project.id)}
-                  className="w-full py-2 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
+                  className="w-full flex items-center justify-center gap-2"
                 >
                   Ver Projeto <ArrowUpCircleIcon className="w-4 h-4 rotate-45" />
-                </button>
+                </Button>
               </div>
             );
           })}
