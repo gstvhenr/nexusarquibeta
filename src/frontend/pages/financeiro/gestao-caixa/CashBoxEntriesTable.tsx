@@ -61,7 +61,7 @@ export const CashBoxEntriesTable: (props: CashBoxEntriesTableProps) => React.Rea
                 badgeClass = isCredit ? 'bg-success/10 text-success' : 'bg-error/10 text-error';
                 badgeLabel = isCredit ? 'Crédito' : 'Débito';
               } else if (isOverdue) {
-                badgeClass = 'bg-black text-white';
+                badgeClass = 'bg-text-primary text-surface';
                 badgeLabel = isCredit ? 'Crédito Previsto' : 'Débito Previsto';
               } else {
                 badgeClass = isCredit ? 'bg-info/10 text-info' : 'bg-warning/10 text-warning';

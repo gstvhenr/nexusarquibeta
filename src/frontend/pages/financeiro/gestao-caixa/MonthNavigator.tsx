@@ -1,4 +1,6 @@
 import React from 'react';
+import { IconButton } from '@/components/ui';
+import { ChevronLeftIcon, ChevronRightIcon } from '@/components/ui/icons';
 
 type MonthNavigatorProps = {
   currentDate: Date;
@@ -18,27 +20,17 @@ export const MonthNavigator: (props: MonthNavigatorProps) => React.ReactNode = (
 
   return (
     <div className="flex justify-center items-center gap-4">
-      <button
-        type="button"
-        onClick={() => changeMonth(-1)}
-        className="p-2 rounded-full hover:bg-surface transition-colors"
-        aria-label="Mês anterior"
-      >
-        &lt;
-      </button>
+      <IconButton variant="default" onClick={() => changeMonth(-1)} aria-label="Mês anterior">
+        <ChevronLeftIcon className="w-5 h-5" />
+      </IconButton>
       <h3 className="font-serif text-2xl font-bold text-secondary min-w-[12rem] text-center">
         {currentDate
           .toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
           .replace(/^\w/, (char) => char.toUpperCase())}
       </h3>
-      <button
-        type="button"
-        onClick={() => changeMonth(1)}
-        className="p-2 rounded-full hover:bg-surface transition-colors"
-        aria-label="Próximo mês"
-      >
-        &gt;
-      </button>
+      <IconButton variant="default" onClick={() => changeMonth(1)} aria-label="Próximo mês">
+        <ChevronRightIcon className="w-5 h-5" />
+      </IconButton>
     </div>
   );
 };

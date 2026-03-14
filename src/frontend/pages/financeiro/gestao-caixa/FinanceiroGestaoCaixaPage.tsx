@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { useState } from 'react';
 import { PageHeader } from '@/components/layout';
-import { DeleteConfirmationModal } from '@/components/ui';
+import { Button, DeleteConfirmationModal } from '@/components/ui';
 import { PlusIcon } from '@/components/ui/icons';
 import { CashBoxCreditFormModal, CashBoxExpenseFormModal } from '@/components/finance';
 import { useFinanceData } from '@/context/DataContext';
@@ -118,22 +118,16 @@ const FinanceiroGestaoCaixaPage: () => React.ReactNode = () => {
         <div className="h-full flex flex-col">
           <PageHeader title="Gestão de Caixa" icon={financeiroIcon}>
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setCreditFormOpen(true)}
-                className="px-4 py-2 rounded-lg font-semibold text-sm text-white bg-success hover:bg-success/80 flex items-center gap-2 transition-colors"
-                id="btn-add-credit"
-              >
+              <Button variant="success" onClick={() => setCreditFormOpen(true)} id="btn-add-credit">
                 <PlusIcon className="w-5 h-5" /> Adicionar crédito
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="primary"
                 onClick={() => setExpenseFormOpen(true)}
-                className="px-4 py-2 rounded-lg font-semibold text-sm text-primary-content bg-primary hover:bg-primary-focus flex items-center gap-2 transition-colors"
                 id="btn-add-expense"
               >
                 <PlusIcon className="w-5 h-5" /> Adicionar despesa
-              </button>
+              </Button>
             </div>
           </PageHeader>
 

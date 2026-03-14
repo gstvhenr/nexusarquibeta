@@ -1,17 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { PageHeader } from '../../components/layout';
+import { PageHeader } from '@/components/layout';
 import {
   useCoreData,
   useFinanceData,
   useMarketingData,
   useSupplyChainData,
   useSystemData,
-} from '../../context/DataContext';
-import { formatCurrency } from '../../utils/formatters';
-import { getFinancialPageData } from '../../services/financeService';
-import { NAV_LINKS, EXPENSE_CATEGORY_COLORS, RECEIVABLE_SOURCE_COLORS } from '../../constants';
-import { ArrowLeftIcon, Button, IconButton, KeyIcon } from '../../components/ui';
+} from '@/context/DataContext';
+import { formatCurrency } from '@/utils/formatters';
+import { getFinancialPageData } from '@/services/financeService';
+import { NAV_LINKS, EXPENSE_CATEGORY_COLORS, RECEIVABLE_SOURCE_COLORS } from '@/constants';
+import { ArrowLeftIcon, Button, IconButton, KeyIcon } from '@/components/ui';
 import {
   CardShell,
   SectionTitle,
@@ -20,8 +20,8 @@ import {
   HealthBar,
   EmergencyFundCard,
   DonutTooltip,
-} from '../../components/finance';
-import { ArrowUpCircleIcon, ArrowDownCircleIcon } from '../../components/ui';
+} from '@/components/finance';
+import { ArrowUpCircleIcon, ArrowDownCircleIcon } from '@/components/ui';
 
 const DEFAULT_CATEGORY_COLOR = 'hsl(0, 0%, 55%)';
 const DEFAULT_RECEIVABLE_COLOR = 'hsl(160, 40%, 50%)';
@@ -239,7 +239,7 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
               <div className="space-y-3 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 rounded-full bg-gradient-to-b from-success to-emerald-400" />
+                    <div className="w-1 h-4 rounded-full bg-gradient-to-b from-success to-success/60" />
                     <p className="text-xs font-semibold text-text-primary">Recebíveis</p>
                   </div>
                   <div className="space-y-3 pl-3">
@@ -265,7 +265,7 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                 </div>
                 <div className="border-t border-border-color/30 pt-3">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 rounded-full bg-gradient-to-b from-error to-rose-400" />
+                    <div className="w-1 h-4 rounded-full bg-gradient-to-b from-error to-error/60" />
                     <p className="text-xs font-semibold text-text-primary">Débitos</p>
                   </div>
                   <div className="space-y-3 pl-3">

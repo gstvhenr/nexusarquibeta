@@ -8,19 +8,19 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { PageHeader } from '../../components/layout';
+import { PageHeader } from '@/components/layout';
 import {
   useCoreData,
   useFinanceData,
   useMarketingData,
   useSupplyChainData,
   useSystemData,
-} from '../../context/DataContext';
-import { formatYAxisTick } from '../../utils/formatters';
-import { getCashFlowForecastSeries } from '../../services/financeService';
-import { NAV_LINKS } from '../../constants';
-import { CardShell, SectionTitle, CustomTooltip } from '../../components/finance';
-import type { FinancialSeriesSource } from '../../types';
+} from '@/context/DataContext';
+import { formatYAxisTick } from '@/utils/formatters';
+import { getCashFlowForecastSeries } from '@/services/financeService';
+import { NAV_LINKS } from '@/constants';
+import { CardShell, SectionTitle, CustomTooltip } from '@/components/finance';
+import type { FinancialSeriesSource } from '@/types';
 
 const FinanceiroPrevisaoCaixaPage: () => React.ReactNode = () => {
   const { projects } = useCoreData();
