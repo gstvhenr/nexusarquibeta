@@ -125,33 +125,27 @@ const HomePage: () => React.ReactNode = () => {
 
       {/* Critical Alert "Hero" Section */}
       {activeFocusItem ? (
-        <div
-          onClick={() => navigate(activeFocusItem.path)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              navigate(activeFocusItem.path);
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-l-4 border-error p-6 rounded-r-xl shadow-sm flex items-start gap-5 cursor-pointer transition-all hover:shadow-md group relative overflow-hidden"
-        >
-          <div className="p-3 bg-white dark:bg-black/30 rounded-full text-error shadow-sm z-10 group-hover:scale-110 transition-transform">
+        <div className="bg-gradient-to-r from-error/5 to-warning/5 dark:from-error/10 dark:to-warning/10 border-l-4 border-error p-6 rounded-r-xl shadow-sm flex items-start gap-5 transition-all hover:shadow-md group relative overflow-hidden focus-within:ring-2 focus-within:ring-error focus-within:ring-inset">
+          <button
+            type="button"
+            className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
+            onClick={() => navigate(activeFocusItem.path)}
+            aria-label={`Ver detalhes sobre ${activeFocusItem.title}`}
+          />
+          <div className="p-3 bg-surface rounded-full text-error shadow-sm z-10 group-hover:scale-110 transition-transform pointer-events-none">
             <AlertIcon className="w-8 h-8" />
           </div>
-          <div className="flex-1 z-10">
-            <div className="flex justify-between items-start">
+          <div className="flex-1 z-10 pointer-events-none">
+            <div className="flex justify-between items-start pointer-events-auto">
               <p className="text-xs font-bold text-error uppercase tracking-widest mb-1">
                 {activeFocusItem.tag}
               </p>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={() => {
                   setDismissedFocusItems((prev) => [...prev, activeFocusItem.id]);
                 }}
-                className="text-text-secondary hover:text-primary text-xs font-semibold hover:underline"
+                className="text-text-secondary hover:text-primary text-xs font-semibold hover:underline relative z-20"
               >
                 Dispensar
               </button>

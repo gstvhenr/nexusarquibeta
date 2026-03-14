@@ -189,11 +189,7 @@ function ConfiguracoesPage(): JSX.Element {
                   Altere a senha utilizada para desbloquear os valores financeiros.
                 </p>
               </div>
-              <Button
-                variant="secondary"
-                onClick={openPasswordModal}
-                className="text-primary bg-primary/10 hover:bg-primary/20"
-              >
+              <Button variant="secondary" onClick={openPasswordModal}>
                 Redefinir
               </Button>
             </div>
@@ -280,11 +276,7 @@ function ConfiguracoesPage(): JSX.Element {
                   Salva todos os seus dados em um arquivo de backup.
                 </p>
               </div>
-              <Button
-                variant="secondary"
-                onClick={handleExportData}
-                className="text-primary bg-primary/10 hover:bg-primary/20"
-              >
+              <Button variant="secondary" onClick={handleExportData}>
                 Exportar
               </Button>
             </div>
@@ -295,11 +287,7 @@ function ConfiguracoesPage(): JSX.Element {
                   Carrega dados de um arquivo de backup. Substitui os dados atuais.
                 </p>
               </div>
-              <Button
-                variant="secondary"
-                onClick={importModal.open}
-                className="text-primary bg-primary/10 hover:bg-primary/20"
-              >
+              <Button variant="secondary" onClick={importModal.open}>
                 Importar
               </Button>
             </div>
@@ -310,11 +298,7 @@ function ConfiguracoesPage(): JSX.Element {
                   Remove permanentemente todos os dados do aplicativo.
                 </p>
               </div>
-              <Button
-                variant="secondary"
-                onClick={clearModal.open}
-                className="text-error bg-error/10 hover:bg-error/20"
-              >
+              <Button variant="danger" onClick={clearModal.open}>
                 Limpar Dados
               </Button>
             </div>

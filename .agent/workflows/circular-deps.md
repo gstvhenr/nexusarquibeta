@@ -80,8 +80,8 @@ Se o baseline já está vermelho, **parar e avisar o usuário**.
 | ------------------------------- | ----------------------------------------------------- |
 | Tipos compartilhados circulares | Extrair para `types/shared.ts` ou `types/{domain}.ts` |
 | Funções utilitárias circulares  | Extrair para módulo intermediário                     |
-| Service ↔ Service              | Dependency Inversion: introduzir interface            |
-| Component ↔ Hook bidireccional | Extrair lógica compartilhada para utils               |
+| Service ↔ Service               | Dependency Inversion: introduzir interface            |
+| Component ↔ Hook bidireccional  | Extrair lógica compartilhada para utils               |
 
 **Regra:** cada fix deve quebrar **exatamente 1 aresta** do ciclo.
 

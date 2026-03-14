@@ -19,19 +19,16 @@ Ativa o modo DEBUG para investigação sistemática de bugs, erros ou comportame
 Quando `/debug` for acionado:
 
 1. **Coletar informações**
-
    - Mensagem de erro completa
    - Passos para reproduzir
    - Comportamento esperado vs. atual
    - Mudanças recentes (`git log --oneline -10`)
 
 2. **Formular hipóteses**
-
    - **OBRIGATÓRIO:** Use a tool `mcp_sequential-thinking` para explorar a raiz do erro e eliminar hipóteses falsas _antes_ de tentar editar código ou cuspir o resultado na tela.
    - Listar causas possíveis ordenadas por probabilidade
 
 3. **Investigar sistematicamente**
-
    - Testar cada hipótese
    - Verificar dados, contexto React, storage IndexedDB
    - Usar método de eliminação

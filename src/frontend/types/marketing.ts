@@ -74,15 +74,6 @@ export interface MarketingActivity {
   cost?: number;
 }
 
-export interface MarketingIdea {
-  id: string;
-  content: string;
-  date: string;
-  title?: string;
-  color?: string;
-  isFavorite?: boolean;
-}
-
 /** Registro manual de métricas do Instagram em um ponto no tempo. */
 export interface InstagramSnapshot {
   id: string;

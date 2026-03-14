@@ -10,12 +10,7 @@ import type {
   ProfessionalExpense,
 } from './finance';
 import type { Freelancer, HiredService } from './freelancer';
-import type {
-  MarketingActivity,
-  MarketingIdea,
-  MarketingProfessional,
-  SocialNetwork,
-} from './marketing';
+import type { MarketingActivity, MarketingProfessional, SocialNetwork } from './marketing';
 import type { BudgetTemplateSection, Proposal } from './proposal';
 import type { Project } from './project';
 import type { Product, Quotation, Supplier, SupplierProductPrice } from './supply-chain';
@@ -33,7 +28,6 @@ export interface AppData {
   commissions: Commission[];
   marketingProfessionals: MarketingProfessional[];
   marketingActivities: MarketingActivity[];
-  marketingIdeas: MarketingIdea[];
   socialNetworks: SocialNetwork[];
   freelancers: Freelancer[];
   agendaEvents: AgendaEvent[];

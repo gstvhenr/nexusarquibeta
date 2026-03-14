@@ -21,9 +21,7 @@
     "src/frontend/services/infrastructure/index.ts",
     "src/frontend/services/infrastructure/persistence/sqlite/index.ts"
   ],
-  "unlistedBinaries": [
-    "package.json:dot"
-  ],
+  "unlistedBinaries": ["package.json:dot"],
   "unusedExports": [
     "src/frontend/components/layout/index.ts:ErrorBoundary",
     "src/frontend/services/infrastructure/persistence/index.ts:IndexedDbPersistenceAdapter",

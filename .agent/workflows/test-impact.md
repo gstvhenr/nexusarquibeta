@@ -64,7 +64,6 @@ npx vitest --changed --run
 Para cada arquivo alterado que contém lógica runtime:
 
 1. **Arquivo `.test.ts(x)` existe?**
-
    - ✅ Sim → Verificar se os testes cobrem a lógica alterada.
    - ❌ Não → **ALERTA**: criar teste obrigatório antes de prosseguir.
 

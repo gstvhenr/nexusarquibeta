@@ -79,13 +79,11 @@ Health Metrics:
 **Protocolo:**
 
 1. **REPRODUZIR** — Para cada dependência circular reportada:
-
    - Verificar se é real ou falso positivo (artefato de barrel export, self-reference, etc.)
    - `grep -r "import.*from" <arquivo>` para mapear a cadeia de imports
    - Construir o ciclo completo: `A → B → C → A`
 
 2. **DIAGNOSTICAR** — Para cada ciclo confirmado como real:
-
    - Classificar o tipo:
      - **Type-only cycle**: imports apenas de tipos (`import type { ... }`)
      - **Runtime cycle**: imports de valores/funções (⚠️ perigoso)
@@ -93,7 +91,6 @@ Health Metrics:
    - Identificar a causa raiz (shared barrel? dependência cruzada? responsabilidade misturada?)
 
 3. **REMEDIAR** — Aplicar a correção incremental adequada:
-
    - **Self-reference** → Remover o re-export circular do barrel
    - **Type-only cycle** → Migrar para `import type` (se ainda não for) — seguro
    - **Runtime cycle** → Extrair a dependência compartilhada para módulo neutro
@@ -115,18 +112,15 @@ Health Metrics:
 **Protocolo:**
 
 1. **IDENTIFICAR** — Para cada módulo reportado como "high coupling":
-
    - Listar todos os seus importadores: `grep -r "from.*<módulo>" src/`
    - Listar todas as suas importações: analisar imports do arquivo
    - Calcular fan-in (quem importa) e fan-out (quem é importado)
 
 2. **CLASSIFICAR** — Determinar se o alto acoplamento é:
-
    - **Legítimo**: módulo de tipos compartilhados, utils fundacionais, constantes globais → **documentar e aceitar**
    - **Problemático**: módulo "god object" que mistura responsabilidades → **refatorar**
 
 3. **REMEDIAR** (apenas para acoplamento problemático):
-
    - Aplicar **Single Responsibility**: dividir em módulos menores por domínio
    - Usar **barrel exports** para manter interface pública estável
    - Atualizar TODOS os imports afetados (verificar com grep)
@@ -157,14 +151,12 @@ Health Metrics:
    | **Arquivo novo/WIP**     | Criado recentemente, possivelmente em progresso  | ⏸️ Registrar em NEXT.md, não remover                  |
 
 2. **VALIDAR CANDIDATOS** — Para cada candidato a remoção:
-
    - `grep -rn "<nome-do-export>" src/` — confirmar zero usos
    - `grep -rn "<nome-do-arquivo>" src/` — confirmar zero referências
    - Verificar se não é referenciado em `vite.config`, `tsconfig`, `tailwind.config`, rotas
    - ⚠️ **Dupla confirmação obrigatória antes de qualquer remoção**
 
 3. **REMEDIAR** — Em micro-batches de no máximo 10 arquivos:
-
    - Remover arquivo
    - Remover export do barrel (se existir)
    - Atualizar inventário (`.agent/memory/project-inventory.md`)
@@ -201,7 +193,6 @@ Health Metrics:
    ```
 
 3. **Atualizar documentação:**
-
    - `NEXT.md` — registrar o que foi feito e o que ficou pendente
    - `.agent/lessons-learned.md` — registrar padrões encontrados
    - `docs/decisions/` — criar ADR se houve decisão arquitetural

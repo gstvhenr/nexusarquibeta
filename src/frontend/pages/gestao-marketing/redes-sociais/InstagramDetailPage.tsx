@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { InstagramCredentialModal } from '@/components/marketing';
+import { IconButton } from '@/components/ui';
 import { ArrowLeftIcon } from '@/components/ui/icons';
 import { SOCIAL_NETWORKS_SUPPORTED } from '@/constants';
 import { useMarketingData } from '@/context/DataContext';
@@ -165,13 +166,12 @@ const InstagramDetailPage: () => React.ReactNode = () => {
     return (
       <div className="animate-fade-in-up">
         <div className="flex items-center gap-3 mb-6">
-          <button
-            type="button"
+          <IconButton
             onClick={() => navigate('/gestao-marketing/redes-sociais')}
-            className="p-2 rounded-lg hover:bg-border-color/30 transition-colors"
+            aria-label="Voltar para Redes Sociais"
           >
             <ArrowLeftIcon className="w-5 h-5" />
-          </button>
+          </IconButton>
           <h1 className="font-serif text-2xl font-bold text-secondary">Rede não encontrada</h1>
         </div>
       </div>

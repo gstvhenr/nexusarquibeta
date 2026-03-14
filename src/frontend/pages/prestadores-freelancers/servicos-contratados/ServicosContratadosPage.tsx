@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useDisclosure } from '@/hooks';
 import { PageHeader } from '@/components/layout';
 import { Button, FormField, IconButton, Input, Modal, Select } from '@/components/ui';
 import { useCoreData, useSupplyChainData, useSystemData } from '@/context/DataContext';
@@ -28,7 +29,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
   const { freelancers } = useSupplyChainData();
   const { hiredServices, setHiredServices } = useSystemData();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const modalDisclosure = useDisclosure();
   const [showArchived, setShowArchived] = useState(false);
 
   // Form State
@@ -67,7 +68,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
     setSelectedFreelancerId('');
     setCost(0);
     setDeadline(getTodayDateOnly());
-    setIsModalOpen(true);
+    modalDisclosure.open();
   };
 
   const handleSave = () => {
@@ -120,7 +121,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
       );
     }
 
-    setIsModalOpen(false);
+    modalDisclosure.close();
   };
 
   const toggleTaskSelection = (taskId: string) => {
@@ -276,8 +277,8 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
       </div>
 
       <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={modalDisclosure.isOpen}
+        onClose={modalDisclosure.close}
         title="Contratar Novo Serviço"
       >
         <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
@@ -377,7 +378,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
           )}
         </div>
         <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
-          <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+          <Button variant="secondary" onClick={modalDisclosure.close}>
             Cancelar
           </Button>
           <Button variant="primary" onClick={handleSave}>

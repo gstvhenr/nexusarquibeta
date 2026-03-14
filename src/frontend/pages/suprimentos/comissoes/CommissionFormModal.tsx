@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Button, FormField, Input, Modal, Textarea } from '@/components/ui';
+import { Button, FormField, Input, Modal, Select, Textarea } from '@/components/ui';
 import { useCoreData, useSupplyChainData } from '@/context/DataContext';
 import type { Commission } from '@/types';
-import { getTodayDateOnly } from '@/utils/formatters';
+import { getLatestPriceFromHistory } from '@/utils/supplierHelpers';
+import { getTodayDateOnly, formatCurrency } from '@/utils/formatters';
 
 type CommissionFormModalProps = {
   isOpen: boolean;
@@ -20,7 +21,7 @@ export const CommissionFormModal: (props: CommissionFormModalProps) => React.Rea
   onSave,
   initialCommission,
 }) => {
-  const { suppliers } = useSupplyChainData();
+  const { suppliers, quotations, products, supplierProductPrices } = useSupplyChainData();
   const { clients } = useCoreData();
 
   const getInitial = useCallback(
@@ -88,8 +89,29 @@ export const CommissionFormModal: (props: CommissionFormModalProps) => React.Rea
     return null;
   }
 
-  const selectClass =
-    'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent';
+  const supplierOptions = [
+    { value: '', label: 'Selecione o Fornecedor' },
+    ...suppliers
+      .filter((supplier) => !supplier.archived)
+      .map((supplier) => ({ value: supplier.id, label: supplier.name })),
+  ];
+
+  const clientOptions = [
+    { value: '', label: 'Selecione o Cliente' },
+    ...clients
+      .filter((client) => !client.archived)
+      .map((client) => ({ value: client.id, label: client.name })),
+  ];
+
+  const sourceQuotation = commission.quotationId
+    ? quotations.find((q) => q.id === commission.quotationId)
+    : null;
+
+  const quotationItems = sourceQuotation
+    ? (sourceQuotation.items || []).filter(
+        (item) => (sourceQuotation.selections || {})[item.productId] === commission.supplierId,
+      )
+    : [];
 
   return (
     <Modal
@@ -99,54 +121,20 @@ export const CommissionFormModal: (props: CommissionFormModalProps) => React.Rea
     >
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="field-fornecedor"
-              className="block text-xs font-medium text-text-secondary mb-1"
-            >
-              Fornecedor
-            </label>
-            <select
-              id="field-fornecedor"
-              value={commission.supplierId}
-              onChange={(event) => handleChange('supplierId', event.target.value)}
-              className={selectClass}
-              aria-label="Fornecedor"
-            >
-              <option value="">Selecione o Fornecedor</option>
-              {suppliers
-                .filter((supplier) => !supplier.archived)
-                .map((supplier) => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.name}
-                  </option>
-                ))}
-            </select>
-          </div>
-          <div>
-            <label
-              htmlFor="field-cliente"
-              className="block text-xs font-medium text-text-secondary mb-1"
-            >
-              Cliente
-            </label>
-            <select
-              id="field-cliente"
-              value={commission.clientId}
-              onChange={(event) => handleChange('clientId', event.target.value)}
-              className={selectClass}
-              aria-label="Cliente"
-            >
-              <option value="">Selecione o Cliente</option>
-              {clients
-                .filter((client) => !client.archived)
-                .map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                  </option>
-                ))}
-            </select>
-          </div>
+          <Select
+            label="Fornecedor"
+            value={commission.supplierId}
+            onChange={(event) => handleChange('supplierId', event.target.value)}
+            options={supplierOptions}
+            aria-label="Fornecedor"
+          />
+          <Select
+            label="Cliente"
+            value={commission.clientId}
+            onChange={(event) => handleChange('clientId', event.target.value)}
+            options={clientOptions}
+            aria-label="Cliente"
+          />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Data da Venda">
@@ -208,6 +196,62 @@ export const CommissionFormModal: (props: CommissionFormModalProps) => React.Rea
             aria-label="Notas"
           />
         </FormField>
+
+        {sourceQuotation && quotationItems.length > 0 && (
+          <div className="mt-6 pt-4 border-t border-border-color">
+            <h4 className="font-semibold text-secondary mb-3">Itens da Cotação</h4>
+            <div className="bg-surface rounded-lg shadow-soft border border-border-color overflow-hidden">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-background text-text-secondary">
+                  <tr>
+                    <th className="py-2 px-4 font-medium">Produto</th>
+                    <th className="py-2 px-4 font-medium">Qtd</th>
+                    <th className="py-2 px-4 font-medium text-right">Valor Unit.</th>
+                    <th className="py-2 px-4 font-medium text-right">Comissão</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-color">
+                  {quotationItems.map((item) => {
+                    const product = products.find((p) => p.id === item.productId);
+                    const priceInfo = supplierProductPrices.find(
+                      (p) =>
+                        p.productId === item.productId && p.supplierId === commission.supplierId,
+                    );
+                    const latestPrice = priceInfo
+                      ? getLatestPriceFromHistory(priceInfo.priceHistory) || 0
+                      : 0;
+                    const itemTotal = latestPrice * item.quantity;
+                    const itemCommission = calculateCommissionValue(
+                      itemTotal,
+                      commission.commissionPercentage,
+                    );
+
+                    return (
+                      <tr key={item.productId} className="hover:bg-background/50">
+                        <td className="py-2 px-4">
+                          <p className="font-medium text-text-primary">
+                            {product?.name || 'Produto não encontrado'}
+                          </p>
+                          <p className="text-xs text-text-secondary">{product?.category}</p>
+                        </td>
+                        <td className="py-2 px-4">
+                          {item.quantity} {product?.unit}
+                        </td>
+                        <td className="py-2 px-4 text-right">{formatCurrency(latestPrice)}</td>
+                        <td className="py-2 px-4 text-right text-success font-semibold">
+                          {formatCurrency(itemCommission)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-text-secondary italic mt-2 text-right">
+              Origem: Cotação "{sourceQuotation.name}"
+            </p>
+          </div>
+        )}
       </div>
       <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
         <Button variant="secondary" onClick={onClose}>

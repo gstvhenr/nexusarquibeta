@@ -1,23 +1,18 @@
 import { useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import {
-  ActivityFormModal,
-  IdeaFormModal,
-  ProfessionalFormModal,
-} from '../../components/marketing';
+import { ActivityFormModal, ProfessionalFormModal } from '../../components/marketing';
 import { PageHeader } from '../../components/layout';
 import { DeleteConfirmationModal, PlusIcon, Button } from '../../components/ui';
 import { NAV_LINKS } from '../../constants';
 import { useCoreData, useMarketingData } from '../../context/DataContext';
-import type { MarketingActivity, MarketingIdea, MarketingProfessional } from '../../types';
+import type { MarketingActivity, MarketingProfessional } from '../../types';
 import { useDisclosure } from '../../hooks/useDisclosure';
 import { MarketingContentListView } from './MarketingContentListView';
 import { MarketingDashboardView } from './MarketingDashboardView';
-import { MarketingIdeasView } from './MarketingIdeasView';
 
-type MarketingView = 'dashboard' | 'content' | 'ideas';
+type MarketingView = 'dashboard' | 'content';
 
-type DeletableItemType = 'professional' | 'activity' | 'idea' | null;
+type DeletableItemType = 'professional' | 'activity' | null;
 
 function GestaoMarketingPage(): JSX.Element {
   const {
@@ -25,8 +20,6 @@ function GestaoMarketingPage(): JSX.Element {
     setMarketingProfessionals: setProfessionals,
     marketingActivities: activities,
     setMarketingActivities: setActivities,
-    marketingIdeas: ideas,
-    setMarketingIdeas: setIdeas,
   } = useMarketingData();
   const { projects, clients } = useCoreData();
 
@@ -35,17 +28,16 @@ function GestaoMarketingPage(): JSX.Element {
   const activeView = useMemo<MarketingView>(() => {
     const path = location.pathname;
     if (path.endsWith('/conteudos')) return 'content';
-    if (path.endsWith('/banco-de-ideias')) return 'ideas';
     return 'dashboard';
   }, [location.pathname]);
 
   const professionalModal = useDisclosure();
   const activityModal = useDisclosure();
-  const ideaModal = useDisclosure();
+
   const deleteModal = useDisclosure();
 
   const [itemToInteract, setItemToInteract] = useState<
-    MarketingActivity | MarketingProfessional | MarketingIdea | null
+    MarketingActivity | MarketingProfessional | null
   >(null);
   const [itemTypeToDelete, setItemTypeToDelete] = useState<DeletableItemType>(null);
   const [activityModalMode, setActivityModalMode] = useState<'view' | 'edit'>('edit');
@@ -80,27 +72,6 @@ function GestaoMarketingPage(): JSX.Element {
     setActivities((previous) => previous.filter((item) => item.id !== id));
   };
 
-  const handleSaveIdea = (idea: MarketingIdea) => {
-    setIdeas((previous) => {
-      const exists = previous.some((item) => item.id === idea.id);
-      if (exists) {
-        return previous.map((item) => (item.id === idea.id ? idea : item));
-      }
-      return [idea, ...previous];
-    });
-    ideaModal.close();
-  };
-
-  const handleDeleteIdea = (id: string) => {
-    setIdeas((previous) => previous.filter((item) => item.id !== id));
-  };
-
-  const handleToggleFavoriteIdea = (id: string) => {
-    setIdeas((previous) =>
-      previous.map((item) => (item.id === id ? { ...item, isFavorite: !item.isFavorite } : item)),
-    );
-  };
-
   const handleToggleActivityStatus = (id: string) => {
     setActivities((previous) =>
       previous.map((item) =>
@@ -129,13 +100,8 @@ function GestaoMarketingPage(): JSX.Element {
     activityModal.open();
   };
 
-  const openIdeaModal = (idea: MarketingIdea | null) => {
-    setItemToInteract(idea);
-    ideaModal.open();
-  };
-
   const handleDeleteRequest = (
-    item: MarketingProfessional | MarketingActivity | MarketingIdea,
+    item: MarketingProfessional | MarketingActivity,
     type: Exclude<DeletableItemType, null>,
   ) => {
     setItemToInteract(item);
@@ -152,22 +118,16 @@ function GestaoMarketingPage(): JSX.Element {
     if (itemTypeToDelete === 'activity') {
       handleDeleteActivity(itemToInteract.id);
     }
-    if (itemTypeToDelete === 'idea') {
-      handleDeleteIdea(itemToInteract.id);
-    }
 
     deleteModal.close();
     setItemToInteract(null);
     setItemTypeToDelete(null);
   };
 
-  const getDeleteItemName = (
-    item: MarketingProfessional | MarketingActivity | MarketingIdea | null,
-  ): string => {
+  const getDeleteItemName = (item: MarketingProfessional | MarketingActivity | null): string => {
     if (!item) return '';
     if ('name' in item && item.name) return item.name;
     if ('title' in item && item.title) return item.title;
-    if ('content' in item && item.content) return item.content;
     return '';
   };
 
@@ -185,21 +145,10 @@ function GestaoMarketingPage(): JSX.Element {
       );
     }
 
-    if (activeView === 'ideas') {
-      return (
-        <MarketingIdeasView
-          ideas={ideas}
-          onEditIdea={(idea) => openIdeaModal(idea)}
-          onToggleFavorite={handleToggleFavoriteIdea}
-        />
-      );
-    }
-
     return (
       <MarketingDashboardView
         professionals={professionals}
         activities={activities}
-        ideas={ideas}
         clients={clients}
         onEditProfessional={openProfessionalModal}
       />
@@ -207,31 +156,23 @@ function GestaoMarketingPage(): JSX.Element {
   };
 
   return (
-    <div className="animate-fade-in-up flex h-full flex-col overflow-hidden">
-      <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6">
-        <div className="flex h-full min-h-0 flex-col">
-          <PageHeader title="Gestão de Marketing" icon={marketingIcon} contentGap="compact">
-            {activeView === 'dashboard' && (
-              <Button onClick={() => openProfessionalModal(null)}>
-                <PlusIcon className="w-4 h-4" /> Adicionar Prestador
-              </Button>
-            )}
+    <div className="animate-fade-in-up">
+      <div className="flex h-full min-h-0 flex-col">
+        <PageHeader title="Gestão de Marketing" icon={marketingIcon} contentGap="compact">
+          {activeView === 'dashboard' && (
+            <Button onClick={() => openProfessionalModal(null)}>
+              <PlusIcon className="w-4 h-4" /> Adicionar Prestador
+            </Button>
+          )}
 
-            {activeView === 'content' && (
-              <Button onClick={() => openActivityModal(null, 'edit')}>
-                <PlusIcon className="w-4 h-4" /> Novo Conteúdo
-              </Button>
-            )}
+          {activeView === 'content' && (
+            <Button onClick={() => openActivityModal(null, 'edit')}>
+              <PlusIcon className="w-4 h-4" /> Novo Conteúdo
+            </Button>
+          )}
+        </PageHeader>
 
-            {activeView === 'ideas' && (
-              <Button onClick={() => openIdeaModal(null)}>
-                <PlusIcon className="w-4 h-4" /> Nova Ideia
-              </Button>
-            )}
-          </PageHeader>
-
-          <div className="min-h-0 flex-1">{renderContent()}</div>
-        </div>
+        <div className="min-h-0 flex-1">{renderContent()}</div>
       </div>
 
       <ProfessionalFormModal
@@ -251,14 +192,6 @@ function GestaoMarketingPage(): JSX.Element {
         professionals={professionals}
         projects={projects}
         readOnly={activityModalMode === 'view'}
-      />
-
-      <IdeaFormModal
-        isOpen={ideaModal.isOpen}
-        onClose={ideaModal.close}
-        onSave={handleSaveIdea}
-        onDelete={(id) => handleDeleteRequest({ id } as MarketingIdea, 'idea')}
-        initialIdea={itemToInteract as MarketingIdea | null}
       />
 
       <DeleteConfirmationModal

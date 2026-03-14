@@ -167,8 +167,7 @@ Good Gradient Rules:
   background: linear-gradient(
     DIRECTION,
     /* angle or to-keyword */ COLOR-STOP-1,
-    /* color + optional position */ COLOR-STOP-2,
-    /* ... more stops */
+    /* color + optional position */ COLOR-STOP-2 /* ... more stops */
   );
 }
 

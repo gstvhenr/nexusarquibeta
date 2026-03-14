@@ -1,4 +1,4 @@
-import { Input, Modal } from '../../components/ui';
+import { Button, Input, Modal } from '../../components/ui';
 
 type ClearDataModalProps = {
   isOpen: boolean;
@@ -36,14 +36,14 @@ export function ClearDataModal({
           />
         </div>
         <div className="flex justify-end pt-4">
-          <button
-            type="button"
+          <Button
+            variant="danger"
             onClick={onConfirmClear}
             disabled={clearConfirmationText !== 'EXCLUIR'}
-            className="w-full px-6 py-2 rounded-lg font-semibold text-white bg-error hover:opacity-90 disabled:bg-text-secondary/50 disabled:cursor-not-allowed"
+            className="w-full"
           >
             Eu entendo as consequências, excluir tudo
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

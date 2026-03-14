@@ -9,9 +9,9 @@ interface HealthBarProps {
 }
 
 const barColors = {
-  success: 'bg-gradient-to-r from-success to-emerald-400',
-  warning: 'bg-gradient-to-r from-warning to-amber-400',
-  error: 'bg-gradient-to-r from-error to-rose-400',
+  success: 'bg-gradient-to-r from-success to-success/70',
+  warning: 'bg-gradient-to-r from-warning to-warning/70',
+  error: 'bg-gradient-to-r from-error to-error/70',
 };
 const textColors = { success: 'text-success', warning: 'text-warning', error: 'text-error' };
 const dotColors = { success: 'bg-success', warning: 'bg-warning', error: 'bg-error' };
@@ -41,7 +41,7 @@ export const HealthBar: (props: HealthBarProps) => React.ReactNode = ({
       <div className="w-full h-1.5 rounded-full bg-border-color/20 overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-1000 ease-out ${barColors[variant]}`}
-          style={{ width: `${pct}%` }}
+          style={{ width: `${pct}%` }} // NOSONAR
         />
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { DocumentIcons } from '../../components/ui';
+import { Badge, DocumentIcons } from '../../components/ui';
 import type { DocumentFile, DocumentFolder, DocumentItem, DocumentStatus } from '../../types';
 import { formatBytes, formatDate } from '../../utils/formatters';
 
@@ -9,11 +9,11 @@ type DocumentsListViewProps = {
   onOpenFile: (file: DocumentFile) => void;
 };
 
-const documentStatusClasses: Record<DocumentStatus, string> = {
-  'Em Revisão': 'bg-warning/20 text-warning',
-  Aprovado: 'bg-info/20 text-info',
-  'Versão Final': 'bg-success/20 text-success',
-  Obsoleto: 'bg-surface text-text-secondary',
+const STATUS_BADGE_VARIANT: Record<DocumentStatus, 'warning' | 'info' | 'success' | 'default'> = {
+  'Em Revisão': 'warning',
+  Aprovado: 'info',
+  'Versão Final': 'success',
+  Obsoleto: 'default',
 };
 
 export const DocumentsListView: (props: DocumentsListViewProps) => React.ReactNode = ({
@@ -85,11 +85,7 @@ export const DocumentsListView: (props: DocumentsListViewProps) => React.ReactNo
                 </td>
                 <td className="px-6 py-4 text-text-secondary">
                   {file && file.status && (
-                    <span
-                      className={`px-2 py-1 text-xs font-bold rounded-full ${documentStatusClasses[file.status]}`}
-                    >
-                      {file.status}
-                    </span>
+                    <Badge variant={STATUS_BADGE_VARIANT[file.status]}>{file.status}</Badge>
                   )}
                 </td>
               </tr>

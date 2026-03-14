@@ -213,6 +213,7 @@ Executar /standardize workflow pós-criação. Os mecanismos devem detectar:
 <flag>MINIMAL_FRICTION_MAXIMAL_ENFORCEMENT</flag>
 </constraints>
 <diagnostic_injection>
+
 <source>standardization_debate.md</source>
 <core_insight>
 O agente AI opera por statistical pattern matching.

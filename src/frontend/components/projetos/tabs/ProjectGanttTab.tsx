@@ -99,12 +99,12 @@ export const ProjectGanttTab: (props: ProjectGanttTabProps) => React.ReactNode =
 
   const getBarClasses = useCallback((row: TimelineRow) => {
     if (row.isCompleted) {
-      return 'bg-gradient-to-r from-success to-emerald-500 shadow-[0_2px_8px_rgba(16,185,129,0.3)]';
+      return 'bg-gradient-to-r from-success to-success/80 shadow-[0_2px_8px_hsl(var(--color-success)/0.3)]';
     }
     if (row.isLate) {
-      return 'bg-gradient-to-r from-error to-rose-500 shadow-[0_2px_8px_rgba(239,68,68,0.3)]';
+      return 'bg-gradient-to-r from-error to-error/80 shadow-[0_2px_8px_hsl(var(--color-error)/0.3)]';
     }
-    return 'bg-gradient-to-r from-primary to-primary-focus shadow-[0_2px_8px_rgba(0,0,0,0.12)]';
+    return 'bg-gradient-to-r from-primary to-primary-focus shadow-[0_2px_8px_rgba(var(--color-shadow-rgb),0.12)]';
   }, []);
 
   const hasTasks = sections.length > 0 && sections.some((section) => section.tasks.length > 0);
@@ -175,11 +175,11 @@ export const ProjectGanttTab: (props: ProjectGanttTabProps) => React.ReactNode =
             <span>Em Andamento</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-5 h-2.5 rounded-sm bg-gradient-to-r from-success to-emerald-500" />
+            <div className="w-5 h-2.5 rounded-sm bg-gradient-to-r from-success to-success/80" />
             <span>Concluído</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-5 h-2.5 rounded-sm bg-gradient-to-r from-error to-rose-500" />
+            <div className="w-5 h-2.5 rounded-sm bg-gradient-to-r from-error to-error/80" />
             <span>Atrasado</span>
           </div>
           <div className="flex items-center gap-2">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { PlusIcon, TrashIcon } from '@/components/ui/icons';
-import { IconButton } from '@/components/ui';
+import { Button, IconButton } from '@/components/ui';
 import type { InstagramSnapshot } from '@/types';
 import { formatDateWithTime } from '@/utils/formatters';
 
@@ -17,14 +17,10 @@ export const InstagramSnapshotHistoryTable: (
     <div className="bg-surface rounded-xl shadow-soft p-5 mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-serif text-lg font-bold text-secondary">Histórico de Métricas</h2>
-        <button
-          type="button"
-          onClick={onNewSnapshot}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-primary-content bg-primary hover:bg-primary-focus transition-colors"
-        >
+        <Button onClick={onNewSnapshot}>
           <PlusIcon className="w-4 h-4" />
           Novo Registro
-        </button>
+        </Button>
       </div>
 
       {snapshots.length === 0 ? (

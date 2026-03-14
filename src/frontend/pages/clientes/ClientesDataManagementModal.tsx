@@ -63,7 +63,7 @@ function segmentedButtonClass(active: boolean) {
 
 function filterButtonClass(active: boolean) {
   return active
-    ? 'bg-white dark:bg-zinc-700 shadow-sm text-primary'
+    ? 'bg-surface shadow-sm text-primary'
     : 'text-text-secondary hover:text-text-primary';
 }
 
@@ -280,14 +280,15 @@ export function ClientesDataManagementModal({
                         ? 'Arquivo pronto para importação'
                         : 'Suporta apenas arquivos .JSON de backup'}
                     </p>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={onFileSelect}
-                      accept=".json"
-                      className="hidden"
-                    />
                   </div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={onFileSelect}
+                    accept=".json"
+                    aria-label="Selecionar arquivo JSON para importação"
+                    className="hidden"
+                  />
 
                   {importFile ? (
                     <Button

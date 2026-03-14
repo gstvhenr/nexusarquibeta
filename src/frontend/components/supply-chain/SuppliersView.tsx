@@ -40,6 +40,7 @@ function SuppliersView({
 }: SuppliersViewProps): JSX.Element {
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('Todos');
   const [activeTab, setActiveTab] = useState<SupplierActiveTab>('details');
   const [isLinkModalOpen, setLinkModalOpen] = useState(false);
 
@@ -51,17 +52,35 @@ function SuppliersView({
     [suppliers],
   );
 
+  const allCategories = useMemo(() => {
+    const categoriesSet = new Set<string>();
+    activeSuppliers.forEach((supplier) => {
+      supplier.categories?.forEach((category) => {
+        const trimmed = category?.trim();
+        if (trimmed) categoriesSet.add(trimmed);
+      });
+    });
+    return Array.from(categoriesSet).sort((a, b) => a.localeCompare(b));
+  }, [activeSuppliers]);
+
   const filteredSuppliers = useMemo(() => {
-    if (!filter) return activeSuppliers;
+    let result = activeSuppliers;
 
-    const normalizedFilter = filter.toLowerCase();
+    if (categoryFilter !== 'Todos') {
+      result = result.filter((supplier) => supplier.categories.includes(categoryFilter));
+    }
 
-    return activeSuppliers.filter(
-      (supplier) =>
-        supplier.name.toLowerCase().includes(normalizedFilter) ||
-        supplier.categories.some((category) => category.toLowerCase().includes(normalizedFilter)),
-    );
-  }, [activeSuppliers, filter]);
+    if (filter) {
+      const normalizedFilter = filter.toLowerCase();
+      result = result.filter(
+        (supplier) =>
+          supplier.name.toLowerCase().includes(normalizedFilter) ||
+          supplier.categories.some((category) => category.toLowerCase().includes(normalizedFilter)),
+      );
+    }
+
+    return result;
+  }, [activeSuppliers, filter, categoryFilter]);
 
   useEffect(() => {
     if (!selectedSupplierId && activeSuppliers.length > 0) {
@@ -83,7 +102,7 @@ function SuppliersView({
   );
 
   useEffect(() => {
-    setActiveTab('products');
+    setActiveTab('details');
   }, [selectedSupplierId]);
 
   const supplierProducts = useMemo<SupplierProductSnapshot[]>(() => {
@@ -163,10 +182,13 @@ function SuppliersView({
     .reduce((sum, commission) => sum + commission.commissionValue, 0);
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-140px)] gap-6 overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-full min-h-0 gap-6 overflow-hidden pb-4 md:pb-5">
       <SuppliersSidebar
         filter={filter}
         onFilterChange={setFilter}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={setCategoryFilter}
+        allCategories={allCategories}
         filteredSuppliers={filteredSuppliers}
         selectedSupplierId={selectedSupplierId}
         onSelectSupplier={setSelectedSupplierId}

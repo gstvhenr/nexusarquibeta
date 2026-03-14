@@ -220,7 +220,7 @@ export function useClientFormHandlers({
         originalVal === null || originalVal === undefined ? '' : String(originalVal);
 
       return normalizedCurrent !== normalizedOriginal
-        ? 'border-yellow-500 ring-1 ring-yellow-500/20'
+        ? 'border-warning ring-1 ring-warning/20'
         : 'border-border-color';
     },
     [initialClient],

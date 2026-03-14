@@ -1,6 +1,7 @@
 import React from 'react';
 import { commissionStatuses } from '@/types';
 import type { CommissionStatus, Supplier } from '@/types';
+import { Select } from '@/components/ui';
 import type { CommissionFilters } from './types';
 
 type CommissionsFilterBarProps = {
@@ -14,10 +15,22 @@ export const CommissionsFilterBar: (props: CommissionsFilterBarProps) => React.R
   suppliers,
   onFilterChange,
 }) => {
+  const statusOptions = [
+    { value: 'Todos', label: 'Todos os Status' },
+    ...commissionStatuses.map((status) => ({ value: status, label: status })),
+  ];
+
+  const supplierOptions = [
+    { value: 'Todos', label: 'Todos os Fornecedores' },
+    ...suppliers
+      .filter((supplier) => !supplier.archived)
+      .map((supplier) => ({ value: supplier.id, label: supplier.name })),
+  ];
+
   return (
     <div className="my-6 p-4 bg-surface rounded-xl shadow-soft flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-4 flex-grow">
-        <select
+        <Select
           value={filters.status}
           onChange={(event) =>
             onFilterChange({
@@ -25,17 +38,10 @@ export const CommissionsFilterBar: (props: CommissionsFilterBarProps) => React.R
               status: event.target.value as CommissionStatus | 'Todos',
             })
           }
-          className="bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm"
+          options={statusOptions}
           aria-label="Filtrar por status"
-        >
-          <option value="Todos">Todos os Status</option>
-          {commissionStatuses.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-        <select
+        />
+        <Select
           value={filters.supplierId}
           onChange={(event) =>
             onFilterChange({
@@ -43,18 +49,9 @@ export const CommissionsFilterBar: (props: CommissionsFilterBarProps) => React.R
               supplierId: event.target.value,
             })
           }
-          className="bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm"
+          options={supplierOptions}
           aria-label="Filtrar por fornecedor"
-        >
-          <option value="Todos">Todos os Fornecedores</option>
-          {suppliers
-            .filter((supplier) => !supplier.archived)
-            .map((supplier) => (
-              <option key={supplier.id} value={supplier.id}>
-                {supplier.name}
-              </option>
-            ))}
-        </select>
+        />
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { Badge } from '../ui';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import type { SupplierCommissionHistory } from './supplierViewTypes';
 
@@ -42,11 +43,9 @@ export function SupplierCommissionsTab({
                       {formatCurrency(commission.commissionValue)}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span
-                        className={`px-2 py-1 text-xs font-bold rounded-full ${commission.status === 'Recebido' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}
-                      >
+                      <Badge variant={commission.status === 'Recebido' ? 'success' : 'warning'}>
                         {commission.status}
-                      </span>
+                      </Badge>
                     </td>
                   </tr>
                 ))}

@@ -35,11 +35,7 @@ export type SupplyChainDataType = DomainContext<
 >;
 
 export type MarketingDataType = DomainContext<
-  | 'marketingProfessionals'
-  | 'marketingActivities'
-  | 'marketingIdeas'
-  | 'socialNetworks'
-  | 'prospects'
+  'marketingProfessionals' | 'marketingActivities' | 'socialNetworks' | 'prospects'
 >;
 
 export type SystemDataType = DomainContext<

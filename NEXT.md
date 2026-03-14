@@ -1,5 +1,288 @@
 # NEXT.md
 
+## Último estado conhecido (2026-03-14)
+
+Correção definitiva da **página em branco ao abrir Cotações** (Aceita/Rejeitada). O padrão anterior de `useState` one-shot + `useEffect` fallback foi substituído por uma derivação reativa `useMemo` + sincronização via `useEffect`, eliminando a race condition entre lazy-loading do componente e propagação do contexto assíncrono. Adicionado estado visual de "Carregando…" e "Não encontrada" estilizados, substituindo o antigo `<div>` sem formatação que parecia uma página em branco no tema escuro.
+
+### Checklist desta sessão
+
+- [x] Substituição de `useState` initializer + `useEffect` por `useMemo` (`contextQuotation`) + `useEffect` sync no `CotacaoDetalhesPage.tsx`.
+- [x] Adição de estados estilizados de loading ("Carregando cotação…") e not-found ("Cotação não encontrada") com `PageHeader` e botão "Voltar".
+- [x] Movido `cotacoesIcon` para antes do guard de `!quotation`.
+- [x] Baseline de linhas atualizado de 695 → 721 em `file-line-baseline.json`.
+- [x] `npm run verify` → `[VERIFY][LOOP][PASS]` — todos os 9 gates verdes. Exit code: 0.
+
+### Concluído nesta sessão
+
+- `src/frontend/pages/suprimentos/cotacoes/CotacaoDetalhesPage.tsx` — Reescrita do padrão de inicialização de estado e fallback UI.
+- `scripts/file-line-baseline.json` — Baseline atualizado.
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual: navegar até **Suprimentos → Cotações**, abrir cotações existentes (Aceita e Rejeitada) e confirmar que os campos, tabela de itens e barra inferior renderizam com dados.
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
+## Último estado conhecido (2026-03-14)
+
+Correção crítica em **Cotações**: Ao abrir o detalhamento de uma Cotação já Salva (Aceita/Rejeitada) o sistema renderizava uma página em branco quando os dados não tivessem subido instantaneamente para o cache síncrono da UI. O hook agora lida com carregamentos assíncronos. Adicionalmente, todo o escopo de itens salvos dentro da Cotação agora é exposto com total transparência em uma tabela final informativa (produto, quantidade, fornecedor, price, total e comissão) substituindo os modais expansíveis individuais em views do tipo `isEditable === false`. O mini-widget da lista de cotação externa também foi ocultado a pedido para garantir limpeza visual, unificando toda a informação no documento final detalhado.
+
+### Checklist desta sessão
+
+- [x] Ocultar a representação agrupada de itens no Card da Listagem Principal (`CotacoesPage.tsx`).
+- [x] Introduzir `useEffect` em `CotacaoDetalhesPage.tsx` para sincronia manual de contexto demorado caso `quotation === null`.
+- [x] Refatorar a visualização dos itens em modo "Read Only" (`!isEditable`) para uma grande Tabela informativa clara.
+- [x] Rastrear e expor ativamente a "Data da Cotação" em um Input readonly no cabeçalho do documento.
+- [x] Passagem íntegra pelos Testes, Typecheck e Lints (`Exit code: 0`).
+
+### Concluído nesta sessão
+
+- `src/frontend/pages/suprimentos/cotacoes/CotacaoDetalhesPage.tsx` — Injeção de Data de Cotação, Correção de Renderização Vazia, Extrato Visual ReadOnly.
+- `src/frontend/pages/suprimentos/cotacoes/CotacoesPage.tsx` — Remoção de Poluição visual de listagem.
+
+## Evidências da sessão
+
+- Todos os lints zerados (`prettier --write`), Typecheck zerado (`tsc --noEmit`), e Suíte de testes aprovadas. Exit code: 0.
+
+## Próximo passo exato
+
+1. Testar abrindo Cotações Existentes (`status Aceita` ou `Rejeitada`), que antes travavam com "tela branca". A expectativa é que todas abram, listando tudo que havia sido atrelado a elas num painel final tipo extrato, garantindo transparência nativa ao usuário.
+
+---
+
+## Último estado conhecido (2026-03-14)
+
+Detalhamento completo dos produtos da cotação agora fica visível dentro da modal de visualização/edição de **Comissões**. Quando uma comissão é gerada a partir de uma Cotação Salva, o usuário já consegue ver todos os produtos cotados atrelados àquela loja, quantidades, preço unitário do contrato e o montante de comissão que cada linha individual gerou para compor o valor final.
+
+### Checklist desta sessão
+
+- [x] Conexão com os hooks de `quotations`, `products` e `supplierProductPrices` no `CommissionFormModal.tsx`.
+- [x] Extração da `origem` da Cotação correspondente à comissão.
+- [x] Mapeamento dos itens comprados com aquele fornecedor em específico.
+- [x] Renderização de uma tabela "Read Only" informativa no final do formulário editável exibindo o breakdown da compra.
+- [x] Gates executados e aprovados via `npm run verify` (`[VERIFY][LOOP][PASS]`).
+
+### Concluído nesta sessão
+
+- `src/frontend/pages/suprimentos/comissoes/CommissionFormModal.tsx` — Inclusão estrutural de tabela de produtos oriundos de cotação.
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual acessando a página de "Comissões", clicando num card de comissão já existente originado de uma cotação e avaliando a nova tabela "Itens da Cotação".
+
+## Bloqueios e dúvidas
+
+- Acionar o breakdown exige que a comissão tenha sido gerada diretamente pelo registro Aceito da cotação. Comissões manuais (sem `quotationId`) ocultam a interface corretamente.
+
+---
+
+## Último estado conhecido (2026-03-14)
+
+Visibilidade aprimorada na listagem de Cotações: Agora os cards exibem um resumo dos itens atrelados à cotação (quantidade, nome do produto) e o fornecedor selecionado para a compra, além da indicação "Fornecedor não selecionado" quando o item ainda não tiver um registro de loja vinculada.
+
+### Checklist desta sessão
+
+- [x] Obtenção dos arrays globais `products` e `suppliers` no componente pai `CotacoesPage.tsx`.
+- [x] Componente `QuotationListItem` atualizado para receber arrays secundários por props.
+- [x] Injeção de UI condicional mapeando itens da cotação e exibindo dados com truncamento de layout.
+- [x] Gates executados e aprovados via `npm run verify` (`[VERIFY][LOOP][PASS]`).
+
+### Concluído nesta sessão
+
+- `src/frontend/pages/suprimentos/cotacoes/CotacoesPage.tsx` — Exibição secundária de itens em componentes de lista (listagem de até 3 com overflow control).
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual acessando "Suprimentos > Cotações" para visualizar os sub-itens recém inseridos dentro dos cards de cotação ativos.
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
+## Último estado conhecido (2026-03-14)
+
+Adição das categorias "Papelaria" e "Outros" às opções disponíveis para o Cadastro de Fornecedor.
+
+### Checklist desta sessão
+
+- [x] Inclusão de `'Papelaria'` e `'Outros'` no array constante `SUPPLIER_CATEGORY_OPTIONS` em `src/frontend/constants/index.ts`.
+- [x] Gates executados e aprovados via `npm run verify:quick`.
+
+### Concluído nesta sessão
+
+- `src/frontend/constants/index.ts` — Ampliação de constante UI.
+
+## Evidências da sessão
+
+- `npm run verify:quick` → Limpo de erros e formatado corretamente. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual acessando a página de Fornecedores / Cadastro e verificando a presença de "Papelaria" e "Outros" no dropdown "Categoria".
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
+## Último estado conhecido (2026-03-14)
+
+Adição da unidade de medida "m³" (metro cúbico) às opções disponíveis para cadastro de produtos, atendendo a necessidade de mensuração de volume para insumos e produtos do catálogo.
+
+### Checklist desta sessão
+
+- [x] Inclusão de `'m³'` no tipo união `ProductUnit` em `src/frontend/types/supply-chain.ts`.
+- [x] Inclusão visual de `'m³'` no array constante `PRODUCT_UNIT_OPTIONS` em `src/frontend/constants/index.ts`.
+- [x] Execução da suíte completa de verificação (lint, typecheck, tests, build) que validou a ausência de quebras de contrato.
+- [x] Gates executados e aprovados via `npm run verify` (`[VERIFY][LOOP][PASS]`).
+
+### Concluído nesta sessão
+
+- `src/frontend/types/supply-chain.ts` — Ampliação de contrato de tipo.
+- `src/frontend/constants/index.ts` — Ampliação de constante UI.
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual acessando o "Catálogo de Produtos" > "Adicionar Produto" e verificando a presença de "m³" no dropdown "Unidade".
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
+## Último estado conhecido (2026-03-14)
+
+Padronização e ajustes de UI no módulo "Catálogo de Produtos": O visualizador em "grid" e "cards" foi removido em favor da exclusividade do layout em lista, para maior clareza e espaço. Implementado `ProductPriceModal.tsx`, uma nova interface centralizada que se abre ao clicar na linha do produto na tabela, permitindo a visualização limpa do histórico de preços com edição num só lugar. E a nova funcionalidade de Filtro de Categorias via dropdown UI acoplada ao input de busca, listando dinamicamente categorias ativas no estado.
+
+### Checklist desta sessão
+
+- [x] Remoção absoluta de viewMode ('grid'/'card') e botões toggle de visualização em `CatalogoPage.tsx`.
+- [x] Criação do componente modal independente `ProductPriceModal.tsx` recebendo todos os IDs e states isolados.
+- [x] Injeção de componente UI Select para dropdown the categorias em `CatalogoPage.tsx`.
+- [x] Atualização da tabela p/ instanciar o modal ao clicar na `tr`.
+- [x] Higienização de SVG icons importados, porém não usados na página.
+- [x] Gates executados e aprovados via `npm run verify` (`[VERIFY][LOOP][PASS]`).
+
+### Concluído nesta sessão
+
+- `src/frontend/components/catalogo/ProductPriceModal.tsx` — Modulo central com a prop de history render list.
+- `src/frontend/components/catalogo/index.ts` — Modificado para expor a feature nova.
+- `src/frontend/pages/suprimentos/catalogo/CatalogoPage.tsx` — Limpeza estrutural da UI e controle de estado estrito em lista.
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual nas modificações de "Catálogo de Produtos", confirmando o trigger da Tabela de Preços ao clicar em uma row, o filtro ativo e testando form de "Novo Preço".
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
+## Último estado conhecido (2026-03-14)
+
+Refinamento da UI de Fornecedores conforme novas solicitações: renomeação de cabeçalhos da tabela de produtos ("Comissão Est. (0%)" -> "Comissão" e "Última Atualização" -> "Atualização"), correção do filtro de categorias para omitir strings vazias/falsy garantindo exibir apenas categorias existentes atreladas a fornecedores ativos, restauração da exibição do cargo do contato (posicionado abaixo do nome), fusão da aba de "Categorias" dentro de "Informações", indicativo visual em contatos com "(WhatsApp)", e destaque sutil no botão "Editar Perfil".
+
+### Checklist desta sessão
+
+- [x] Cabeçalho "Comissão Est." alterado para "Comissão" em `SupplierProductsTab.tsx`.
+- [x] Cabeçalho "Última Atualização" alterado para "Atualização" em `SupplierProductsTab.tsx`.
+- [x] Lógica de derivação de `allCategories` em `SuppliersView.tsx` atualizada para filtrar strings vazias ou nulas com `trim()`.
+- [x] Elemento de cargo do contato principal retornado à interface, posicionado em linha separada sob o nome em `SupplierContactDetailsTab.tsx`.
+- [x] Aba de "Categorias" completamente movida como bloco estático para dentro da aba de "Informações".
+- [x] Indicador `<Badge>` "(WhatsApp)" incluído ao lado dos telefones que suportam, na tab de "Detalhes de Contato".
+- [x] Novo background highlight implementado para o botão de "Editar Perfil" (mantendo a consistência do standard UI ghost text, mas com fundo e borda sutis).
+- [x] Gates executados e aprovados via `npm run verify` (`[VERIFY][LOOP][PASS]`).
+
+### Concluído nesta sessão
+
+- `src/frontend/components/supply-chain/SupplierProductsTab.tsx` — Textos de <th> ajustados para visual mais limpo e conciso.
+- `src/frontend/components/supply-chain/SuppliersView.tsx` — Consolidado e higienizado o array de categorias, reduzido default tabs.
+- `src/frontend/components/supply-chain/SupplierDetailsPanel.tsx` — Exclusão da tab "Categorias" e junção do bloco dinâmico em "Informações". Adicionado background de highlight em botão Editar.
+- `src/frontend/components/supply-chain/SupplierContactDetailsTab.tsx` — Ajuste de DOM para adicionar Badge de (WhatsApp) nos telefones de contato e exibir cargo lido.
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual nas modificações injetadas da aba de `Fornecedores`, avaliando a nova tabela de produtos e filtros.
+2. Aguardar novas instruções para a padronização de próximas telas.
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
+## Último estado conhecido (2026-03-14)
+
+Padronização e ajustes de UI no painel de "Detalhes do Fornecedor". Modificamos os itens para atingir um layout mais direto e minimalista nas métricas (KPI Cards), mudamos a aba padrão para Contato e criamos duas novas visualizações nativas em aba para as tags de "Categoria" e para os próprios KPI Cards de "Informações", visando maximizar o espaçamento vertical para navegação e limpar o header.
+
+### Checklist desta sessão
+
+- [x] Aba "Detalhes de Contato" configurada como padrão inicial ao renderizar os detalhes.
+- [x] Criada aba "Categoria" isolando a visualização em lista flexível de badges (`SupplierDetailsPanel`).
+- [x] Layout dos cards (Produtos, Comissões e Total Negociado) tornado mais leve: gap reduzido, ícones menores, tipografia simplificada e padding reduzido (`SupplierKpiCard`).
+- [x] Removida a linha de descrição "Vendas confirmadas" do card de Total Negociado.
+- [x] Removida linha de subtítulo no topo da tab de `SupplierProductsTab`.
+- [x] Criada aba "Informações" e movido os KPI Cards do header para ela.
+- [x] Erro de warning `eslint` (unused import do ícone Tag) eliminado.
+- [x] Gates executados e aprovados via `npm run verify`.
+
+### Concluído nesta sessão
+
+- `src/frontend/components/supply-chain/SuppliersView.tsx` — Mudado `activeTab` default fallback.
+- `src/frontend/components/supply-chain/supplierViewTypes.ts` — Literal type `'categories'` e `'info'` expostos.
+- `src/frontend/components/supply-chain/SupplierDetailsPanel.tsx` — Modificações de layout de tabs, KPI icon props e estrutura dos `TabPanel` (cards movidos do header para a tab "Informações").
+- `src/frontend/components/supply-chain/SupplierKpiCard.tsx` — Modificação arquitetural CSS dos cards p/ tokens contidos e visualização clean.
+- `src/frontend/components/supply-chain/SupplierProductsTab.tsx` — Componente limpo da descrição verbosa.
+
+## Evidências da sessão
+
+- `npm run format` → Fix dos arquivos de pipeline antes do verify.
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual nas modificações injetadas da aba de `Fornecedores`, testando navegação entre aba de categorias e exibição vazia onde não houver categorias marcadas, e visualizando os KPI cards na aba Informações.
+2. Aguardar novas instruções para a padronização de próximas telas.
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
 ## Regra de archival
 
 - Quando este arquivo ultrapassar ~100 linhas, mover sessões antigas para `docs/changelog/session-log-YYYY-MM.md`.

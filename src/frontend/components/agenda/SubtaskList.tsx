@@ -45,7 +45,7 @@ function SubtaskList({
           onDragOver={(e) => e.preventDefault()}
           className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
             sub.completed
-              ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-200/60 dark:border-emerald-800/40'
+              ? 'bg-success/10 dark:bg-success/10 border-success/30 dark:border-success/20'
               : 'bg-surface/50 border-border-color/40 hover:border-border-color'
           }`}
         >
@@ -70,7 +70,7 @@ function SubtaskList({
             onClick={() => onToggle(sub.id)}
             className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
               sub.completed
-                ? 'bg-emerald-500 border-emerald-500 text-white'
+                ? 'bg-success border-success text-white'
                 : 'border-border-color hover:border-primary'
             }`}
             aria-label={sub.completed ? `Desmarcar "${sub.title}"` : `Concluir "${sub.title}"`}
@@ -102,6 +102,8 @@ function SubtaskList({
                 }}
                 // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus
+                aria-label="Editar título da subtarefa"
+                placeholder="Título da subtarefa"
                 className="w-full bg-background p-1 rounded border border-border-color text-sm text-text-primary"
               />
             ) : (
@@ -114,7 +116,7 @@ function SubtaskList({
                   {sub.title}
                 </span>
                 {sub.completed && sub.completedAt && (
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+                  <span className="text-[10px] text-success mt-0.5 block">
                     Concluída em {formatDateTime(sub.completedAt)}
                   </span>
                 )}

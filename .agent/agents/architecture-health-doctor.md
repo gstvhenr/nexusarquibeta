@@ -96,7 +96,7 @@ Qual patologia tratar?
 | -------------------------------------------- | ----------------------------------------------------- |
 | A importa tipo de B, B importa tipo de A     | Extrair tipos compartilhados para `types/shared.ts`   |
 | A importa função de B, B importa função de A | Extrair função comum para módulo intermediário        |
-| Service A ↔ Service B                       | Introduzir interface/abstração. Dependency Inversion. |
+| Service A ↔ Service B                        | Introduzir interface/abstração. Dependency Inversion. |
 
 ### Alto Acoplamento
 

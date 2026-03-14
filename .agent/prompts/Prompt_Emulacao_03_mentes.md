@@ -30,7 +30,6 @@ Inicie um protocolo de orquestração instanciando 1 (um) Conductor e 3 (três) 
 PROTOCOLO DO CONDUCTOR:
 
 1. STEP-BACK (abstração obrigatória antes da análise):
-
    - "Qual é o PRINCÍPIO FUNDAMENTAL em jogo neste <assunto>?"
    - "Quais são as INVARIANTES que qualquer conclusão deve respeitar?"
    - Estas respostas fundamentam e restringem TODO o debate subsequente.
@@ -38,7 +37,6 @@ PROTOCOLO DO CONDUCTOR:
 2. DECOMPOSE: Dividir o <assunto> em 3 sub-problemas ortogonais.
 
 3. ASSIGN: Para cada sub-problema, instanciar um Expert com:
-
    - Persona técnica deduzida do contexto do projeto
    - Instrução específica ao sub-problema
    - Template de raciocínio (ver abaixo)
@@ -124,6 +122,7 @@ e formatação supérflua. O output deve ser 100% raciocínio orquestrado.
 </constraints>
 
 <orchestrator_engine protocol="META_PROMPTING_V2024">
+
 <!-- Meta-Prompting: Suzgun & Kalai (arXiv:2401.12954, 2024)
          +17.1% vs standard, +15.2% vs multipersona empiricamente -->
 

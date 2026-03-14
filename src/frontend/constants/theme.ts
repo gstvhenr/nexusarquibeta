@@ -46,7 +46,7 @@ export const tokens = {
     lifted:
       '0 10px 20px -5px rgba(var(--color-shadow-rgb), 0.1), 0 4px 6px -2px rgba(var(--color-shadow-rgb), 0.05)',
     interactive: '0 0 0 2px hsl(var(--color-surface)), 0 0 0 4px hsl(var(--color-primary) / 0.5)',
-    'inner-soft': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
+    'inner-soft': 'inset 0 2px 4px 0 rgba(var(--color-shadow-rgb), 0.05)',
   },
   zIndex: {
     hide: -1,

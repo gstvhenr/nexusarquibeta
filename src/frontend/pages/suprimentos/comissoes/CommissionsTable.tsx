@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ArchiveIcon,
   Badge,
+  Button,
   EditIcon,
   IconButton,
   TrashIcon,
@@ -85,13 +86,13 @@ export const CommissionsTable: (props: CommissionsTableProps) => React.ReactNode
                 <div className="flex items-center justify-end gap-2">
                   {commission.status === 'Pendente' ? (
                     <>
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => onConfirmPayment(commission)}
-                        className="font-semibold text-primary hover:underline text-xs"
                       >
                         Confirmar
-                      </button>
+                      </Button>
                       <IconButton
                         variant="primary"
                         size="sm"

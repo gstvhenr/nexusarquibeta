@@ -41,9 +41,9 @@ export const IDEA_COLORS: { [key: string]: { bg: string; border: string; hover: 
     hover: 'hover:border-error/50',
   },
   teal: {
-    bg: 'bg-teal-100/50 dark:bg-teal-900/20',
-    border: 'border-teal-300/30',
-    hover: 'hover:border-teal-400/50',
+    bg: 'bg-secondary/10 dark:bg-secondary/20',
+    border: 'border-secondary/30',
+    hover: 'hover:border-secondary/50',
   },
 };
 
@@ -126,9 +126,11 @@ export const SUPPLIER_CATEGORY_OPTIONS = [
   'Toldos e Coberturas',
   'Ar Condicionado',
   'Esquadrias',
+  'Papelaria',
+  'Outros',
 ];
 
-export const PRODUCT_UNIT_OPTIONS: ProductUnit[] = ['m²', 'un', 'pç'];
+export const PRODUCT_UNIT_OPTIONS: ProductUnit[] = ['m²', 'm³', 'un', 'pç'];
 
 export const FREELANCER_SPECIALTIES = [
   'Projeto Executivo',

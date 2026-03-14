@@ -36,12 +36,16 @@ const QuotationListItem: (props: {
       tabIndex={0}
       className={`bg-surface rounded-xl shadow-soft transition-all duration-300 ease-in-out group p-5 flex justify-between items-center cursor-pointer ${quotation.archived ? 'opacity-70' : 'hover:shadow-lg hover:-translate-y-px'}`}
     >
-      <div className="flex-1 truncate">
+      <div className="flex-1 min-w-0 pr-4">
         <p className="font-serif text-2xl font-semibold text-secondary truncate group-hover:underline">
           {quotation.name}
         </p>
         <p className="text-sm text-text-secondary">
           {project ? `Projeto: ${project.code} - ${project.name}` : 'Sem projeto vinculado'}
+        </p>
+        <p className="text-sm text-text-secondary mt-1">
+          {(quotation.items || []).length} {(quotation.items || []).length === 1 ? 'item' : 'itens'}{' '}
+          na cotação
         </p>
       </div>
       <div className="flex items-center gap-4 ml-4">

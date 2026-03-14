@@ -92,13 +92,9 @@ export const FreelancerDetailFormModal: (props: {
             </div>
             {!isReadOnly && (
               <>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-xs font-semibold text-primary hover:underline"
-                >
+                <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}>
                   {photoPreview ? 'Alterar' : 'Adicionar Foto'}
-                </button>
+                </Button>
                 <input
                   type="file"
                   ref={fileInputRef}

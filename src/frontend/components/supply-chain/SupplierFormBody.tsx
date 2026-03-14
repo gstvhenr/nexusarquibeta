@@ -185,16 +185,16 @@ function SupplierFormBody({
               Comissão (%)
             </span>
             <div className="relative">
-              <input
+              <Input
                 id="supplier-commission"
                 type="number"
                 value={supplier.commissionPercentage || ''}
                 onChange={(e) =>
                   onFieldChange('commissionPercentage', parseFloat(e.target.value) || 0)
                 }
-                className="w-full bg-background p-2.5 rounded-md border border-border-color focus:border-primary outline-none transition text-sm pl-3 pr-8"
                 placeholder="0"
                 aria-label="Comissão (%)"
+                className="pr-8"
               />
               <span className="absolute right-3 top-2.5 text-text-secondary font-bold">%</span>
             </div>

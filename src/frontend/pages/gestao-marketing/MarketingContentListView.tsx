@@ -61,7 +61,7 @@ export function MarketingContentListView({
   });
 
   return (
-    <div className="p-6">
+    <div>
       <div className="bg-surface rounded-xl shadow-soft overflow-hidden border border-border-color/50">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">

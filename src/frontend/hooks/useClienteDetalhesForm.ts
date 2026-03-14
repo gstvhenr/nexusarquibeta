@@ -147,7 +147,7 @@ export function useClienteDetalhesForm({
       if (!isEditing || !originalClient) return 'border-border-color';
       const v1 = currentVal === null || currentVal === undefined ? '' : String(currentVal);
       const v2 = originalVal === null || originalVal === undefined ? '' : String(originalVal);
-      return v1 !== v2 ? 'border-yellow-500 ring-1 ring-yellow-500/20' : 'border-border-color';
+      return v1 !== v2 ? 'border-warning ring-1 ring-warning/20' : 'border-border-color';
     },
     [isEditing, originalClient],
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal } from '../ui';
+import { Button, FormField, Input, Modal, Select } from '../ui';
 import type { Product } from '../../types';
 
 /**
@@ -34,8 +34,12 @@ const LinkProductModal: (props: {
 
   if (!isOpen) return null;
 
-  const inputClass =
-    'w-full bg-background p-3 rounded-lg border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition text-sm font-medium';
+  const productOptions = [
+    { value: '', label: 'Selecione um produto...' },
+    ...products
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((p) => ({ value: p.id, label: `${p.name} (${p.unit})` })),
+  ];
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Vincular Produto a ${supplierName}`}>
@@ -47,61 +51,31 @@ const LinkProductModal: (props: {
           </p>
         </div>
 
-        <div>
-          <label
-            htmlFor="field-produto-do-catalogo"
-            className="block text-xs font-bold text-text-secondary uppercase mb-2"
-          >
-            Produto do Catálogo
-          </label>
-          <select
-            id="field-produto-do-catalogo"
-            value={selectedProductId}
-            onChange={(e) => setSelectedProductId(e.target.value)}
-            className={inputClass}
-            aria-label="Produto do catálogo"
-          >
-            <option value="">Selecione um produto...</option>
-            {products
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} ({p.unit})
-                </option>
-              ))}
-          </select>
-        </div>
-        <div>
-          <label
-            htmlFor="field-preco-atual-r"
-            className="block text-xs font-bold text-text-secondary uppercase mb-2"
-          >
-            Preço Atual (R$)
-          </label>
-          <input
-            id="field-preco-atual-r"
+        <Select
+          label="Produto do Catálogo"
+          value={selectedProductId}
+          onChange={(e) => setSelectedProductId(e.target.value)}
+          options={productOptions}
+          aria-label="Produto do catálogo"
+        />
+
+        <FormField label="Preço Atual (R$)">
+          <Input
             type="number"
             value={price || ''}
             onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-            className={inputClass}
             placeholder="0.00"
             aria-label="Preço atual"
           />
-        </div>
+        </FormField>
       </div>
       <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-border-color">
-        <button
-          onClick={onClose}
-          className="px-6 py-2.5 rounded-lg font-semibold text-text-primary bg-surface border border-border-color hover:bg-background transition-colors"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          onClick={handleSave}
-          className="px-6 py-2.5 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus shadow-soft transition-all transform hover:-translate-y-0.5"
-        >
+        </Button>
+        <Button variant="primary" onClick={handleSave}>
           Salvar Vínculo
-        </button>
+        </Button>
       </div>
     </Modal>
   );

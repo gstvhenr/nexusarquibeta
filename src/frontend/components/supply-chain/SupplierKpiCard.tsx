@@ -14,12 +14,14 @@ const SupplierKpiCard: (props: {
   icon: React.ReactNode;
   color: string;
 }) => React.ReactNode = ({ label, value, subtext, icon, color }) => (
-  <div className="bg-surface rounded-xl shadow-sm border border-border-color p-4 flex items-center gap-4 hover:shadow-md transition-shadow">
-    <div className={`p-3 rounded-full ${color} bg-opacity-10 text-opacity-100`}>{icon}</div>
-    <div>
-      <p className="text-xs font-bold text-text-secondary uppercase tracking-wide">{label}</p>
-      <p className="text-2xl font-bold font-sans text-text-primary">{value}</p>
-      {subtext && <p className="text-xs text-text-secondary mt-0.5">{subtext}</p>}
+  <div className="bg-surface rounded-xl shadow-sm border border-border-color p-3 flex items-center gap-3 hover:shadow-md transition-shadow">
+    <div className={`p-2.5 rounded-full ${color} bg-opacity-10 text-opacity-100 flex-shrink-0`}>
+      {icon}
+    </div>
+    <div className="min-w-0">
+      <p className="text-xs font-semibold text-text-secondary truncate">{label}</p>
+      <p className="text-lg font-bold font-sans text-text-primary truncate">{value}</p>
+      {subtext && <p className="text-xs text-text-secondary mt-0.5 truncate">{subtext}</p>}
     </div>
   </div>
 );

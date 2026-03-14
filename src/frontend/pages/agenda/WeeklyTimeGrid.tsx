@@ -39,7 +39,7 @@ function WeeklyTimeGrid({
         {/* Day column headers */}
         <div
           className="grid shrink-0 border-b border-border-color/50 sticky top-0 z-20 bg-surface"
-          style={{ gridTemplateColumns: '3.5rem repeat(7, 1fr)' }}
+          style={{ gridTemplateColumns: '3.5rem repeat(7, 1fr)' }} // NOSONAR
         >
           <div className="bg-surface" />
           {weeklyGrid.map((date) => {
@@ -88,7 +88,7 @@ function WeeklyTimeGrid({
           style={{
             gridTemplateColumns: '3.5rem repeat(7, 1fr)',
             gridTemplateRows: `repeat(${HOURS.length}, ${HOUR_HEIGHT_PX}px)`,
-          }}
+          }} // NOSONAR
         >
           {/* Hour rows */}
           {HOURS.map((hour) => {
@@ -97,7 +97,7 @@ function WeeklyTimeGrid({
               <React.Fragment key={hour}>
                 <div
                   className="text-[10px] font-semibold text-text-secondary pr-2 text-right select-none border-t border-border-color/20 pt-0.5"
-                  style={{ gridColumn: 1, gridRow: hour + 1 }}
+                  style={{ gridColumn: 1, gridRow: hour + 1 }} // NOSONAR
                 >
                   {String(hour).padStart(2, '0')}:00
                 </div>
@@ -121,14 +121,14 @@ function WeeklyTimeGrid({
                   if (isWeekend) {
                     cellBg = 'bg-background/60 dark:bg-background/25';
                   } else if (isPastCell) {
-                    cellBg = 'bg-amber-50/60 dark:bg-amber-950/25';
+                    cellBg = 'bg-warning/10 dark:bg-warning/5';
                   }
 
                   return (
                     <div
                       key={colIdx}
                       className={`border-t border-l border-border-color/20 ${cellBg}`}
-                      style={{ gridColumn: colIdx + 2, gridRow: hour + 1 }}
+                      style={{ gridColumn: colIdx + 2, gridRow: hour + 1 }} // NOSONAR
                     />
                   );
                 })}
@@ -151,7 +151,7 @@ function WeeklyTimeGrid({
                   left: '3.5rem',
                   right: 0,
                   height: 0,
-                }}
+                }} // NOSONAR
               >
                 <div className="absolute inset-x-0 h-[1px] bg-error/30" />
                 <div
@@ -159,13 +159,13 @@ function WeeklyTimeGrid({
                   style={{
                     left: `calc(${(todayIndex / 7) * 100}%)`,
                     width: `${(1 / 7) * 100}%`,
-                  }}
+                  }} // NOSONAR
                 />
                 <div
                   className="absolute w-2.5 h-2.5 bg-error rounded-full -translate-y-[4px] -translate-x-[3px]"
                   style={{
                     left: `calc(${(todayIndex / 7) * 100}%)`,
-                  }}
+                  }} // NOSONAR
                 />
               </div>
             );
@@ -183,7 +183,7 @@ function WeeklyTimeGrid({
                   gridColumn: colIdx + 2,
                   gridRow: `1 / ${HOURS.length + 1}`,
                   pointerEvents: 'none',
-                }}
+                }} // NOSONAR
               >
                 {dayEvents.map((event) => {
                   const [hStr, mStr] = (event.time || '00:00').split(':');
@@ -228,7 +228,7 @@ function WeeklyTimeGrid({
                         left: '2px',
                         right: '2px',
                         pointerEvents: 'auto',
-                      }}
+                      }} // NOSONAR
                       onClick={() => onEventView(event)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {

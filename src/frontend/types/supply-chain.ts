@@ -1,5 +1,5 @@
 // --- Supply Chain Types (Suppliers, Products, Quotations) ---
-export type ProductUnit = 'm²' | 'un' | 'pç';
+export type ProductUnit = 'm²' | 'm³' | 'un' | 'pç';
 
 export interface SupplierContact {
   name: string;

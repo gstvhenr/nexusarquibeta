@@ -1,9 +1,7 @@
 {
   "version": 1,
   "rules": {
-    "S04": [
-      "src/frontend/context/useDomain.ts"
-    ],
+    "S04": ["src/frontend/context/useDomain.ts"],
     "S06": [],
     "S07": []
   }

@@ -1,6 +1,6 @@
 import type { Commission, Product, Quotation } from '../../types';
 
-export type SupplierActiveTab = 'details' | 'products' | 'commissions' | 'quotations';
+export type SupplierActiveTab = 'details' | 'products' | 'commissions' | 'quotations' | 'info';
 
 export type SupplierProductSnapshot = {
   product: Product;

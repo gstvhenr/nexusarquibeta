@@ -15,17 +15,14 @@ Exibir status atual do projeto e dos agentes em atividade.
 ### O que Exibir
 
 1. **Info do Projeto**
-
    - Nome, stack, tamanho
    - Domínios detectados em `src/services/`
 
 2. **Status dos Gates**
-
    - Último resultado conhecido de `npm run verify`
    - Cobertura de testes
 
 3. **Tarefas Ativas**
-
    - Arquivo de plano aberto (`{task-slug}.md`)
    - Próximos itens de `NEXT.md`
 

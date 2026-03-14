@@ -1,9 +1,13 @@
+import { Input, Select } from '../ui';
 import type { Supplier } from '../../types';
 import { getInitials } from '../../utils/supplierHelpers';
 
 type SuppliersSidebarProps = {
   filter: string;
   onFilterChange: (value: string) => void;
+  categoryFilter: string;
+  onCategoryFilterChange: (value: string) => void;
+  allCategories: string[];
   filteredSuppliers: Supplier[];
   selectedSupplierId: string | null;
   onSelectSupplier: (supplierId: string) => void;
@@ -12,21 +16,24 @@ type SuppliersSidebarProps = {
 export function SuppliersSidebar({
   filter,
   onFilterChange,
+  categoryFilter,
+  onCategoryFilterChange,
+  allCategories,
   filteredSuppliers,
   selectedSupplierId,
   onSelectSupplier,
 }: SuppliersSidebarProps): JSX.Element {
   return (
     <div className="w-full lg:w-80 bg-surface rounded-2xl shadow-soft flex flex-col overflow-hidden border border-border-color/60 shrink-0">
-      <div className="p-4 border-b border-border-color shrink-0 bg-background/30">
+      <div className="p-4 border-b border-border-color shrink-0 bg-background/30 flex flex-col gap-3">
         <div className="relative">
-          <input
+          <Input
             id="supplier-search"
             type="search"
             placeholder="Buscar fornecedor..."
             value={filter}
             onChange={(event) => onFilterChange(event.target.value)}
-            className="w-full bg-background pl-9 pr-4 py-2.5 rounded-xl border border-border-color focus:border-accent text-sm transition-all focus:ring-2 focus:ring-accent/10"
+            className="pl-9"
             aria-label="Buscar fornecedor"
           />
           <svg
@@ -43,6 +50,17 @@ export function SuppliersSidebar({
             ></path>
           </svg>
         </div>
+
+        <Select
+          value={categoryFilter}
+          onChange={(e) => onCategoryFilterChange(e.target.value)}
+          className="w-full text-sm"
+          aria-label="Filtrar por categoria"
+          options={[
+            { value: 'Todos', label: 'Todas as Categorias' },
+            ...allCategories.map((cat) => ({ value: cat, label: cat })),
+          ]}
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">

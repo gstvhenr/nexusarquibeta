@@ -333,7 +333,7 @@ function OrcamentosPage(): JSX.Element {
         </div>
       </div>
 
-      <div className="fixed bottom-0 right-0 left-0 md:left-64 lg:left-80 bg-surface border-t border-border-color p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-20">
+      <div className="fixed bottom-0 right-0 left-0 md:left-64 lg:left-80 bg-surface border-t border-border-color p-4 shadow-[0_-4px_20px_rgba(var(--color-shadow-rgb),0.05)] z-20">
         <div className="flex justify-end items-center gap-4 px-4 md:px-8">
           <Button
             variant="secondary"

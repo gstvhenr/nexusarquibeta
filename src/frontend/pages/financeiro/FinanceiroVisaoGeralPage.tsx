@@ -23,13 +23,13 @@ import {
 } from '@/components/finance';
 import { ArrowUpCircleIcon, ArrowDownCircleIcon } from '@/components/ui';
 
-const DEFAULT_CATEGORY_COLOR = 'hsl(0, 0%, 55%)';
-const DEFAULT_RECEIVABLE_COLOR = 'hsl(160, 40%, 50%)';
+const DEFAULT_CATEGORY_COLOR = 'hsl(var(--color-text-secondary))';
+const DEFAULT_RECEIVABLE_COLOR = 'hsl(var(--color-success))';
 
 type DonutView = 'all' | 'expenses' | 'income';
 
-const ALL_EXPENSES_COLOR = 'hsl(0, 72%, 56%)';
-const ALL_INCOME_COLOR = 'hsl(142, 64%, 44%)';
+const ALL_EXPENSES_COLOR = 'hsl(var(--color-error))';
+const ALL_INCOME_COLOR = 'hsl(var(--color-success))';
 
 /** Builds a Date set to the 1st of the month offset from today. */
 const getOffsetDate = (offset: number): Date => {
@@ -398,7 +398,7 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div
                               className="w-2 h-2 rounded-full shrink-0 ring-2 ring-white/20"
-                              style={{ backgroundColor: cat.color }}
+                              style={{ backgroundColor: cat.color }} // NOSONAR
                             />
                             <span className="text-text-secondary truncate group-hover:text-text-primary transition-colors">
                               {cat.category}

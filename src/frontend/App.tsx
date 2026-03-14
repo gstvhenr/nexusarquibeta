@@ -29,9 +29,7 @@ const GestaoMarketingPainelPage = lazy(() => import('./pages/gestao-marketing'))
 const GestaoMarketingConteudosPage = lazy(
   () => import('./pages/gestao-marketing/GestaoMarketingConteudosPage'),
 );
-const GestaoMarketingBancoIdeiasPage = lazy(
-  () => import('./pages/gestao-marketing/GestaoMarketingBancoIdeiasPage'),
-);
+
 const InstagramDetailPage = lazy(
   () => import('./pages/gestao-marketing/redes-sociais/InstagramDetailPage'),
 );
@@ -58,7 +56,8 @@ const App: () => React.ReactNode = () => {
   const isSpecialPage =
     location.pathname.startsWith('/agenda') ||
     location.pathname.startsWith('/financeiro') ||
-    location.pathname.startsWith('/prestadores-freelancers');
+    location.pathname.startsWith('/prestadores-freelancers') ||
+    location.pathname.startsWith('/fornecedores');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const standardBottomPaddingClass = 'pb-4 md:pb-5';
   const mainPaddingClass = isSpecialPage
@@ -132,10 +131,7 @@ const App: () => React.ReactNode = () => {
                   path="/gestao-marketing/conteudos"
                   element={<GestaoMarketingConteudosPage />}
                 />
-                <Route
-                  path="/gestao-marketing/banco-de-ideias"
-                  element={<GestaoMarketingBancoIdeiasPage />}
-                />
+
                 <Route path="/gestao-marketing/redes-sociais" element={<RedesSociaisPage />} />
                 <Route
                   path="/gestao-marketing/redes-sociais/:networkId"

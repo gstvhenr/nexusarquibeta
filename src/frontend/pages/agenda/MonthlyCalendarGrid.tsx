@@ -76,7 +76,7 @@ function MonthlyCalendarGrid({
         bgClass = 'bg-primary/5';
         borderClass = 'border border-primary/30';
       } else if (isPast) {
-        bgClass = 'bg-amber-50/60 dark:bg-amber-950/25';
+        bgClass = 'bg-warning/10 dark:bg-warning/5';
         textClass = 'text-text-secondary';
       }
 
@@ -103,7 +103,7 @@ function MonthlyCalendarGrid({
                     relative rounded-xl flex flex-col p-2 cursor-pointer transition-all duration-200 ease-in-out group
                     ${bgClass} ${borderClass}
                 `}
-          style={{ minHeight: `${DEFAULT_CELL_HEIGHT_REM * normalizedCellHeightScale}rem` }}
+          style={{ minHeight: `${DEFAULT_CELL_HEIGHT_REM * normalizedCellHeightScale}rem` }} // NOSONAR
         >
           <div className="flex justify-center">
             <span

@@ -25,7 +25,6 @@ export const ENTITY_TABLE_MAP: Record<string, string> = {
   commissions: 'commissions',
   marketingProfessionals: 'marketing_professionals',
   marketingActivities: 'marketing_activities',
-  marketingIdeas: 'marketing_ideas',
   socialNetworks: 'social_networks',
   freelancers: 'freelancers',
   agendaEvents: 'agenda_events',

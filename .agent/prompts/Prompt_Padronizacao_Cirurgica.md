@@ -153,6 +153,7 @@ Pós-execução, os ratios devem inverter:
 <flag>ATOM_WITHOUT_MIGRATION_FORBIDDEN</flag>
 </constraints>
 <diagnostic_injection>
+
 <source>standardization_debate.md</source>
 <key_metrics>
 <metric name="inline_buttons" value="200+" versus="5 Button imports" ratio="40:1 inline"/>

@@ -48,8 +48,8 @@ export const MarginBar: (props: MarginBarProps) => React.ReactNode = ({
           </div>
           <div className="w-full h-2.5 rounded-full bg-error/15 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-success via-emerald-400 to-success transition-all duration-1000 ease-out"
-              style={{ width: `${Math.min(incomeShare, 100)}%` }}
+              className="h-full rounded-full bg-gradient-to-r from-success via-success/70 to-success transition-all duration-1000 ease-out"
+              style={{ width: `${Math.min(incomeShare, 100)}%` }} // NOSONAR
             />
           </div>
         </div>

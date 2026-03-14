@@ -189,15 +189,6 @@ export const ConteudosIcon: (props: { className?: string }) => React.ReactNode =
     <path d="M9 18h6" />
   </Icon>
 );
-export const BancoDeIdeiasIcon: (props: { className?: string }) => React.ReactNode = ({
-  className,
-}) => (
-  <Icon className={className}>
-    <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2 1.5-3.5a6 6 0 0 0-11 0c0 1.5.5 2.5 1.5 3.5.8.8 1.3 1.5 1.5 2.5" />
-    <path d="M9 18h6" />
-    <path d="M10 22h4" />
-  </Icon>
-);
 export const RedesSociaisIcon: (props: { className?: string }) => React.ReactNode = ({
   className,
 }) => (

@@ -67,7 +67,7 @@ export const InstagramCredentialModal: (
             Insira a senha de segurança para visualizar as credenciais de acesso.
           </p>
           <div className="relative">
-            <input
+            <Input
               type={showPassword ? 'text' : 'password'}
               value={passwordAttempt}
               onChange={(e) => setPasswordAttempt(e.target.value)}
@@ -75,15 +75,15 @@ export const InstagramCredentialModal: (
                 if (e.key === 'Enter') handleUnlock();
               }}
               placeholder="Senha de segurança"
-              className="w-full bg-background p-2.5 rounded-md border border-border-color focus:border-accent focus:outline-none transition-colors"
             />
-            <button
-              type="button"
+            <IconButton
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary p-1"
+              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              size="sm"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
             >
               {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-            </button>
+            </IconButton>
           </div>
           {error && <p className="text-sm text-error font-semibold">{error}</p>}
           <div className="flex justify-end pt-2">
@@ -110,25 +110,25 @@ export const InstagramCredentialModal: (
               Senha
             </label>
             <div className="relative">
-              <input
+              <Input
                 id="field-senha"
                 type={showPassword ? 'text' : 'password'}
                 value={editPassword}
                 onChange={(e) => setEditPassword(e.target.value)}
                 placeholder="Senha da plataforma"
-                className="w-full bg-background p-2.5 rounded-md border border-border-color focus:border-accent focus:outline-none transition-colors"
               />
-              <button
-                type="button"
+              <IconButton
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary p-1"
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                size="sm"
+                className="absolute right-2 top-1/2 -translate-y-1/2"
               >
                 {showPassword ? (
                   <EyeOffIcon className="w-4 h-4" />
                 ) : (
                   <EyeIcon className="w-4 h-4" />
                 )}
-              </button>
+              </IconButton>
             </div>
           </div>
           <div className="flex justify-end space-x-3 pt-2 border-t border-border-color mt-4">

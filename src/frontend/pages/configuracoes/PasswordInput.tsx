@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Input } from '../../components/ui';
+import { IconButton, Input } from '../../components/ui';
 import { EyeIcon, EyeOffIcon } from '../../components/ui/icons';
 
 type PasswordInputProps = {
@@ -27,15 +27,16 @@ export function PasswordInput({
         aria-label={ariaLabel || placeholder}
         className="pr-10"
       />
-      <button
-        type="button"
+      <IconButton
+        variant="primary"
+        size="sm"
         onClick={() => setVisible((prev) => !prev)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-text-secondary hover:text-primary transition-colors rounded-md"
         aria-label={visible ? 'Ocultar senha' : 'Mostrar senha'}
         tabIndex={-1}
+        className="absolute right-2 top-1/2 -translate-y-1/2"
       >
         {visible ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-      </button>
+      </IconButton>
     </div>
   );
 }

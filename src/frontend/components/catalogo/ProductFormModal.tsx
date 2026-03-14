@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Button, FormField, Input, Modal, Textarea } from '../ui';
+import { Button, FormField, Input, Modal, Select, Textarea } from '../ui';
 import type { Product, Supplier, ProductUnit } from '../../types';
 import {
   PRODUCT_UNIT_OPTIONS,
@@ -81,8 +81,13 @@ export const ProductFormModal: (props: {
   if (!isOpen) return null;
 
   const hasSuppliers = suppliers.length > 0;
-  const inputClass =
-    'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-text-primary transition text-sm';
+
+  const unitOptions = PRODUCT_UNIT_OPTIONS.map((o) => ({ value: o, label: o }));
+
+  const categoryOptions = [
+    { value: '', label: 'Selecione uma categoria...' },
+    ...PRODUCT_CATEGORY_OPTIONS.map((c) => ({ value: c, label: c })),
+  ];
 
   return (
     <Modal
@@ -102,9 +107,9 @@ export const ProductFormModal: (props: {
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-primary text-sm font-semibold hover:underline">
+          <Button variant="ghost" size="sm" onClick={onClose}>
             Voltar e cadastrar fornecedores
-          </button>
+          </Button>
         </div>
       ) : (
         <>
@@ -118,49 +123,20 @@ export const ProductFormModal: (props: {
               />
             </FormField>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="field-unidade"
-                  className="block text-xs font-medium text-text-secondary mb-1"
-                >
-                  Unidade
-                </label>
-                <select
-                  id="field-unidade"
-                  value={product.unit}
-                  onChange={(e) => handleChange('unit', e.target.value as ProductUnit)}
-                  className={inputClass}
-                  aria-label="Unidade"
-                >
-                  {PRODUCT_UNIT_OPTIONS.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="field-categoria"
-                  className="block text-xs font-medium text-text-secondary mb-1"
-                >
-                  Categoria
-                </label>
-                <select
-                  id="field-categoria"
-                  value={product.category}
-                  onChange={(e) => handleChange('category', e.target.value)}
-                  className={inputClass}
-                  aria-label="Categoria"
-                >
-                  <option value="">Selecione uma categoria...</option>
-                  {PRODUCT_CATEGORY_OPTIONS.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                label="Unidade"
+                value={product.unit}
+                onChange={(e) => handleChange('unit', e.target.value as ProductUnit)}
+                options={unitOptions}
+                aria-label="Unidade"
+              />
+              <Select
+                label="Categoria"
+                value={product.category}
+                onChange={(e) => handleChange('category', e.target.value)}
+                options={categoryOptions}
+                aria-label="Categoria"
+              />
             </div>
             <FormField label="Descrição">
               <Textarea
@@ -200,13 +176,13 @@ export const ProductFormModal: (props: {
                 <div className="p-4 border-t border-border-color animate-fade-in-up">
                   <div className="relative mb-3">
                     <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
-                    <input
+                    <Input
                       id="product-supplier-search"
                       type="text"
                       placeholder="Buscar fornecedor..."
                       value={supplierSearch}
                       onChange={(e) => setSupplierSearch(e.target.value)}
-                      className="w-full bg-surface pl-9 pr-3 py-2 rounded-lg border border-border-color text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                      className="pl-9"
                     />
                   </div>
                   <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar pr-1">

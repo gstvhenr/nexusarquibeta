@@ -32,20 +32,15 @@ const LAYER_PATTERNS = [
 
 const REQUIRES_TEST = new Set(['service', 'util', 'hook', 'component', 'page']);
 
-const CONTRACT_PATTERNS = [
-  /^src\/frontend\/types\//,
-  /types\.ts$/,
-  /\.types\.ts$/,
-];
+const CONTRACT_PATTERNS = [/^src\/frontend\/types\//, /types\.ts$/, /\.types\.ts$/];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function getChangedFiles() {
   try {
-    const output = execSync(
-      "git diff --name-only HEAD -- 'src/frontend/**'",
-      { encoding: 'utf-8' },
-    ).trim();
+    const output = execSync("git diff --name-only HEAD -- 'src/frontend/**'", {
+      encoding: 'utf-8',
+    }).trim();
     if (!output) return [];
     return output.split('\n').filter(Boolean);
   } catch {
@@ -115,7 +110,12 @@ function main() {
 
   if (changedFiles.length === 0) {
     console.log('No changed source files detected under src/frontend/.');
-    const emptyReport = { timestamp: new Date().toISOString(), files: [], actions: [], vitestResult: null };
+    const emptyReport = {
+      timestamp: new Date().toISOString(),
+      files: [],
+      actions: [],
+      vitestResult: null,
+    };
     mkdirSync(REPORT_DIR, { recursive: true });
     writeFileSync(REPORT_PATH, JSON.stringify(emptyReport, null, 2));
     console.log(`\nReport saved to ${REPORT_PATH}`);
@@ -126,7 +126,9 @@ function main() {
   const sourceFiles = changedFiles.filter((f) => !isTestFile(f));
   const testFiles = changedFiles.filter((f) => isTestFile(f));
 
-  console.log(`Changed files: ${changedFiles.length} (${sourceFiles.length} source, ${testFiles.length} test)\n`);
+  console.log(
+    `Changed files: ${changedFiles.length} (${sourceFiles.length} source, ${testFiles.length} test)\n`,
+  );
 
   // Classify each file
   const fileAnalysis = sourceFiles.map((filePath) => {
@@ -155,8 +157,15 @@ function main() {
   console.log('| --- | --- | --- | --- |');
   for (const f of fileAnalysis) {
     const testCol = f.layer === 'type' ? 'N/A' : f.hasTest ? '✅' : '❌';
-    const statusEmoji = { EXEMPT: '➖ ISENTO', COVERED: '✅ OK', GAP: '⚠️ GAP', OPTIONAL: '❔ OPTIONAL' };
-    console.log(`| ${f.filePath} | ${f.layer} | ${testCol} | ${statusEmoji[f.status] ?? f.status} |`);
+    const statusEmoji = {
+      EXEMPT: '➖ ISENTO',
+      COVERED: '✅ OK',
+      GAP: '⚠️ GAP',
+      OPTIONAL: '❔ OPTIONAL',
+    };
+    console.log(
+      `| ${f.filePath} | ${f.layer} | ${testCol} | ${statusEmoji[f.status] ?? f.status} |`,
+    );
   }
 
   // Detect actions needed
@@ -178,7 +187,9 @@ function main() {
   }
 
   // Run vitest related on eligible source files
-  const testableFiles = sourceFiles.filter((f) => !CONTRACT_PATTERNS.some((p) => p.test(f)) || REQUIRES_TEST.has(classifyLayer(f)));
+  const testableFiles = sourceFiles.filter(
+    (f) => !CONTRACT_PATTERNS.some((p) => p.test(f)) || REQUIRES_TEST.has(classifyLayer(f)),
+  );
   const vitestResult = runVitestRelated(testableFiles);
 
   console.log(`\n--- Vitest Related ---`);

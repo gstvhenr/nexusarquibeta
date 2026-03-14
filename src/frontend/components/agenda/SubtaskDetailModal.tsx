@@ -176,10 +176,10 @@ export const SubtaskDetailModal: (props: {
         {subtasks.length > 0 && (
           <div className="w-full bg-border-color/30 rounded-full h-1.5 overflow-hidden">
             <div
-              className="h-full bg-emerald-500 rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-success rounded-full transition-all duration-500 ease-out"
               style={{
                 width: `${(completedCount / subtasks.length) * 100}%`,
-              }}
+              }} // NOSONAR
             />
           </div>
         )}

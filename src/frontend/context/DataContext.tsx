@@ -95,7 +95,6 @@ export const DataProvider: (props: PropsWithChildren<{}>) => React.ReactNode = (
   const marketingValue: MarketingDataType = useDomain(data, setField, [
     'marketingProfessionals',
     'marketingActivities',
-    'marketingIdeas',
     'socialNetworks',
     'prospects',
   ]);

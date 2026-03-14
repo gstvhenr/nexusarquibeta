@@ -1,9 +1,6 @@
-import React from 'react';
-import { FormField, Input, Textarea } from '../ui';
+import { FormField, Input, Select, Textarea } from '../ui';
 import type { MarketingActivity, MarketingProfessional, Project } from '../../types';
 import { marketingActivityStatuses, marketingContentTypes } from '../../types';
-
-const selectClass = 'w-full bg-background p-2 rounded-md border border-border-color';
 
 interface ActivityFormFieldsProps {
   activity: MarketingActivity & { datePart: string; timePart: string };
@@ -54,76 +51,36 @@ function ActivityFormFields({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="field-status"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Status
-          </label>
-          <select
-            id="field-status"
-            value={activity.status}
-            onChange={(e) => onChange('status', e.target.value)}
-            className={selectClass}
-            disabled={readOnly}
-            aria-label="Status"
-          >
-            {marketingActivityStatuses.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label
-            htmlFor="field-plataforma-tipo"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Plataforma / Tipo
-          </label>
-          <select
-            id="field-plataforma-tipo"
-            value={activity.contentType}
-            onChange={(e) => onChange('contentType', e.target.value)}
-            className={selectClass}
-            disabled={readOnly}
-            aria-label="Plataforma ou tipo"
-          >
-            {marketingContentTypes.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="Status"
+          value={activity.status}
+          onChange={(e) => onChange('status', e.target.value)}
+          options={marketingActivityStatuses.map((s) => ({ value: s, label: s }))}
+          disabled={readOnly}
+          aria-label="Status"
+        />
+        <Select
+          label="Plataforma / Tipo"
+          value={activity.contentType}
+          onChange={(e) => onChange('contentType', e.target.value)}
+          options={marketingContentTypes.map((c) => ({ value: c, label: c }))}
+          disabled={readOnly}
+          aria-label="Plataforma ou tipo"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="field-responsavel"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Responsável
-          </label>
-          <select
-            id="field-responsavel"
-            value={activity.responsibleId}
-            onChange={(e) => onChange('responsibleId', e.target.value)}
-            className={selectClass}
-            disabled={readOnly}
-            aria-label="Responsável"
-          >
-            <option value="architect">Eu (Arquiteto)</option>
-            {professionals.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="Responsável"
+          value={activity.responsibleId}
+          onChange={(e) => onChange('responsibleId', e.target.value)}
+          options={[
+            { value: 'architect', label: 'Eu (Arquiteto)' },
+            ...professionals.map((p) => ({ value: p.id, label: p.name })),
+          ]}
+          disabled={readOnly}
+          aria-label="Responsável"
+        />
         <FormField label="Custo Adicional (R$)">
           <Input
             type="number"
@@ -135,23 +92,20 @@ function ActivityFormFields({
         </FormField>
       </div>
 
-      <FormField label="Projeto Vinculado">
-        <select
-          id="field-projeto-vinculado"
-          value={activity.linkedProjectId || ''}
-          onChange={(e) => onProjectChange(e.target.value)}
-          className={selectClass}
-          disabled={readOnly}
-          aria-label="Projeto vinculado"
-        >
-          <option value="">Nenhum</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name.startsWith(p.code) ? p.name : `${p.code} - ${p.name}`}
-            </option>
-          ))}
-        </select>
-      </FormField>
+      <Select
+        label="Projeto Vinculado"
+        value={activity.linkedProjectId || ''}
+        onChange={(e) => onProjectChange(e.target.value)}
+        options={[
+          { value: '', label: 'Nenhum' },
+          ...projects.map((p) => ({
+            value: p.id,
+            label: p.name.startsWith(p.code) ? p.name : `${p.code} - ${p.name}`,
+          })),
+        ]}
+        disabled={readOnly}
+        aria-label="Projeto vinculado"
+      />
 
       <FormField label="Descrição">
         <Textarea

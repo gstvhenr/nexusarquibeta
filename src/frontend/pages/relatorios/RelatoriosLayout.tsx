@@ -4,7 +4,7 @@ import { PageHeader } from '../../components/layout';
 import { useReportData } from '../../hooks/useReportData';
 import { generateReport, ReportFilter } from '../../services/reportService';
 import { NAV_LINKS } from '../../constants';
-import { Input } from '../../components/ui';
+import { Button, Input } from '../../components/ui';
 import { getTodayDateOnly } from '../../utils/formatters';
 
 // ═══════════════════════════════════════════════════════════════
@@ -86,18 +86,16 @@ const RelatoriosLayout: () => React.ReactNode = () => {
         <div className="flex items-center gap-4 bg-background p-1.5 rounded-lg border border-border-color">
           <div className="flex items-center gap-1">
             {dateFilterOptions.map((opt) => (
-              <button
+              <Button
                 key={opt.value}
-                type="button"
+                variant={
+                  filter.type === 'preset' && filter.days === opt.value ? 'primary' : 'ghost'
+                }
+                size="sm"
                 onClick={() => handlePresetClick(opt.value)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                  filter.type === 'preset' && filter.days === opt.value
-                    ? 'bg-primary text-primary-content'
-                    : 'bg-transparent text-text-secondary hover:bg-surface'
-                }`}
               >
                 {opt.label}
-              </button>
+              </Button>
             ))}
           </div>
           <div className="flex items-center gap-2 border-l border-border-color pl-3">

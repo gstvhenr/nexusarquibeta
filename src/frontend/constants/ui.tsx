@@ -3,7 +3,6 @@ import type { NavLinkItem, ProjectStatus, SocialNetworkName } from '../types';
 import {
   AgendaIcon,
   BadgeIcon,
-  BancoDeIdeiasIcon,
   BellAlertIcon,
   BriefcaseIcon,
   BuildingIcon,
@@ -189,12 +188,6 @@ export const NAV_LINKS: NavLinkItem[] = [
         label: 'Conteúdos',
         icon: <ConteudosIcon />,
         iconName: 'ConteudosIcon',
-      },
-      {
-        path: '/gestao-marketing/banco-de-ideias',
-        label: 'Banco de Ideias',
-        icon: <BancoDeIdeiasIcon />,
-        iconName: 'BancoDeIdeiasIcon',
       },
       {
         path: '/gestao-marketing/redes-sociais',

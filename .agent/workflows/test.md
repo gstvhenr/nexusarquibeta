@@ -26,13 +26,11 @@ $ARGUMENTS
 Quando pedido para testar um arquivo ou feature:
 
 1. **Analisar o código**
-
    - Identificar funções/hooks/componentes
    - Detectar edge cases
    - Identificar dependências para mockar
 
 2. **Gerar casos de teste**
-
    - Happy path
    - Casos de erro
    - Edge cases

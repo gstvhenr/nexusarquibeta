@@ -166,7 +166,7 @@ const LembretesPage: () => React.ReactNode = () => {
       {/* ── BOARD ── */}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar py-4">
         {/* Subtle board area */}
-        <div className="relative min-h-full rounded-2xl p-6 bg-surface/40 border border-border-color/50 bg-[radial-gradient(circle,_var(--border-color,_rgba(0,0,0,0.06))_1px,_transparent_1px)] bg-[length:24px_24px]">
+        <div className="relative min-h-full rounded-2xl p-6 bg-surface/40 border border-border-color/50 bg-[radial-gradient(circle,_var(--border-color,_rgba(var(--color-shadow-rgb),0.06))_1px,_transparent_1px)] bg-[length:24px_24px]">
           {sorted.length === 0 && !showCompleted ? (
             <ReminderEmptyState />
           ) : (
@@ -184,9 +184,9 @@ const LembretesPage: () => React.ReactNode = () => {
                         key={reminder.id}
                         className={`
                           group relative cursor-pointer rounded-lg border p-0
-                          transition-all duration-300
+                          transition duration-300
                           hover:shadow-lg hover:scale-[1.03] hover:!rotate-0 hover:z-20
-                          shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06)] min-h-[170px]
+                          shadow-[0_2px_8px_rgba(var(--color-shadow-rgb),0.08),0_1px_2px_rgba(var(--color-shadow-rgb),0.06)] min-h-[170px]
                           ${style.bg} ${style.border}
                           ${reminder.pinned ? '!rotate-0 shadow-md ring-2 ring-primary/40' : rotation}
                         `}
@@ -225,7 +225,7 @@ const LembretesPage: () => React.ReactNode = () => {
 
                           {/* Comment */}
                           {reminder.comment && (
-                            <p className="text-xs text-text-secondary leading-relaxed mb-3 line-clamp-4 flex-1">
+                            <p className="text-xs text-text-secondary leading-relaxed mb-3 line-clamp-4">
                               {reminder.comment}
                             </p>
                           )}
@@ -352,7 +352,7 @@ const LembretesPage: () => React.ReactNode = () => {
                       return (
                         <div
                           key={reminder.id}
-                          className={`relative rounded-lg border p-5 opacity-50 grayscale-[40%] shadow-[0_1px_4px_rgba(0,0,0,0.06)] min-h-[120px] ${style.bg} ${style.border}`}
+                          className={`relative rounded-lg border p-5 opacity-50 grayscale-[40%] shadow-[0_1px_4px_rgba(var(--color-shadow-rgb),0.06)] min-h-[120px] ${style.bg} ${style.border}`}
                         >
                           <h3 className="font-bold text-text-primary text-sm leading-snug mb-1 line-through">
                             {reminder.title}

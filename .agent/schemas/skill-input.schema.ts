@@ -40,7 +40,7 @@ export function validateSkillInput(payload: unknown): GenericSkillInput {
     {
       target: 'string',
       action: 'string',
-      payload: 'object'
-    }
+      payload: 'object',
+    },
   );
 }

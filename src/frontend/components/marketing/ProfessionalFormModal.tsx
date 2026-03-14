@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, FormField, Input, Modal, Textarea, UserCircleIcon } from '../ui';
+import { Button, FormField, Input, Modal, Select, Textarea, UserCircleIcon } from '../ui';
 import type { MarketingBillingFormat, MarketingProfessional } from '../../types';
 import { marketingBillingFormats } from '../../types';
 
@@ -77,13 +77,9 @@ const ProfessionalFormModal: (props: ProfessionalFormModalProps) => React.ReactN
                 <UserCircleIcon className="w-20 h-20 text-secondary/20" />
               )}
             </div>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="text-sm font-semibold text-primary hover:underline"
-            >
+            <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}>
               {photoPreview ? 'Alterar' : 'Adicionar Foto'}
-            </button>
+            </Button>
             <input
               id="professional-photo-upload"
               type="file"
@@ -132,34 +128,21 @@ const ProfessionalFormModal: (props: ProfessionalFormModalProps) => React.ReactN
             />
           </FormField>
         </div>
-        <div>
-          <label
-            htmlFor="professional-billing-format"
-            className="block text-sm font-medium text-text-secondary mb-1"
-          >
-            Formato de Cobrança
-          </label>
-          <select
-            id="professional-billing-format"
-            value={professional.billingFormat || ''}
-            onChange={(e) =>
-              setProfessional((p) => ({
-                ...p,
-                billingFormat: e.target.value as MarketingBillingFormat,
-              }))
-            }
-            className="w-full bg-background p-2 rounded-md border border-border-color"
-            aria-label="Formato de cobrança"
-            title="Formato de cobrança"
-          >
-            <option value="">Selecione...</option>
-            {marketingBillingFormats.map((f) => (
-              <option key={f} value={f}>
-                {f}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="Formato de Cobrança"
+          value={professional.billingFormat || ''}
+          onChange={(e) =>
+            setProfessional((p) => ({
+              ...p,
+              billingFormat: e.target.value as MarketingBillingFormat,
+            }))
+          }
+          options={[
+            { value: '', label: 'Selecione...' },
+            ...marketingBillingFormats.map((f) => ({ value: f, label: f })),
+          ]}
+          aria-label="Formato de cobrança"
+        />
         <FormField label="Notas">
           <Textarea
             value={professional.notes || ''}

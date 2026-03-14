@@ -133,7 +133,9 @@ function renderSection(section, entries) {
   }
 
   for (const entry of entries) {
-    lines.push(`- \`${entry.file}\`: ${entry.exportsFound.map((name) => `\`${name}\``).join(', ')}`);
+    lines.push(
+      `- \`${entry.file}\`: ${entry.exportsFound.map((name) => `\`${name}\``).join(', ')}`,
+    );
   }
 
   return lines.join('\n');

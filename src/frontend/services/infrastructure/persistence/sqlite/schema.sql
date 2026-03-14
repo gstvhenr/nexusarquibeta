@@ -83,11 +83,6 @@ CREATE TABLE IF NOT EXISTS marketing_activities (
   updated_at INTEGER NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS marketing_ideas (
-  id         TEXT    PRIMARY KEY NOT NULL,
-  data       TEXT    NOT NULL,
-  updated_at INTEGER NOT NULL
-);
 
 CREATE TABLE IF NOT EXISTS social_networks (
   id         TEXT    PRIMARY KEY NOT NULL,

@@ -47,15 +47,10 @@ export function isAgentTask(val: unknown): val is AgentTaskSchema {
  * Se o LLM alucinar, esta função extrai as violações para a Pipeline de Auto-Correção.
  */
 export function validateTaskPayload(payload: unknown): AgentTaskSchema {
-  return validateAgentStructure<AgentTaskSchema>(
-    payload,
-    isAgentTask,
-    'AgentTask',
-    {
-      id: 'string',
-      title: 'string',
-      description: 'string',
-      status: 'string'
-    }
-  );
+  return validateAgentStructure<AgentTaskSchema>(payload, isAgentTask, 'AgentTask', {
+    id: 'string',
+    title: 'string',
+    description: 'string',
+    status: 'string',
+  });
 }

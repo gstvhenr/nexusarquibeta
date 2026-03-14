@@ -18,11 +18,9 @@ export function SupplierContactDetailsTab({
           <div className="space-y-4">
             <div>
               <p className="text-xs font-bold text-text-secondary uppercase">Nome</p>
-              <p className="text-text-primary font-medium text-lg">
-                {supplier.mainContact.name}{' '}
-                <span className="text-sm font-normal text-text-secondary">
-                  ({supplier.mainContact.role || 'Responsável'})
-                </span>
+              <p className="text-text-primary font-medium text-lg">{supplier.mainContact.name}</p>
+              <p className="text-sm font-normal text-text-secondary mt-1">
+                {supplier.mainContact.role || 'Responsável'}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -31,7 +29,14 @@ export function SupplierContactDetailsTab({
               </div>
               <div>
                 <p className="text-xs font-bold text-text-secondary uppercase">Telefone</p>
-                <p className="text-text-primary font-mono">{supplier.mainContact.phone}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-text-primary font-mono">{supplier.mainContact.phone}</p>
+                  {supplier.mainContact.hasWhatsApp && (
+                    <span className="text-xs font-bold text-success/90 bg-success/10 px-2 py-0.5 rounded-full">
+                      WhatsApp
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -85,15 +90,24 @@ export function SupplierContactDetailsTab({
                 </a>
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <div className="bg-success/10 p-2 rounded-lg text-success">
+                <BuildingIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-text-secondary uppercase">Comissão</p>
+                <p className="text-text-primary font-bold text-lg">
+                  {supplier.commissionPercentage || 0}%
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {supplier.notes && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/10 p-5 rounded-xl border border-yellow-200 dark:border-yellow-800/30">
-          <h4 className="font-bold text-yellow-800 dark:text-yellow-500 mb-2">
-            Anotações Internas
-          </h4>
+        <div className="bg-warning/10 p-5 rounded-xl border border-warning/20">
+          <h4 className="font-bold text-warning mb-2">Anotações Internas</h4>
           <p className="text-text-primary whitespace-pre-wrap text-sm leading-relaxed">
             {supplier.notes}
           </p>

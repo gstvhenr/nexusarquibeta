@@ -98,19 +98,19 @@ const SocialNetworkCard: (props: {
       }}
     >
       <div className="flex justify-between items-start gap-4">
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-white border border-border-color">
+        <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-surface border border-border-color">
           {React.cloneElement(icon, { className: 'w-8 h-8' })}
         </div>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={(e) => {
             e.stopPropagation();
             onEdit();
           }}
-          className="text-sm font-semibold text-primary hover:underline"
         >
           {networkData ? 'Editar' : 'Adicionar'}
-        </button>
+        </Button>
       </div>
       <h3 className="font-serif text-2xl font-bold text-secondary mt-4">{name}</h3>
 

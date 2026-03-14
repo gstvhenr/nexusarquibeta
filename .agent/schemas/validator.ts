@@ -32,12 +32,12 @@ export function validateAgentStructure<T>(
   data: unknown,
   typeGuard: (val: unknown) => val is T,
   schemaContextName: string,
-  requiredFields: Record<string, 'string' | 'number' | 'boolean' | 'object'>
+  requiredFields: Record<string, 'string' | 'number' | 'boolean' | 'object'>,
 ): T {
   // 1. O dado deve ser um Objeto
   if (typeof data !== 'object' || data === null) {
     throw new SchemaValidationError(
-      `[Self-Healing] O output para '${schemaContextName}' deve ser um objeto JSON válido, mas recebeu: ${typeof data}`
+      `[Self-Healing] O output para '${schemaContextName}' deve ser um objeto JSON válido, mas recebeu: ${typeof data}`,
     );
   }
 
@@ -51,7 +51,7 @@ export function validateAgentStructure<T>(
         property: field,
         expected: expectedType,
         received: 'undefined',
-        message: `Campo MANDATÓRIO ausente: '${field}'.`
+        message: `Campo MANDATÓRIO ausente: '${field}'.`,
       });
       continue;
     }
@@ -65,7 +65,7 @@ export function validateAgentStructure<T>(
           property: field,
           expected: expectedType,
           received: actualType,
-          message: `Inconsistência de tipo em '${field}': era esperado '${expectedType}'.`
+          message: `Inconsistência de tipo em '${field}': era esperado '${expectedType}'.`,
         });
       }
     }
@@ -75,15 +75,15 @@ export function validateAgentStructure<T>(
   if (!typeGuard(data)) {
     throw new SchemaValidationError(
       `[Self-Healing] O objeto falhou na validação customizada para '${schemaContextName}'. Estrutura incompatível com o esperado. Corrija baseando-se no contrato.`,
-      errors
+      errors,
     );
   }
 
   if (errors.length > 0) {
-    const errorDetailsMsg = errors.map(e => `- ${e.message}`).join('\n');
+    const errorDetailsMsg = errors.map((e) => `- ${e.message}`).join('\n');
     throw new SchemaValidationError(
       `[Self-Healing] Rejeitado por '${schemaContextName}'. Por favor corrija sua resposta:\n${errorDetailsMsg}`,
-      errors
+      errors,
     );
   }
 

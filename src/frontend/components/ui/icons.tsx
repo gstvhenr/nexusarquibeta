@@ -67,7 +67,6 @@ export {
   GiftIcon,
   PainelIcon,
   ConteudosIcon,
-  BancoDeIdeiasIcon,
   RedesSociaisIcon,
   BadgeIcon,
 } from './icons-submenu';

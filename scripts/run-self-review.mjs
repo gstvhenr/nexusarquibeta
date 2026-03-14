@@ -203,7 +203,9 @@ if (lineRatchetCheck.status === 'error') {
   fail(`Unable to validate line-baseline ratchet: ${lineRatchetCheck.details}`);
   failures++;
 } else if (lineRatchetCheck.status === 'stale') {
-  fail(`Line-baseline ratchet is stale. Run "npm run check:lines:ratchet".\n${lineRatchetCheck.details}`);
+  fail(
+    `Line-baseline ratchet is stale. Run "npm run check:lines:ratchet".\n${lineRatchetCheck.details}`,
+  );
   failures++;
 } else {
   pass('Line-baseline ratchet check passed.');

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button, Textarea } from '@/components/ui';
 
 type InstagramNotesCardProps = {
   notes?: string;
@@ -24,42 +25,28 @@ export const InstagramNotesCard: (props: InstagramNotesCardProps) => React.React
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-serif text-lg font-bold text-secondary">Breve campo de informação</h2>
         {!isEditing && (
-          <button
-            type="button"
-            onClick={onStartEdit}
-            className="text-sm font-semibold text-primary hover:underline"
-          >
+          <Button variant="ghost" size="sm" onClick={onStartEdit}>
             {notes ? 'Editar' : 'Adicionar'}
-          </button>
+          </Button>
         )}
       </div>
 
       {isEditing ? (
         <div className="space-y-3">
-          <textarea
+          <Textarea
             value={notesValue}
             onChange={(event) => onNotesChange(event.target.value)}
             rows={3}
             placeholder="Observação breve sobre o perfil."
-            className="w-full bg-background p-3 rounded-md border border-border-color focus:border-accent focus:outline-none text-sm resize-y transition-colors"
-            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
           <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onCancelEdit}
-              className="px-4 py-1.5 rounded-lg text-sm font-semibold text-text-primary bg-border-color/50 hover:bg-border-color transition-colors"
-            >
+            <Button variant="secondary" size="sm" onClick={onCancelEdit}>
               Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={onSave}
-              className="px-4 py-1.5 rounded-lg text-sm font-semibold text-primary-content bg-primary hover:bg-primary-focus transition-colors"
-            >
+            </Button>
+            <Button variant="primary" size="sm" onClick={onSave}>
               Salvar
-            </button>
+            </Button>
           </div>
         </div>
       ) : notes ? (

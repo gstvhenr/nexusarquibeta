@@ -19,14 +19,12 @@ Ativa o modo BRAINSTORM para exploração de opções **antes** de qualquer impl
 Quando `/brainstorm` for acionado:
 
 1. **Entender o problema**
-
    - Qual funcionalidade do ERP está sendo discutida?
    - Quais dados estão envolvidos? (Projetos, Propostas, Clientes?)
    - Persiste em IndexedDB ou é UI state temporário?
    - Há impacto em tipos existentes (`docs/data-contracts/types-contracts.md`)?
 
 2. **Gerar opções**
-
    - Mínimo 3 abordagens diferentes
    - Prós, contras e esforço estimado para cada
    - Considerar soluções não-óbvias

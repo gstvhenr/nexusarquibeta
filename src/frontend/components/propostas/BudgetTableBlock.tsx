@@ -29,13 +29,13 @@ export const BudgetTableBlock: (props: BudgetTableBlockProps) => React.ReactNode
         const sectionTotal = computeSectionTotal(section);
         return (
           <div key={section.id} className="mb-8">
-            <h4 className="font-serif text-lg font-bold text-gray-800 mb-2 border-b-2 border-primary/20 pb-1 inline-block">
+            <h4 className="font-serif text-lg font-bold text-text-primary mb-2 border-b-2 border-primary/20 pb-1 inline-block">
               {section.title}
             </h4>
 
             <div className="overflow-x-auto mt-2">
               <table className="w-full text-sm">
-                <thead className="text-left text-gray-500 border-b border-gray-200">
+                <thead className="text-left text-text-secondary border-b border-border-color">
                   <tr>
                     <th className="py-2 pr-4 font-semibold uppercase text-xs tracking-wider">
                       Descrição
@@ -49,17 +49,17 @@ export const BudgetTableBlock: (props: BudgetTableBlockProps) => React.ReactNode
                 </thead>
                 <tbody>
                   {section.items.map((item) => (
-                    <tr key={item.id} className="border-b border-gray-100 last:border-0">
-                      <td className="py-3 pr-4 text-gray-700">
+                    <tr key={item.id} className="border-b border-border-color/30 last:border-0">
+                      <td className="py-3 pr-4 text-text-primary">
                         {item.description}
                         {item.quantity > 1 && (
-                          <span className="text-gray-400 text-xs ml-2">
+                          <span className="text-text-secondary text-xs ml-2">
                             ({item.quantity} {item.unit})
                           </span>
                         )}
                       </td>
                       {showItemPrices && (
-                        <td className="py-3 pl-4 text-right font-medium text-gray-900">
+                        <td className="py-3 pl-4 text-right font-medium text-text-primary">
                           {formatCurrency(item.quantity * item.unitPrice)}
                         </td>
                       )}
@@ -71,9 +71,11 @@ export const BudgetTableBlock: (props: BudgetTableBlockProps) => React.ReactNode
 
             {showSectionTotals && (
               <div className="flex justify-end mt-3 pr-2">
-                <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded">
-                  <span className="text-sm text-gray-600 font-medium">Subtotal da Seção:</span>
-                  <span className="text-base text-gray-900 font-semibold">
+                <div className="flex items-center gap-3 bg-background px-4 py-2 rounded">
+                  <span className="text-sm text-text-secondary font-medium">
+                    Subtotal da Seção:
+                  </span>
+                  <span className="text-base text-text-primary font-semibold">
                     {formatCurrency(sectionTotal)}
                   </span>
                 </div>
@@ -85,29 +87,29 @@ export const BudgetTableBlock: (props: BudgetTableBlockProps) => React.ReactNode
 
       {showGrandTotal && (
         <div
-          className={`flex items-end pt-4 mt-4 border-t-2 border-gray-300 ${totalsAlignment === 'left' ? 'justify-start' : 'justify-end'}`}
+          className={`flex items-end pt-4 mt-4 border-t-2 border-border-color ${totalsAlignment === 'left' ? 'justify-start' : 'justify-end'}`}
         >
           <div className="w-full max-w-xs space-y-2 text-md">
             {showDiscount && proposal.discount > 0 && (
               <>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Subtotal</span>
-                  <span className="font-medium text-gray-900">
+                  <span className="text-text-secondary">Subtotal</span>
+                  <span className="font-medium text-text-primary">
                     {formatCurrency(proposal.subtotal)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Desconto ({proposal.discount}%)</span>
-                  <span className="font-medium text-red-500">
+                  <span className="text-text-secondary">Desconto ({proposal.discount}%)</span>
+                  <span className="font-medium text-error">
                     - {formatCurrency(proposal.subtotal - proposal.total)}
                   </span>
                 </div>
-                <div className="border-t border-gray-200 my-1"></div>
+                <div className="border-t border-border-color my-1"></div>
               </>
             )}
             <div className="flex justify-between font-bold text-xl items-center">
               <span className="text-primary">Total</span>
-              <span className="text-gray-900">{formatCurrency(proposal.total)}</span>
+              <span className="text-text-primary">{formatCurrency(proposal.total)}</span>
             </div>
           </div>
         </div>

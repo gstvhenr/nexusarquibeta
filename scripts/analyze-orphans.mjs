@@ -32,10 +32,7 @@ console.log(`  Total modules in graph: ${allModules.length}`);
 
 /* ── 2. Filter orphans (0 dependents, excluding tests) ──────────── */
 const orphans = allModules.filter(
-  (m) =>
-    m.dependents.length === 0 &&
-    !m.source.includes('.test.') &&
-    !m.source.includes('.spec.'),
+  (m) => m.dependents.length === 0 && !m.source.includes('.test.') && !m.source.includes('.spec.'),
 );
 console.log(`  Orphan candidates (no tests): ${orphans.length}`);
 
@@ -81,8 +78,7 @@ function classify(source) {
     return 'CONFIG';
 
   // Main entry point
-  if (s === 'src/frontend/index.tsx' || s === 'src/frontend/main.tsx')
-    return 'ENTRY_POINT';
+  if (s === 'src/frontend/index.tsx' || s === 'src/frontend/main.tsx') return 'ENTRY_POINT';
 
   // App.tsx itself
   if (s === 'src/frontend/App.tsx') return 'ENTRY_POINT';
@@ -162,12 +158,7 @@ const order = [
 ];
 for (const cat of order) {
   const items = groups[cat] || [];
-  const emoji =
-    cat === 'DEAD_CODE'
-      ? '🗑️'
-      : cat === 'UNCERTAIN'
-        ? '❓'
-        : '✅';
+  const emoji = cat === 'DEAD_CODE' ? '🗑️' : cat === 'UNCERTAIN' ? '❓' : '✅';
   if (items.length > 0) {
     console.log(`  ${emoji} ${cat}: ${items.length} modules`);
   }
@@ -180,17 +171,11 @@ const output = {
   timestamp: new Date().toISOString(),
   totalModulesInGraph: allModules.length,
   totalOrphanCandidates: classified.length,
-  summary: Object.fromEntries(
-    order.map((cat) => [cat, (groups[cat] || []).length]),
-  ),
+  summary: Object.fromEntries(order.map((cat) => [cat, (groups[cat] || []).length])),
   classified,
 };
 
-writeFileSync(
-  'scripts/orphans-diagnostic.json',
-  JSON.stringify(output, null, 2),
-  'utf8',
-);
+writeFileSync('scripts/orphans-diagnostic.json', JSON.stringify(output, null, 2), 'utf8');
 
 console.log('\n✅ Full report written to scripts/orphans-diagnostic.json');
 

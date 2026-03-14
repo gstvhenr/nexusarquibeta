@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Modal } from '../ui';
+import { Button, Modal } from '../ui';
 import type { MarketingActivity, MarketingProfessional, Project } from '../../types';
 import ActivityFormFields from './ActivityFormFields';
 import { getTodayDateOnly } from '../../utils/formatters';
@@ -104,31 +104,19 @@ const ActivityFormModal: (props: ActivityFormModalProps) => React.ReactNode = ({
       <div className="flex justify-between items-center mt-6 pt-4 border-t border-border-color">
         <div>
           {!readOnly && initialActivity && (
-            <button
-              type="button"
-              onClick={() => onDelete(activity.id)}
-              className="px-4 py-2 rounded-lg font-semibold text-error hover:bg-error/10 transition-colors"
-            >
+            <Button variant="danger" onClick={() => onDelete(activity.id)}>
               Excluir
-            </button>
+            </Button>
           )}
         </div>
         <div className="flex space-x-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-          >
+          <Button variant="secondary" onClick={onClose}>
             {readOnly ? 'Fechar' : 'Cancelar'}
-          </button>
+          </Button>
           {!readOnly && (
-            <button
-              type="button"
-              onClick={handleSave}
-              className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-            >
+            <Button variant="primary" onClick={handleSave}>
               Salvar
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -15,7 +15,7 @@ export function Toggle({ enabled, onChange, label }: ToggleProps): JSX.Element {
       aria-label={label || 'Alternar'}
     >
       <span
-        className={`${enabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+        className={`${enabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-surface shadow ring-0 transition duration-200 ease-in-out`}
       />
     </button>
   );

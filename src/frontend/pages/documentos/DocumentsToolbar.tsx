@@ -1,5 +1,5 @@
 import React from 'react';
-import { CollectionIcon, ListViewIcon, PlusIcon } from '../../components/ui';
+import { Button, CollectionIcon, IconButton, ListViewIcon, PlusIcon } from '../../components/ui';
 
 type DocumentsToolbarProps = {
   viewMode: 'list' | 'grid';
@@ -15,30 +15,30 @@ export const DocumentsToolbar: (props: DocumentsToolbarProps) => React.ReactNode
   return (
     <div className="flex items-center gap-4">
       <div className="flex items-center gap-1 p-1 bg-background rounded-lg shadow-inner-soft">
-        <button
-          type="button"
-          onClick={() => onViewModeChange('list')}
-          className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-primary text-primary-content' : 'text-text-secondary hover:bg-surface'}`}
+        <IconButton
           aria-label="Visualização em lista"
+          variant={viewMode === 'list' ? 'primary' : 'default'}
+          onClick={() => onViewModeChange('list')}
+          className={
+            viewMode === 'list' ? 'bg-primary text-primary-content rounded-md' : 'rounded-md'
+          }
         >
           <ListViewIcon className="w-5 h-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => onViewModeChange('grid')}
-          className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-primary text-primary-content' : 'text-text-secondary hover:bg-surface'}`}
+        </IconButton>
+        <IconButton
           aria-label="Visualização em grade"
+          variant={viewMode === 'grid' ? 'primary' : 'default'}
+          onClick={() => onViewModeChange('grid')}
+          className={
+            viewMode === 'grid' ? 'bg-primary text-primary-content rounded-md' : 'rounded-md'
+          }
         >
           <CollectionIcon className="w-5 h-5" />
-        </button>
+        </IconButton>
       </div>
-      <button
-        type="button"
-        onClick={onAdd}
-        className="px-4 py-2 rounded-lg font-semibold text-sm text-primary-content bg-primary hover:bg-primary-focus flex items-center gap-2"
-      >
+      <Button variant="primary" onClick={onAdd}>
         <PlusIcon className="w-5 h-5" /> Adicionar
-      </button>
+      </Button>
     </div>
   );
 };

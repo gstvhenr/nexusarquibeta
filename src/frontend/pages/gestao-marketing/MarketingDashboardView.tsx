@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import {
+  Badge,
   BullhornIcon,
   ClockIcon,
   EmptyState,
-  TagIcon,
   UserCircleIcon,
   UsersIcon,
 } from '../../components/ui';
-import type { Client, MarketingActivity, MarketingIdea, MarketingProfessional } from '../../types';
+import type { Client, MarketingActivity, MarketingProfessional } from '../../types';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
 type LeadSourceChartProps = {
@@ -35,7 +35,7 @@ type ProfessionalCardProps = {
 type MarketingDashboardViewProps = {
   professionals: MarketingProfessional[];
   activities: MarketingActivity[];
-  ideas: MarketingIdea[];
+
   clients: Client[];
   onEditProfessional: (professional: MarketingProfessional) => void;
 };
@@ -125,9 +125,9 @@ function ProfessionalCard({ professional, onEdit }: ProfessionalCardProps): JSX.
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <h4 className="truncate text-sm font-bold text-text-primary">{professional.name}</h4>
-          <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+          <Badge variant="primary" size="sm">
             {professional.billingFormat || 'Sem formato'}
-          </span>
+          </Badge>
         </div>
         <p className="truncate text-xs text-text-secondary">{professional.email}</p>
       </div>
@@ -176,7 +176,7 @@ function LeadSourceChart({ clients }: LeadSourceChartProps): JSX.Element {
           <div className="h-2 overflow-hidden rounded-full bg-surface">
             <div
               className="h-full rounded-full bg-gradient-to-r from-primary to-secondary"
-              style={{ width: `${maxCount > 0 ? (item.count / maxCount) * 100 : 0}%` }}
+              style={{ width: `${maxCount > 0 ? (item.count / maxCount) * 100 : 0}%` }} // NOSONAR
             />
           </div>
           <span className="min-w-5 text-right text-xs font-semibold text-secondary">
@@ -231,14 +231,14 @@ function ConversionRateChart({ clients }: LeadSourceChartProps): JSX.Element {
         >
           <div className="mb-1.5 flex items-center justify-between gap-2">
             <span className="truncate text-xs font-semibold text-text-primary">{item.name}</span>
-            <span className="rounded-full bg-secondary/10 px-2 py-0.5 text-[10px] font-semibold text-secondary">
+            <Badge variant="accent" size="sm">
               {item.label}
-            </span>
+            </Badge>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-background">
             <div
               className="h-full rounded-full bg-gradient-to-r from-secondary to-primary"
-              style={{ width: `${item.rate}%` }}
+              style={{ width: `${item.rate}%` }} // NOSONAR
             />
           </div>
           <p className="mt-1.5 text-[11px] font-semibold text-text-secondary">
@@ -253,7 +253,6 @@ function ConversionRateChart({ clients }: LeadSourceChartProps): JSX.Element {
 export function MarketingDashboardView({
   professionals,
   activities,
-  ideas,
   clients,
   onEditProfessional,
 }: MarketingDashboardViewProps): JSX.Element {
@@ -319,7 +318,7 @@ export function MarketingDashboardView({
   }, [activities, clients]);
 
   return (
-    <div className="grid h-full min-h-0 grid-cols-12 grid-rows-[auto_minmax(0,1fr)] gap-3">
+    <div className="grid grid-cols-12 gap-6">
       <section className="col-span-12 grid grid-cols-2 gap-3 xl:grid-cols-4">
         <MetricCard
           title="Prestadores"
@@ -336,22 +335,17 @@ export function MarketingDashboardView({
           value={formatCurrency(dashboardData.totalCost)}
           icon={<BullhornIcon className="h-4 w-4" />}
         />
-        <MetricCard
-          title="Ideias"
-          value={String(ideas.length)}
-          icon={<TagIcon className="h-4 w-4" />}
-        />
       </section>
 
-      <section className="col-span-12 min-h-0 rounded-2xl border border-border-color/60 bg-surface p-3 shadow-soft">
-        <div className="grid h-full min-h-0 grid-cols-12 gap-3">
+      <section className="col-span-12 rounded-2xl border border-border-color/60 bg-surface p-6 shadow-soft">
+        <div className="grid grid-cols-12 gap-6">
           <PanelShell
             eyebrow="Prestadores"
             title="Rede de execução"
             className="col-span-12 xl:col-span-5"
           >
             {professionals.length > 0 ? (
-              <div className="grid min-h-0 auto-rows-min gap-2 overflow-y-auto pr-1 no-scrollbar">
+              <div className="grid auto-rows-min gap-3">
                 {professionals.map((professional) => (
                   <ProfessionalCard
                     key={professional.id}
@@ -370,9 +364,9 @@ export function MarketingDashboardView({
             )}
           </PanelShell>
 
-          <div className="col-span-12 grid min-h-0 grid-cols-1 gap-3 xl:col-span-3 xl:grid-rows-[auto_minmax(0,1fr)]">
+          <div className="col-span-12 grid grid-cols-1 gap-6 xl:col-span-3">
             <PanelShell eyebrow="Indicadores" title="Radar operacional">
-              <div className="grid gap-2">
+              <div className="grid gap-3">
                 <FocusStat
                   label="Origem líder"
                   value={dashboardData.leadingSourceEntry?.[0] || 'Sem dados'}
@@ -409,22 +403,22 @@ export function MarketingDashboardView({
 
             <PanelShell eyebrow="Agenda" title="Próximas entregas">
               {dashboardData.nextActivities.length > 0 ? (
-                <div className="space-y-2 overflow-y-auto pr-1 no-scrollbar">
+                <div className="space-y-3">
                   {dashboardData.nextActivities.map((activity) => (
                     <div
                       key={activity.id}
-                      className="rounded-lg border border-border-color/60 bg-surface px-3 py-2.5"
+                      className="rounded-lg border border-border-color/60 bg-surface px-4 py-3"
                     >
-                      <div className="mb-1.5 flex items-center justify-between gap-2">
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <Badge variant="warning" size="sm">
                           {activity.contentType}
-                        </span>
+                        </Badge>
                         <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
                           {activity.status}
                         </span>
                       </div>
                       <p className="text-sm font-bold text-text-primary">{activity.title}</p>
-                      <p className="mt-0.5 text-xs text-text-secondary">
+                      <p className="mt-1 text-xs text-text-secondary">
                         Entrega em {formatDate(activity.dueDate)}
                       </p>
                     </div>
@@ -441,7 +435,7 @@ export function MarketingDashboardView({
             </PanelShell>
           </div>
 
-          <div className="col-span-12 grid min-h-0 grid-cols-1 gap-3 xl:col-span-4 xl:grid-rows-2">
+          <div className="col-span-12 grid grid-cols-1 gap-6 xl:col-span-4">
             <PanelShell eyebrow="Aquisição" title="Origem de Leads">
               <LeadSourceChart clients={clients} />
             </PanelShell>

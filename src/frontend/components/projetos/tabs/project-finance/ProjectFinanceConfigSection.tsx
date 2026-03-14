@@ -49,14 +49,14 @@ export const ProjectFinanceConfigSection = ({
             <button
               type="button"
               onClick={() => onFinancialsChange('paymentType', 'vista')}
-              className={`flex-1 text-sm font-semibold rounded-md transition-all duration-200 ${financials.paymentType === 'vista' ? 'bg-white dark:bg-zinc-700 shadow-sm text-primary' : 'text-text-secondary hover:text-text-primary'}`}
+              className={`flex-1 text-sm font-semibold rounded-md transition-all duration-200 ${financials.paymentType === 'vista' ? 'bg-surface shadow-sm text-primary' : 'text-text-secondary hover:text-text-primary'}`}
             >
               À Vista
             </button>
             <button
               type="button"
               onClick={() => onFinancialsChange('paymentType', 'parcelado')}
-              className={`flex-1 text-sm font-semibold rounded-md transition-all duration-200 ${financials.paymentType === 'parcelado' ? 'bg-white dark:bg-zinc-700 shadow-sm text-primary' : 'text-text-secondary hover:text-text-primary'}`}
+              className={`flex-1 text-sm font-semibold rounded-md transition-all duration-200 ${financials.paymentType === 'parcelado' ? 'bg-surface shadow-sm text-primary' : 'text-text-secondary hover:text-text-primary'}`}
             >
               Parcelado
             </button>

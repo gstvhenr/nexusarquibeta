@@ -4,19 +4,19 @@
 
 @layer components {
   .priority-swatch-1 {
-    background-color: #38bdf8;
+    background-color: hsl(var(--color-info));
   }
   .priority-swatch-2 {
-    background-color: #34d399;
+    background-color: hsl(var(--color-success));
   }
   .priority-swatch-3 {
-    background-color: #facc15;
+    background-color: hsl(var(--color-warning));
   }
   .priority-swatch-4 {
-    background-color: #fb923c;
+    background-color: hsl(var(--color-accent));
   }
   .priority-swatch-5 {
-    background-color: #f87171;
+    background-color: hsl(var(--color-error));
   }
 
   .progress-bar {
@@ -82,7 +82,12 @@
   }
 
   .progress-fill-orange-emerald {
-    --progress-fill: linear-gradient(to right, #fb923c, #facc15, #10b981);
+    --progress-fill: linear-gradient(
+      to right,
+      hsl(var(--color-accent)),
+      hsl(var(--color-warning)),
+      hsl(var(--color-success))
+    );
   }
 
   .progress-fill-primary-70 {

@@ -64,8 +64,8 @@ function walkDirectories(directory) {
 }
 
 function normalizeList(items) {
-  return [...new Set(items.filter((item) => typeof item === 'string' && item.length > 0))].sort((a, b) =>
-    a.localeCompare(b),
+  return [...new Set(items.filter((item) => typeof item === 'string' && item.length > 0))].sort(
+    (a, b) => a.localeCompare(b),
   );
 }
 
@@ -86,7 +86,9 @@ function readBaseline() {
     };
   } catch (error) {
     console.error(`[STRUCTURE][FAIL] Baseline invalida em ${BASELINE_PATH}.`);
-    console.error(`[STRUCTURE][HINT] ${(error && error.message) || 'Erro desconhecido ao parsear JSON.'}`);
+    console.error(
+      `[STRUCTURE][HINT] ${(error && error.message) || 'Erro desconhecido ao parsear JSON.'}`,
+    );
     process.exit(1);
   }
 }
@@ -329,7 +331,9 @@ function printPhaseWarnings(ruleId, issues) {
     printViolation('WARN', ruleId, issue.currentPath, issue.expected, issue.fix);
   }
   if (issues.length > maxPreview) {
-    console.warn(`[${ruleId}][WARN] +${issues.length - maxPreview} violacoes adicionais rastreadas no baseline.`);
+    console.warn(
+      `[${ruleId}][WARN] +${issues.length - maxPreview} violacoes adicionais rastreadas no baseline.`,
+    );
   }
 }
 
@@ -346,7 +350,13 @@ const blockingViolations = [
 
 if (blockingViolations.length > 0) {
   for (const violation of blockingViolations) {
-    printViolation('ERROR', violation.ruleId, violation.currentPath, violation.expected, violation.fix);
+    printViolation(
+      'ERROR',
+      violation.ruleId,
+      violation.currentPath,
+      violation.expected,
+      violation.fix,
+    );
   }
   console.error(`[STRUCTURE][FAIL] ${blockingViolations.length} violacao(oes) bloqueante(s).`);
   process.exit(1);
@@ -418,7 +428,9 @@ if (regressionIssues.length > 0) {
   for (const issue of regressionIssues) {
     printViolation('ERROR', issue.ruleId, issue.currentPath, issue.expected, issue.fix);
   }
-  console.error(`[STRUCTURE][FAIL] ${regressionIssues.length} regressao(oes) fora do baseline phaseado.`);
+  console.error(
+    `[STRUCTURE][FAIL] ${regressionIssues.length} regressao(oes) fora do baseline phaseado.`,
+  );
   process.exit(1);
 }
 
@@ -434,4 +446,6 @@ if (ratchetCandidates > 0) {
   console.warn(`[STRUCTURE][INFO] baseline_tightening_available=${ratchetCandidates}.`);
 }
 
-console.log('[STRUCTURE][PASS] sem violacoes bloqueantes e sem regressao estrutural fora do baseline.');
+console.log(
+  '[STRUCTURE][PASS] sem violacoes bloqueantes e sem regressao estrutural fora do baseline.',
+);

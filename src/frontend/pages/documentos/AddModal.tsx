@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, FormField, Input, Modal } from '../../components/ui';
+import { Button, FormField, Input, Modal, Select } from '../../components/ui';
 import { useCoreData, useSystemData } from '../../context/DataContext';
 import type { DocumentFolder, DocumentItem, DocumentFile, Project } from '../../types';
 import { fileToB64 } from '../../utils/documents';
@@ -138,8 +138,8 @@ export const AddModal: (props: AddModalProps) => React.ReactNode = ({
     return null;
   }
 
-  const inputClass =
-    'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent';
+  const fileInputClass =
+    'w-full bg-surface p-2 rounded-lg border border-border-color focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors duration-150';
 
   return (
     <Modal
@@ -149,54 +149,36 @@ export const AddModal: (props: AddModalProps) => React.ReactNode = ({
     >
       <div className="space-y-4">
         {!isProjectRoot && (
-          <div>
-            <label
-              htmlFor="field-tipo"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Tipo
-            </label>
-            <select
-              id="field-tipo"
-              value={addType}
-              onChange={(event) => setAddType(event.target.value)}
-              className={inputClass}
-              aria-label="Tipo"
-            >
-              {!isRootFolder && <option value="upload">Upload de Arquivo</option>}
-              <option value="folder">Nova Pasta</option>
-            </select>
-          </div>
+          <Select
+            label="Tipo"
+            id="field-tipo"
+            value={addType}
+            onChange={(event) => setAddType(event.target.value)}
+            options={[
+              ...(!isRootFolder ? [{ value: 'upload', label: 'Upload de Arquivo' }] : []),
+              { value: 'folder', label: 'Nova Pasta' },
+            ]}
+          />
         )}
 
         {addType === 'project' && (
-          <div>
-            <label
-              htmlFor="field-projeto"
-              className="block text-sm font-medium text-text-secondary mb-1"
-            >
-              Projeto
-            </label>
-            <select
-              id="field-projeto"
-              value={projectToLink}
-              onChange={(event) => setProjectToLink(event.target.value)}
-              className={inputClass}
-              aria-label="Projeto"
-            >
-              {unlinkedProjects.length > 0 ? (
-                unlinkedProjects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name.startsWith(project.code)
+          <Select
+            label="Projeto"
+            id="field-projeto"
+            value={projectToLink}
+            onChange={(event) => setProjectToLink(event.target.value)}
+            options={
+              unlinkedProjects.length > 0
+                ? unlinkedProjects.map((project) => ({
+                    value: project.id,
+                    label: project.name.startsWith(project.code)
                       ? project.name
-                      : `${project.code} - ${project.name}`}
-                  </option>
-                ))
-              ) : (
-                <option disabled>Nenhum projeto para vincular</option>
-              )}
-            </select>
-          </div>
+                      : `${project.code} - ${project.name}`,
+                  }))
+                : []
+            }
+            placeholder={unlinkedProjects.length === 0 ? 'Nenhum projeto para vincular' : undefined}
+          />
         )}
 
         {addType === 'folder' && (
@@ -223,7 +205,7 @@ export const AddModal: (props: AddModalProps) => React.ReactNode = ({
               type="file"
               multiple
               onChange={(event) => setFilesToUpload(event.target.files)}
-              className={`${inputClass} file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20`}
+              className={`${fileInputClass} file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20`}
               aria-label="Selecionar arquivos"
             />
           </div>

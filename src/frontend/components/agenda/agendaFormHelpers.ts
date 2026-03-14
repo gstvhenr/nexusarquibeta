@@ -6,43 +6,43 @@ export const priorityConfig: Record<
   { bg: string; text: string; name: string; swatchClass: string }
 > = {
   1: {
-    bg: 'bg-sky-100 dark:bg-sky-900/40',
-    text: 'text-sky-800 dark:text-sky-300',
+    bg: 'bg-info/10 dark:bg-info/20',
+    text: 'text-info',
     name: 'Opcional',
     swatchClass: 'priority-swatch-1',
   },
   2: {
-    bg: 'bg-emerald-100 dark:bg-emerald-900/40',
-    text: 'text-emerald-800 dark:text-emerald-300',
+    bg: 'bg-success/10 dark:bg-success/20',
+    text: 'text-success',
     name: 'Baixa',
     swatchClass: 'priority-swatch-2',
   },
   3: {
-    bg: 'bg-yellow-100 dark:bg-yellow-900/40',
-    text: 'text-yellow-800 dark:text-yellow-300',
+    bg: 'bg-warning/10 dark:bg-warning/20',
+    text: 'text-warning',
     name: 'Moderada',
     swatchClass: 'priority-swatch-3',
   },
   4: {
-    bg: 'bg-orange-100 dark:bg-orange-900/40',
-    text: 'text-orange-800 dark:text-orange-300',
+    bg: 'bg-accent/10 dark:bg-accent/20',
+    text: 'text-accent',
     name: 'Alta',
     swatchClass: 'priority-swatch-4',
   },
   5: {
-    bg: 'bg-red-100 dark:bg-red-900/40',
-    text: 'text-red-800 dark:text-red-300',
+    bg: 'bg-error/10 dark:bg-error/20',
+    text: 'text-error',
     name: 'Crítica',
     swatchClass: 'priority-swatch-5',
   },
 };
 
 export const priorityLabels: Record<number, { label: string; color: string }> = {
-  1: { label: 'Opcional', color: 'text-sky-600 dark:text-sky-400' },
-  2: { label: 'Baixa', color: 'text-emerald-600 dark:text-emerald-400' },
-  3: { label: 'Média', color: 'text-yellow-600 dark:text-yellow-400' },
-  4: { label: 'Alta', color: 'text-orange-600 dark:text-orange-400' },
-  5: { label: 'Crítica', color: 'text-red-600 dark:text-red-400' },
+  1: { label: 'Opcional', color: 'text-info' },
+  2: { label: 'Baixa', color: 'text-success' },
+  3: { label: 'Média', color: 'text-warning' },
+  4: { label: 'Alta', color: 'text-accent' },
+  5: { label: 'Crítica', color: 'text-error' },
 };
 
 export const getInitialEvent = (date: Date): Omit<AgendaEvent, 'id'> => ({

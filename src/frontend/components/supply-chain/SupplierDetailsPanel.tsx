@@ -1,12 +1,12 @@
 import {
   Badge,
   BuildingIcon,
+  Button,
   ChartBarIcon,
   ClockIcon,
   CubeIcon,
   EditIcon,
   GiftIcon,
-  TagIcon,
 } from '../ui';
 import { Tab, TabList, TabPanel, Tabs } from '../ui/Tabs';
 import type { Supplier } from '../../types';
@@ -33,7 +33,7 @@ type SupplierDetailsPanelProps = {
   onOpenLinkModal: () => void;
 };
 
-const SUPPLIER_TABS: readonly SupplierActiveTab[] = ['details', 'products', 'commissions'];
+const SUPPLIER_TABS: readonly SupplierActiveTab[] = ['details', 'products', 'commissions', 'info'];
 
 function isSupplierActiveTab(value: string): value is SupplierActiveTab {
   return (SUPPLIER_TABS as readonly string[]).includes(value);
@@ -63,12 +63,9 @@ export function SupplierDetailsPanel({
           Navegue pela lista à esquerda para ver detalhes, gerenciar produtos ou acompanhar
           comissões.
         </p>
-        <button
-          onClick={() => onEditSupplier(null)}
-          className="mt-6 text-primary font-semibold hover:underline"
-        >
+        <Button variant="ghost" onClick={() => onEditSupplier(null)} className="mt-6">
           Ou cadastre um novo fornecedor
-        </button>
+        </Button>
       </div>
     );
   }
@@ -91,7 +88,7 @@ export function SupplierDetailsPanel({
       <header className="p-6 pb-0 shrink-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div className="flex items-center gap-5">
-            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center overflow-hidden border-2 border-border-color shadow-sm p-1">
+            <div className="w-20 h-20 bg-surface rounded-2xl flex items-center justify-center overflow-hidden border-2 border-border-color shadow-sm p-1">
               {selectedSupplier.logo ? (
                 <img
                   src={selectedSupplier.logo}
@@ -107,10 +104,6 @@ export function SupplierDetailsPanel({
                 {selectedSupplier.name}
               </h2>
               <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-text-secondary">
-                <Badge variant="primary" className="font-medium">
-                  <TagIcon className="w-3.5 h-3.5" />{' '}
-                  {selectedSupplier.categories[0] || 'Fornecedor'}
-                </Badge>
                 {selectedSupplier.commissionPercentage ? (
                   <Badge variant="success" className="font-bold">
                     <GiftIcon className="w-3.5 h-3.5" /> {selectedSupplier.commissionPercentage}%
@@ -120,34 +113,13 @@ export function SupplierDetailsPanel({
               </div>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => onEditSupplier(selectedSupplier)}
-            className="px-4 py-2 rounded-lg font-semibold text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors flex items-center gap-2"
+            className="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
           >
             <EditIcon className="w-4 h-4" /> Editar Perfil
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <SupplierKpiCard
-            label="Produtos no Catálogo"
-            value={supplierProducts.length}
-            icon={<CubeIcon className="w-5 h-5" />}
-            color="text-info bg-info"
-          />
-          <SupplierKpiCard
-            label="Comissões Pendentes"
-            value={formatCurrency(pendingCommissionValue)}
-            icon={<ClockIcon className="w-5 h-5" />}
-            color="text-warning bg-warning"
-          />
-          <SupplierKpiCard
-            label="Total Negociado"
-            value={formatCurrency(totalNegotiatedValue)}
-            subtext="Vendas confirmadas"
-            icon={<ChartBarIcon className="w-5 h-5" />}
-            color="text-success bg-success"
-          />
+          </Button>
         </div>
 
         <nav className="flex border-b border-border-color overflow-x-auto no-scrollbar">
@@ -160,6 +132,9 @@ export function SupplierDetailsPanel({
             </Tab>
             <Tab value="commissions" className={tabButtonClass}>
               Histórico Financeiro
+            </Tab>
+            <Tab value="info" className={tabButtonClass}>
+              Informações
             </Tab>
           </TabList>
         </nav>
@@ -178,6 +153,49 @@ export function SupplierDetailsPanel({
         </TabPanel>
         <TabPanel value="commissions">
           <SupplierCommissionsTab supplierCommissions={supplierCommissions} />
+        </TabPanel>
+        <TabPanel value="info">
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <SupplierKpiCard
+                label="Produtos no Catálogo"
+                value={supplierProducts.length}
+                icon={<CubeIcon className="w-4 h-4" />}
+                color="text-info bg-info"
+              />
+              <SupplierKpiCard
+                label="Comissões Pendentes"
+                value={formatCurrency(pendingCommissionValue)}
+                icon={<ClockIcon className="w-4 h-4" />}
+                color="text-warning bg-warning"
+              />
+              <SupplierKpiCard
+                label="Total Negociado"
+                value={formatCurrency(totalNegotiatedValue)}
+                icon={<ChartBarIcon className="w-4 h-4" />}
+                color="text-success bg-success"
+              />
+            </div>
+
+            <div className="bg-surface p-5 rounded-xl border border-border-color shadow-sm">
+              <h4 className="font-bold text-secondary mb-3">Categorias</h4>
+              <div className="flex flex-wrap gap-2">
+                {selectedSupplier.categories.length > 0 ? (
+                  selectedSupplier.categories.map((category) => (
+                    <Badge
+                      key={category}
+                      variant="primary"
+                      className="text-sm px-3 py-1.5 font-medium"
+                    >
+                      {category}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-text-secondary">Nenhuma categoria vinculada.</p>
+                )}
+              </div>
+            </div>
+          </div>
         </TabPanel>
       </div>
     </Tabs>
