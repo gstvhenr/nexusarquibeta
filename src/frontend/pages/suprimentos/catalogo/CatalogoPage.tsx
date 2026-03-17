@@ -170,7 +170,7 @@ const CatalogoPage: () => React.ReactNode = () => {
         <div className="p-4 border-b border-border-color bg-background/30 flex flex-col sm:flex-row gap-4">
           <Input
             type="search"
-            placeholder="Buscar produto..."
+            placeholder="Buscar produto"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="w-full sm:w-64"

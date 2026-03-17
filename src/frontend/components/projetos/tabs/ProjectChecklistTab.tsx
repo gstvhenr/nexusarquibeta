@@ -56,9 +56,6 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
       <div className="flex justify-between items-end mb-4">
         <div>
           <h3 className="font-serif text-xl font-bold text-secondary">Etapas do Projeto</h3>
-          <p className="text-sm text-text-secondary">
-            Organize seu projeto em fases (ex: Preliminar, Executivo) para manter o controle.
-          </p>
         </div>
         <Button
           variant="primary"
@@ -87,10 +84,9 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
       ) : (
         <div className="space-y-6">
           {sections.map((section) => {
-            const totalHours = section.tasks.reduce(
-              (sum, task) => sum + (Number(task.hours) || 0),
-              0,
-            );
+            const totalHours = section.tasks
+              .filter((task) => !task.assignee?.startsWith('Freelancer:'))
+              .reduce((sum, task) => sum + (Number(task.hours) || 0), 0);
             const completedTasks = section.tasks.filter((t) => t.completed).length;
             const totalTasks = section.tasks.length;
             const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;

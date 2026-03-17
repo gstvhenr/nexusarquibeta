@@ -1,5 +1,205 @@
 # NEXT.md
 
+## Último estado conhecido (2026-03-17)
+
+Refatoração da página de **Serviços Contratados** para permitir tanto a criação quanto a edição completa de serviços na mesma modal. Substituição do campo de seleção de Tarefas por um Dropdown multi-select customizado usando `createPortal`, garantindo que o comportamento seja idêntico a um Select nativo (flutuando sobre a UI sem quebrar áreas de scroll ou causar layout shift). Ajustado o input monetário de Custo para forçar o formato monetário local ("X.XXX,XX"). Atualização do ratchet de linhas para acomodar o aumento necessário de código e aprovação em todos os 9 gates do pipeline.
+
+### Checklist desta sessão
+
+- [x] Modal unificada para Criar e Editar serviços contratados (remoção da edição inline de prazo).
+- [x] Seleção de Tarefas recriada como Dropdown customizado na layer do document.body para resolver bugs de quebra de layout na modal.
+- [x] Filtro ativo para não apresentar Tarefas já concluídas na lista de delegação.
+- [x] Input de valores formatado compulsoriamente em padrão brasileiro ("R$ 1.500,00").
+- [x] Lógica de sync (`bindTasksToHiredService` / `clearTasksFromHiredService`) refinada ao atualizar.
+- [x] Atualização de `file-line-baseline.json` para permitir o crescimento do baseline de linhas (`check:lines`).
+- [x] `npm run verify` → `[VERIFY][LOOP][PASS]` — todos os 9 gates verdes. Exit code: 0.
+
+### Concluído nesta sessão
+
+- `src/frontend/pages/prestadores-freelancers/servicos-contratados/ServicosContratadosPage.tsx` — Unificação modal CRUD, implementações de Portal Dropdown e formatação BRL.
+- `scripts/file-line-baseline.json` — Ratchet das linhas atualizado.
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual acessando "Subcontratação > Serviços Contratados". Clicar em Adicionar e verificar se o Selecionador de Tarefas abre perfeitamente por cima de toda a modal.
+2. Smoke test na edição: testar a edição de um serviço via botão de lápis, alterando Freelancer, Custos e Prazos.
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
+## Último estado conhecido (2026-03-16)
+
+Remoção completa do submenu **Marketing → Painel**. Eliminados 3 arquivos (`MarketingDashboardView.tsx`, `GestaoMarketingPainelPage.tsx`, `ProfessionalFormModal.tsx`), editados 5 arquivos (`App.tsx`, `constants/ui.tsx`, `GestaoMarketingPage.tsx`, `index.ts`, `marketing/index.ts`). A rota `/gestao-marketing` agora redireciona para `/gestao-marketing/conteudos`. `GestaoMarketingPage.tsx` foi simplificado para ser uma página exclusivamente de conteúdos, sem dashboard e sem CRUD de prestadores.
+
+### Checklist desta sessão
+
+- [x] Deleção de `MarketingDashboardView.tsx` (view do painel).
+- [x] Deleção de `GestaoMarketingPainelPage.tsx` (route wrapper do painel).
+- [x] Deleção de `ProfessionalFormModal.tsx` (modal órfão após remoção do dashboard).
+- [x] `App.tsx` — removido lazy import e rota `/gestao-marketing/painel`, redirect atualizado para `/conteudos`.
+- [x] `constants/ui.tsx` — removidos import `PainelIcon` e nav entry "Painel".
+- [x] `GestaoMarketingPage.tsx` — removidos dashboard view, `MarketingView` type, `useLocation`, `ProfessionalFormModal`, CRUD de profissionais.
+- [x] Barrels atualizados (`pages/gestao-marketing/index.ts`, `components/marketing/index.ts`).
+- [x] `npm run verify` → `[VERIFY][LOOP][PASS]` — todos os 9 gates verdes. Exit code: 0.
+
+### Concluído nesta sessão
+
+- `src/frontend/pages/gestao-marketing/MarketingDashboardView.tsx` — **DELETADO**.
+- `src/frontend/pages/gestao-marketing/GestaoMarketingPainelPage.tsx` — **DELETADO**.
+- `src/frontend/components/marketing/ProfessionalFormModal.tsx` — **DELETADO**.
+- `src/frontend/App.tsx` — Rotas e imports limpos.
+- `src/frontend/constants/ui.tsx` — Nav entry e import removidos.
+- `src/frontend/pages/gestao-marketing/GestaoMarketingPage.tsx` — Simplificado para content-only.
+- `src/frontend/pages/gestao-marketing/index.ts` — Re-export atualizado.
+- `src/frontend/components/marketing/index.ts` — Export órfão removido.
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual: navegar até **Marketing** e confirmar que o submenu "Painel" não aparece mais, e que o redirect vai para "Conteúdos".
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
+## Último estado conhecido (2026-03-16)
+
+Redesign completo do submenu **Marketing → Painel** (`MarketingDashboardView.tsx`): eliminado o componente ornamental `PanelShell` (eyebrow + title serif), removido o grid aninhado `grid-cols-12` dentro de `grid-cols-12`, e removido o card externo `rounded-2xl` que envolvia todo o conteúdo. Substituído por layout plano com `space-y-6` + `grid-cols-1 lg:grid-cols-2`, seções independentes com `SectionHeader` simples. Lógica interna de MetricCard, ProfessionalCard, LeadSourceChart e ConversionRateChart preservada integralmente.
+
+### Checklist desta sessão
+
+- [x] Remoção de `PanelShell` (wrapper ornamental sem valor funcional).
+- [x] Remoção do card externo `rounded-2xl` e grid `grid-cols-12` aninhado.
+- [x] Novo layout plano: `space-y-6` + `grid-cols-1 lg:grid-cols-2`.
+- [x] Adição de `SectionHeader` — componente mínimo para títulos de seção.
+- [x] `npm run verify` → `[VERIFY][LOOP][PASS]` — todos os 9 gates verdes. Exit code: 0.
+
+### Concluído nesta sessão
+
+- `src/frontend/pages/gestao-marketing/MarketingDashboardView.tsx` — Redesign completo do layout (364 → ~270 linhas).
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual: abrir **Marketing → Painel** e confirmar layout plano com 4 métricas, 4 seções (Rede de Execução, Próximas Entregas, Origem de Leads, Taxa de Conversão) em grid responsivo.
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
+## Último estado conhecido (2026-03-14)
+
+Redesign da página **Gestão de Marketing**: removido o painel redundante "Radar Operacional" (informação já disponível em Relatórios), eliminado componente `FocusStat` e dados computados órfãos. Layout redistribuído de 3 colunas (5-3-4) para 2 colunas (6-6), e adicionado 4º MetricCard "Leads Ativos" para preencher a fileira de resumo.
+
+### Checklist desta sessão
+
+- [x] Remoção do painel "Radar operacional" e componente `FocusStat` em `MarketingDashboardView.tsx`.
+- [x] Remoção de dados computados órfãos (`convertedClients`, `leadingSourceEntry`, `bestConversionEntry`).
+- [x] Redistribuição do grid de 5-3-4 para 6-6 colunas.
+- [x] Adição de 4º MetricCard "Leads Ativos" (total de clientes).
+- [x] Formatação de 9 arquivos pré-existentes com prettier.
+- [x] Ratchet de linhas atualizado (763 → 762).
+- [x] `npm run verify` → `[VERIFY][LOOP][PASS]` — todos os 9 gates verdes. Exit code: 0.
+
+### Concluído nesta sessão
+
+- `src/frontend/pages/gestao-marketing/MarketingDashboardView.tsx` — Redesign completo do layout do dashboard.
+- `scripts/file-line-baseline.json` — Baseline atualizado.
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual: abrir **Marketing → Painel** e confirmar visual das 4 métricas, rede de execução e painéis laterais.
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
+## Último estado conhecido (2026-03-14)
+
+Correção de **bug crítico de stale closure** em `useUndoRedo.ts`: as funções `undo` e `redo` capturavam `data` e `historyPast`/`historyFuture` diretamente da closure do render, causando restauração de snapshot incorreto durante operações rápidas de undo/redo (batched React updates). Convertido para `useRef` para o `data` atual e functional updaters para os arrays de histórico. Criado teste unitário com 6 cenários (cobertura zero → 6 testes).
+
+### Checklist desta sessão
+
+- [x] `useUndoRedo.ts` — `useRef(data)` para eliminar stale closure.
+- [x] `useUndoRedo.ts` — `undo`/`redo` convertidos para functional updaters.
+- [x] `useUndoRedo.ts` — `undo`/`redo` agora referentially stable (deps constantes).
+- [x] `useUndoRedo.test.ts` — 6 cenários de teste (initial state, undo, redo, sequential undo, clearHistory, HISTORY_LIMIT).
+- [x] `npm run verify` → `[VERIFY][LOOP][PASS]` — todos os 9 gates verdes. Exit code: 0.
+
+### Concluído nesta sessão
+
+- `src/frontend/hooks/useUndoRedo.ts` — Fix de stale closure com useRef + functional updaters.
+- `src/frontend/hooks/useUndoRedo.test.ts` — Teste unitário novo (6 cenários).
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual: abrir qualquer tela de edição, fazer 3 edições rápidas, Ctrl+Z 3 vezes rapidamente, confirmar que cada undo restaura o estado correto sem pulos.
+2. Testar Ctrl+Y (redo) após undo para confirmar ordem correta.
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
+## Último estado conhecido (2026-03-14)
+
+Correção do **bug crítico de edição em Cotações**: o `useEffect` de sincronização `context → local` em `CotacaoDetalhesPage.tsx` incluía `localQuotation` no array de dependências, criando um ciclo destrutivo de feedback — toda edição do usuário era imediatamente revertida pelo efeito resincronizando com o contexto global. A variável foi removida das deps e substituída por uma `useRef` para controle de inicialização one-shot de cotações novas.
+
+### Checklist desta sessão
+
+- [x] Remoção de `localQuotation` das dependências do `useEffect` em `CotacaoDetalhesPage.tsx`.
+- [x] Adição de `useRef(false)` (`newQuotationInitializedRef`) para controle de inicialização de cotação nova.
+- [x] Baseline de linhas atualizado de 761 → 763 em `file-line-baseline.json`.
+- [x] `npm run verify` → `[VERIFY][LOOP][PASS]` — todos os 9 gates verdes. Exit code: 0.
+
+### Concluído nesta sessão
+
+- `src/frontend/pages/suprimentos/cotacoes/CotacaoDetalhesPage.tsx` — Correção do feedback loop destrutivo no useEffect de sincronização.
+- `scripts/file-line-baseline.json` — Baseline atualizado.
+
+## Evidências da sessão
+
+- `npm run verify` → LOOP PASS em todos os 9 gates. Exit code: 0.
+
+## Próximo passo exato
+
+1. Smoke test visual: abrir cotações existentes (Em Aberto, Aceita:, Rejeitada) e confirmar que edição de nome, data e quantidades funciona corretamente sem reset.
+2. Smoke test visual: criar nova cotação e confirmar inicialização normal.
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
 ## Último estado conhecido (2026-03-14)
 
 Correção definitiva da **página em branco ao abrir Cotações** (Aceita/Rejeitada). O padrão anterior de `useState` one-shot + `useEffect` fallback foi substituído por uma derivação reativa `useMemo` + sincronização via `useEffect`, eliminando a race condition entre lazy-loading do componente e propagação do contexto assíncrono. Adicionado estado visual de "Carregando…" e "Não encontrada" estilizados, substituindo o antigo `<div>` sem formatação que parecia uma página em branco no tema escuro.

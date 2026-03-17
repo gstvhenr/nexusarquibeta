@@ -2,7 +2,8 @@
   "src/frontend/components/finance/FinanceLineChart.tsx": 418,
   "src/frontend/components/projetos/tabs/project-finance/ProjectFinanceAddendumsSection.tsx": 421,
   "src/frontend/pages/comercial/propostas/PropostaDetalhesPage.tsx": 519,
-  "src/frontend/pages/projetos/detalhes/ProjetoDetalhesPageContent.tsx": 501,
-  "src/frontend/pages/suprimentos/cotacoes/CotacaoDetalhesPage.tsx": 761,
-  "src/frontend/services/agendaService.ts": 413
+  "src/frontend/pages/prestadores-freelancers/servicos-contratados/ServicosContratadosPage.tsx": 666,
+  "src/frontend/pages/projetos/detalhes/ProjetoDetalhesPageContent.tsx": 517,
+  "src/frontend/pages/suprimentos/cotacoes/CotacaoDetalhesPage.tsx": 762,
+  "src/frontend/services/agendaService.ts": 451
 }

@@ -48,8 +48,8 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
   const navigate = useNavigate();
   const { projects, setProjects } = useCoreData();
   const { manualExpenses, setManualExpenses, setManualIncomes, commissions } = useFinanceData();
-  const { quotations, suppliers, supplierProductPrices } = useSupplyChainData();
-  const { setAgendaEvents, customBudgetTemplate } = useSystemData();
+  const { quotations, suppliers, supplierProductPrices, freelancers } = useSupplyChainData();
+  const { setAgendaEvents, customBudgetTemplate, hiredServices } = useSystemData();
 
   const project = useMemo(() => projects.find((p) => p.id === id), [id, projects]);
   const [localProject, setLocalProject] = useState<Project | null>(
@@ -356,6 +356,21 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
     return total;
   }, [quotations, localProject, suppliers, supplierProductPrices]);
 
+  const freelancerDeadlines = useMemo(() => {
+    if (!localProject) return [];
+    return hiredServices
+      .filter((hs) => hs.projectId === localProject.id && hs.status !== 'Cancelado')
+      .map((hs) => {
+        const freelancer = freelancers.find((f) => f.id === hs.freelancerId);
+        return {
+          id: hs.id,
+          freelancerName: freelancer?.name || 'Freelancer',
+          deadline: hs.deadline,
+          status: hs.status,
+        };
+      });
+  }, [hiredServices, localProject, freelancers]);
+
   if (!project || !localProject) {
     return (
       <div className="text-center p-10">
@@ -416,6 +431,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
         handleUnlinkQuotation={handleUnlinkQuotation}
         commissionTotal={commissionTotal}
         potentialCommissionTotal={potentialCommissionTotal}
+        freelancerDeadlines={freelancerDeadlines}
       />
 
       {isDirty && (

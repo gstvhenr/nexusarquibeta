@@ -4,11 +4,12 @@ import { LinkIcon } from '@/components/ui/icons';
 type InstagramProfileInfoCardProps = {
   profileUrl: string;
   profileHandle: string;
+  networkName?: string;
 };
 
 export const InstagramProfileInfoCard: (
   props: InstagramProfileInfoCardProps,
-) => React.ReactNode = ({ profileUrl, profileHandle }) => {
+) => React.ReactNode = ({ profileUrl, profileHandle, networkName }) => {
   return (
     <div className="bg-surface rounded-xl shadow-soft p-5 mb-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -23,7 +24,7 @@ export const InstagramProfileInfoCard: (
                 rel="noopener noreferrer"
                 className="text-sm text-primary hover:underline break-all"
               >
-                {profileUrl}
+                {networkName === 'Google' ? 'Google' : profileUrl}
               </a>
             ) : (
               <span className="text-sm text-text-secondary italic">Nenhum link cadastrado</span>

@@ -66,7 +66,6 @@ export function PasswordResetModal({
             <PasswordInput
               value={currentPwd}
               onChange={onCurrentPwdChange}
-              placeholder="Digite a senha atual"
               ariaLabel="Senha atual"
             />
           </div>

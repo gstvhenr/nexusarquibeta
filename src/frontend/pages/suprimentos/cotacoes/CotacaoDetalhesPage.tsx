@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/layout';
 import { Button, FormField, IconButton, Input, Modal, Select } from '@/components/ui';
@@ -55,7 +55,7 @@ const AddProductModal: (props: {
       <div className="flex gap-4 mb-4">
         <Input
           type="search"
-          placeholder="Buscar produto..."
+          placeholder="Buscar produto"
           value={filter.search}
           onChange={(e) => setFilter((f) => ({ ...f, search: e.target.value }))}
         />
@@ -191,14 +191,16 @@ const CotacaoDetalhesPage: () => React.ReactNode = () => {
   }, [id, quotations]);
 
   const [localQuotation, setLocalQuotation] = useState<Quotation | null>(null);
+  const newQuotationInitializedRef = useRef(false);
 
   useEffect(() => {
     if (contextQuotation) {
       setLocalQuotation(contextQuotation);
-    } else if (isNewQuotation && !localQuotation && id) {
+    } else if (isNewQuotation && !newQuotationInitializedRef.current && id) {
+      newQuotationInitializedRef.current = true;
       setLocalQuotation(getInitialQuotation(id));
     }
-  }, [contextQuotation, isNewQuotation, id, localQuotation]);
+  }, [contextQuotation, isNewQuotation, id]);
 
   const quotation = localQuotation ?? contextQuotation;
   const setQuotation = setLocalQuotation;
@@ -313,8 +315,7 @@ const CotacaoDetalhesPage: () => React.ReactNode = () => {
       const priceInfo = supplierProductPrices.find(
         (p) => p.productId === item.productId && p.supplierId === selectedSupplierId,
       );
-      const price = priceInfo ? getLatestPriceFromHistory(priceInfo.priceHistory) : 0;
-      if (price === null) return;
+      const price = priceInfo ? getLatestPriceFromHistory(priceInfo.priceHistory) || 0 : 0;
 
       const itemTotal = price * item.quantity;
       const existing = supplierTotals.get(selectedSupplierId);

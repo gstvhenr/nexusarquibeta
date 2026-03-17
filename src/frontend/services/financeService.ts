@@ -288,7 +288,10 @@ export const getFinancialPageData = (
   );
   const monthlyDebits = allDebits.filter((debit) => isInMonth(debit.dueDate, viewDate));
 
-  const receita = monthlyReceivables.reduce((sum, receivable) => sum + receivable.value, 0);
+  const realizedReceivables = monthlyReceivables.filter((r) => r.status !== 'Previsão');
+  const forecastReceivables = monthlyReceivables.filter((r) => r.status === 'Previsão');
+
+  const receita = realizedReceivables.reduce((sum, receivable) => sum + receivable.value, 0);
   const despesa = monthlyDebits.reduce((sum, debit) => sum + debit.value, 0);
   const currentMonthTotals = { receita, despesa, saldo: receita - despesa };
 
@@ -296,8 +299,9 @@ export const getFinancialPageData = (
   prevMonthDate.setDate(1);
   prevMonthDate.setMonth(viewDate.getMonth() - 1);
 
-  const prevMonthReceivables = allReceivables.filter((receivable) =>
-    isInMonth(receivable.dueDate, prevMonthDate),
+  const prevMonthReceivables = allReceivables.filter(
+    (receivable) =>
+      isInMonth(receivable.dueDate, prevMonthDate) && receivable.status !== 'Previsão',
   );
   const prevMonthDebits = allDebits.filter((debit) => isInMonth(debit.dueDate, prevMonthDate));
 
@@ -309,7 +313,7 @@ export const getFinancialPageData = (
     saldo: prevReceita - prevDespesa,
   };
 
-  const totalInadimplencia = monthlyReceivables
+  const totalInadimplencia = realizedReceivables
     .filter((receivable) => receivable.status === 'Vencido')
     .reduce((sum, receivable) => sum + receivable.value, 0);
   const totalDebitosAtrasados = monthlyDebits
@@ -327,7 +331,7 @@ export const getFinancialPageData = (
     .sort((a, b) => b.value - a.value);
 
   const receivableSourceMap = new Map<string, number>();
-  monthlyReceivables.forEach((receivable) => {
+  realizedReceivables.forEach((receivable) => {
     const label =
       receivable.source === 'Project' && receivable.projectCode
         ? `Projeto: ${receivable.projectCode}`
@@ -340,13 +344,14 @@ export const getFinancialPageData = (
     .sort((a, b) => b.value - a.value);
 
   const receivablesHealth = {
-    totalOpen: monthlyReceivables
+    totalOpen: realizedReceivables
       .filter((receivable) => receivable.status === 'Em Aberto')
       .reduce((sum, receivable) => sum + receivable.value, 0),
     totalOverdue: totalInadimplencia,
-    totalPaid: monthlyReceivables
+    totalPaid: realizedReceivables
       .filter((receivable) => receivable.status === 'Pago')
       .reduce((sum, receivable) => sum + receivable.value, 0),
+    totalForecast: forecastReceivables.reduce((sum, receivable) => sum + receivable.value, 0),
   };
 
   const debitsHealth = {

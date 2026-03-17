@@ -1,6 +1,5 @@
 import { CurrencyInput } from '@/components/projetos/tabs/project-finance/CurrencyInput';
 import { Button, Modal } from '@/components/ui';
-import { formatCurrency } from '@/utils/formatters';
 
 interface EmergencyFundEditModalProps {
   currentValue: number | undefined;
@@ -28,7 +27,7 @@ export function EmergencyFundEditModal({
   onTargetToggle,
   onTargetValueChange,
   suggestionValue,
-  targetMonths,
+  targetMonths: _targetMonths,
   targetValue,
 }: EmergencyFundEditModalProps) {
   return (
@@ -79,12 +78,7 @@ export function EmergencyFundEditModal({
             </div>
           )}
 
-          {suggestionValue && (
-            <p className="text-xs leading-relaxed text-text-secondary">
-              Sugestão inicial: {formatCurrency(suggestionValue)} para cobrir cerca de{' '}
-              {targetMonths} meses no ritmo atual do dashboard.
-            </p>
-          )}
+          {suggestionValue && <p className="text-xs leading-relaxed text-text-secondary"></p>}
         </div>
 
         {formError && (

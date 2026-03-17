@@ -1,7 +1,10 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Header, Sidebar, RouteErrorBoundary } from './components/layout';
 import LoadingFallback from './components/ui/LoadingFallback';
+import { DriveApiToast } from './components/drive/DriveApiToast';
+import { localDriveService } from './services/infrastructure/localDriveService';
+import { googleDriveService } from './services/infrastructure/googleDriveService';
 
 // Critical-path page: loaded eagerly for instant first paint.
 import HomePage from './pages/home/HomePage';
@@ -25,14 +28,16 @@ const FinanceiroPrevisaoCaixaPage = lazy(
 );
 const FinanceiroVisaoGeralPage = lazy(() => import('./pages/financeiro'));
 const FornecedoresPage = lazy(() => import('./pages/suprimentos/fornecedores/FornecedoresPage'));
-const GestaoMarketingPainelPage = lazy(() => import('./pages/gestao-marketing'));
 const GestaoMarketingConteudosPage = lazy(
   () => import('./pages/gestao-marketing/GestaoMarketingConteudosPage'),
 );
 
-const InstagramDetailPage = lazy(
-  () => import('./pages/gestao-marketing/redes-sociais/InstagramDetailPage'),
-);
+const InstagramPage = lazy(() => import('./pages/gestao-marketing/redes-sociais/InstagramPage'));
+const FacebookPage = lazy(() => import('./pages/gestao-marketing/redes-sociais/FacebookPage'));
+const LinkedInPage = lazy(() => import('./pages/gestao-marketing/redes-sociais/LinkedInPage'));
+const TikTokPage = lazy(() => import('./pages/gestao-marketing/redes-sociais/TikTokPage'));
+const YouTubePage = lazy(() => import('./pages/gestao-marketing/redes-sociais/YouTubePage'));
+const GooglePage = lazy(() => import('./pages/gestao-marketing/redes-sociais/GooglePage'));
 const LembretesPage = lazy(() => import('./pages/agenda/lembretes/LembretesPage'));
 const OrcamentosPage = lazy(() => import('./pages/comercial/orcamentos'));
 const PrestadoresFreelancersPage = lazy(() => import('./pages/prestadores-freelancers'));
@@ -59,6 +64,34 @@ const App: () => React.ReactNode = () => {
     location.pathname.startsWith('/prestadores-freelancers') ||
     location.pathname.startsWith('/fornecedores');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [showDriveToast, setShowDriveToast] = useState(false);
+
+  useEffect(() => {
+    async function connectDrive(): Promise<void> {
+      // 1. Verificar se voltamos de um redirect do Google (token no hash)
+      const connected = await googleDriveService.handleRedirectCallback();
+      if (connected) return;
+
+      // 2. Se tem pasta local, não precisa de API
+      const hasFolder = await localDriveService.hasSavedFolder();
+      if (hasFolder) return;
+
+      // 3. Sem pasta local e sem token → redirecionar ao Google
+      googleDriveService.signIn().catch(() => {
+        /* redirect em progresso ou erro silenciado */
+      });
+    }
+
+    connectDrive();
+
+    const unsubscribe = googleDriveService.subscribe((driveState) => {
+      if (driveState.status === 'connected') {
+        setShowDriveToast(true);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
   const standardBottomPaddingClass = 'pb-4 md:pb-5';
   const mainPaddingClass = isSpecialPage
     ? standardBottomPaddingClass
@@ -124,9 +157,8 @@ const App: () => React.ReactNode = () => {
                 <Route path="/comissoes" element={<ComissoesPage />} />
                 <Route
                   path="/gestao-marketing"
-                  element={<Navigate to="/gestao-marketing/painel" replace />}
+                  element={<Navigate to="/gestao-marketing/conteudos" replace />}
                 />
-                <Route path="/gestao-marketing/painel" element={<GestaoMarketingPainelPage />} />
                 <Route
                   path="/gestao-marketing/conteudos"
                   element={<GestaoMarketingConteudosPage />}
@@ -134,9 +166,14 @@ const App: () => React.ReactNode = () => {
 
                 <Route path="/gestao-marketing/redes-sociais" element={<RedesSociaisPage />} />
                 <Route
-                  path="/gestao-marketing/redes-sociais/:networkId"
-                  element={<InstagramDetailPage />}
+                  path="/gestao-marketing/redes-sociais/Instagram"
+                  element={<InstagramPage />}
                 />
+                <Route path="/gestao-marketing/redes-sociais/Facebook" element={<FacebookPage />} />
+                <Route path="/gestao-marketing/redes-sociais/LinkedIn" element={<LinkedInPage />} />
+                <Route path="/gestao-marketing/redes-sociais/TikTok" element={<TikTokPage />} />
+                <Route path="/gestao-marketing/redes-sociais/YouTube" element={<YouTubePage />} />
+                <Route path="/gestao-marketing/redes-sociais/Google" element={<GooglePage />} />
                 <Route
                   path="/prestadores-freelancers"
                   element={<Navigate to="/prestadores-freelancers/visao-geral" replace />}
@@ -161,6 +198,8 @@ const App: () => React.ReactNode = () => {
           </RouteErrorBoundary>
         </main>
       </div>
+
+      <DriveApiToast visible={showDriveToast} onDismiss={() => setShowDriveToast(false)} />
     </div>
   );
 };

@@ -8,11 +8,12 @@ type InstagramCredentialModalProps = {
   onClose: () => void;
   credentials?: { username: string; password: string };
   onSaveCredentials: (creds: { username: string; password: string }) => void;
+  networkName: string;
 };
 
 export const InstagramCredentialModal: (
   props: InstagramCredentialModalProps,
-) => React.ReactNode = ({ isOpen, onClose, credentials, onSaveCredentials }) => {
+) => React.ReactNode = ({ isOpen, onClose, credentials, onSaveCredentials, networkName }) => {
   const { isLockEnabled, isUnlocked, unlock } = useFinancialSecurity();
   const [passwordAttempt, setPasswordAttempt] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -60,7 +61,7 @@ export const InstagramCredentialModal: (
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Acessos — Instagram">
+    <Modal isOpen={isOpen} onClose={onClose} title={`Acessos — ${networkName}`}>
       {!authenticated ? (
         <div className="space-y-4">
           <p className="text-sm text-text-secondary">

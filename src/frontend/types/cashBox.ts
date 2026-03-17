@@ -406,4 +406,8 @@ export type UnifiedEntry = {
   installmentTotal?: number | null;
   paymentDate?: string | null;
   raw: CashBoxExpense | CashBoxCredit;
+  /** When true, entry is a derived forecast (read-only, not persisted). */
+  isForecast?: boolean;
+  /** When true, entry is derived from another module (read-only in cash box). */
+  isDerived?: boolean;
 };

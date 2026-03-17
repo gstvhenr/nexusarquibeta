@@ -18,22 +18,42 @@ import {
 } from '@/context/DataContext';
 import { formatYAxisTick } from '@/utils/formatters';
 import { getCashFlowForecastSeries } from '@/services/financeService';
+import { deriveQuotationForecasts } from '@/services/quotationCommissionService';
 import { NAV_LINKS } from '@/constants';
 import { CardShell, SectionTitle, CustomTooltip } from '@/components/finance';
 import type { FinancialSeriesSource } from '@/types';
 
 const FinanceiroPrevisaoCaixaPage: () => React.ReactNode = () => {
-  const { projects } = useCoreData();
+  const { projects, clients } = useCoreData();
   const { commissions, manualExpenses, manualIncomes, cashBoxExpenses, cashBoxCredits } =
     useFinanceData();
   const { marketingActivities } = useMarketingData();
-  const { freelancers } = useSupplyChainData();
+  const { freelancers, suppliers, quotations, products, supplierProductPrices } =
+    useSupplyChainData();
   const { hiredServices } = useSystemData();
+
+  const forecastCommissions = useMemo(
+    () =>
+      deriveQuotationForecasts({
+        quotations,
+        suppliers,
+        products,
+        supplierProductPrices,
+        projects,
+        clients,
+      }),
+    [quotations, suppliers, products, supplierProductPrices, projects, clients],
+  );
+
+  const allCommissions = useMemo(
+    () => [...commissions, ...forecastCommissions],
+    [commissions, forecastCommissions],
+  );
 
   const source: FinancialSeriesSource = useMemo(
     () => ({
       projects,
-      commissions,
+      commissions: allCommissions,
       manualExpenses,
       manualIncomes,
       marketingActivities,
@@ -44,7 +64,7 @@ const FinanceiroPrevisaoCaixaPage: () => React.ReactNode = () => {
     }),
     [
       projects,
-      commissions,
+      allCommissions,
       manualExpenses,
       manualIncomes,
       marketingActivities,

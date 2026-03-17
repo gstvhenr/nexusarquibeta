@@ -1,21 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Modal, Input, Textarea, FormField, Button } from '../../components/ui';
-import { TrashIcon, UserCircleIcon, ArchiveIcon, UnarchiveIcon } from '../../components/ui';
-import { FREELANCER_SPECIALTIES } from '../../constants';
-import { Freelancer } from '../../types';
-import { formatPhone } from '../../utils/formatters';
+import { Modal, Input, Textarea, FormField, Button } from '@/components/ui';
+import { TrashIcon, UserCircleIcon, ArchiveIcon, UnarchiveIcon } from '@/components/ui';
+import { FREELANCER_SPECIALTIES } from '@/constants';
+import type { Freelancer } from '@/types';
+import { formatPhone } from '@/utils/formatters';
 
 const getInitialFreelancer = (): Freelancer => ({
   id: '',
   name: '',
   email: '',
   phone: '',
+  location: '',
+  rating: 0,
+  socialMedia: '',
+  quotesRequested: 0,
+  quotesApproved: 0,
+  portfolioLink: '',
   specialties: [],
   projects: [],
   archived: false,
   photo: '',
   notes: '',
-  portfolioLink: '',
 });
 
 export const FreelancerDetailFormModal: (props: {
@@ -35,9 +40,7 @@ export const FreelancerDetailFormModal: (props: {
 
   useEffect(() => {
     if (isOpen) {
-      const data = initialFreelancer
-        ? JSON.parse(JSON.stringify(initialFreelancer))
-        : getInitialFreelancer();
+      const data = initialFreelancer ? structuredClone(initialFreelancer) : getInitialFreelancer();
       setFreelancer(data);
       setPhotoPreview(data.photo || null);
       setMode(initialFreelancer ? 'view' : 'add');
@@ -120,10 +123,10 @@ export const FreelancerDetailFormModal: (props: {
             </FormField>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input
             type="email"
-            placeholder="Email"
+            placeholder="E-mail"
             value={freelancer.email}
             onChange={(e) => handleChange('email', e.target.value)}
             disabled={isReadOnly}
@@ -139,16 +142,76 @@ export const FreelancerDetailFormModal: (props: {
             className={inputOverride}
             aria-label="Telefone"
           />
+          <Input
+            type="text"
+            placeholder="Cidade/UF"
+            value={freelancer.location || ''}
+            onChange={(e) => handleChange('location', e.target.value)}
+            disabled={isReadOnly}
+            className={inputOverride}
+            aria-label="Cidade e UF"
+          />
         </div>
-        <Input
-          type="url"
-          placeholder="Link do Portfólio"
-          value={freelancer.portfolioLink || ''}
-          onChange={(e) => handleChange('portfolioLink', e.target.value)}
-          disabled={isReadOnly}
-          className={inputOverride}
-          aria-label="Link do portfólio"
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            type="url"
+            placeholder="Redes Sociais (Link/Perfil)"
+            value={freelancer.socialMedia || ''}
+            onChange={(e) => handleChange('socialMedia', e.target.value)}
+            disabled={isReadOnly}
+            className={inputOverride}
+            aria-label="Redes Sociais"
+          />
+          <Input
+            type="url"
+            placeholder="Portfólio"
+            value={freelancer.portfolioLink || ''}
+            onChange={(e) => handleChange('portfolioLink', e.target.value)}
+            disabled={isReadOnly}
+            className={inputOverride}
+            aria-label="Link do portfólio"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormField label="Avaliação (0-5)">
+            <Input
+              type="number"
+              min="0"
+              max="5"
+              step="1"
+              value={freelancer.rating || 0}
+              onChange={(e) => handleChange('rating', Number(e.target.value))}
+              disabled={isReadOnly}
+              className={inputOverride}
+              aria-label="Avaliação do Freelancer"
+            />
+          </FormField>
+          <FormField label="Cotações Solicitadas">
+            <Input
+              type="number"
+              min="0"
+              step="1"
+              value={freelancer.quotesRequested || 0}
+              onChange={(e) => handleChange('quotesRequested', Number(e.target.value))}
+              disabled={isReadOnly}
+              className={inputOverride}
+              aria-label="Quantidade de cotações solicitadas"
+            />
+          </FormField>
+          <FormField label="Cotações Efetivas">
+            <Input
+              type="number"
+              min="0"
+              step="1"
+              value={freelancer.quotesApproved || 0}
+              onChange={(e) => handleChange('quotesApproved', Number(e.target.value))}
+              disabled={isReadOnly}
+              className={inputOverride}
+              aria-label="Quantidade de cotações efetivas"
+            />
+          </FormField>
+        </div>
         <div>
           <span className="block text-sm font-medium text-text-secondary mb-2">Especialidades</span>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-background/30 p-2 rounded-lg border border-border-color/50">

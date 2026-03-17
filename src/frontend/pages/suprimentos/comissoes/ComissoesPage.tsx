@@ -3,7 +3,8 @@ import { PageHeader } from '@/components/layout';
 import { Button, DeleteConfirmationModal } from '@/components/ui';
 import { ArchiveIcon, PlusIcon, UnarchiveIcon } from '@/components/ui';
 import { NAV_LINKS } from '@/constants';
-import { useFinanceData, useSupplyChainData } from '@/context/DataContext';
+import { useCoreData, useFinanceData, useSupplyChainData } from '@/context/DataContext';
+import { deriveQuotationForecasts } from '@/services/quotationCommissionService';
 import { CommissionFormModal } from './CommissionFormModal';
 import { CommissionsFilterBar } from './CommissionsFilterBar';
 import { CommissionsSummaryCards } from './CommissionsSummaryCards';
@@ -15,7 +16,26 @@ import { formatCurrency, parseDateString } from '@/utils/formatters';
 
 const ComissoesPage: () => React.ReactNode = () => {
   const { commissions, setCommissions } = useFinanceData();
-  const { suppliers } = useSupplyChainData();
+  const { suppliers, quotations, products, supplierProductPrices } = useSupplyChainData();
+  const { projects, clients } = useCoreData();
+
+  const forecastCommissions = useMemo(
+    () =>
+      deriveQuotationForecasts({
+        quotations,
+        suppliers,
+        products,
+        supplierProductPrices,
+        projects,
+        clients,
+      }),
+    [quotations, suppliers, products, supplierProductPrices, projects, clients],
+  );
+
+  const allCommissions = useMemo(
+    () => [...commissions, ...forecastCommissions],
+    [commissions, forecastCommissions],
+  );
 
   const [isFormModalOpen, setFormModalOpen] = useState(false);
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -28,7 +48,7 @@ const ComissoesPage: () => React.ReactNode = () => {
   });
 
   const filteredCommissions = useMemo(() => {
-    return commissions
+    return allCommissions
       .filter((commission) => {
         if ((commission.archived || false) !== showArchived) {
           return false;
@@ -46,10 +66,13 @@ const ComissoesPage: () => React.ReactNode = () => {
           (parseDateString(b.saleDate)?.getTime() || 0) -
           (parseDateString(a.saleDate)?.getTime() || 0),
       );
-  }, [commissions, filters, showArchived]);
+  }, [allCommissions, filters, showArchived]);
 
   const summary = useMemo(() => {
-    const activeCommissions = commissions.filter((commission) => !commission.archived);
+    const activeCommissions = allCommissions.filter((commission) => !commission.archived);
+    const forecastValue = activeCommissions
+      .filter((commission) => commission.status === 'Previsão')
+      .reduce((sum, commission) => sum + commission.commissionValue, 0);
     const pendingValue = activeCommissions
       .filter((commission) => commission.status === 'Pendente')
       .reduce((sum, commission) => sum + commission.commissionValue, 0);
@@ -65,8 +88,8 @@ const ComissoesPage: () => React.ReactNode = () => {
       })
       .reduce((sum, commission) => sum + commission.commissionValue, 0);
 
-    return { pendingValue, receivedLast30Days };
-  }, [commissions]);
+    return { forecastValue, pendingValue, receivedLast30Days };
+  }, [allCommissions]);
 
   const handleSave = (commission: Commission) => {
     setCommissions((previous) => {
@@ -148,6 +171,7 @@ const ComissoesPage: () => React.ReactNode = () => {
       </PageHeader>
 
       <CommissionsSummaryCards
+        forecastValue={summary.forecastValue}
         pendingValue={summary.pendingValue}
         receivedLast30Days={summary.receivedLast30Days}
       />

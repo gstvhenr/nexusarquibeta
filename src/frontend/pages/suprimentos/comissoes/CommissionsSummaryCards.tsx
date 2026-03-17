@@ -2,16 +2,22 @@ import React from 'react';
 import { formatCurrency } from '@/utils/formatters';
 
 type CommissionsSummaryCardsProps = {
+  forecastValue: number;
   pendingValue: number;
   receivedLast30Days: number;
 };
 
 export const CommissionsSummaryCards: (props: CommissionsSummaryCardsProps) => React.ReactNode = ({
+  forecastValue,
   pendingValue,
   receivedLast30Days,
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="bg-surface rounded-xl shadow-soft p-5">
+        <p className="text-sm font-semibold text-text-secondary">Previsão de Cotações</p>
+        <p className="text-3xl font-bold text-info">{formatCurrency(forecastValue)}</p>
+      </div>
       <div className="bg-surface rounded-xl shadow-soft p-5">
         <p className="text-sm font-semibold text-text-secondary">Total a Receber</p>
         <p className="text-3xl font-bold text-warning">{formatCurrency(pendingValue)}</p>

@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useDisclosure } from '../../hooks';
-import { PageHeader } from '../../components/layout';
-import { DeleteConfirmationModal } from '../../components/ui';
-import { useSupplyChainData, useSystemData } from '../../context/DataContext';
-import { Freelancer, HiredService } from '../../types';
-import { NAV_LINKS } from '../../constants';
+import { useDisclosure } from '@/hooks';
+import { PageHeader } from '@/components/layout';
+import { DeleteConfirmationModal } from '@/components/ui';
+import { useSupplyChainData, useSystemData } from '@/context/DataContext';
+import type { Freelancer, HiredService } from '@/types';
+import { NAV_LINKS, SUBCONTRATACAO_LABEL } from '@/constants';
 import {
   Button,
   Input,
@@ -15,9 +15,10 @@ import {
   CashIcon,
   ArchiveIcon,
   UnarchiveIcon,
-} from '../../components/ui';
-import { formatCurrency } from '../../utils/formatters';
-import { getInitials } from '../../utils/supplierHelpers';
+  StarIcon,
+} from '@/components/ui';
+import { formatCurrency } from '@/utils/formatters';
+import { getInitials } from '@/utils/supplierHelpers';
 import { v4 as uuidv4 } from 'uuid';
 import { FreelancerDetailFormModal } from './FreelancerDetailFormModal';
 
@@ -101,9 +102,35 @@ const FreelancerCard: (props: {
     <h4 className="font-bold text-text-primary text-lg mb-1 group-hover:text-primary transition-colors">
       {freelancer.name}
     </h4>
-    <p className="text-xs text-text-secondary h-8 line-clamp-2 px-2">
-      {freelancer.specialties.join(', ')}
-    </p>
+    <div className="w-full flex-1 flex flex-col items-center justify-start mt-2 space-y-2">
+      {freelancer.location ? (
+        <span className="text-xs text-text-secondary font-medium px-2 truncate w-full text-center">
+          {freelancer.location}
+        </span>
+      ) : (
+        <span className="text-xs text-text-secondary opacity-50 px-2 truncate w-full text-center">
+          Local não informado
+        </span>
+      )}
+
+      <div className="flex items-center gap-1 text-warning">
+        <StarIcon className={`w-4 h-4 ${!freelancer.rating ? 'text-border-color' : ''}`} />
+        <span className="text-sm font-bold text-text-primary">
+          {freelancer.rating ? freelancer.rating.toFixed(1) : '-'}
+        </span>
+      </div>
+
+      <div className="w-full pt-2 mt-auto border-t border-border-color/30 flex justify-center items-center gap-3 text-[10px] text-text-secondary">
+        <span title="Cotações Efetivas / Solicitadas">
+          <strong className="text-text-primary">{freelancer.quotesApproved || 0}</strong> efetivas
+        </span>
+        <span className="opacity-50">•</span>
+        <span>
+          <strong className="text-text-primary">{freelancer.quotesRequested || 0}</strong>{' '}
+          requisições
+        </span>
+      </div>
+    </div>
   </div>
 );
 
@@ -170,7 +197,7 @@ const PrestadoresFreelancersPage: () => React.ReactNode = () => {
     detailDisclosure.open();
   };
 
-  const subcontratacaoLink = NAV_LINKS.find((link) => link.label === 'Subcontratação');
+  const subcontratacaoLink = NAV_LINKS.find((link) => link.label === SUBCONTRATACAO_LABEL);
   const pageIcon = subcontratacaoLink?.children?.find((c) => c.label === 'Freelancers')?.icon || (
     <UsersIcon />
   );
@@ -198,7 +225,7 @@ const PrestadoresFreelancersPage: () => React.ReactNode = () => {
         <div className="p-4 bg-surface rounded-xl shadow-soft flex flex-wrap items-center justify-between gap-4 shrink-0 border border-border-color/50">
           <Input
             type="search"
-            placeholder="Buscar por nome ou especialidade..."
+            placeholder="Buscar por nome ou especialidade"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="sm:w-64 p-2 rounded-md"

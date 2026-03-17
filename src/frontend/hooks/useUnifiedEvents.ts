@@ -4,6 +4,7 @@ import {
   useFinanceData,
   useMarketingData,
   useSystemData,
+  useSupplyChainData,
 } from '../context/DataContext';
 import { agendaService } from '../services/agendaService';
 import type { AgendaEvent } from '../types';
@@ -16,10 +17,11 @@ import type { AgendaEvent } from '../types';
  * output -> AgendaEvent[] (memoized)
  */
 export function useUnifiedEvents(): AgendaEvent[] {
-  const { agendaEvents } = useSystemData();
+  const { agendaEvents, hiredServices } = useSystemData();
   const { projects } = useCoreData();
   const { marketingActivities, prospects } = useMarketingData();
   const { manualExpenses, commissions, manualIncomes } = useFinanceData();
+  const { freelancers } = useSupplyChainData();
 
   return useMemo(
     () =>
@@ -31,6 +33,8 @@ export function useUnifiedEvents(): AgendaEvent[] {
         manualExpenses,
         commissions,
         manualIncomes,
+        hiredServices,
+        freelancers,
       }),
     [
       agendaEvents,
@@ -40,6 +44,8 @@ export function useUnifiedEvents(): AgendaEvent[] {
       manualExpenses,
       commissions,
       manualIncomes,
+      hiredServices,
+      freelancers,
     ],
   );
 }

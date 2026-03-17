@@ -10,6 +10,7 @@ import {
 } from '@/context/DataContext';
 import { formatCurrency } from '@/utils/formatters';
 import { getFinancialPageData } from '@/services/financeService';
+import { deriveQuotationForecasts } from '@/services/quotationCommissionService';
 import { NAV_LINKS, EXPENSE_CATEGORY_COLORS, RECEIVABLE_SOURCE_COLORS } from '@/constants';
 import { ArrowLeftIcon, Button, IconButton, KeyIcon } from '@/components/ui';
 import {
@@ -52,24 +53,43 @@ const getMonthLabel = (offset: number, date: Date): string => {
 // PAGE COMPONENT
 // ═══════════════════════════════════════════════════════════════
 const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
-  const { projects } = useCoreData();
+  const { projects, clients } = useCoreData();
   const { commissions, manualExpenses, manualIncomes, cashBoxExpenses, cashBoxCredits } =
     useFinanceData();
   const { marketingActivities } = useMarketingData();
-  const { freelancers } = useSupplyChainData();
+  const { freelancers, suppliers, quotations, products, supplierProductPrices } =
+    useSupplyChainData();
   const { hiredServices } = useSystemData();
 
-  const [donutView, setDonutView] = useState<DonutView>('expenses');
+  const [donutView, setDonutView] = useState<DonutView>('all');
   const [monthOffset, setMonthOffset] = useState(0);
 
   const viewDate = useMemo(() => getOffsetDate(monthOffset), [monthOffset]);
   const monthLabel = useMemo(() => getMonthLabel(monthOffset, viewDate), [monthOffset, viewDate]);
 
+  const forecastCommissions = useMemo(
+    () =>
+      deriveQuotationForecasts({
+        quotations,
+        suppliers,
+        products,
+        supplierProductPrices,
+        projects,
+        clients,
+      }),
+    [quotations, suppliers, products, supplierProductPrices, projects, clients],
+  );
+
+  const allCommissions = useMemo(
+    () => [...commissions, ...forecastCommissions],
+    [commissions, forecastCommissions],
+  );
+
   const financialData = useMemo(
     () =>
       getFinancialPageData(
         projects,
-        commissions,
+        allCommissions,
         manualExpenses,
         manualIncomes,
         marketingActivities,
@@ -82,7 +102,7 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
       ),
     [
       projects,
-      commissions,
+      allCommissions,
       manualExpenses,
       manualIncomes,
       marketingActivities,
@@ -106,7 +126,10 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
   const financeiroIcon = NAV_LINKS.find((link) => link.label === 'Financeiro')?.icon;
 
   const totalReceivables =
-    receivablesHealth.totalOpen + receivablesHealth.totalOverdue + receivablesHealth.totalPaid;
+    receivablesHealth.totalOpen +
+    receivablesHealth.totalOverdue +
+    receivablesHealth.totalPaid +
+    receivablesHealth.totalForecast;
   const totalDebits =
     debitsHealth.totalPending + debitsHealth.totalOverdue + debitsHealth.totalPaid;
 
@@ -261,6 +284,14 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                       total={totalReceivables}
                       variant="error"
                     />
+                    {receivablesHealth.totalForecast > 0 && (
+                      <HealthBar
+                        label="Previsão"
+                        value={receivablesHealth.totalForecast}
+                        total={totalReceivables}
+                        variant="info"
+                      />
+                    )}
                   </div>
                 </div>
                 <div className="border-t border-border-color/30 pt-3">
@@ -343,9 +374,9 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                 </div>
               </div>
               {activeDonutData.length > 0 ? (
-                <>
+                <div className="flex flex-col items-center flex-1 min-h-0">
                   <div
-                    className="flex justify-center relative my-1"
+                    className="flex justify-center relative my-2"
                     role="img"
                     aria-label={
                       donutView === 'all'
@@ -355,15 +386,15 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                           : 'Gráfico de rosca mostrando a distribuição de receitas recebidas por fonte no mês atual'
                     }
                   >
-                    <PieChart width={150} height={150}>
+                    <PieChart width={220} height={220}>
                       <Pie
                         data={activeDonutData}
                         dataKey="value"
                         nameKey="category"
                         cx="50%"
                         cy="50%"
-                        innerRadius={45}
-                        outerRadius={68}
+                        innerRadius={65}
+                        outerRadius={95}
                         paddingAngle={3}
                         stroke="none"
                         cornerRadius={4}
@@ -372,20 +403,27 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip content={<DonutTooltip />} />
+                      <Tooltip
+                        content={<DonutTooltip />}
+                        wrapperStyle={{ zIndex: 10, pointerEvents: 'none' }}
+                        position={{ x: 230, y: 90 }}
+                      />
                     </PieChart>
-                    {/* Center label */}
+                    {/* Center label — shows saldo (credit - debit) */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="text-center">
-                        <p className="text-[10px] text-text-secondary font-medium">Total</p>
-                        <p className="text-sm font-bold text-text-primary tabular-nums">
-                          {formatCurrency(totalDonutValue)}
+                        <p className="text-[10px] text-text-secondary font-medium">Saldo</p>
+                        <p
+                          className={`text-sm font-bold tabular-nums ${kpis.saldoMensal >= 0 ? 'text-success' : 'text-error'}`}
+                        >
+                          {formatCurrency(kpis.saldoMensal)}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-1 mt-1">
-                    {activeDonutData.slice(0, 6).map((cat, i) => {
+                  {/* Legend — bottom center */}
+                  <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2 overflow-y-auto custom-scrollbar max-h-24">
+                    {activeDonutData.slice(0, 8).map((cat, i) => {
                       const pct =
                         totalDonutValue > 0
                           ? ((cat.value / totalDonutValue) * 100).toFixed(1)
@@ -393,30 +431,26 @@ const FinanceiroVisaoGeralPage: () => React.ReactNode = () => {
                       return (
                         <div
                           key={i}
-                          className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-background/60 transition-colors cursor-default group"
+                          className="flex items-center gap-1.5 text-xs py-1 cursor-default group"
                         >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div
-                              className="w-2 h-2 rounded-full shrink-0 ring-2 ring-white/20"
-                              style={{ backgroundColor: cat.color }} // NOSONAR
-                            />
-                            <span className="text-text-secondary truncate group-hover:text-text-primary transition-colors">
-                              {cat.category}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-[10px] text-text-secondary tabular-nums bg-background/80 px-1.5 py-0.5 rounded-full">
-                              {pct}%
-                            </span>
-                            <span className="font-semibold text-text-primary tabular-nums">
-                              {formatCurrency(cat.value)}
-                            </span>
-                          </div>
+                          <div
+                            className="w-2 h-2 rounded-full shrink-0 ring-2 ring-white/20"
+                            style={{ backgroundColor: cat.color }} // NOSONAR
+                          />
+                          <span className="text-text-secondary group-hover:text-text-primary transition-colors">
+                            {cat.category}
+                          </span>
+                          <span className="text-[10px] text-text-secondary tabular-nums bg-background/80 px-1.5 py-0.5 rounded-full">
+                            {pct}%
+                          </span>
+                          <span className="font-semibold text-text-primary tabular-nums">
+                            {formatCurrency(cat.value)}
+                          </span>
                         </div>
                       );
                     })}
                   </div>
-                </>
+                </div>
               ) : (
                 <div className="flex-1 flex items-center justify-center">
                   <p className="text-text-secondary text-xs">

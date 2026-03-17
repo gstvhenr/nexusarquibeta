@@ -19,8 +19,8 @@ export const paymentMethods: PaymentMethod[] = [
   'Cheque',
 ];
 
-export type CommissionStatus = 'Pendente' | 'Recebido';
-export const commissionStatuses: CommissionStatus[] = ['Pendente', 'Recebido'];
+export type CommissionStatus = 'Previsão' | 'Pendente' | 'Recebido';
+export const commissionStatuses: CommissionStatus[] = ['Previsão', 'Pendente', 'Recebido'];
 
 export type ProfessionalExpenseStatus = 'Pendente' | 'Pago';
 

@@ -54,10 +54,24 @@ export const CashBoxEntriesTable: (props: CashBoxEntriesTableProps) => React.Rea
             entries.map((entry) => {
               const isCredit = entry.type === 'credit';
               const isOverdue = !entry.confirmed && entry.date < todayStr;
+              const isForecast = entry.isForecast === true;
+              const isReadOnly = isForecast || entry.isDerived === true;
 
               let badgeClass: string;
               let badgeLabel: string;
-              if (entry.confirmed) {
+              if (isForecast) {
+                badgeClass = 'bg-primary/10 text-primary border border-primary/20';
+                badgeLabel = 'Previsão';
+              } else if (isReadOnly && isCredit) {
+                // Derived commission entries from the commissions module
+                if (entry.confirmed) {
+                  badgeClass = 'bg-success/10 text-success';
+                  badgeLabel = 'Comissão Recebida';
+                } else {
+                  badgeClass = 'bg-warning/10 text-warning';
+                  badgeLabel = 'Comissão Pendente';
+                }
+              } else if (entry.confirmed) {
                 badgeClass = isCredit ? 'bg-success/10 text-success' : 'bg-error/10 text-error';
                 badgeLabel = isCredit ? 'Crédito' : 'Débito';
               } else if (isOverdue) {
@@ -71,7 +85,7 @@ export const CashBoxEntriesTable: (props: CashBoxEntriesTableProps) => React.Rea
               return (
                 <tr
                   key={entry.id}
-                  className={`group border-b border-border-color/50 last:border-b-0 hover:bg-background transition-colors ${isOverdue ? 'bg-error/5' : ''}`}
+                  className={`group border-b border-border-color/50 last:border-b-0 hover:bg-background transition-colors ${isOverdue ? 'bg-error/5' : ''} ${isForecast ? 'opacity-70 border-dashed' : ''}`}
                 >
                   <td className="px-6 py-4">
                     <span
@@ -106,7 +120,7 @@ export const CashBoxEntriesTable: (props: CashBoxEntriesTableProps) => React.Rea
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1">
-                      {!entry.confirmed && (
+                      {!isReadOnly && !entry.confirmed && (
                         <IconButton
                           variant="default"
                           onClick={() => onConfirmEntry(entry)}
@@ -117,14 +131,16 @@ export const CashBoxEntriesTable: (props: CashBoxEntriesTableProps) => React.Rea
                           <CheckCircleIcon className="w-4 h-4" />
                         </IconButton>
                       )}
-                      <IconButton
-                        variant="danger"
-                        onClick={() => onDeleteEntry(entry)}
-                        aria-label={isCredit ? 'Excluir crédito' : 'Excluir despesa'}
-                        className="opacity-0 group-hover:opacity-100"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </IconButton>
+                      {!isReadOnly && (
+                        <IconButton
+                          variant="danger"
+                          onClick={() => onDeleteEntry(entry)}
+                          aria-label={isCredit ? 'Excluir crédito' : 'Excluir despesa'}
+                          className="opacity-0 group-hover:opacity-100"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </IconButton>
+                      )}
                     </div>
                   </td>
                 </tr>

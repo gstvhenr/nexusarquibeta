@@ -139,27 +139,24 @@ export const buildUnifiedFinancialEntries = (
 
   commissions.forEach((commission) => {
     const expectedDate = commission.expectedPaymentDate ?? null;
-    const expectedDateParsed = parseDateString(expectedDate);
+
+    const isForecast = commission.status === 'Previsão';
+    const descriptionPrefix = isForecast ? 'Previsão Comissão' : 'Comissão';
 
     const receivable: FinancialReceivable = {
       id: `comm_${commission.id}`,
       number: 1,
       value: commission.commissionValue,
       dueDate: expectedDate || commission.saleDate,
-      paid: commission.status === 'Recebido',
+      paid: commission.status !== 'Previsão',
       paymentDate: commission.paymentDate || null,
       remuneration: commission.commissionValue,
-      status:
-        commission.status === 'Recebido'
-          ? 'Pago'
-          : expectedDateParsed && expectedDateParsed < today
-            ? 'Vencido'
-            : 'Em Aberto',
+      status: isForecast ? 'Previsão' : 'Pago',
       projectId: '',
       projectCode: '',
       clientName: commission.clientName,
       clientId: commission.clientId,
-      description: `Comissão: ${commission.supplierName}`,
+      description: `${descriptionPrefix}: ${commission.supplierName}`,
       source: 'Commission',
     };
     allReceivables.push(receivable);
@@ -250,14 +247,15 @@ export const buildUnifiedFinancialEntries = (
     .map((service) => {
       const freelancer = freelancers.find((f) => f.id === service.freelancerId);
       const project = projects.find((p) => p.id === service.projectId);
+      const isPaid = Boolean(service.paidAt);
       return {
         id: `hired_${service.id}`,
         description: `Subcontratação: ${freelancer?.name || 'Desconhecido'} (${project?.name || 'Projeto Desconhecido'})`,
         category: 'Serviços Terceirizados',
         value: service.cost,
         dueDate: service.deadline,
-        status: service.status === 'Concluído' ? 'Pago' : 'Pendente',
-        paymentDate: service.status === 'Concluído' ? service.deadline : null,
+        status: isPaid ? 'Pago' : 'Pendente',
+        paymentDate: isPaid ? (service.paidAt ?? null) : null,
         isRecurring: false,
         source: 'Freelancer',
         freelancerActivityId: service.id,
@@ -295,7 +293,8 @@ export const buildUnifiedFinancialEntries = (
 
   const cashBoxDebits: FinancialDebit[] = cashBoxExpenses.map((expense) => {
     const dueDate = parseDateString(expense.dueDate);
-    const isOverdue = dueDate ? dueDate < today : false;
+    const isPaid = Boolean(expense.paymentDate);
+    const isOverdue = !isPaid && dueDate ? dueDate < today : false;
     const label =
       expense.recurrence === 'Parcelada' && expense.installmentNumber && expense.installmentTotal
         ? `${expense.category} (${expense.installmentNumber}/${expense.installmentTotal})`
@@ -310,8 +309,8 @@ export const buildUnifiedFinancialEntries = (
       category: expense.category,
       value: expense.value,
       dueDate: expense.dueDate,
-      status: isOverdue ? ('Vencido' as const) : ('Pendente' as const),
-      paymentDate: null,
+      status: isPaid ? ('Pago' as const) : isOverdue ? ('Vencido' as const) : ('Pendente' as const),
+      paymentDate: expense.paymentDate,
       isRecurring: expense.recurrence !== 'Única',
       source: 'CashBox',
     };

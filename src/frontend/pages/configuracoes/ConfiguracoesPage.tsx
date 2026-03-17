@@ -8,6 +8,7 @@ import { useAutoReset } from '../../hooks/useAutoReset';
 import { useDisclosure } from '../../hooks/useDisclosure';
 import { api } from '../../services/infrastructure/api';
 import { ClearDataModal } from './ClearDataModal';
+import { GoogleDriveSection } from './GoogleDriveSection';
 import { ImportDataModal } from './ImportDataModal';
 import { PasswordResetModal } from './PasswordResetModal';
 import { Section } from './Section';
@@ -304,6 +305,8 @@ function ConfiguracoesPage(): JSX.Element {
             </div>
           </div>
         </Section>
+
+        <GoogleDriveSection />
       </div>
 
       <ImportDataModal

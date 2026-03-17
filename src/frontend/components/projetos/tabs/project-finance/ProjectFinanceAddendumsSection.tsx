@@ -136,7 +136,6 @@ export const ProjectFinanceAddendumsSection = ({
                   <input
                     id="field-addendum-desc"
                     type="text"
-                    placeholder="Ex: Mudança de layout na sala"
                     value={newAddendum.description}
                     onChange={(event) =>
                       onNewAddendumChange((current) => ({
@@ -157,7 +156,7 @@ export const ProjectFinanceAddendumsSection = ({
                   <input
                     id="field-addendum-value"
                     type="number"
-                    placeholder="0,00"
+                    placeholder="R$ 0,00"
                     value={newAddendum.value || ''}
                     onChange={(event) =>
                       onNewAddendumChange((current) => ({
@@ -254,7 +253,7 @@ export const ProjectFinanceAddendumsSection = ({
                   <input
                     id="field-budget-value"
                     type="number"
-                    placeholder="0,00"
+                    placeholder="R$ 0,00"
                     value={budgetServiceValue || ''}
                     onChange={(event) =>
                       onBudgetServiceValueChange(parseFloat(event.target.value) || 0)
@@ -329,9 +328,6 @@ export const ProjectFinanceAddendumsSection = ({
           {addendums.length === 0 ? (
             <div className="text-center py-8 border-2 border-dashed border-border-color rounded-xl">
               <p className="text-sm text-text-secondary">Nenhum aditivo registrado.</p>
-              <p className="text-xs text-text-secondary/70 mt-1">
-                Use o formulário acima para adicionar um aditivo.
-              </p>
             </div>
           ) : (
             <div className="space-y-2">

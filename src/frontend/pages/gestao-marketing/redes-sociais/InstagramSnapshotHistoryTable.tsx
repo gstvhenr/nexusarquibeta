@@ -1,18 +1,22 @@
 import React from 'react';
 import { PlusIcon, TrashIcon } from '@/components/ui/icons';
 import { Button, IconButton } from '@/components/ui';
-import type { InstagramSnapshot } from '@/types';
+import type { InstagramSnapshot, SocialNetworkName } from '@/types';
 import { formatDateWithTime } from '@/utils/formatters';
 
 type InstagramSnapshotHistoryTableProps = {
   snapshots: InstagramSnapshot[];
   onNewSnapshot: () => void;
   onDeleteSnapshot: (snapshotId: string) => void;
+  networkId?: SocialNetworkName;
 };
 
 export const InstagramSnapshotHistoryTable: (
   props: InstagramSnapshotHistoryTableProps,
-) => React.ReactNode = ({ snapshots, onNewSnapshot, onDeleteSnapshot }) => {
+) => React.ReactNode = ({ snapshots, onNewSnapshot, onDeleteSnapshot, networkId }) => {
+  const isFacebookOrLinkedIn = networkId === 'Facebook' || networkId === 'LinkedIn';
+  const isLinkedIn = networkId === 'LinkedIn';
+  const isGoogle = networkId === 'Google';
   return (
     <div className="bg-surface rounded-xl shadow-soft p-5 mb-6">
       <div className="flex items-center justify-between mb-4">
@@ -35,15 +39,24 @@ export const InstagramSnapshotHistoryTable: (
                 <th className="text-left pb-3 pr-4 font-semibold text-text-secondary text-xs uppercase tracking-wider">
                   Data/Hora
                 </th>
+                {!isFacebookOrLinkedIn && !isGoogle && (
+                  <th className="text-right pb-3 px-4 font-semibold text-text-secondary text-xs uppercase tracking-wider">
+                    Posts
+                  </th>
+                )}
                 <th className="text-right pb-3 px-4 font-semibold text-text-secondary text-xs uppercase tracking-wider">
-                  Posts
+                  {isGoogle ? 'Qualidade' : networkId === 'LinkedIn' ? 'Conexões' : 'Seguidores'}
                 </th>
-                <th className="text-right pb-3 px-4 font-semibold text-text-secondary text-xs uppercase tracking-wider">
-                  Seguidores
-                </th>
-                <th className="text-right pb-3 px-4 font-semibold text-text-secondary text-xs uppercase tracking-wider">
-                  Seguindo
-                </th>
+                {!isLinkedIn && !isGoogle && (
+                  <th className="text-right pb-3 px-4 font-semibold text-text-secondary text-xs uppercase tracking-wider">
+                    {isFacebookOrLinkedIn ? 'Conexões' : 'Seguindo'}
+                  </th>
+                )}
+                {isGoogle && (
+                  <th className="text-right pb-3 px-4 font-semibold text-text-secondary text-xs uppercase tracking-wider">
+                    Qtd. Avaliações
+                  </th>
+                )}
                 <th className="text-center pb-3 pl-4 font-semibold text-text-secondary text-xs uppercase tracking-wider w-16">
                   Ações
                 </th>
@@ -58,15 +71,24 @@ export const InstagramSnapshotHistoryTable: (
                   <td className="py-3 pr-4 text-text-primary font-medium">
                     {formatDateWithTime(snapshot.recordedAt)}
                   </td>
+                  {!isFacebookOrLinkedIn && !isGoogle && (
+                    <td className="py-3 px-4 text-right font-semibold">
+                      {snapshot.posts.toLocaleString('pt-BR')}
+                    </td>
+                  )}
                   <td className="py-3 px-4 text-right font-semibold">
-                    {snapshot.posts.toLocaleString('pt-BR')}
+                    {isGoogle ? snapshot.posts : snapshot.followers.toLocaleString('pt-BR')}
                   </td>
-                  <td className="py-3 px-4 text-right font-semibold">
-                    {snapshot.followers.toLocaleString('pt-BR')}
-                  </td>
-                  <td className="py-3 px-4 text-right font-semibold">
-                    {snapshot.following.toLocaleString('pt-BR')}
-                  </td>
+                  {!isLinkedIn && !isGoogle && (
+                    <td className="py-3 px-4 text-right font-semibold">
+                      {snapshot.following.toLocaleString('pt-BR')}
+                    </td>
+                  )}
+                  {isGoogle && (
+                    <td className="py-3 px-4 text-right font-semibold">
+                      {snapshot.followers.toLocaleString('pt-BR')}
+                    </td>
+                  )}
                   <td className="py-3 pl-4 text-center">
                     <IconButton
                       variant="danger"

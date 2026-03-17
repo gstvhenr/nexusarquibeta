@@ -5,16 +5,27 @@ interface HealthBarProps {
   label: string;
   value: number;
   total: number;
-  variant: 'success' | 'warning' | 'error';
+  variant: 'success' | 'warning' | 'error' | 'info';
 }
 
 const barColors = {
   success: 'bg-gradient-to-r from-success to-success/70',
   warning: 'bg-gradient-to-r from-warning to-warning/70',
   error: 'bg-gradient-to-r from-error to-error/70',
+  info: 'bg-gradient-to-r from-primary to-primary/70',
 };
-const textColors = { success: 'text-success', warning: 'text-warning', error: 'text-error' };
-const dotColors = { success: 'bg-success', warning: 'bg-warning', error: 'bg-error' };
+const textColors = {
+  success: 'text-success',
+  warning: 'text-warning',
+  error: 'text-error',
+  info: 'text-primary',
+};
+const dotColors = {
+  success: 'bg-success',
+  warning: 'bg-warning',
+  error: 'bg-error',
+  info: 'bg-primary',
+};
 
 export const HealthBar: (props: HealthBarProps) => React.ReactNode = ({
   label,

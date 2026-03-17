@@ -27,6 +27,7 @@ export const ChecklistTaskRow: (props: ChecklistTaskRowProps) => React.ReactNode
   const totalSubtasks = task.subtasks?.length || 0;
   const completedSubtasks = task.subtasks?.filter((s) => s.completed).length || 0;
   const subtaskProgress = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
+  const isDelegated = Boolean(task.assignee?.startsWith('Freelancer:'));
 
   return (
     <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-background transition-colors group border border-transparent hover:border-border-color/50">
@@ -36,12 +37,22 @@ export const ChecklistTaskRow: (props: ChecklistTaskRowProps) => React.ReactNode
           type="checkbox"
           checked={task.completed}
           onChange={(e) => onTaskChange(sectionId, task.id, 'completed', e.target.checked)}
+          disabled={isDelegated && !task.completed}
           className={`
-            appearance-none w-5 h-5 border-2 rounded-md cursor-pointer transition-all duration-200
+            appearance-none w-5 h-5 border-2 rounded-md transition-all duration-200
+            ${isDelegated && !task.completed ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
             ${task.completed ? 'bg-success border-success' : 'border-text-secondary/40 hover:border-primary'}
           `}
-          title={`Marcar tarefa ${task.name} como ${task.completed ? 'pendente' : 'concluída'}`}
-          aria-label={`Marcar tarefa ${task.name} como ${task.completed ? 'pendente' : 'concluída'}`}
+          title={
+            isDelegated && !task.completed
+              ? 'Conclusão gerenciada pela subcontratação'
+              : `Marcar tarefa ${task.name} como ${task.completed ? 'pendente' : 'concluída'}`
+          }
+          aria-label={
+            isDelegated && !task.completed
+              ? 'Conclusão gerenciada pela subcontratação'
+              : `Marcar tarefa ${task.name} como ${task.completed ? 'pendente' : 'concluída'}`
+          }
         />
         {task.completed && (
           <svg
@@ -60,7 +71,8 @@ export const ChecklistTaskRow: (props: ChecklistTaskRowProps) => React.ReactNode
         <Input
           value={task.name}
           onChange={(e) => onTaskChange(sectionId, task.id, 'name', e.target.value)}
-          className={`w-full bg-transparent border-none p-0 focus:ring-0 text-sm ${task.completed ? 'line-through text-text-secondary' : 'text-text-primary font-medium'}`}
+          disabled={isDelegated}
+          className={`w-full bg-transparent border-none p-0 focus:ring-0 text-sm ${isDelegated ? 'cursor-default' : ''} ${task.completed ? 'line-through text-text-secondary' : 'text-text-primary font-medium'}`}
           placeholder="Descreva a tarefa..."
           aria-label="Nome da tarefa"
         />
@@ -94,7 +106,7 @@ export const ChecklistTaskRow: (props: ChecklistTaskRowProps) => React.ReactNode
           )}
           {task.assignee && (
             <span
-              className="text-[10px] px-1.5 py-0.5 rounded bg-background text-text-secondary flex items-center gap-1 border border-border-color"
+              className={`text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border border-border-color ${isDelegated ? 'bg-primary/10 text-primary border-primary/20' : 'bg-background text-text-secondary'}`}
               title="Responsável"
             >
               <UserCircleIcon className="w-3 h-3" /> {task.assignee}
@@ -110,42 +122,53 @@ export const ChecklistTaskRow: (props: ChecklistTaskRowProps) => React.ReactNode
         </div>
       </div>
 
-      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="relative group/tooltip">
-          <Input
-            type="number"
-            value={task.hours}
-            onChange={(e) => onTaskChange(sectionId, task.id, 'hours', e.target.value)}
-            className="w-12 text-right text-xs bg-background border border-border-color rounded p-1 focus:border-accent focus:ring-0"
-            placeholder="h"
-            aria-label="Horas estimadas"
-          />
-          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-[10px] text-white bg-black/80 rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            Horas estimadas
+      {isDelegated ? (
+        <div className="flex items-center gap-2">
+          <span
+            className="text-[10px] px-2 py-1 rounded font-bold uppercase bg-primary/10 text-primary border border-primary/20 whitespace-nowrap"
+            title="Tarefa gerenciada pela subcontratação — edição bloqueada"
+          >
+            🔒 Delegada
           </span>
         </div>
+      ) : (
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="relative group/tooltip">
+            <Input
+              type="number"
+              value={task.hours}
+              onChange={(e) => onTaskChange(sectionId, task.id, 'hours', e.target.value)}
+              className="w-12 text-right text-xs bg-background border border-border-color rounded p-1 focus:border-accent focus:ring-0"
+              placeholder="h"
+              aria-label="Horas estimadas"
+            />
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-[10px] text-white bg-black/80 rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Horas estimadas
+            </span>
+          </div>
 
-        <IconButton
-          variant="primary"
-          size="sm"
-          onClick={() => onEditTaskDetails(sectionId, task)}
-          aria-label="Detalhes da Tarefa"
-          title="Detalhes da Tarefa"
-          className="bg-background border border-border-color"
-        >
-          <PencilIcon className="w-3.5 h-3.5" />
-        </IconButton>
-        <IconButton
-          variant="danger"
-          size="sm"
-          onClick={() => onRemoveTask(sectionId, task.id)}
-          aria-label="Remover Tarefa"
-          title="Remover Tarefa"
-          className="bg-background border border-border-color"
-        >
-          <TrashIcon className="w-3.5 h-3.5" />
-        </IconButton>
-      </div>
+          <IconButton
+            variant="primary"
+            size="sm"
+            onClick={() => onEditTaskDetails(sectionId, task)}
+            aria-label="Detalhes da Tarefa"
+            title="Detalhes da Tarefa"
+            className="bg-background border border-border-color"
+          >
+            <PencilIcon className="w-3.5 h-3.5" />
+          </IconButton>
+          <IconButton
+            variant="danger"
+            size="sm"
+            onClick={() => onRemoveTask(sectionId, task.id)}
+            aria-label="Remover Tarefa"
+            title="Remover Tarefa"
+            className="bg-background border border-border-color"
+          >
+            <TrashIcon className="w-3.5 h-3.5" />
+          </IconButton>
+        </div>
+      )}
     </div>
   );
 };

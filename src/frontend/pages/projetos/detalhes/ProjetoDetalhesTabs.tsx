@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type {
   ContractAddendum,
   ContractAddendumStatus,
@@ -11,11 +11,11 @@ import {
   Button,
   CalendarPlusIcon,
   CashIcon,
-  CheckCircleIcon,
   ClipboardDocumentListIcon,
   ClockIcon,
   IconButton,
   Input,
+  ListViewIcon,
   PencilIcon,
   PlusIcon,
   Tab,
@@ -34,6 +34,329 @@ import {
 import type { ProjectActionType } from '@/components/projetos';
 import type { BudgetServiceOption, ProjectDetailTabId } from './types';
 import { ProjetoDetalhesOverviewTab } from './ProjetoDetalhesOverviewTab';
+import type { HiredServiceStatus } from '@/types/freelancer';
+
+interface FreelancerDeadline {
+  id: string;
+  freelancerName: string;
+  deadline: string;
+  status: HiredServiceStatus;
+}
+
+// ─── Unified Timeline Types ──────────────────────────────────────────────────
+
+type UnifiedDeadlineKind = 'conclusao' | 'prazo' | 'freelancer';
+
+interface UnifiedDeadlineEntry {
+  id: string;
+  date: string; // YYYY-MM-DD
+  label: string;
+  kind: UnifiedDeadlineKind;
+  status?: HiredServiceStatus;
+  originalId?: string; // set for 'prazo' entries — the additionalDeadline original id
+}
+
+// ─── DeadlinesTabContent ─────────────────────────────────────────────────────
+
+interface DeadlinesTabContentProps {
+  localProject: Project;
+  freelancerDeadlines: FreelancerDeadline[];
+  handleLocalChange: (field: keyof Project, value: Project[keyof Project]) => void;
+  handleAddDeadline: () => void;
+  handleDeadlineChange: (id: string, field: 'title' | 'date', value: string) => void;
+  handleRemoveDeadline: (id: string) => void;
+}
+
+function DeadlinesTabContent({
+  localProject,
+  freelancerDeadlines,
+  handleLocalChange,
+  handleAddDeadline,
+  handleDeadlineChange,
+  handleRemoveDeadline,
+}: DeadlinesTabContentProps) {
+  const today = new Date().toISOString().split('T')[0];
+
+  const unifiedDeadlines = useMemo<UnifiedDeadlineEntry[]>(() => {
+    const entries: UnifiedDeadlineEntry[] = [];
+    const conclusionDateStr = localProject.deadline ? localProject.deadline.split('T')[0] : null;
+
+    if (conclusionDateStr) {
+      entries.push({
+        id: 'conclusao',
+        date: conclusionDateStr,
+        label: 'Prazo de Conclusão',
+        kind: 'conclusao',
+      });
+    }
+
+    for (const d of localProject.additionalDeadlines ?? []) {
+      const dateStr = d.date.split('T')[0];
+      // Skip any additional deadline that coincides with the conclusion date (e.g. legacy "Entrega Projeto Executivo")
+      if (conclusionDateStr && dateStr === conclusionDateStr) continue;
+      entries.push({
+        id: `prazo-${d.id}`,
+        date: dateStr,
+        label: d.title || 'Prazo sem título',
+        kind: 'prazo',
+        originalId: d.id,
+      });
+    }
+
+    for (const fd of freelancerDeadlines) {
+      entries.push({
+        id: `fl-${fd.id}`,
+        date: fd.deadline.split('T')[0],
+        label: fd.freelancerName,
+        kind: 'freelancer',
+        status: fd.status,
+      });
+    }
+
+    return entries.sort((a, b) => a.date.localeCompare(b.date));
+  }, [localProject.deadline, localProject.additionalDeadlines, freelancerDeadlines]);
+
+  const kindConfig: Record<
+    UnifiedDeadlineKind,
+    { border: string; dot: string; badge: string; badgeText: string; rowBg: string }
+  > = {
+    conclusao: {
+      border: 'border-l-success',
+      dot: 'bg-success',
+      badge: 'bg-success/15 text-success',
+      badgeText: 'Conclusão',
+      rowBg: 'hover:bg-success/5',
+    },
+    prazo: {
+      border: 'border-l-warning',
+      dot: 'bg-warning',
+      badge: 'bg-warning/15 text-warning',
+      badgeText: 'Prazo',
+      rowBg: 'hover:bg-warning/5',
+    },
+    freelancer: {
+      border: 'border-l-info',
+      dot: 'bg-info',
+      badge: 'bg-info/15 text-info',
+      badgeText: 'Freelancer',
+      rowBg: 'hover:bg-info/5',
+    },
+  };
+
+  const conclusionDate = localProject.deadline ? localProject.deadline.split('T')[0] : null;
+  const canAddDeadline = !!conclusionDate && today < conclusionDate;
+
+  return (
+    <div className="animate-fade-in-up">
+      <div className="bg-background/30 rounded-xl border border-border-color/50 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-color/50">
+          <div className="flex items-center gap-3">
+            <ListViewIcon className="w-5 h-5 text-primary" />
+            <h3 className="font-serif text-xl font-bold text-secondary">Prazos do Projeto</h3>
+            <span className="text-xs text-text-secondary bg-background/60 px-2 py-0.5 rounded-full border border-border-color/40">
+              {unifiedDeadlines.length} {unifiedDeadlines.length === 1 ? 'prazo' : 'prazos'}
+            </span>
+          </div>
+          <div
+            title={
+              !canAddDeadline
+                ? 'Defina um Prazo de Conclusão antes de adicionar marcos intermediários'
+                : undefined
+            }
+          >
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleAddDeadline}
+              disabled={!canAddDeadline}
+              className="flex items-center gap-2"
+            >
+              <PlusIcon className="w-4 h-4" /> Adicionar Prazo
+            </Button>
+          </div>
+        </div>
+
+        {/* Legenda */}
+        <div className="flex items-center gap-5 px-6 py-2.5 bg-background/20 border-b border-border-color/30 text-[11px] text-text-secondary">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-success inline-block" /> Conclusão
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-warning inline-block" /> Atividade
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-info inline-block" /> Freelancer
+          </span>
+        </div>
+
+        {/* Empty state */}
+        {unifiedDeadlines.length === 0 && (
+          <div className="text-center py-16 text-text-secondary">
+            <ClockIcon className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="font-medium">Nenhum prazo definido para este projeto.</p>
+            <p className="text-sm mt-1 opacity-70">
+              Adicione o prazo de conclusão ou marcos intermediários.
+            </p>
+          </div>
+        )}
+
+        {/* Deadline rows */}
+        <ul className="divide-y divide-border-color/40">
+          {unifiedDeadlines.map((entry) => {
+            const cfg = kindConfig[entry.kind];
+            const isPast = entry.date < today;
+            const isFreelancer = entry.kind === 'freelancer';
+            const isConclusao = entry.kind === 'conclusao';
+            const originalId = entry.originalId;
+
+            return (
+              <li
+                key={entry.id}
+                className={`flex items-center gap-5 px-6 py-4 border-l-4 transition-colors ${cfg.border} ${cfg.rowBg} ${isPast ? 'opacity-60' : ''} group`}
+              >
+                {/* Badge column */}
+                <div className="flex flex-col items-center gap-1 shrink-0 w-24">
+                  <span className={`w-3 h-3 rounded-full ${cfg.dot}`} />
+                  <span
+                    className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${cfg.badge}`}
+                  >
+                    {cfg.badgeText}
+                  </span>
+                </div>
+
+                {/* Title column */}
+                <div className="flex-1 min-w-0">
+                  {isFreelancer ? (
+                    <div>
+                      <span className="block text-[10px] font-bold text-text-secondary uppercase mb-0.5">
+                        Prestador
+                      </span>
+                      <p className="text-sm font-sans font-semibold text-text-primary truncate">
+                        {entry.label}
+                      </p>
+                      {entry.status && (
+                        <span
+                          className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                            entry.status === 'Concluído'
+                              ? 'bg-success/10 text-success'
+                              : 'bg-info/10 text-info'
+                          }`}
+                        >
+                          {entry.status}
+                        </span>
+                      )}
+                    </div>
+                  ) : isConclusao ? (
+                    <div>
+                      <span className="block text-[10px] font-bold text-text-secondary uppercase mb-0.5">
+                        Entrega
+                      </span>
+                      <p className="text-sm font-sans font-semibold text-text-primary">
+                        Prazo de Conclusão
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <label
+                        htmlFor={`field-title-${entry.id}`}
+                        className="block text-[10px] font-bold text-text-secondary uppercase mb-0.5"
+                      >
+                        Prazo
+                      </label>
+                      <Input
+                        id={`field-title-${entry.id}`}
+                        value={entry.label === 'Prazo sem título' ? '' : entry.label}
+                        onChange={(e) =>
+                          originalId && handleDeadlineChange(originalId, 'title', e.target.value)
+                        }
+                        className="w-full bg-transparent hover:bg-warning/5 border border-transparent hover:border-border-color focus:ring-1 focus:ring-warning/50 rounded text-sm font-semibold text-text-primary px-0 py-0.5"
+                        placeholder="Nome do prazo"
+                        aria-label="Título do prazo"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Date + actions column */}
+                <div className="shrink-0 flex items-center justify-end gap-2">
+                  {isFreelancer ? (
+                    /* Read-only freelancer date */
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-text-secondary uppercase mb-0.5">
+                        Prazo
+                      </p>
+                      <p
+                        className={`text-sm font-mono font-semibold ${
+                          isPast ? 'line-through text-text-secondary' : 'text-text-primary'
+                        }`}
+                      >
+                        {new Date(entry.date + 'T12:00:00').toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                  ) : (
+                    /* Editable date: [date text] [trash?] [📅 calendar trigger] */
+                    <div>
+                      <p className="text-[10px] font-bold text-text-secondary uppercase mb-0.5 text-right">
+                        Data
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`text-sm font-mono font-semibold ${isPast ? 'line-through text-text-secondary' : 'text-text-primary'}`}
+                        >
+                          {new Date(entry.date + 'T12:00:00').toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })}
+                        </span>
+
+                        {/* Trash — always visible, only for marcos */}
+                        {!isConclusao && originalId && (
+                          <IconButton
+                            variant="danger"
+                            onClick={() => handleRemoveDeadline(originalId)}
+                            aria-label={`Remover prazo ${entry.label}`}
+                            className="rounded-md"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </IconButton>
+                        )}
+
+                        {/* Calendar icon — hidden date input overlaid on top */}
+                        <div className="relative flex items-center justify-center w-7 h-7 rounded-md transition-colors hover:bg-info/15 group/cal cursor-pointer">
+                          <CalendarPlusIcon className="w-4 h-4 text-text-secondary group-hover/cal:text-info pointer-events-none transition-colors" />
+                          <input
+                            type="date"
+                            value={entry.date}
+                            max={!isConclusao && conclusionDate ? conclusionDate : undefined}
+                            onChange={(e) => {
+                              if (isConclusao) {
+                                handleLocalChange('deadline', e.target.value || null);
+                              } else if (originalId) {
+                                handleDeadlineChange(originalId, 'date', e.target.value);
+                              }
+                            }}
+                            aria-label="Selecionar data do prazo"
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+}
 
 type ChecklistTabProps = React.ComponentProps<typeof ProjectChecklistTab>;
 type GanttTabProps = React.ComponentProps<typeof ProjectGanttTab>;
@@ -95,6 +418,7 @@ interface ProjetoDetalhesTabsProps {
   handleUnlinkQuotation: QuotationsTabProps['onUnlink'];
   commissionTotal?: number;
   potentialCommissionTotal?: number;
+  freelancerDeadlines: FreelancerDeadline[];
 }
 
 export function ProjetoDetalhesTabs({
@@ -135,6 +459,7 @@ export function ProjetoDetalhesTabs({
   handleUnlinkQuotation,
   commissionTotal,
   potentialCommissionTotal,
+  freelancerDeadlines,
 }: ProjetoDetalhesTabsProps) {
   const tabButtonClass = ({ active }: { active: boolean }) =>
     `flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-colors border-b-2 -mb-px ${
@@ -207,110 +532,14 @@ export function ProjetoDetalhesTabs({
           </TabPanel>
 
           <TabPanel value="deadlines">
-            <div className="space-y-8 animate-fade-in-up">
-              <div className="bg-background/30 p-6 rounded-xl border border-border-color/50">
-                <h3 className="font-serif text-xl font-bold text-secondary mb-4 flex items-center gap-2">
-                  <CheckCircleIcon className="w-6 h-6 text-success" /> Prazo de Conclusão
-                </h3>
-                <div className="max-w-md">
-                  <label
-                    htmlFor="field-data-final-de-entrega-do-projeto"
-                    className="block text-sm font-medium text-text-secondary mb-1"
-                  >
-                    Data Final de Entrega do Projeto
-                  </label>
-                  <Input
-                    id="field-data-final-de-entrega-do-projeto"
-                    type="date"
-                    value={localProject.deadline?.split('T')[0] || ''}
-                    onChange={(e) => handleLocalChange('deadline', e.target.value || null)}
-                    className="max-w-md"
-                    aria-label="Prazo final do projeto"
-                  />
-                  <p className="text-xs text-text-secondary mt-2">
-                    Esta data define o marco final no cronograma e serve como base para alertas de
-                    atraso.
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-background/30 p-6 rounded-xl border border-border-color/50">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-serif text-xl font-bold text-secondary flex items-center gap-2">
-                    <ClockIcon className="w-6 h-6 text-warning" /> Adição de Prazos (Marcos)
-                  </h3>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={handleAddDeadline}
-                    className="flex items-center gap-2"
-                  >
-                    <PlusIcon className="w-4 h-4" /> Adicionar Prazo
-                  </Button>
-                </div>
-
-                <div className="space-y-3">
-                  {(localProject.additionalDeadlines || []).length === 0 && (
-                    <div className="text-center py-8 text-text-secondary border-2 border-dashed border-border-color rounded-lg">
-                      <p>Nenhum prazo intermediário definido.</p>
-                    </div>
-                  )}
-
-                  {(localProject.additionalDeadlines || []).map((deadline) => (
-                    <div
-                      key={deadline.id}
-                      className="flex items-center gap-4 bg-surface p-4 rounded-lg shadow-sm border border-border-color group hover:border-primary/50 transition-colors"
-                    >
-                      <div className="flex-1">
-                        <label
-                          htmlFor={`field-titulo-do-marco-${deadline.id}`}
-                          className="block text-xs font-bold text-text-secondary uppercase mb-1"
-                        >
-                          Título do Marco
-                        </label>
-                        <Input
-                          id={`field-titulo-do-marco-${deadline.id}`}
-                          value={deadline.title}
-                          onChange={(e) =>
-                            handleDeadlineChange(deadline.id, 'title', e.target.value)
-                          }
-                          className="w-full bg-transparent border-none focus:ring-0 text-base font-semibold text-text-primary p-0"
-                          placeholder="Ex: Aprovação de Layout"
-                          aria-label="Título do marco"
-                        />
-                      </div>
-                      <div className="h-8 w-px bg-border-color"></div>
-                      <div>
-                        <label
-                          htmlFor={`field-data-${deadline.id}`}
-                          className="block text-xs font-bold text-text-secondary uppercase mb-1"
-                        >
-                          Data
-                        </label>
-                        <Input
-                          id={`field-data-${deadline.id}`}
-                          type="date"
-                          value={deadline.date.split('T')[0]}
-                          onChange={(e) =>
-                            handleDeadlineChange(deadline.id, 'date', e.target.value)
-                          }
-                          className="bg-transparent border-none focus:ring-0 text-sm text-text-primary p-0"
-                          aria-label="Data do marco"
-                        />
-                      </div>
-                      <IconButton
-                        variant="danger"
-                        onClick={() => handleRemoveDeadline(deadline.id)}
-                        aria-label={`Remover prazo ${deadline.title}`}
-                        className="opacity-0 group-hover:opacity-100 ml-2"
-                      >
-                        <TrashIcon className="w-5 h-5" />
-                      </IconButton>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <DeadlinesTabContent
+              localProject={localProject}
+              freelancerDeadlines={freelancerDeadlines}
+              handleLocalChange={handleLocalChange}
+              handleAddDeadline={handleAddDeadline}
+              handleDeadlineChange={handleDeadlineChange}
+              handleRemoveDeadline={handleRemoveDeadline}
+            />
           </TabPanel>
 
           <TabPanel value="gantt">

@@ -97,4 +97,6 @@ export interface SocialNetwork {
   instagramSnapshots?: InstagramSnapshot[];
   /** Total acumulado investido em marketing nesta plataforma (BRL). */
   totalInvested?: number;
+  /** Data da última postagem na rede (ISO date, apenas data). */
+  lastPostDate?: string;
 }

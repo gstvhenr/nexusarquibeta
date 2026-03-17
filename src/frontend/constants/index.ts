@@ -149,6 +149,8 @@ export const FREELANCER_SPECIALTIES = [
   'Outros',
 ];
 
+export const SUBCONTRATACAO_LABEL = 'Subcontratação';
+
 export const PROSPECT_ORIGIN_OPTIONS = [
   'Instagram',
   'Facebook',

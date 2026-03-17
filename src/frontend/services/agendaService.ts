@@ -18,6 +18,8 @@ export interface UnifiedEventsInput {
   manualExpenses: ProfessionalExpense[];
   commissions: Commission[];
   manualIncomes: ManualIncome[];
+  hiredServices: import('../types').HiredService[];
+  freelancers: import('../types').Freelancer[];
 }
 
 /** Pre-computed date-key → events lookup. Built once per unifiedEvents change. */
@@ -46,6 +48,8 @@ export const agendaService = {
       manualExpenses = [],
       commissions = [],
       manualIncomes = [],
+      hiredServices = [],
+      freelancers = [],
     } = data;
 
     const generatedEvents: AgendaEvent[] = [];
@@ -213,6 +217,40 @@ export const agendaService = {
           priority: 3,
           recurrence: 'none',
           isFinancialEvent: 'income',
+        });
+      }
+    });
+
+    // 7. Hired Services (Freelancer Deadlines)
+    hiredServices.forEach((service) => {
+      // Mapear se não estiver concluído, cancelado nem arquivado (e se tiver data de prazo)
+      if (
+        service.status !== 'Concluído' &&
+        service.status !== 'Cancelado' &&
+        !service.archived &&
+        service.deadline
+      ) {
+        const dueDate = toDatePart(service.deadline);
+        if (!dueDate) return;
+
+        const freelancer = freelancers.find((f) => f.id === service.freelancerId);
+        const freelancerName = freelancer?.name || 'Freelancer Desconhecido';
+        const project = projects.find((p) => p.id === service.projectId);
+        const projectName = project?.name || 'Projeto Desconhecido';
+
+        generatedEvents.push({
+          id: `hsc_${service.id}`,
+          title: `Prazo Freelancer: ${freelancerName}`,
+          date: dueDate,
+          time: '17:00',
+          type: 'Prazo de Entrega',
+          description: `Serviço Subcontratado (${projectName}). Custo: ${formatCurrency(service.cost)}.`,
+          projectId: service.projectId,
+          projectName: projectName,
+          priority: 5,
+          recurrence: 'none',
+          completed: false,
+          isDeadlineEvent: true, // Usamos flag existente de data limite importante
         });
       }
     });

@@ -107,7 +107,6 @@ export const ProjectFinanceConfigSection = ({
                   onFinancialsChange('numberOfInstallments', parseInt(event.target.value))
                 }
                 className={commonInputClass}
-                placeholder="Ex: 6"
                 aria-label="Número de Parcelas"
               />
             </div>
@@ -128,7 +127,6 @@ export const ProjectFinanceConfigSection = ({
                   onFinancialsChange('installmentsPaymentDay', parseInt(event.target.value))
                 }
                 className={commonInputClass}
-                placeholder="Ex: 10"
                 aria-label="Dia do Vencimento"
               />
             </div>

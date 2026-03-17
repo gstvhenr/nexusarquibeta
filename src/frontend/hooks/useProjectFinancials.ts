@@ -128,30 +128,37 @@ export function useProjectFinancials(
   };
 
   const handleAddDeadline = () => {
-    setLocalProject((p) =>
-      p
-        ? {
-            ...p,
-            additionalDeadlines: [
-              ...(p.additionalDeadlines || []),
-              { id: uuidv4(), title: 'Novo Prazo', date: getTodayDateOnly() },
-            ],
-          }
-        : null,
-    );
+    setLocalProject((p) => {
+      if (!p) return null;
+      const conclusionDate = p.deadline ? p.deadline.split('T')[0] : null;
+      const today = getTodayDateOnly();
+      // Block if there is no conclusion date or today is >= conclusion date
+      if (!conclusionDate || today >= conclusionDate) return p;
+      return {
+        ...p,
+        additionalDeadlines: [
+          ...(p.additionalDeadlines || []),
+          { id: uuidv4(), title: 'Novo Prazo', date: today },
+        ],
+      };
+    });
   };
 
   const handleDeadlineChange = (id: string, field: keyof AdditionalDeadline, value: string) => {
-    setLocalProject((p) =>
-      p
-        ? {
-            ...p,
-            additionalDeadlines: (p.additionalDeadlines || []).map((d) =>
-              d.id === id ? { ...d, [field]: value } : d,
-            ),
-          }
-        : null,
-    );
+    setLocalProject((p) => {
+      if (!p) return null;
+      // When editing a date, block values >= conclusion date
+      if (field === 'date') {
+        const conclusionDate = p.deadline ? p.deadline.split('T')[0] : null;
+        if (conclusionDate && value >= conclusionDate) return p;
+      }
+      return {
+        ...p,
+        additionalDeadlines: (p.additionalDeadlines || []).map((d) =>
+          d.id === id ? { ...d, [field]: value } : d,
+        ),
+      };
+    });
   };
 
   const handleRemoveDeadline = (id: string) => {

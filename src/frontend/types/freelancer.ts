@@ -15,6 +15,11 @@ export interface Freelancer {
   photo?: string;
   email: string;
   phone: string;
+  location?: string;
+  rating?: number;
+  socialMedia?: string;
+  quotesRequested?: number;
+  quotesApproved?: number;
   portfolioLink?: string;
   specialties: string[];
   notes?: string;
@@ -33,5 +38,6 @@ export interface HiredService {
   deadline: string; // YYYY-MM-DD
   status: HiredServiceStatus;
   createdAt: string; // ISO string
+  paidAt?: string | null; // ISO string — when set, cost is confirmed as paid
   archived?: boolean;
 }

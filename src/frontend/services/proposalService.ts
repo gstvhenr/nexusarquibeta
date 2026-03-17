@@ -120,7 +120,6 @@ export const proposalService = {
 
     const additionalDeadlines: AdditionalDeadline[] = [
       { id: uuidv4(), title: 'Entrega Projeto Preliminar', date: preliminarDate.toISOString() },
-      { id: uuidv4(), title: 'Entrega Projeto Executivo', date: executiveDate.toISOString() },
     ];
 
     const newProject: Project = {

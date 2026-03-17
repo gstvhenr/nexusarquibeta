@@ -78,7 +78,15 @@ export const CommissionsTable: (props: CommissionsTableProps) => React.ReactNode
                 {commission.notes || '-'}
               </td>
               <td className="px-6 py-4 text-center">
-                <Badge variant={commission.status === 'Recebido' ? 'success' : 'warning'}>
+                <Badge
+                  variant={
+                    commission.status === 'Recebido'
+                      ? 'success'
+                      : commission.status === 'Previsão'
+                        ? 'info'
+                        : 'warning'
+                  }
+                >
                   {commission.status}
                 </Badge>
               </td>
@@ -110,6 +118,16 @@ export const CommissionsTable: (props: CommissionsTableProps) => React.ReactNode
                         <TrashIcon className="w-4 h-4" />
                       </IconButton>
                     </>
+                  ) : commission.status === 'Previsão' ? (
+                    <IconButton
+                      variant="danger"
+                      size="sm"
+                      onClick={() => onDelete(commission)}
+                      aria-label="Excluir previsão"
+                      title="Excluir previsão"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </IconButton>
                   ) : (
                     <IconButton
                       variant="secondary"

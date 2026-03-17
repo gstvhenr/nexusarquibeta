@@ -145,7 +145,6 @@ export function ProjetoDetalhesOverviewTab({
                 type="text"
                 value={localProject.rrtNumber || ''}
                 onChange={(e) => handleLocalChange('rrtNumber', e.target.value)}
-                placeholder="Ex: 1234567"
                 aria-label="Número do RRT"
                 title="Número do RRT"
               />
@@ -158,7 +157,6 @@ export function ProjetoDetalhesOverviewTab({
                   type="text"
                   value={localProject.rrtUrl || ''}
                   onChange={(e) => handleLocalChange('rrtUrl', e.target.value)}
-                  placeholder="https://..."
                   aria-label="Link do RRT"
                   title="Link do RRT"
                 />

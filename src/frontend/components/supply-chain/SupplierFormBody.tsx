@@ -78,7 +78,6 @@ function SupplierFormBody({
                   type="text"
                   value={supplier.name}
                   onChange={(e) => onFieldChange('name', e.target.value)}
-                  placeholder="Ex: Marmoraria Pedra Fina"
                 />
               </FormField>
             </div>
@@ -88,7 +87,6 @@ function SupplierFormBody({
                   type="text"
                   value={supplier.cnpj || ''}
                   onChange={(e) => onFieldChange('cnpj', e.target.value)}
-                  placeholder="00.000.000/0001-00"
                 />
               </FormField>
             </div>
@@ -98,7 +96,6 @@ function SupplierFormBody({
                   type="url"
                   value={supplier.site || ''}
                   onChange={(e) => onFieldChange('site', e.target.value)}
-                  placeholder="https://"
                 />
               </FormField>
             </div>
@@ -225,12 +222,11 @@ function SupplierFormBody({
       </div>
 
       <div>
-        <FormField label="Notas Internas">
+        <FormField label="Informações Gerais">
           <Textarea
             value={supplier.notes || ''}
             onChange={(e) => onFieldChange('notes', e.target.value)}
             rows={3}
-            placeholder="Informações sobre atendimento, prazos, qualidade..."
           />
         </FormField>
       </div>

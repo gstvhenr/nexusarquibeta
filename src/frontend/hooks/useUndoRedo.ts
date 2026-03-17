@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { AppData } from '../services/infrastructure/api';
 
 // ---------------------------------------------------------------------------
@@ -34,6 +34,10 @@ interface UndoRedoApi {
 /**
  * Self-contained undo/redo engine for the unified AppData state.
  *
+ * Uses `useRef` for `data` to avoid stale closures in `undo`/`redo`,
+ * and functional updaters for history arrays to guarantee access to the
+ * latest state even under batched React updates.
+ *
  * @param data     Current live snapshot (read-only reference for undo/redo).
  * @param setData  React state setter for the unified AppData.
  * @param persist  Side-effect to persist a restored snapshot to storage.
@@ -43,6 +47,11 @@ export function useUndoRedo(
   setData: React.Dispatch<React.SetStateAction<AppData>>,
   persist: (snapshot: AppData) => void,
 ): UndoRedoApi {
+  // Keep a ref to the latest data so undo/redo always read the fresh value,
+  // even when React batches state updates and the closure would be stale.
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
   const [historyPast, setHistoryPast] = useState<AppData[]>([]);
   const [historyFuture, setHistoryFuture] = useState<AppData[]>([]);
 
@@ -68,25 +77,31 @@ export function useUndoRedo(
   );
 
   const undo = useCallback(() => {
-    if (historyPast.length === 0) return;
+    setHistoryPast((previous) => {
+      if (previous.length === 0) return previous;
 
-    const previousSnapshot = historyPast[historyPast.length - 1];
-    setHistoryPast((previous) => previous.slice(0, -1));
-    setHistoryFuture((previous) => {
-      const next = [cloneDataSnapshot(data), ...previous];
-      return next.length > HISTORY_LIMIT ? next.slice(0, HISTORY_LIMIT) : next;
+      const previousSnapshot = previous[previous.length - 1];
+
+      setHistoryFuture((prevFuture) => {
+        const next = [cloneDataSnapshot(dataRef.current), ...prevFuture];
+        return next.length > HISTORY_LIMIT ? next.slice(0, HISTORY_LIMIT) : next;
+      });
+
+      applySnapshot(previousSnapshot);
+      return previous.slice(0, -1);
     });
-    applySnapshot(previousSnapshot);
-  }, [applySnapshot, data, historyPast]);
+  }, [applySnapshot]);
 
   const redo = useCallback(() => {
-    if (historyFuture.length === 0) return;
+    setHistoryFuture((prevFuture) => {
+      if (prevFuture.length === 0) return prevFuture;
 
-    const [nextSnapshot, ...remaining] = historyFuture;
-    setHistoryFuture(remaining);
-    appendToHistory(data);
-    applySnapshot(nextSnapshot);
-  }, [appendToHistory, applySnapshot, data, historyFuture]);
+      const [nextSnapshot, ...remaining] = prevFuture;
+      appendToHistory(dataRef.current);
+      applySnapshot(nextSnapshot);
+      return remaining;
+    });
+  }, [appendToHistory, applySnapshot]);
 
   return {
     appendToHistory,

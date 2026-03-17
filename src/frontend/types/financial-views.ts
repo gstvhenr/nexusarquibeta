@@ -11,7 +11,7 @@ export interface FinancialReceivable extends Installment {
   clientName: string;
   clientId: string;
   description: string;
-  status: 'Pago' | 'Vencido' | 'Em Aberto' | 'Recebido' | 'Pendente';
+  status: 'Pago' | 'Vencido' | 'Em Aberto' | 'Recebido' | 'Pendente' | 'Previsão';
   source: 'Project' | 'Commission' | 'Manual';
   category?: string;
 }

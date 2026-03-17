@@ -41,7 +41,9 @@ const QuotationListItem: (props: {
           {quotation.name}
         </p>
         <p className="text-sm text-text-secondary">
-          {project ? `Projeto: ${project.code} - ${project.name}` : 'Sem projeto vinculado'}
+          {project
+            ? `Projeto: ${project.name.startsWith(project.code) ? project.name : `${project.code} - ${project.name}`}`
+            : 'Sem projeto vinculado'}
         </p>
         <p className="text-sm text-text-secondary mt-1">
           {(quotation.items || []).length} {(quotation.items || []).length === 1 ? 'item' : 'itens'}{' '}

@@ -4,10 +4,11 @@ import { PageHeader } from '@/components/layout';
 import { Button, DeleteConfirmationModal } from '@/components/ui';
 import { PlusIcon } from '@/components/ui/icons';
 import { CashBoxCreditFormModal, CashBoxExpenseFormModal } from '@/components/finance';
-import { useFinanceData } from '@/context/DataContext';
+import { useCoreData, useFinanceData, useSupplyChainData } from '@/context/DataContext';
 import { NAV_LINKS } from '@/constants';
 import { useAutoReset } from '@/hooks/useAutoReset';
-import type { CashBoxCredit, CashBoxExpense } from '@/types';
+import type { CashBoxCredit, CashBoxExpense, UnifiedEntry } from '@/types';
+import { deriveQuotationForecasts } from '@/services/quotationCommissionService';
 
 import {
   generateExpenses,
@@ -22,8 +23,10 @@ import { CashBoxTotals } from './CashBoxTotals';
 import { MonthNavigator } from './MonthNavigator';
 
 const FinanceiroGestaoCaixaPage: () => React.ReactNode = () => {
-  const { cashBoxExpenses, setCashBoxExpenses, cashBoxCredits, setCashBoxCredits } =
+  const { cashBoxExpenses, setCashBoxExpenses, cashBoxCredits, setCashBoxCredits, commissions } =
     useFinanceData();
+  const { projects, clients } = useCoreData();
+  const { suppliers, quotations, products, supplierProductPrices } = useSupplyChainData();
 
   const [viewDate, setViewDate] = useState(new Date());
   const [isExpenseFormOpen, setExpenseFormOpen] = useState(false);
@@ -40,7 +43,20 @@ const FinanceiroGestaoCaixaPage: () => React.ReactNode = () => {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   }, []);
 
-  const { entries, totalExpenses, totalCredits, netBalance } = useMemo(
+  const forecastCommissions = useMemo(
+    () =>
+      deriveQuotationForecasts({
+        quotations,
+        suppliers,
+        products,
+        supplierProductPrices,
+        projects,
+        clients,
+      }),
+    [quotations, suppliers, products, supplierProductPrices, projects, clients],
+  );
+
+  const baseResult = useMemo(
     () =>
       buildMonthEntries(
         cashBoxExpenses,
@@ -51,6 +67,67 @@ const FinanceiroGestaoCaixaPage: () => React.ReactNode = () => {
       ),
     [cashBoxExpenses, cashBoxCredits, sortAsc, viewDate],
   );
+
+  const { entries, totalExpenses, totalCredits, netBalance } = useMemo(() => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+
+    const matchMonth = (dateStr: string) => {
+      const parts = dateStr.split('-');
+      return Number.parseInt(parts[0], 10) === year && Number.parseInt(parts[1], 10) - 1 === month;
+    };
+
+    // Forecast commissions (derived from quotations, read-only)
+    const forecastEntries: UnifiedEntry[] = forecastCommissions
+      .filter((commission) => matchMonth(commission.expectedPaymentDate || commission.saleDate))
+      .map((commission) => ({
+        id: `forecast_${commission.id}`,
+        type: 'credit' as const,
+        date: commission.expectedPaymentDate || commission.saleDate,
+        origin: 'Profissional' as const,
+        description: `Previsão Comissão: ${commission.supplierName}`,
+        value: commission.commissionValue,
+        confirmed: false,
+        isForecast: true,
+        raw: {} as CashBoxCredit,
+      }));
+
+    // Real commissions (Pendente / Recebido — persisted, read-only in cash box)
+    const realCommissionEntries: UnifiedEntry[] = commissions
+      .filter((commission) => {
+        if (commission.status === 'Previsão') return false;
+        const dateStr =
+          commission.paymentDate || commission.expectedPaymentDate || commission.saleDate;
+        return matchMonth(dateStr);
+      })
+      .map((commission) => ({
+        id: `commission_${commission.id}`,
+        type: 'credit' as const,
+        date: commission.paymentDate || commission.expectedPaymentDate || commission.saleDate,
+        origin: 'Profissional' as const,
+        description: `Comissão: ${commission.supplierName}`,
+        value: commission.commissionValue,
+        confirmed: true,
+        isForecast: false,
+        isDerived: true,
+        raw: {} as CashBoxCredit,
+      }));
+
+    const derivedEntries = [...forecastEntries, ...realCommissionEntries];
+
+    const allEntries = [...baseResult.entries, ...derivedEntries].sort((a, b) =>
+      sortAsc ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date),
+    );
+
+    const derivedTotal = derivedEntries.reduce((sum, entry) => sum + entry.value, 0);
+
+    return {
+      entries: allEntries,
+      totalExpenses: baseResult.totalExpenses,
+      totalCredits: baseResult.totalCredits + derivedTotal,
+      netBalance: baseResult.netBalance + derivedTotal,
+    };
+  }, [baseResult, forecastCommissions, commissions, viewDate, sortAsc]);
 
   const handleSaveExpense = useCallback(
     (input: CreateExpenseInput) => {

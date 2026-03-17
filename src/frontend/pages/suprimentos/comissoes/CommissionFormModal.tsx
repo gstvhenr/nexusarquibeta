@@ -169,7 +169,7 @@ export const CommissionFormModal: (props: CommissionFormModalProps) => React.Rea
           <FormField label="% Comissão">
             <Input
               type="number"
-              placeholder="%"
+              placeholder=""
               value={commission.commissionPercentage || ''}
               onChange={(event) =>
                 handleChange('commissionPercentage', Number.parseFloat(event.target.value) || 0)

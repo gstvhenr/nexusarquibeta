@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { InstagramCredentialModal } from '@/components/marketing';
-import { IconButton } from '@/components/ui';
+import { Button, FormField, IconButton, Input, Modal } from '@/components/ui';
 import { ArrowLeftIcon } from '@/components/ui/icons';
 import { SOCIAL_NETWORKS_SUPPORTED } from '@/constants';
 import { useMarketingData } from '@/context/DataContext';
@@ -12,22 +12,26 @@ import {
   INSTAGRAM_INITIAL_SNAPSHOT,
 } from './constants';
 import { InstagramDetailHeader } from './InstagramDetailHeader';
+import { FacebookLatestSnapshotCard } from './FacebookLatestSnapshotCard';
+import { GoogleLatestSnapshotCard } from './GoogleLatestSnapshotCard';
 import { InstagramLatestSnapshotCard } from './InstagramLatestSnapshotCard';
-import { InstagramNotesCard } from './InstagramNotesCard';
+
 import { InstagramProfileInfoCard } from './InstagramProfileInfoCard';
 import { InstagramSnapshotHistoryTable } from './InstagramSnapshotHistoryTable';
 import { InstagramTopBar } from './InstagramTopBar';
 import { NewSnapshotModal } from './NewSnapshotModal';
 
-const InstagramDetailPage: () => React.ReactNode = () => {
+const SocialNetworkDetailPage: () => React.ReactNode = () => {
   const navigate = useNavigate();
-  const { networkId } = useParams<{ networkId: string }>();
-  const { socialNetworks, setSocialNetworks, marketingActivities } = useMarketingData();
+  const location = useLocation();
+  const networkId = location.pathname.split('/').pop();
+  const { socialNetworks, setSocialNetworks } = useMarketingData();
 
   const [isCredentialModalOpen, setCredentialModalOpen] = useState(false);
   const [isSnapshotModalOpen, setSnapshotModalOpen] = useState(false);
-  const [isEditingNotes, setEditingNotes] = useState(false);
-  const [notesValue, setNotesValue] = useState('');
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [editUrl, setEditUrl] = useState('');
+  const [editHandle, setEditHandle] = useState('');
 
   const networkData = useMemo(
     () => socialNetworks.find((network) => network.id === networkId),
@@ -129,38 +133,10 @@ const InstagramDetailPage: () => React.ReactNode = () => {
 
   const latestSnapshot = snapshots[0];
 
-  const investmentFromMarketingPages = useMemo(
-    () =>
-      marketingActivities
-        .filter(
-          (activity) =>
-            activity.contentType.includes('(Instagram)') &&
-            typeof activity.cost === 'number' &&
-            activity.cost > 0,
-        )
-        .reduce((sum, activity) => sum + (activity.cost || 0), 0),
-    [marketingActivities],
-  );
-
-  const totalInvested =
-    investmentFromMarketingPages > 0
-      ? investmentFromMarketingPages
-      : networkData?.totalInvested || 0;
-
   const displayProfileUrl =
     networkData?.url || (networkId === 'Instagram' ? INSTAGRAM_DEFAULT_URL : '');
   const displayProfileHandle =
     networkData?.profileHandle || (networkId === 'Instagram' ? INSTAGRAM_DEFAULT_HANDLE : '');
-
-  const handleStartEditNotes = () => {
-    setNotesValue(networkData?.notes || '');
-    setEditingNotes(true);
-  };
-
-  const handleSaveNotes = () => {
-    updateNetworkData({ notes: notesValue });
-    setEditingNotes(false);
-  };
 
   if (!networkConfig) {
     return (
@@ -187,31 +163,38 @@ const InstagramDetailPage: () => React.ReactNode = () => {
       />
 
       <InstagramTopBar
-        totalInvested={totalInvested}
         onOpenCredentials={() => setCredentialModalOpen(true)}
+        onEdit={() => {
+          setEditUrl(networkData?.url || displayProfileUrl);
+          setEditHandle(networkData?.profileHandle || displayProfileHandle);
+          setEditModalOpen(true);
+        }}
       />
 
       <InstagramProfileInfoCard
         profileUrl={displayProfileUrl}
         profileHandle={displayProfileHandle}
+        networkName={networkConfig.name}
       />
 
-      <InstagramLatestSnapshotCard latestSnapshot={latestSnapshot} />
+      {networkId === 'Google' ? (
+        <GoogleLatestSnapshotCard latestSnapshot={latestSnapshot} />
+      ) : networkId === 'Facebook' || networkId === 'LinkedIn' ? (
+        <FacebookLatestSnapshotCard
+          latestSnapshot={latestSnapshot}
+          lastPostDate={networkData?.lastPostDate}
+          onLastPostDateChange={(date) => updateNetworkData({ lastPostDate: date })}
+          networkId={networkConfig.id}
+        />
+      ) : (
+        <InstagramLatestSnapshotCard latestSnapshot={latestSnapshot} />
+      )}
 
       <InstagramSnapshotHistoryTable
         snapshots={snapshots}
         onNewSnapshot={() => setSnapshotModalOpen(true)}
         onDeleteSnapshot={handleDeleteSnapshot}
-      />
-
-      <InstagramNotesCard
-        notes={networkData?.notes}
-        isEditing={isEditingNotes}
-        notesValue={notesValue}
-        onStartEdit={handleStartEditNotes}
-        onCancelEdit={() => setEditingNotes(false)}
-        onSave={handleSaveNotes}
-        onNotesChange={setNotesValue}
+        networkId={networkConfig.id}
       />
 
       <InstagramCredentialModal
@@ -219,15 +202,57 @@ const InstagramDetailPage: () => React.ReactNode = () => {
         onClose={() => setCredentialModalOpen(false)}
         credentials={networkData?.credentials}
         onSaveCredentials={handleSaveCredentials}
+        networkName={networkConfig.name}
       />
 
       <NewSnapshotModal
         isOpen={isSnapshotModalOpen}
         onClose={() => setSnapshotModalOpen(false)}
         onSave={handleSaveSnapshot}
+        networkName={networkConfig.name}
+        networkId={networkConfig.id}
+        onSaveLastPostDate={(date) => updateNetworkData({ lastPostDate: date })}
       />
+
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        title={`Editar ${networkConfig.name}`}
+      >
+        <div className="space-y-4">
+          <FormField label="URL do Perfil">
+            <Input
+              type="url"
+              value={editUrl}
+              onChange={(e) => setEditUrl(e.target.value)}
+              placeholder=""
+            />
+          </FormField>
+          <FormField label="@ do Perfil">
+            <Input
+              value={editHandle}
+              onChange={(e) => setEditHandle(e.target.value)}
+              placeholder=""
+            />
+          </FormField>
+        </div>
+        <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
+          <Button variant="secondary" onClick={() => setEditModalOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              updateNetworkData({ url: editUrl, profileHandle: editHandle });
+              setEditModalOpen(false);
+            }}
+          >
+            Salvar
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 };
 
-export default InstagramDetailPage;
+export default SocialNetworkDetailPage;

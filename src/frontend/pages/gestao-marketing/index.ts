@@ -1,1 +1,1 @@
-export { default } from './GestaoMarketingPainelPage';
+export { default } from './GestaoMarketingConteudosPage';

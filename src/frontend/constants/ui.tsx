@@ -30,7 +30,6 @@ import {
   NotStartedIcon,
   OrcamentosIcon,
   PausedIcon,
-  PainelIcon,
   ProjetosIcon,
   ProposalIcon,
   RedesSociaisIcon,
@@ -177,12 +176,6 @@ export const NAV_LINKS: NavLinkItem[] = [
     icon: <MarketingIconNew />,
     iconName: 'MarketingIconNew',
     children: [
-      {
-        path: '/gestao-marketing/painel',
-        label: 'Painel',
-        icon: <PainelIcon />,
-        iconName: 'PainelIcon',
-      },
       {
         path: '/gestao-marketing/conteudos',
         label: 'Conteúdos',

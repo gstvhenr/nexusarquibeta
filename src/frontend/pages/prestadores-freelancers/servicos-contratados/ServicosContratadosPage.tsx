@@ -1,9 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useDisclosure } from '@/hooks';
 import { PageHeader } from '@/components/layout';
 import { Button, FormField, IconButton, Input, Modal, Select } from '@/components/ui';
 import { useCoreData, useSupplyChainData, useSystemData } from '@/context/DataContext';
-import { NAV_LINKS } from '@/constants';
+import { NAV_LINKS, SUBCONTRATACAO_LABEL } from '@/constants';
+import {
+  bindTasksToHiredService,
+  clearTasksFromHiredService,
+  completeHiredService,
+  completeTasksFromHiredService,
+  cancelHiredService,
+} from '@/services/hiredServiceService';
 import type { HiredService } from '@/types';
 import {
   ClipboardDocumentListIcon,
@@ -12,6 +20,10 @@ import {
   UserCircleIcon,
   ArchiveIcon,
   UnarchiveIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  PencilIcon,
+  ChevronDownIcon,
 } from '@/components/ui';
 import { formatCurrency, formatDate, getDeadlineInfo, getTodayDateOnly } from '@/utils/formatters';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,6 +35,27 @@ const DEADLINE_STATUS_CLASS = {
   none: 'text-text-secondary',
 } as const;
 
+const BORDER_BY_STATUS: Record<HiredService['status'], string> = {
+  'Em Andamento': 'border-info',
+  Concluído: 'border-success',
+  Cancelado: 'border-error',
+};
+
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  'Em Andamento': {
+    label: 'Em andamento',
+    className: 'text-info bg-info/10',
+  },
+  Concluído: {
+    label: 'Concluído',
+    className: 'text-success bg-success/10',
+  },
+  Cancelado: {
+    label: 'Cancelado',
+    className: 'text-error bg-error/10',
+  },
+};
+
 const ServicosContratadosPage: () => React.ReactNode = () => {
   const { projects, setProjects } = useCoreData();
 
@@ -30,7 +63,10 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
   const { hiredServices, setHiredServices } = useSystemData();
 
   const modalDisclosure = useDisclosure();
+  const paymentModalDisclosure = useDisclosure();
   const [showArchived, setShowArchived] = useState(false);
+  const [pendingCompleteId, setPendingCompleteId] = useState<string | null>(null);
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
 
   // Form State
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
@@ -38,6 +74,51 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
   const [selectedFreelancerId, setSelectedFreelancerId] = useState('');
   const [cost, setCost] = useState<number>(0);
   const [deadline, setDeadline] = useState('');
+
+  // Dropdown state for Custom Tasks Select
+  const [isTasksOpen, setIsTasksOpen] = useState(false);
+  const tasksButtonRef = useRef<HTMLButtonElement>(null);
+  const tasksDropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click was outside both the button and the dropdown content
+      const target = event.target as Node;
+      if (
+        isTasksOpen &&
+        tasksButtonRef.current &&
+        !tasksButtonRef.current.contains(target) &&
+        tasksDropdownRef.current &&
+        !tasksDropdownRef.current.contains(target)
+      ) {
+        setIsTasksOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isTasksOpen]);
+
+  const toggleTasksDropdown = () => {
+    if (!isTasksOpen && tasksButtonRef.current) {
+      const rect = tasksButtonRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'fixed',
+        top: `${rect.bottom + 4}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        zIndex: 99999, // very high to float over modal
+      });
+    }
+    setIsTasksOpen(!isTasksOpen);
+  };
+
+  const handleTaskCheckboxClick = (taskId: string) => {
+    setSelectedTaskIds((prev) =>
+      prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId],
+    );
+  };
 
   const activeProjects = useMemo(
     () =>
@@ -62,12 +143,25 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [hiredServices, showArchived]);
 
-  const openModal = () => {
+  const openCreateModal = () => {
+    setEditingServiceId(null);
     setSelectedProjectId('');
     setSelectedTaskIds([]);
     setSelectedFreelancerId('');
     setCost(0);
     setDeadline(getTodayDateOnly());
+    modalDisclosure.open();
+  };
+
+  const openEditModal = (serviceId: string) => {
+    const service = hiredServices.find((s) => s.id === serviceId);
+    if (!service) return;
+    setEditingServiceId(serviceId);
+    setSelectedProjectId(service.projectId);
+    setSelectedTaskIds([...service.taskIds]);
+    setSelectedFreelancerId(service.freelancerId);
+    setCost(service.cost);
+    setDeadline(service.deadline);
     modalDisclosure.open();
   };
 
@@ -82,69 +176,121 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
 
     if (!project || !freelancer) return;
 
-    const newServiceId = uuidv4();
-    const newService: HiredService = {
-      id: newServiceId,
-      projectId: selectedProjectId,
-      freelancerId: selectedFreelancerId,
-      taskIds: selectedTaskIds,
-      cost: cost,
-      deadline: deadline,
-      status: 'Em Andamento',
-      createdAt: new Date().toISOString(),
-      archived: false,
-    };
+    if (editingServiceId) {
+      // ── UPDATE existing service ──
+      const oldService = hiredServices.find((s) => s.id === editingServiceId);
+      if (!oldService) return;
 
-    // 1. Create Hired Service
-    setHiredServices((prev) => [newService, ...prev]);
+      // 1. Clear old task bindings
+      setProjects((prev) => {
+        let updated = clearTasksFromHiredService(prev, oldService);
+        // 2. Bind new task selection
+        if (selectedTaskIds.length > 0) {
+          updated = bindTasksToHiredService(
+            updated,
+            selectedProjectId,
+            selectedTaskIds,
+            freelancer.name,
+          );
+        }
+        return updated;
+      });
 
-    // 4. Update Project Tasks Assignee
-    if (selectedTaskIds.length > 0) {
-      setProjects((prev) =>
-        prev.map((p) => {
-          if (p.id === selectedProjectId) {
-            return {
-              ...p,
-              sections: p.sections.map((sec) => ({
-                ...sec,
-                tasks: sec.tasks.map((task) => {
-                  if (selectedTaskIds.includes(task.id)) {
-                    return { ...task, assignee: `Freelancer: ${freelancer.name}` };
-                  }
-                  return task;
-                }),
-              })),
-            };
-          }
-          return p;
-        }),
+      // 3. Update the service itself
+      setHiredServices((prev) =>
+        prev.map((s) =>
+          s.id === editingServiceId
+            ? {
+                ...s,
+                freelancerId: selectedFreelancerId,
+                taskIds: selectedTaskIds,
+                cost,
+                deadline,
+              }
+            : s,
+        ),
       );
+    } else {
+      // ── CREATE new service ──
+      const newServiceId = uuidv4();
+      const newService: HiredService = {
+        id: newServiceId,
+        projectId: selectedProjectId,
+        freelancerId: selectedFreelancerId,
+        taskIds: selectedTaskIds,
+        cost: cost,
+        deadline: deadline,
+        status: 'Em Andamento',
+        createdAt: new Date().toISOString(),
+        paidAt: null,
+        archived: false,
+      };
+
+      setHiredServices((prev) => [newService, ...prev]);
+
+      if (selectedTaskIds.length > 0) {
+        setProjects((prev) =>
+          bindTasksToHiredService(prev, selectedProjectId, selectedTaskIds, freelancer.name),
+        );
+      }
     }
 
     modalDisclosure.close();
   };
-
-  const toggleTaskSelection = (taskId: string) => {
-    setSelectedTaskIds((prev) =>
-      prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId],
-    );
-  };
-
   const handleArchive = (id: string, archive: boolean) => {
     setHiredServices((prev) => prev.map((s) => (s.id === id ? { ...s, archived: archive } : s)));
   };
 
   const handleDelete = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este serviço?')) {
+      const service = hiredServices.find((s) => s.id === id);
+      if (service) {
+        setProjects((prev) => clearTasksFromHiredService(prev, service));
+      }
       setHiredServices((prev) => prev.filter((s) => s.id !== id));
     }
   };
 
-  const handleStatusChange = (id: string, status: HiredService['status']) => {
-    setHiredServices((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)));
+  // ── Completion flow ──────────────────────────────────────────
+  const handleCompleteClick = (serviceId: string) => {
+    setPendingCompleteId(serviceId);
+    paymentModalDisclosure.open();
   };
 
-  const subcontratacaoLink = NAV_LINKS.find((link) => link.label === 'Subcontratação');
+  const handlePaymentConfirm = (isPaid: boolean) => {
+    if (!pendingCompleteId) return;
+    const service = hiredServices.find((s) => s.id === pendingCompleteId);
+    if (!service) return;
+
+    const updated = completeHiredService(service, isPaid);
+    setHiredServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+
+    // Auto-complete linked project tasks
+    setProjects((prev) => completeTasksFromHiredService(prev, service));
+
+    setPendingCompleteId(null);
+    paymentModalDisclosure.close();
+  };
+
+  // ── Cancellation flow ────────────────────────────────────────
+  const handleCancelClick = (serviceId: string) => {
+    const service = hiredServices.find((s) => s.id === serviceId);
+    if (!service) return;
+
+    if (
+      !window.confirm(
+        'Tem certeza que deseja cancelar este serviço? O freelancer será desvinculado do projeto e as cobranças serão removidas. Esta ação é irreversível.',
+      )
+    ) {
+      return;
+    }
+
+    const updated = cancelHiredService(service);
+    setHiredServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    setProjects((prev) => clearTasksFromHiredService(prev, service));
+  };
+
+  const subcontratacaoLink = NAV_LINKS.find((link) => link.label === SUBCONTRATACAO_LABEL);
   const pageIcon = subcontratacaoLink?.children?.find(
     (child) => child.path === '/prestadores-freelancers/servicos-contratados',
   )?.icon;
@@ -164,7 +310,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
           )}
           {showArchived ? 'Ver Ativos' : 'Ver Arquivados'}
         </Button>
-        <Button variant="primary" onClick={openModal} className="flex items-center gap-2">
+        <Button variant="primary" onClick={openCreateModal} className="flex items-center gap-2">
           <PlusIcon className="w-5 h-5" /> Contratar Serviço
         </Button>
       </PageHeader>
@@ -174,11 +320,13 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
           const project = projects.find((p) => p.id === service.projectId);
           const freelancer = freelancers.find((f) => f.id === service.freelancerId);
           const deadlineInfo = getDeadlineInfo(service.deadline);
+          const isFinalized = service.status !== 'Em Andamento';
+          const badge = STATUS_BADGE[service.status];
 
           return (
             <div
               key={service.id}
-              className={`bg-surface rounded-xl shadow-soft p-5 border-l-4 ${service.status === 'Concluído' ? 'border-success' : 'border-info'} transition-all hover:shadow-lg`}
+              className={`bg-surface rounded-xl shadow-soft p-5 border-l-4 ${BORDER_BY_STATUS[service.status]} transition-all hover:shadow-lg`}
             >
               <div className="flex justify-between items-start mb-3">
                 <div>
@@ -221,25 +369,61 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
                     {service.taskIds.length} selecionadas
                   </span>
                 </div>
+                {service.paidAt && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-text-secondary">Pagamento:</span>
+                    <span className="font-semibold text-success">Pago</span>
+                  </div>
+                )}
+                {service.status === 'Concluído' && !service.paidAt && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-text-secondary">Pagamento:</span>
+                    <span className="font-semibold text-warning">Pendente</span>
+                  </div>
+                )}
               </div>
 
               <div className="pt-3 border-t border-border-color flex justify-between items-center">
-                <Select
-                  value={service.status}
-                  onChange={(e) =>
-                    handleStatusChange(service.id, e.target.value as HiredService['status'])
-                  }
-                  size="sm"
-                  aria-label="Status do serviço"
-                  options={[
-                    { value: 'Em Andamento', label: 'Em Andamento' },
-                    { value: 'Concluído', label: 'Concluído' },
-                    { value: 'Cancelado', label: 'Cancelado' },
-                  ]}
-                  wrapperClassName="min-w-[10rem]"
-                  className="bg-background"
-                />
+                {/* Status badge */}
+                <span
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-full ${badge.className}`}
+                >
+                  {badge.label}
+                </span>
+
+                {/* Action buttons */}
                 <div className="flex gap-2">
+                  {!isFinalized && (
+                    <IconButton
+                      onClick={() => openEditModal(service.id)}
+                      variant="primary"
+                      className="bg-background"
+                      title="Editar serviço"
+                      aria-label="Editar serviço"
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                    </IconButton>
+                  )}
+                  <IconButton
+                    onClick={() => handleCompleteClick(service.id)}
+                    variant="primary"
+                    className="bg-background"
+                    title="Concluir serviço"
+                    aria-label="Concluir serviço"
+                    disabled={isFinalized}
+                  >
+                    <CheckCircleIcon className="w-4 h-4" />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => handleCancelClick(service.id)}
+                    variant="danger"
+                    className="bg-background"
+                    title="Cancelar serviço"
+                    aria-label="Cancelar serviço"
+                    disabled={isFinalized}
+                  >
+                    <XCircleIcon className="w-4 h-4" />
+                  </IconButton>
                   <IconButton
                     onClick={() => handleArchive(service.id, !service.archived)}
                     variant="primary"
@@ -276,12 +460,16 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
         )}
       </div>
 
+      {/* Modal: Contratar Novo Serviço */}
       <Modal
         isOpen={modalDisclosure.isOpen}
         onClose={modalDisclosure.close}
-        title="Contratar Novo Serviço"
+        title={editingServiceId ? 'Editar Serviço Contratado' : 'Contratar Novo Serviço'}
       >
-        <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+        <div
+          className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar"
+          onScroll={() => setIsTasksOpen(false)}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Projeto" htmlFor="field-projeto">
               <Select
@@ -297,6 +485,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
                     : `${project.code} - ${project.name}`,
                 }))}
                 className="bg-background"
+                disabled={Boolean(editingServiceId)}
               />
             </FormField>
             <FormField label="Freelancer" htmlFor="field-freelancer">
@@ -305,10 +494,10 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
                 value={selectedFreelancerId}
                 onChange={(e) => setSelectedFreelancerId(e.target.value)}
                 aria-label="Freelancer"
-                placeholder="Selecione o Profissional..."
+                placeholder="Selecione o Profissional."
                 options={activeFreelancers.map((freelancer) => ({
                   value: freelancer.id,
-                  label: `${freelancer.name} (${freelancer.specialties[0]})`,
+                  label: freelancer.name,
                 }))}
                 className="bg-background"
               />
@@ -318,59 +507,96 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Custo Total (R$)">
               <Input
-                type="number"
-                value={cost || ''}
-                onChange={(e) => setCost(parseFloat(e.target.value) || 0)}
-                placeholder="0.00"
+                type="text"
+                inputMode="decimal"
+                value={
+                  cost
+                    ? cost.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : ''
+                }
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\./g, '').replace(',', '.');
+                  setCost(parseFloat(raw) || 0);
+                }}
+                placeholder="R$ 0,00"
               />
             </FormField>
             <FormField label="Prazo de Entrega">
               <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
             </FormField>
           </div>
-
           {selectedProject ? (
-            <div className="bg-background/50 p-4 rounded-xl border border-border-color/50">
-              <span className="block text-sm font-bold text-text-primary mb-3">
-                Selecione as Tarefas para Delegar
-              </span>
-              <div className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar pr-2">
-                {selectedProject.sections
-                  .flatMap((s) => s.tasks)
-                  .map((task) => (
-                    <label
-                      key={task.id}
-                      className="flex items-center gap-3 text-sm cursor-pointer hover:bg-surface p-2 rounded-lg border border-transparent hover:border-border-color transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedTaskIds.includes(task.id)}
-                        onChange={() => toggleTaskSelection(task.id)}
-                        className="rounded accent-primary w-4 h-4 cursor-pointer"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <span className="font-medium text-text-primary block truncate">
-                          {task.name}
-                        </span>
-                        {task.assignee && (
-                          <span className="text-xs text-text-secondary">
-                            Atual: {task.assignee}
-                          </span>
-                        )}
+            <FormField label="Tarefas" htmlFor="field-tarefas">
+              <button
+                type="button"
+                id="field-tarefas"
+                ref={tasksButtonRef}
+                onClick={toggleTasksDropdown}
+                className={`w-full bg-surface border rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between
+                  focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent
+                  transition-colors duration-150 border-border-color`}
+                aria-haspopup="true"
+                aria-expanded={isTasksOpen}
+              >
+                <span
+                  className={`block truncate ${selectedTaskIds.length === 0 ? 'text-text-secondary' : 'text-text-primary'}`}
+                >
+                  {selectedTaskIds.length === 0
+                    ? 'Selecione as tarefas...'
+                    : `${selectedTaskIds.length} tarefa${selectedTaskIds.length > 1 ? 's' : ''} selecionada${selectedTaskIds.length > 1 ? 's' : ''}`}
+                </span>
+                <ChevronDownIcon
+                  className={`w-4 h-4 text-text-secondary transition-transform duration-200 ${isTasksOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              {isTasksOpen &&
+                typeof document !== 'undefined' &&
+                createPortal(
+                  <div
+                    ref={tasksDropdownRef}
+                    // dynamic portal coordinates
+                    style={dropdownStyle}
+                    className="bg-surface border border-border-color shadow-lifted rounded-lg max-h-56 overflow-y-auto custom-scrollbar flex flex-col my-1 z-[99999]"
+                  >
+                    {selectedProject.sections
+                      .flatMap((s) => s.tasks)
+                      .filter((task) => !task.completed || selectedTaskIds.includes(task.id))
+                      .length === 0 ? (
+                      <div className="px-3 py-4 text-sm text-text-secondary text-center italic">
+                        Este projeto não tem tarefas disponíveis para delegar.
                       </div>
-                    </label>
-                  ))}
-                {selectedProject.sections.flatMap((s) => s.tasks).length === 0 && (
-                  <p className="text-xs text-text-secondary italic text-center py-4">
-                    Este projeto não tem tarefas cadastradas.
-                  </p>
+                    ) : (
+                      selectedProject.sections
+                        .flatMap((s) => s.tasks)
+                        .filter((task) => !task.completed || selectedTaskIds.includes(task.id))
+                        .map((task) => (
+                          <label
+                            key={task.id}
+                            className="flex items-center gap-3 px-3 py-2.5 text-sm cursor-pointer hover:bg-background transition-colors border-b border-border-color/30 last:border-b-0"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedTaskIds.includes(task.id)}
+                              onChange={() => handleTaskCheckboxClick(task.id)}
+                              className="rounded accent-primary w-4 h-4 cursor-pointer shrink-0"
+                              aria-label={task.name}
+                            />
+                            <span className="font-medium text-text-primary truncate">
+                              {task.assignee && !selectedTaskIds.includes(task.id)
+                                ? `${task.name} (Atual: ${task.assignee})`
+                                : task.name}
+                            </span>
+                          </label>
+                        ))
+                    )}
+                  </div>,
+                  document.body,
                 )}
-              </div>
-              <p className="text-xs text-text-secondary mt-3 italic">
-                * Ao salvar, o freelancer será definido como responsável por estas tarefas no
-                projeto.
-              </p>
-            </div>
+            </FormField>
           ) : (
             <div className="text-center py-8 bg-background/30 rounded-xl border border-dashed border-border-color text-sm text-text-secondary">
               Selecione um projeto para ver as tarefas disponíveis.
@@ -382,7 +608,54 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
             Cancelar
           </Button>
           <Button variant="primary" onClick={handleSave}>
-            Confirmar Contratação
+            {editingServiceId ? 'Salvar Alterações' : 'Confirmar Contratação'}
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Modal: Confirmação de Pagamento */}
+      <Modal
+        isOpen={paymentModalDisclosure.isOpen}
+        onClose={() => {
+          setPendingCompleteId(null);
+          paymentModalDisclosure.close();
+        }}
+        title="Confirmar Conclusão do Serviço"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-secondary">
+            O serviço contratado já foi pago ao freelancer?
+          </p>
+          <div className="bg-background/50 p-3 rounded-lg border border-border-color/50 text-sm">
+            <p className="text-text-secondary">
+              <strong className="text-text-primary">Sim:</strong> O valor será registrado como
+              despesa efetiva (pago) no módulo financeiro.
+            </p>
+            <p className="text-text-secondary mt-2">
+              <strong className="text-text-primary">Não:</strong> O valor continuará como previsão
+              de pagamento pendente no módulo financeiro.
+            </p>
+          </div>
+        </div>
+        <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setPendingCompleteId(null);
+              paymentModalDisclosure.close();
+            }}
+          >
+            Voltar
+          </Button>
+          <Button variant="primary" onClick={() => handlePaymentConfirm(false)}>
+            Não, manter pendente
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => handlePaymentConfirm(true)}
+            className="bg-success hover:bg-success/90"
+          >
+            Sim, já foi pago
           </Button>
         </div>
       </Modal>

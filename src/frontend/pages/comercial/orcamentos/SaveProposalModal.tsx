@@ -90,7 +90,6 @@ export function SaveProposalModal({
               type="text"
               value={manualClientName}
               onChange={(event) => setManualClientName(event.target.value)}
-              placeholder="Ex: Cotação para Obra XYZ"
             />
           </FormField>
         ) : (
