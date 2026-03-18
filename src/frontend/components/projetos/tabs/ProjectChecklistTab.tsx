@@ -44,8 +44,8 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
     setExpandedSections((prev) => {
       if (Object.keys(prev).length > 0) return prev;
       const initialState: Record<string, boolean> = {};
-      sections.forEach((section, index) => {
-        initialState[section.id] = index === 0 || sections.length <= 2;
+      sections.forEach((section) => {
+        initialState[section.id] = false;
       });
       return initialState;
     });
@@ -101,7 +101,7 @@ export const ProjectChecklistTab: (props: ChecklistTabProps) => React.ReactNode 
               return (
                 <div
                   key={section.id}
-                  className="bg-surface rounded-xl shadow-soft border border-border-color/50 overflow-hidden transition-all duration-300"
+                  className="bg-surface shadow-soft border border-border-color/50 overflow-hidden transition-all duration-300"
                 >
                   <div
                     className="p-4 bg-background/30 flex items-center gap-4 cursor-pointer select-none hover:bg-background/60 transition-colors"

@@ -392,7 +392,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
 
   return (
     <div className="pb-24 animate-fade-in-up">
-      <PageHeader title={`${localProject.name} - ${localProject.code}`} />
+      <PageHeader title={localProject.name} />
 
       <ProjetoDetalhesTabs
         activeTab={activeTab}

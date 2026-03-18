@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { Project, ProjectAddress, ProjectStatus } from '@/types';
+import { useCoreData } from '@/context/DataContext';
 import { projectStatuses } from '@/types';
 import {
   ArchiveIcon,
@@ -42,10 +43,24 @@ export function ProjetoDetalhesOverviewTab({
   handleActionRequest,
   handleReactivate,
 }: ProjetoDetalhesOverviewTabProps) {
+  const { clients } = useCoreData();
+
+  const linkedClient = useMemo(
+    () => clients.find((c) => c.id === localProject.clientId),
+    [clients, localProject.clientId],
+  );
+
   const projectStatusOptions = projectStatuses.map((status) => ({
     value: status,
     label: status,
   }));
+
+  const statusColorMap: Record<string, string> = {
+    'Em Andamento': 'font-bold text-blue-500 bg-blue-500/10 border-blue-500/30',
+    'Pausado': 'font-bold text-yellow-500 bg-yellow-500/10 border-yellow-500/30',
+    'Concluído': 'font-bold text-green-500 bg-green-500/10 border-green-500/30',
+    'Cancelado': 'font-bold text-red-500 bg-red-500/10 border-red-500/30',
+  };
 
   return (
     <div className="space-y-6">
@@ -63,6 +78,7 @@ export function ProjetoDetalhesOverviewTab({
           />
         </FormField>
 
+
         <Select
           id="field-status"
           label="Status"
@@ -70,8 +86,36 @@ export function ProjetoDetalhesOverviewTab({
           onChange={(e) => handleLocalChange('status', e.target.value as ProjectStatus)}
           options={projectStatusOptions}
           wrapperClassName="md:col-span-3"
+          className={statusColorMap[localProject.status] || ''}
           aria-label="Status do projeto"
         />
+
+        <FormField label="Código" className="md:col-span-3">
+          <Input
+            value={localProject.code}
+            readOnly
+            className="bg-background/50 cursor-default"
+            aria-label="Código do projeto"
+          />
+        </FormField>
+
+        <FormField label="Cliente" className="md:col-span-5">
+          <Input
+            value={localProject.clientName || ''}
+            readOnly
+            className="bg-background/50 cursor-default"
+            aria-label="Nome do cliente"
+          />
+        </FormField>
+
+        <FormField label="CPF/CNPJ" className="md:col-span-4">
+          <Input
+            value={linkedClient?.cpfCnpj || 'Não informado'}
+            readOnly
+            className="bg-background/50 cursor-default"
+            aria-label="CPF ou CNPJ do cliente"
+          />
+        </FormField>
       </div>
 
       <FormField label="Descrição" htmlFor="field-descricao">
@@ -116,6 +160,20 @@ export function ProjetoDetalhesOverviewTab({
                   aria-label="Número"
                 />
                 <Input
+                  placeholder="Complemento"
+                  value={localProject.serviceAddress?.complement || ''}
+                  onChange={(e) => handleAddressChange('complement', e.target.value)}
+                  aria-label="Complemento"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  placeholder="Bairro"
+                  value={localProject.serviceAddress?.neighborhood || ''}
+                  onChange={(e) => handleAddressChange('neighborhood', e.target.value)}
+                  aria-label="Bairro"
+                />
+                <Input
                   placeholder="CEP"
                   value={localProject.serviceAddress?.zip || ''}
                   onChange={(e) => handleAddressChange('zip', e.target.value)}
@@ -132,7 +190,14 @@ export function ProjetoDetalhesOverviewTab({
           ) : (
             <p className="text-text-primary text-sm">
               {localProject.serviceAddress?.street
-                ? `${localProject.serviceAddress.street}, ${localProject.serviceAddress.number} - ${localProject.serviceAddress.city}/${localProject.serviceAddress.state}`
+                ? [
+                    `${localProject.serviceAddress.street}, ${localProject.serviceAddress.number}`,
+                    localProject.serviceAddress.complement,
+                    localProject.serviceAddress.neighborhood,
+                    `${localProject.serviceAddress.city}/${localProject.serviceAddress.state}`,
+                  ]
+                    .filter(Boolean)
+                    .join(' - ')
                 : 'Endereço não informado.'}
             </p>
           )}
@@ -140,7 +205,7 @@ export function ProjetoDetalhesOverviewTab({
 
         <div className="bg-background/30 p-4 rounded-xl border border-border-color/50 space-y-3">
           <span className="block text-sm font-medium text-text-secondary mb-1">Dados de RRT</span>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full">
             <FormField label="Número" htmlFor="project-rrt-number" className="flex-1">
               <Input
                 id="project-rrt-number"

@@ -88,4 +88,5 @@ export interface Reminder {
 export interface ContractDeadlinesSettings {
   defaultPreliminarDeadlineDays: number;
   defaultExecutiveDeadlineDays: number;
+  defaultRevisionLimit: number;
 }

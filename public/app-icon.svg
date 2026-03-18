@@ -1,4 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="14" fill="#7A3A23"/>
-  <path d="M15 49V15h8.5l9 14.4L41.5 15H50v34h-8V28.8l-9.5 14.9-9.3-14.8V49H15z" fill="#F7F2EC"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="365 197 1416 1549" fill="none">
+  <defs>
+    <linearGradient id="nexus-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="hsl(20, 63%, 34%)" stop-opacity="1" />
+      <stop offset="100%" stop-color="hsl(20, 63%, 34%)" stop-opacity="0.65" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M 768.0 1726.5 L 384.5 1549.0 L 384.5 407.0 L 765.0 216.5 L 1316.5 764.0 L 1316.0 1073.5 L 767.5 558.0 Z"
+    fill="url(#nexus-gradient)"
+  />
+  <path
+    d="M 1384.0 1720.5 L 831.5 1186.0 L 831.5 880.0 L 1383.5 1405.0 L 1386.0 219.5 L 1761.5 407.0 L 1761.5 1550.0 Z"
+    fill="url(#nexus-gradient)"
+  />
 </svg>

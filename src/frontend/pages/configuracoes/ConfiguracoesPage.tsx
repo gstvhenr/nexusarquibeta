@@ -240,6 +240,33 @@ function ConfiguracoesPage(): JSX.Element {
         </Section>
 
         <Section
+          title="Revisões de Projeto"
+          description="Defina o limite padrão de revisões aplicado ao criar novos projetos."
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <FormField label="Limite de Revisões Padrão">
+                <Input
+                  type="number"
+                  min="0"
+                  value={contractDeadlines.defaultRevisionLimit ?? 3}
+                  onChange={(event) =>
+                    handleDeadlineChange(
+                      'defaultRevisionLimit',
+                      parseInt(event.target.value, 10) || 3,
+                    )
+                  }
+                />
+              </FormField>
+              <p className="text-xs text-text-secondary mt-1">
+                Cada projeto mantém seu próprio limite após criação. Este valor é usado como base
+                inicial.
+              </p>
+            </div>
+          </div>
+        </Section>
+
+        <Section
           title="Informações do Usuário"
           description="Estes dados podem ser usados em propostas e relatórios."
         >

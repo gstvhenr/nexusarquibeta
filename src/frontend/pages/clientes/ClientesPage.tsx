@@ -1,19 +1,16 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useDisclosure } from '../../hooks/useDisclosure';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/layout';
 import { ClientFormModal } from '../../components/clientes';
 import { Button, DeleteConfirmationModal, Modal } from '../../components/ui';
 import { useCoreData, useSystemData } from '../../context/DataContext';
-import { api } from '../../services/infrastructure/api';
 import type { Client, PaymentStatus } from '../../types';
 import { NAV_LINKS } from '../../constants';
-import { PlusIcon, DownloadIcon, ArchiveIcon, UnarchiveIcon } from '../../components/ui';
+import { PlusIcon, ArchiveIcon, UnarchiveIcon } from '../../components/ui';
 import { getPaymentStatusByClientId, saveClientAndUpdateState } from '../../services/clientService';
-import { exportClients } from '../../services/clientExportService';
-import { ClientesDataManagementModal } from './ClientesDataManagementModal';
 import { ClientesTablePanel } from './ClientesTablePanel';
-import type { ClientesFilterState, DataModalTab, ExportMode, ExportStatusFilter } from './types';
+import type { ClientesFilterState } from './types';
 const ClientesPage: () => React.ReactNode = () => {
   const { clients, setClients, projects, setProjects, setProposals } = useCoreData();
   const { agendaEvents } = useSystemData();
@@ -23,27 +20,16 @@ const ClientesPage: () => React.ReactNode = () => {
     status: 'Todos',
     paymentStatus: 'Todos' as PaymentStatus | 'Todos',
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(30);
 
   const formDisclosure = useDisclosure();
   const deleteDisclosure = useDisclosure();
   const duplicateErrorDisclosure = useDisclosure();
-  const exportDisclosure = useDisclosure();
-  const selectionDisclosure = useDisclosure();
   const openFormModal = formDisclosure.open;
   const closeFormModal = formDisclosure.close;
   const closeDeleteModal = deleteDisclosure.close;
   const openDuplicateErrorModal = duplicateErrorDisclosure.open;
-  const [activeModalTab, setActiveModalTab] = useState<DataModalTab>('export');
-  const [exportMode, setExportMode] = useState<ExportMode>('all');
-  const [exportStatusFilter, setExportStatusFilter] = useState<ExportStatusFilter>('active');
-  const [manualSelectionIds, setManualSelectionIds] = useState<Set<string>>(new Set());
-  const [manualSearch, setManualSearch] = useState('');
-  const [importFile, setImportFile] = useState<File | null>(null);
   const [currentClient, setCurrentClient] = useState<Client | null>(null);
   const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(new Set());
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const totalActiveClients = useMemo(() => clients.filter((c) => !c.archived).length, [clients]);
   const totalArchivedClients = useMemo(() => clients.filter((c) => c.archived).length, [clients]);
@@ -130,16 +116,7 @@ const ClientesPage: () => React.ReactNode = () => {
     [sortedClients, filter, showArchived, paymentStatusByClientId],
   );
 
-  // Reset page when filters or data change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filter, showArchived, pageSize]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredClients.length / pageSize));
-  const paginatedClients = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredClients.slice(startIndex, startIndex + pageSize);
-  }, [filteredClients, currentPage, pageSize]);
   const handleSelectClient = useCallback((id: string) => {
     setSelectedClientIds((prev) => {
       const newSet = new Set(prev);
@@ -254,95 +231,13 @@ const ClientesPage: () => React.ReactNode = () => {
       setSelectedClientIds(new Set());
     }
   };
-  const clientsForExportList = useMemo(() => {
-    let filtered = clients.filter((c) => {
-      if (exportStatusFilter === 'active') return !c.archived;
-      if (exportStatusFilter === 'archived') return c.archived;
-      return true;
-    });
-    if (manualSearch) {
-      const searchLower = manualSearch.toLowerCase();
-      filtered = filtered.filter(
-        (c) =>
-          c.name.toLowerCase().includes(searchLower) ||
-          (c.cpfCnpj && c.cpfCnpj.includes(searchLower)),
-      );
-    }
-    return filtered.sort((a, b) => a.name.localeCompare(b.name));
-  }, [clients, exportStatusFilter, manualSearch]);
-  useEffect(() => {
-    if (exportDisclosure.isOpen) {
-      if (selectedClientIds.size > 0) {
-        setExportMode('selected');
-        setExportStatusFilter('both');
-        setManualSelectionIds(new Set(selectedClientIds));
-      } else {
-        setExportMode('all');
-        setExportStatusFilter('active');
-        setManualSelectionIds(new Set());
-      }
-      setManualSearch('');
-      setImportFile(null);
-    }
-  }, [exportDisclosure.isOpen, selectedClientIds]);
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files?.[0]) {
-      setImportFile(event.target.files[0]);
-    }
-  };
-  const handleImportConfirm = () => {
-    if (!importFile) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result;
-        if (typeof text === 'string') {
-          api.importClients(text);
-          alert('Lista de clientes atualizada com sucesso!');
-          window.location.reload();
-        }
-      } catch (err) {
-        alert('Erro ao importar arquivo JSON: ' + err);
-      }
-    };
-    reader.readAsText(importFile);
-  };
-  const toggleManualSelection = (id: string) => {
-    setManualSelectionIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-  const toggleSelectAllManual = () => {
-    const allVisibleSelected = clientsForExportList.every((c) => manualSelectionIds.has(c.id));
-    setManualSelectionIds((prev) => {
-      const next = new Set(prev);
-      if (allVisibleSelected) {
-        clientsForExportList.forEach((c) => next.delete(c.id));
-      } else {
-        clientsForExportList.forEach((c) => next.add(c.id));
-      }
-      return next;
-    });
-  };
-  const handleExport = async (format: 'PDF' | 'DOCX' | 'JSON') => {
-    let dataToExport: Client[] = [];
-    if (exportMode === 'all') {
-      dataToExport = clientsForExportList;
-    } else {
-      dataToExport = clientsForExportList.filter((c) => manualSelectionIds.has(c.id));
-    }
-    await exportClients(dataToExport, projects, format);
-    exportDisclosure.close();
-  };
+
   const clientesIcon = NAV_LINKS.find((link) => link.path === '/clientes')?.icon;
 
   return (
     <div className="animate-fade-in-up">
       <PageHeader title="Clientes" icon={clientesIcon}>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="secondary"
@@ -357,16 +252,6 @@ const ClientesPage: () => React.ReactNode = () => {
             {showArchived ? 'Ver Ativos' : 'Ver Arquivados'}
           </Button>
 
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={exportDisclosure.open}
-            className="text-sm flex items-center gap-2"
-          >
-            <DownloadIcon className="w-4 h-4" />
-            Dados
-          </Button>
-
           {!showArchived && (
             <Button
               type="button"
@@ -374,7 +259,7 @@ const ClientesPage: () => React.ReactNode = () => {
               onClick={openAddModal}
               className="text-sm flex items-center gap-2"
             >
-              <PlusIcon className="w-5 h-5" /> Adicionar Cliente
+              <PlusIcon className="w-4 h-4" /> Adicionar Cliente
             </Button>
           )}
         </div>
@@ -385,7 +270,7 @@ const ClientesPage: () => React.ReactNode = () => {
         filter={filter}
         onFilterChange={setFilter}
         selectedClientIds={selectedClientIds}
-        filteredClients={paginatedClients}
+        filteredClients={filteredClients}
         totalActiveClients={totalActiveClients}
         totalArchivedClients={totalArchivedClients}
         paymentStatusByClientId={paymentStatusByClientId}
@@ -396,12 +281,6 @@ const ClientesPage: () => React.ReactNode = () => {
         onViewClient={openClientPage}
         onBulkArchive={handleBulkArchive}
         onBulkDelete={handleBulkDelete}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        pageSize={pageSize}
-        totalFilteredCount={filteredClients.length}
-        onPageChange={setCurrentPage}
-        onPageSizeChange={setPageSize}
       />
 
       <ClientFormModal
@@ -437,31 +316,7 @@ const ClientesPage: () => React.ReactNode = () => {
         </div>
       </Modal>
 
-      <ClientesDataManagementModal
-        isOpen={exportDisclosure.isOpen}
-        onClose={exportDisclosure.close}
-        activeModalTab={activeModalTab}
-        onActiveModalTabChange={setActiveModalTab}
-        exportMode={exportMode}
-        onExportModeChange={setExportMode}
-        exportStatusFilter={exportStatusFilter}
-        onExportStatusFilterChange={setExportStatusFilter}
-        manualSelectionIds={manualSelectionIds}
-        onOpenSelectionModal={selectionDisclosure.open}
-        isSelectionModalOpen={selectionDisclosure.isOpen}
-        onCloseSelectionModal={selectionDisclosure.close}
-        manualSearch={manualSearch}
-        onManualSearchChange={setManualSearch}
-        clientsForExportList={clientsForExportList}
-        onToggleSelectAllManual={toggleSelectAllManual}
-        onToggleManualSelection={toggleManualSelection}
-        onClearManualSelection={() => setManualSelectionIds(new Set())}
-        onExport={handleExport}
-        fileInputRef={fileInputRef}
-        importFile={importFile}
-        onFileSelect={handleFileSelect}
-        onImportConfirm={handleImportConfirm}
-      />
+
     </div>
   );
 };

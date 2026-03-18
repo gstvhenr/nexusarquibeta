@@ -73,6 +73,7 @@ const DATA_SYNC_CHANNEL_NAME = 'nexus_arqui_data_sync';
 const DEFAULT_CONTRACT_DEADLINES: ContractDeadlinesSettings = {
   defaultPreliminarDeadlineDays: 7,
   defaultExecutiveDeadlineDays: 30,
+  defaultRevisionLimit: 3,
 };
 
 const DEFAULT_EMERGENCY_FUND: EmergencyFund = {
@@ -203,7 +204,10 @@ const normalizePersistedSnapshot = (snapshot: unknown): AppData => {
       isRecord(snapshot.contractDeadlines) &&
       typeof snapshot.contractDeadlines.defaultPreliminarDeadlineDays === 'number' &&
       typeof snapshot.contractDeadlines.defaultExecutiveDeadlineDays === 'number'
-        ? (snapshot.contractDeadlines as unknown as ContractDeadlinesSettings)
+        ? {
+            ...defaults.contractDeadlines,
+            ...(snapshot.contractDeadlines as unknown as ContractDeadlinesSettings),
+          }
         : defaults.contractDeadlines,
     cashBoxExpenses: asList<CashBoxExpense>(snapshot.cashBoxExpenses),
     cashBoxCredits: asList<CashBoxCredit>(snapshot.cashBoxCredits),

@@ -1,9 +1,6 @@
 import { ClientTableRow } from '../../components/clientes';
 import {
   ArchiveIcon,
-  Button,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   IconButton,
   Input,
   Select,
@@ -40,12 +37,6 @@ interface ClientesTablePanelProps {
   onViewClient: (client: Client) => void;
   onBulkArchive: () => void;
   onBulkDelete: () => void;
-  currentPage: number;
-  totalPages: number;
-  pageSize: number;
-  totalFilteredCount: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
 }
 
 export const ClientesTablePanel = ({
@@ -64,12 +55,6 @@ export const ClientesTablePanel = ({
   onViewClient,
   onBulkArchive,
   onBulkDelete,
-  currentPage,
-  totalPages,
-  pageSize,
-  totalFilteredCount,
-  onPageChange,
-  onPageSizeChange,
 }: ClientesTablePanelProps) => (
   <>
     <div className="mb-6 p-4 bg-surface rounded-xl shadow-soft flex flex-wrap items-center gap-4">
@@ -213,55 +198,5 @@ export const ClientesTablePanel = ({
       </table>
     </div>
 
-    {totalFilteredCount > 0 && (
-      <div className="mt-4 p-3 bg-surface rounded-xl shadow-soft flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-text-secondary">Exibir</span>
-          {[10, 30, 50].map((size) => (
-            <Button
-              key={size}
-              variant={pageSize === size ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => onPageSizeChange(size)}
-              aria-label={`Exibir ${size} por página`}
-            >
-              {size}
-            </Button>
-          ))}
-          <span className="text-sm text-text-secondary">por página</span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-text-secondary">
-            {(currentPage - 1) * pageSize + 1}–
-            {Math.min(currentPage * pageSize, totalFilteredCount)} de{' '}
-            <span className="font-semibold text-text-primary">{totalFilteredCount}</span>
-          </span>
-          <div className="flex items-center gap-1">
-            <IconButton
-              variant="default"
-              size="sm"
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage <= 1}
-              aria-label="Página anterior"
-            >
-              <ChevronLeftIcon className="w-5 h-5" />
-            </IconButton>
-            <span className="text-sm font-medium text-text-primary px-2">
-              {currentPage} / {totalPages}
-            </span>
-            <IconButton
-              variant="default"
-              size="sm"
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages}
-              aria-label="Próxima página"
-            >
-              <ChevronRightIcon className="w-5 h-5" />
-            </IconButton>
-          </div>
-        </div>
-      </div>
-    )}
   </>
 );

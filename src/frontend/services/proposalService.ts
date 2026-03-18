@@ -36,6 +36,7 @@ const createProjectDocumentFolder = (project: Project): DocumentFolder => {
 const DEFAULT_DEADLINES: ContractDeadlinesSettings = {
   defaultPreliminarDeadlineDays: 7,
   defaultExecutiveDeadlineDays: 30,
+  defaultRevisionLimit: 3,
 };
 
 const normalizeContractSettings = (
@@ -43,6 +44,7 @@ const normalizeContractSettings = (
 ): ContractDeadlinesSettings => {
   const preliminarDays = Number(settings?.defaultPreliminarDeadlineDays);
   const executiveDays = Number(settings?.defaultExecutiveDeadlineDays);
+  const revisionLimit = Number(settings?.defaultRevisionLimit);
 
   return {
     defaultPreliminarDeadlineDays:
@@ -53,6 +55,10 @@ const normalizeContractSettings = (
       Number.isFinite(executiveDays) && executiveDays >= 0
         ? executiveDays
         : DEFAULT_DEADLINES.defaultExecutiveDeadlineDays,
+    defaultRevisionLimit:
+      Number.isFinite(revisionLimit) && revisionLimit >= 0
+        ? revisionLimit
+        : DEFAULT_DEADLINES.defaultRevisionLimit,
   };
 };
 
@@ -148,7 +154,7 @@ export const proposalService = {
       serviceAddress: serviceAddress || existingClient.address, // Use provided service address or fallback to client address
       additionalDeadlines: additionalDeadlines,
       revisionCount: 0,
-      revisionLimit: 3,
+      revisionLimit: safeContractSettings.defaultRevisionLimit,
     };
 
     const updatedProposal = { ...proposal, status: 'Concluído' as const, archived: true };

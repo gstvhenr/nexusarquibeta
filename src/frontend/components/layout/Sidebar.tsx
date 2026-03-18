@@ -34,18 +34,18 @@ const Sidebar: (props: SidebarProps) => React.ReactNode = ({ isOpen, setOpen }) 
       `}
       >
         <div className="flex items-center justify-between gap-4 px-6 pt-8 pb-5">
-          <div className="flex items-center gap-4">
-            <LogoIcon className="w-12 h-12 text-primary" />
-            <div>
-              <h1 className="font-serif text-3xl font-bold tracking-tight text-text-primary leading-none">
+          <div className="flex items-center gap-4 min-w-0">
+            <LogoIcon className="w-12 h-12 text-primary shrink-0" />
+            <div className="min-w-0">
+              <h1 className="font-serif text-3xl font-bold tracking-tight text-text-primary leading-none truncate">
                 NexusArqui
               </h1>
-              <p className="text-xs font-medium tracking-wide text-text-secondary normal-case mt-1">
+              <p className="text-xs font-medium tracking-wide text-text-secondary normal-case mt-1 truncate">
                 Rafael Munaro Arquitetura
               </p>
             </div>
           </div>
-          <IconButton onClick={closeSidebar} aria-label="Fechar menu" className="-mr-2 md:hidden">
+          <IconButton onClick={closeSidebar} aria-label="Fechar menu" className="-mr-2 shrink-0 md:hidden">
             <XIcon className="w-6 h-6" />
           </IconButton>
         </div>
