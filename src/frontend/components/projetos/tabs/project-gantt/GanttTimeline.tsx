@@ -86,10 +86,11 @@ export const GanttTimeline = ({
                         strokeWidth={1}
                       />
                       <text
-                        x={x + 8}
+                        x={x + width / 2}
                         y={15}
                         fill="currentColor"
                         className="text-[11px] font-bold uppercase tracking-wide text-text-primary"
+                        textAnchor="middle"
                       >
                         {group.label}
                       </text>

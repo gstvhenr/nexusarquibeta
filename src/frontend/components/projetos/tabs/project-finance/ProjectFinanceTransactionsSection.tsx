@@ -9,16 +9,13 @@ import { CurrencyInput } from './CurrencyInput';
 interface ProjectFinanceTransactionsSectionProps {
   project: Project;
   financials: ProjectFinancials;
-  onFinancialsChange: (
-    field: keyof ProjectFinancials,
-    value: ProjectFinancials[keyof ProjectFinancials],
-  ) => void;
+
   onInstallmentChange: (
     id: string,
     field: keyof Installment,
     value: Installment[keyof Installment],
   ) => void;
-  onGenerateInstallments: () => void;
+
   onConfirmPayment: (payment: { type: 'lump' } | { type: 'installment'; id: string }) => void;
   onAddInstallment: () => void;
   onRemoveInstallment: (id: string) => void;
@@ -27,9 +24,9 @@ interface ProjectFinanceTransactionsSectionProps {
 export const ProjectFinanceTransactionsSection = ({
   project,
   financials,
-  onFinancialsChange,
+
   onInstallmentChange,
-  onGenerateInstallments,
+
   onConfirmPayment,
   onAddInstallment,
   onRemoveInstallment,
@@ -58,16 +55,11 @@ export const ProjectFinanceTransactionsSection = ({
             <div className="flex items-center gap-4 text-sm text-text-secondary">
               <span className="flex items-center gap-1">
                 <ClockIcon className="w-4 h-4" /> Vencimento:{' '}
-                <input
-                  id="field-lump-sum-due-date"
-                  type="date"
-                  value={financials.lumpSumDueDate?.split('T')[0] || ''}
-                  onChange={(event) =>
-                    onFinancialsChange('lumpSumDueDate', event.target.value || null)
-                  }
-                  className="bg-transparent border-none p-0 text-sm focus:ring-0 text-text-primary font-medium cursor-pointer"
-                  aria-label="Data de Vencimento"
-                />
+                <span className="text-text-primary font-medium">
+                  {financials.lumpSumDueDate
+                    ? formatDate(financials.lumpSumDueDate)
+                    : 'Não definido'}
+                </span>
               </span>
             </div>
           </div>
@@ -126,16 +118,9 @@ export const ProjectFinanceTransactionsSection = ({
                     />
                   </td>
                   <td className="px-6 py-4">
-                    <input
-                      name={`installment-date-${installment.id}`}
-                      type="date"
-                      value={installment.dueDate.split('T')[0]}
-                      onChange={(event) =>
-                        onInstallmentChange(installment.id, 'dueDate', event.target.value)
-                      }
-                      className="bg-transparent border-none p-0 text-sm text-text-primary focus:ring-0 font-medium w-32 cursor-pointer"
-                      aria-label="Data de Vencimento"
-                    />
+                    <span className="text-sm text-text-primary font-medium">
+                      {formatDate(installment.dueDate)}
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <CurrencyInput
@@ -190,14 +175,10 @@ export const ProjectFinanceTransactionsSection = ({
         </table>
         {(financials.installments || []).length === 0 && (
           <div className="p-8 text-center text-text-secondary">
-            <p>Nenhuma parcela gerada.</p>
-            <button
-              type="button"
-              onClick={onGenerateInstallments}
-              className="mt-2 text-primary font-semibold hover:underline"
-            >
-              Gerar Agora
-            </button>
+            <p>
+              Nenhuma parcela gerada. Configure e gere as parcelas na aba &quot;Contrato &amp;
+              Aditivos&quot;.
+            </p>
           </div>
         )}
       </div>

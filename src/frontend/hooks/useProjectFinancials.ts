@@ -27,9 +27,10 @@ export function useProjectFinancials(
       const total = getProjectTotalContractValue(p);
       const count = p.financials.numberOfInstallments || 1;
       const day = p.financials.installmentsPaymentDay || new Date().getDate();
-      const interest = p.financials.installmentsInterestEnabled
-        ? (p.financials.installmentsInterestRate || 0) / 100
-        : 0;
+      const interest =
+        (p.financials.installmentsInterestEnabled ?? true)
+          ? (p.financials.installmentsInterestRate || 0) / 100
+          : 0;
       const totalWithInterest = total * (1 + interest);
       const valuePerInstallment = totalWithInterest / count;
       const today = new Date();

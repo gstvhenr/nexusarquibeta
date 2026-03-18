@@ -87,13 +87,13 @@ export const ConfirmPaymentModal: (props: {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Confirmar Recebimento">
       <div className="space-y-4">
-        <p className="text-text-primary">Confirme os detalhes do pagamento recebido.</p>
+        <p className="text-sm text-text-primary">Confirme os detalhes do pagamento recebido.</p>
         <div>
           <label
             htmlFor="field-data-de-recebimento"
             className="block text-sm font-medium text-text-secondary mb-1"
           >
-            Data de Recebimento
+            Data de Pagamento
           </label>
           <input
             id="field-data-de-recebimento"
@@ -101,7 +101,7 @@ export const ConfirmPaymentModal: (props: {
             value={paymentDate}
             onChange={(e) => setPaymentDate(e.target.value)}
             className={commonInputClass}
-            aria-label="Data de recebimento"
+            aria-label="Data de pagamento"
           />
         </div>
         <div>
@@ -124,6 +124,13 @@ export const ConfirmPaymentModal: (props: {
               </option>
             ))}
           </select>
+        </div>
+        <div className="flex items-start gap-2 p-3 bg-warning/10 border border-warning/30 rounded-lg">
+          <AlertIcon className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+          <p className="text-xs text-warning font-medium leading-relaxed">
+            Após confirmação, a baixa do pagamento é <strong>irreversível</strong>. O valor será
+            considerado como recebido e já entrada em caixa.
+          </p>
         </div>
       </div>
       <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-border-color">

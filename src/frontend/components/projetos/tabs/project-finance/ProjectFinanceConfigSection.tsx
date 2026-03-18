@@ -1,6 +1,5 @@
 import type { ProjectFinancials } from '@/types';
 import { formatCurrency } from '@/utils/formatters';
-import { CashIcon } from '@/components/ui/icons';
 import { CurrencyInput } from './CurrencyInput';
 
 interface ProjectFinanceConfigSectionProps {
@@ -24,16 +23,9 @@ export const ProjectFinanceConfigSection = ({
   onGenerateInstallments,
 }: ProjectFinanceConfigSectionProps) => (
   <div className="bg-surface rounded-2xl shadow-soft border border-border-color overflow-hidden">
-    {/* Header */}
-    <div className="px-6 py-4 border-b border-border-color bg-background/30 flex items-center gap-3">
-      <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
-        <CashIcon className="w-4 h-4 text-secondary" />
-      </div>
-    </div>
-
     <div className="p-6 space-y-5">
-      {/* Row 1: Payment Type + Base Value side by side */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-end">
+      {/* Row 1: Payment Type + Due Date/Day + Base Value */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-end">
         <div>
           <span
             id="payment-type-label"
@@ -62,6 +54,46 @@ export const ProjectFinanceConfigSection = ({
             </button>
           </div>
         </div>
+
+        {financials.paymentType === 'vista' ? (
+          <div>
+            <label
+              htmlFor="field-lump-sum-due-date-config"
+              className="block text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2"
+            >
+              Data de Vencimento
+            </label>
+            <input
+              id="field-lump-sum-due-date-config"
+              type="date"
+              value={financials.lumpSumDueDate?.split('T')[0] || ''}
+              onChange={(event) => onFinancialsChange('lumpSumDueDate', event.target.value || null)}
+              className={commonInputClass}
+              aria-label="Data de Vencimento à Vista"
+            />
+          </div>
+        ) : (
+          <div>
+            <label
+              htmlFor="field-dia-vencimento"
+              className="block text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2"
+            >
+              Dia de Vencimento
+            </label>
+            <input
+              id="field-dia-vencimento"
+              type="number"
+              min="1"
+              max="31"
+              value={financials.installmentsPaymentDay || ''}
+              onChange={(event) =>
+                onFinancialsChange('installmentsPaymentDay', parseInt(event.target.value))
+              }
+              className={commonInputClass}
+              aria-label="Dia do Vencimento"
+            />
+          </div>
+        )}
 
         <div>
           <label
@@ -110,42 +142,37 @@ export const ProjectFinanceConfigSection = ({
                 aria-label="Número de Parcelas"
               />
             </div>
-            <div>
-              <label
-                htmlFor="field-dia-vencimento"
-                className="block text-xs font-medium text-text-secondary mb-1"
-              >
-                Dia de Vencimento
-              </label>
-              <input
-                id="field-dia-vencimento"
-                type="number"
-                min="1"
-                max="31"
-                value={financials.installmentsPaymentDay || ''}
-                onChange={(event) =>
-                  onFinancialsChange('installmentsPaymentDay', parseInt(event.target.value))
-                }
-                className={commonInputClass}
-                aria-label="Dia do Vencimento"
-              />
+            <div className="flex items-end">
+              <div className="flex items-center gap-2 h-[38px]">
+                <input
+                  id="start-current-month"
+                  type="checkbox"
+                  checked={financials.startInstallmentsInCurrentMonth || false}
+                  onChange={(event) =>
+                    onFinancialsChange('startInstallmentsInCurrentMonth', event.target.checked)
+                  }
+                  className="rounded accent-primary"
+                />
+                <label htmlFor="start-current-month" className="text-sm text-text-primary">
+                  Lançar vencimento no mês vigente
+                </label>
+              </div>
             </div>
-            <div>
-              <span className="block text-xs font-medium text-text-secondary mb-1">Juros</span>
-              <div className="flex items-center gap-2">
+            <div className="flex items-end">
+              <div className="flex items-center gap-2 h-[38px]">
                 <input
                   id="interest"
                   type="checkbox"
-                  checked={financials.installmentsInterestEnabled}
+                  checked={financials.installmentsInterestEnabled ?? true}
                   onChange={(event) =>
                     onFinancialsChange('installmentsInterestEnabled', event.target.checked)
                   }
                   className="rounded accent-primary"
                 />
                 <label htmlFor="interest" className="text-sm text-text-primary">
-                  Aplicar
+                  Juros
                 </label>
-                {financials.installmentsInterestEnabled && (
+                {(financials.installmentsInterestEnabled ?? true) && (
                   <input
                     id="field-interest-rate"
                     type="number"

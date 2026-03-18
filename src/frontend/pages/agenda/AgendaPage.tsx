@@ -27,7 +27,7 @@ const AgendaPage: () => React.ReactNode = () => {
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<CalendarViewMode>('monthly');
+  const [viewMode, setViewMode] = useState<CalendarViewMode>('weekly');
   const [cellHeightScale, setCellHeightScale] = useLocalStorage<number>(CELL_HEIGHT_STORAGE_KEY, 1);
   const normalizedCellHeightScale = Math.min(1.5, Math.max(0.5, cellHeightScale));
 
@@ -242,7 +242,7 @@ const AgendaPage: () => React.ReactNode = () => {
                       : 'bg-surface text-text-secondary hover:bg-background'
                   }`}
                 >
-                  Mês
+                  Mensal
                 </Button>
                 <Button
                   variant="ghost"
@@ -253,7 +253,7 @@ const AgendaPage: () => React.ReactNode = () => {
                       : 'bg-surface text-text-secondary hover:bg-background'
                   }`}
                 >
-                  Semana
+                  Semanal
                 </Button>
               </div>
 

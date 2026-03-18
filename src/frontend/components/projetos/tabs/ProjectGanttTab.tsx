@@ -4,12 +4,11 @@ import {
   ROW_H,
   SECTION_ROW_H,
   buildRows,
-  computeStats,
   computeTimelineMetrics,
   dateToPixel,
 } from './project-gantt/helpers';
 import { GanttTimeline } from './project-gantt/GanttTimeline';
-import { SummaryBar } from './project-gantt/SummaryBar';
+
 import { Tooltip } from './project-gantt/Tooltip';
 import type {
   ProjectGanttTabProps,
@@ -73,7 +72,6 @@ export const ProjectGanttTab: (props: ProjectGanttTabProps) => React.ReactNode =
   }, []);
 
   const rows = useMemo(() => buildRows(sections, collapsedSections), [sections, collapsedSections]);
-  const stats = useMemo(() => computeStats(sections), [sections]);
 
   const { columns, groups, colWidth, totalWidth, todayOffset } = useMemo(
     () => computeTimelineMetrics(rows, viewMode, containerWidth),
@@ -127,81 +125,79 @@ export const ProjectGanttTab: (props: ProjectGanttTabProps) => React.ReactNode =
   );
 
   return (
-    <div className="space-y-5 animate-fade-in-up">
-      <div className="flex flex-col sm:flex-row justify-between items-center bg-surface p-4 rounded-xl shadow-sm border border-border-color gap-4">
-        <h3 className="font-serif text-lg font-bold text-secondary flex items-center gap-2">
-          <ClockIcon className="w-5 h-5 text-primary" /> Cronograma Interativo
-        </h3>
-        <div className="flex p-1 bg-background rounded-lg border border-border-color/50">
-          {(['day', 'week', 'month'] as ViewMode[]).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setViewMode(mode)}
-              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all duration-200 ${
-                viewMode === mode
-                  ? 'bg-surface text-primary shadow-sm ring-1 ring-border-color'
-                  : 'text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              {mode === 'day' ? 'Dia' : mode === 'week' ? 'Semana' : 'Mês'}
-            </button>
-          ))}
+    <div className="animate-fade-in-up">
+      <div className="bg-background/30 rounded-xl border border-border-color/50 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-color/50">
+          <div className="flex items-center gap-3">
+            <ClockIcon className="w-5 h-5 text-primary" />
+            <h3 className="font-serif text-xl font-bold text-secondary">Cronograma do Projeto</h3>
+          </div>
+          <div className="flex p-1 bg-background rounded-lg border border-border-color/50">
+            {(['day', 'week', 'month'] as ViewMode[]).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setViewMode(mode)}
+                className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all duration-200 ${
+                  viewMode === mode
+                    ? 'bg-surface text-primary shadow-sm ring-1 ring-border-color'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                {mode === 'day' ? 'Dia' : mode === 'week' ? 'Semana' : 'Mês'}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* Timeline */}
+        <div className="p-4">
+          <GanttTimeline
+            hasTasks={hasTasks}
+            viewMode={viewMode}
+            groups={groups}
+            columns={columns}
+            totalWidth={totalWidth}
+            colWidth={colWidth}
+            rows={rows}
+            collapsedSections={collapsedSections}
+            onToggleSection={toggleSection}
+            nameColRef={nameColRef}
+            timelineRef={timelineRef}
+            headerRef={headerRef}
+            onNameScroll={handleNameScroll}
+            onTimelineScroll={handleTimelineScroll}
+            totalHeight={totalHeight}
+            todayOffset={todayOffset}
+            getBarStyle={getBarStyle}
+            getBarClasses={getBarClasses}
+            onTooltipChange={setTooltip}
+          />
+        </div>
+
+        {/* Legend */}
+        {hasTasks && (
+          <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center text-xs text-text-secondary py-2.5 px-4 border-t border-border-color/30">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-2.5 rounded-sm bg-gradient-to-r from-primary to-primary-focus" />
+              <span>Em Andamento</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-2.5 rounded-sm bg-gradient-to-r from-success to-success/80" />
+              <span>Concluído</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-2.5 rounded-sm bg-gradient-to-r from-error to-error/80" />
+              <span>Atrasado</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-[2px] h-3.5 bg-error/60 rounded-full" />
+              <span>Hoje</span>
+            </div>
+          </div>
+        )}
       </div>
-
-      {hasTasks && (
-        <SummaryBar
-          total={stats.total}
-          completed={stats.completed}
-          late={stats.late}
-          inProgress={stats.inProgress}
-          dateRange={stats.dateRange}
-        />
-      )}
-
-      <GanttTimeline
-        hasTasks={hasTasks}
-        viewMode={viewMode}
-        groups={groups}
-        columns={columns}
-        totalWidth={totalWidth}
-        colWidth={colWidth}
-        rows={rows}
-        collapsedSections={collapsedSections}
-        onToggleSection={toggleSection}
-        nameColRef={nameColRef}
-        timelineRef={timelineRef}
-        headerRef={headerRef}
-        onNameScroll={handleNameScroll}
-        onTimelineScroll={handleTimelineScroll}
-        totalHeight={totalHeight}
-        todayOffset={todayOffset}
-        getBarStyle={getBarStyle}
-        getBarClasses={getBarClasses}
-        onTooltipChange={setTooltip}
-      />
-
-      {hasTasks && (
-        <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center text-xs text-text-secondary bg-surface/50 py-2.5 px-4 rounded-lg border border-border-color/30">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-2.5 rounded-sm bg-gradient-to-r from-primary to-primary-focus" />
-            <span>Em Andamento</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-2.5 rounded-sm bg-gradient-to-r from-success to-success/80" />
-            <span>Concluído</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-2.5 rounded-sm bg-gradient-to-r from-error to-error/80" />
-            <span>Atrasado</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-[2px] h-3.5 bg-error/60 rounded-full" />
-            <span>Hoje</span>
-          </div>
-        </div>
-      )}
 
       <Tooltip data={tooltip} />
     </div>
