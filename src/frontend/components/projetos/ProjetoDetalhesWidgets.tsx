@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { paymentMethods, type PaymentMethod } from '../../types';
-import { AlertIcon, PlusIcon } from '../ui';
+import { AlertIcon, MinusIcon, PlusIcon } from '../ui';
 import { Modal } from '../ui';
 import { getTodayDateOnly } from '../../utils/formatters';
 
@@ -19,7 +19,8 @@ export const RevisionCounter: (props: {
   count: number;
   limit: number;
   onIncrement: () => void;
-}) => React.ReactNode = ({ count, limit, onIncrement }) => {
+  onDecrement: () => void;
+}) => React.ReactNode = ({ count, limit, onIncrement, onDecrement }) => {
   const isOverLimit = count > limit;
   return (
     <div
@@ -37,13 +38,23 @@ export const RevisionCounter: (props: {
             <span className="text-text-secondary font-medium">/ {limit}</span>
           </div>
         </div>
-        <button
-          onClick={onIncrement}
-          className="p-2 bg-background hover:bg-border-color rounded-full transition-colors text-text-primary"
-          aria-label="Adicionar revisão"
-        >
-          <PlusIcon className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onDecrement}
+            disabled={count <= 0}
+            className="p-2 bg-background hover:bg-border-color rounded-full transition-colors text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Remover revisão"
+          >
+            <MinusIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onIncrement}
+            className="p-2 bg-background hover:bg-border-color rounded-full transition-colors text-text-primary"
+            aria-label="Adicionar revisão"
+          >
+            <PlusIcon className="w-4 h-4" />
+          </button>
+        </div>
       </div>
       {isOverLimit && (
         <p className="text-xs text-error mt-2 font-semibold flex items-center gap-1">

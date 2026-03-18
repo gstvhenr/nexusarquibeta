@@ -5,6 +5,7 @@ import { GanttBarRenderer } from './GanttBarRenderer';
 
 interface GanttTimelineProps {
   hasTasks: boolean;
+  viewMode: 'day' | 'week' | 'month';
   groups: GroupHeader[];
   columns: TimeColumn[];
   totalWidth: number;
@@ -25,11 +26,12 @@ interface GanttTimelineProps {
 }
 
 const HEADER_GROUP_ROW_H = 24;
-const HEADER_COLUMN_ROW_H = 32;
-const HEADER_TOTAL_H = HEADER_GROUP_ROW_H + HEADER_COLUMN_ROW_H;
+const HEADER_COLUMN_ROW_H_DEFAULT = 32;
+const HEADER_COLUMN_ROW_H_DAY = 40;
 
 export const GanttTimeline = ({
   hasTasks,
+  viewMode,
   groups,
   columns,
   totalWidth,
@@ -48,6 +50,8 @@ export const GanttTimeline = ({
   getBarClasses,
   onTooltipChange,
 }: GanttTimelineProps) => {
+  const columnRowH = viewMode === 'day' ? HEADER_COLUMN_ROW_H_DAY : HEADER_COLUMN_ROW_H_DEFAULT;
+  const headerTotalH = HEADER_GROUP_ROW_H + columnRowH;
   let groupOffset = 0;
 
   return (
@@ -55,14 +59,16 @@ export const GanttTimeline = ({
       {hasTasks ? (
         <div className="flex flex-col">
           <div className="flex border-b border-border-color">
-            <div className="flex h-[56px] w-60 min-w-60 items-end border-r border-border-color bg-surface px-4 pb-2">
+            <div
+              className={`flex w-60 min-w-60 items-end border-r border-border-color bg-surface px-4 pb-2 ${viewMode === 'day' ? 'h-16' : 'h-14'}`}
+            >
               <span className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">
                 Tarefas
               </span>
             </div>
 
             <div ref={headerRef} className="flex-1 overflow-hidden">
-              <svg width={totalWidth} height={HEADER_TOTAL_H} className="block">
+              <svg width={totalWidth} height={headerTotalH} className="block">
                 {groups.map((group, index) => {
                   const width = group.span * colWidth;
                   const x = groupOffset;
@@ -108,7 +114,7 @@ export const GanttTimeline = ({
                         x={x}
                         y={HEADER_GROUP_ROW_H}
                         width={colWidth}
-                        height={HEADER_COLUMN_ROW_H}
+                        height={columnRowH}
                         fill={fill}
                         stroke={stroke}
                         strokeWidth={1}
@@ -116,7 +122,6 @@ export const GanttTimeline = ({
                       {colWidth >= 25 && (
                         <text
                           x={x + colWidth / 2}
-                          y={HEADER_GROUP_ROW_H + 19}
                           textAnchor="middle"
                           fill="currentColor"
                           className={`text-[10px] capitalize ${
@@ -127,7 +132,21 @@ export const GanttTimeline = ({
                                 : 'font-medium text-text-secondary'
                           }`}
                         >
-                          {column.label}
+                          {column.label.includes('\n') ? (
+                            column.label.split('\n').map((line, lineIdx) => (
+                              <tspan
+                                key={lineIdx}
+                                x={x + colWidth / 2}
+                                dy={lineIdx === 0 ? HEADER_GROUP_ROW_H + 14 : 12}
+                              >
+                                {line}
+                              </tspan>
+                            ))
+                          ) : (
+                            <tspan y={HEADER_GROUP_ROW_H + columnRowH / 2 + 4}>
+                              {column.label}
+                            </tspan>
+                          )}
                         </text>
                       )}
                     </g>
@@ -203,7 +222,7 @@ export const GanttTimeline = ({
 
             <div
               ref={timelineRef}
-              className="relative flex-1 overflow-auto custom-scrollbar"
+              className={`relative flex-1 custom-scrollbar ${viewMode === 'month' ? 'overflow-y-auto overflow-x-hidden' : 'overflow-auto'}`}
               onScroll={onTimelineScroll}
             >
               <svg width={totalWidth} height={totalHeight} className="block">

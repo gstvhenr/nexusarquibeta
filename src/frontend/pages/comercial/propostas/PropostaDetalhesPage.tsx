@@ -328,8 +328,12 @@ function PropostaDetalhesPage(): JSX.Element | null {
           </span>
           {/* Independent Checkboxes for PDF Customization */}
           <div className="flex items-center gap-6">
-            <label className="flex items-center gap-2 cursor-pointer select-none group">
+            <label
+              htmlFor="pdf-show-item-prices"
+              className="flex items-center gap-2 cursor-pointer select-none group"
+            >
               <input
+                id="pdf-show-item-prices"
                 type="checkbox"
                 checked={showItemPrices}
                 onChange={toggleShowItemPrices}
@@ -339,8 +343,12 @@ function PropostaDetalhesPage(): JSX.Element | null {
                 Valores individuais
               </span>
             </label>
-            <label className="flex items-center gap-2 cursor-pointer select-none group">
+            <label
+              htmlFor="pdf-show-section-totals"
+              className="flex items-center gap-2 cursor-pointer select-none group"
+            >
               <input
+                id="pdf-show-section-totals"
                 type="checkbox"
                 checked={showSectionTotals}
                 onChange={toggleShowSectionTotals}
@@ -354,6 +362,7 @@ function PropostaDetalhesPage(): JSX.Element | null {
               className={`flex items-center gap-2 select-none group ${hasDiscount ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
             >
               <input
+                id="pdf-show-discount"
                 type="checkbox"
                 checked={showDiscount}
                 onChange={toggleShowDiscount}
@@ -365,8 +374,12 @@ function PropostaDetalhesPage(): JSX.Element | null {
               </span>
             </label>
           </div>
-          <label className="flex items-center gap-2 cursor-pointer select-none group">
+          <label
+            htmlFor="pdf-show-grand-total"
+            className="flex items-center gap-2 cursor-pointer select-none group"
+          >
             <input
+              id="pdf-show-grand-total"
               type="checkbox"
               checked={showGrandTotal}
               onChange={toggleShowGrandTotal}
@@ -376,8 +389,12 @@ function PropostaDetalhesPage(): JSX.Element | null {
               Total geral
             </span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer select-none group">
+          <label
+            htmlFor="pdf-show-proposal-date"
+            className="flex items-center gap-2 cursor-pointer select-none group"
+          >
             <input
+              id="pdf-show-proposal-date"
               type="checkbox"
               checked={showProposalDate}
               onChange={toggleShowProposalDate}

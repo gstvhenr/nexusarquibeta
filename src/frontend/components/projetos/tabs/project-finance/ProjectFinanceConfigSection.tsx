@@ -147,6 +147,7 @@ export const ProjectFinanceConfigSection = ({
                 </label>
                 {financials.installmentsInterestEnabled && (
                   <input
+                    id="field-interest-rate"
                     type="number"
                     value={financials.installmentsInterestRate || ''}
                     onChange={(event) =>

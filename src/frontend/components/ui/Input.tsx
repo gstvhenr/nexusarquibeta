@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode } from 'react';
+import { useId, type InputHTMLAttributes, type ReactNode } from 'react';
 
 interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   /** Visual variant */
@@ -32,14 +32,19 @@ export function Input({
   rightIcon,
   className = '',
   disabled,
+  id,
   ...rest
 }: InputProps) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+
   return (
     <div className="relative flex items-center">
       {leftIcon && (
         <span className="absolute left-3 text-text-secondary pointer-events-none">{leftIcon}</span>
       )}
       <input
+        id={inputId}
         disabled={disabled}
         className={`w-full rounded-lg
           text-text-primary placeholder:text-text-tertiary

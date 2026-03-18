@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { formatDateLong } from '@/utils/formatters';
 import type {
   ContractAddendum,
   ContractAddendumStatus,
@@ -10,13 +11,10 @@ import type {
 import {
   Button,
   CalendarPlusIcon,
-  CashIcon,
-  ClipboardDocumentListIcon,
   ClockIcon,
   IconButton,
   Input,
   ListViewIcon,
-  PencilIcon,
   PlusIcon,
   Tab,
   TabList,
@@ -287,15 +285,11 @@ function DeadlinesTabContent({
                         Prazo
                       </p>
                       <p
-                        className={`text-sm font-mono font-semibold ${
+                        className={`text-sm font-sans font-semibold ${
                           isPast ? 'line-through text-text-secondary' : 'text-text-primary'
                         }`}
                       >
-                        {new Date(entry.date + 'T12:00:00').toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
+                        {formatDateLong(entry.date)}
                       </p>
                     </div>
                   ) : (
@@ -306,13 +300,9 @@ function DeadlinesTabContent({
                       </p>
                       <div className="flex items-center gap-1.5">
                         <span
-                          className={`text-sm font-mono font-semibold ${isPast ? 'line-through text-text-secondary' : 'text-text-primary'}`}
+                          className={`text-sm font-sans font-semibold ${isPast ? 'line-through text-text-secondary' : 'text-text-primary'}`}
                         >
-                          {new Date(entry.date + 'T12:00:00').toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                          })}
+                          {formatDateLong(entry.date)}
                         </span>
 
                         {/* Trash — always visible, only for marcos */}
@@ -331,6 +321,7 @@ function DeadlinesTabContent({
                         <div className="relative flex items-center justify-center w-7 h-7 rounded-md transition-colors hover:bg-info/15 group/cal cursor-pointer">
                           <CalendarPlusIcon className="w-4 h-4 text-text-secondary group-hover/cal:text-info pointer-events-none transition-colors" />
                           <input
+                            id={`deadline-date-${entry.id}`}
                             type="date"
                             value={entry.date}
                             max={!isConclusao && conclusionDate ? conclusionDate : undefined}
@@ -387,6 +378,7 @@ interface ProjetoDetalhesTabsProps {
   handleLocalChange: (field: keyof Project, value: Project[keyof Project]) => void;
   handleAddressChange: (field: keyof ProjectAddress, value: string) => void;
   incrementRevision: () => void;
+  decrementRevision: () => void;
   handleActionRequest: (type: ProjectActionType) => void;
   handleReactivate: () => void;
   handleSectionChange: ChecklistTabProps['onSectionChange'];
@@ -431,6 +423,7 @@ export function ProjetoDetalhesTabs({
   handleLocalChange,
   handleAddressChange,
   incrementRevision,
+  decrementRevision,
   handleActionRequest,
   handleReactivate,
   handleSectionChange,
@@ -486,19 +479,19 @@ export function ProjetoDetalhesTabs({
               Etapas
             </Tab>
             <Tab value="deadlines" className={tabButtonClass}>
-              <ClockIcon className="w-4 h-4" /> Prazos
+              Prazos
             </Tab>
             <Tab value="gantt" className={tabButtonClass}>
-              <CalendarPlusIcon className="w-4 h-4" /> Cronograma
+              Cronograma
             </Tab>
             <Tab value="finance" className={tabButtonClass}>
-              <CashIcon className="w-4 h-4" /> Financeiro
+              Financeiro
             </Tab>
             <Tab value="quotations" className={tabButtonClass}>
-              <ClipboardDocumentListIcon className="w-4 h-4" /> Cotações
+              Cotações
             </Tab>
             <Tab value="notes" className={tabButtonClass}>
-              <PencilIcon className="w-4 h-4" /> Anotações
+              Anotações
             </Tab>
           </TabList>
         </nav>
@@ -513,6 +506,7 @@ export function ProjetoDetalhesTabs({
               handleAddressChange={handleAddressChange}
               progress={progress}
               incrementRevision={incrementRevision}
+              decrementRevision={decrementRevision}
               handleActionRequest={handleActionRequest}
               handleReactivate={handleReactivate}
             />

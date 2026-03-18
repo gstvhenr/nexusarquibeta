@@ -175,6 +175,7 @@ export const ClientFormInfoIdentityContacts = ({
         {client.contacts?.map((contact, index) => (
           <div key={contact.id} className="grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center">
             <input
+              id={`contact-phone-${contact.id}`}
               type="tel"
               value={contact.phone}
               onChange={(e) => onContactChange(contact.id, 'phone', e.target.value)}
@@ -186,6 +187,7 @@ export const ClientFormInfoIdentityContacts = ({
             />
             <label className="flex items-center gap-1.5 text-sm whitespace-nowrap">
               <input
+                id={`whatsapp-${contact.id}`}
                 type="checkbox"
                 checked={contact.hasWhatsApp}
                 onChange={(e) => onContactChange(contact.id, 'hasWhatsApp', e.target.checked)}

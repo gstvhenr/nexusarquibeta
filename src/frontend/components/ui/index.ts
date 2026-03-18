@@ -23,6 +23,7 @@ export {
   ClipboardDocumentListIcon,
   GiftIcon,
   PlusIcon,
+  MinusIcon,
   EditIcon,
   TrashIcon,
   ArchiveIcon,

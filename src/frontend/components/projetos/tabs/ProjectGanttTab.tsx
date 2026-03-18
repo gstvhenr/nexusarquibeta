@@ -20,6 +20,7 @@ import type {
 
 export const ProjectGanttTab: (props: ProjectGanttTabProps) => React.ReactNode = ({ sections }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const [containerWidth, setContainerWidth] = useState(0);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
@@ -59,12 +60,24 @@ export const ProjectGanttTab: (props: ProjectGanttTabProps) => React.ReactNode =
     });
   }, []);
 
+  // Measure the timeline container width so the chart fills it
+  useEffect(() => {
+    const element = timelineRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) setContainerWidth(entry.contentRect.width);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
   const rows = useMemo(() => buildRows(sections, collapsedSections), [sections, collapsedSections]);
   const stats = useMemo(() => computeStats(sections), [sections]);
 
   const { columns, groups, colWidth, totalWidth, todayOffset } = useMemo(
-    () => computeTimelineMetrics(rows, viewMode),
-    [rows, viewMode],
+    () => computeTimelineMetrics(rows, viewMode, containerWidth),
+    [rows, viewMode, containerWidth],
   );
 
   useEffect(() => {
@@ -149,6 +162,7 @@ export const ProjectGanttTab: (props: ProjectGanttTabProps) => React.ReactNode =
 
       <GanttTimeline
         hasTasks={hasTasks}
+        viewMode={viewMode}
         groups={groups}
         columns={columns}
         totalWidth={totalWidth}

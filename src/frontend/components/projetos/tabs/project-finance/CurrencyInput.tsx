@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useId, useState } from 'react';
 import { formatCurrency } from '@/utils/formatters';
 
 interface CurrencyInputProps {
@@ -23,6 +23,8 @@ export const CurrencyInput = ({
   id,
   'aria-label': ariaLabel,
 }: CurrencyInputProps) => {
+  const autoId = useId();
+  const resolvedId = id ?? autoId;
   const [isFocused, setIsFocused] = useState(false);
   const [rawValue, setRawValue] = useState('');
 
@@ -72,7 +74,7 @@ export const CurrencyInput = ({
 
   return (
     <input
-      id={id}
+      id={resolvedId}
       type={isFocused ? 'number' : 'text'}
       value={displayValue}
       onFocus={handleFocus}

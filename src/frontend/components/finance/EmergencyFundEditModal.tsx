@@ -52,6 +52,7 @@ export function EmergencyFundEditModal({
         <div className="space-y-3 rounded-2xl border border-border-color/40 bg-background/55 p-4">
           <label className="flex cursor-pointer items-start gap-3">
             <input
+              id="emergency-fund-has-target"
               type="checkbox"
               checked={hasTarget}
               onChange={(event) => onTargetToggle(event.target.checked)}

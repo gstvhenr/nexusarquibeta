@@ -96,6 +96,7 @@ export const BudgetSectionComponent = React.memo<BudgetSectionProps>(
                 />
               </div>
               <input
+                id={`budget-section-title-${section.id}`}
                 type="text"
                 value={section.title}
                 onChange={(e) => {

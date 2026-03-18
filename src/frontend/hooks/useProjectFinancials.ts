@@ -173,6 +173,12 @@ export function useProjectFinancials(
     setLocalProject((p) => (p ? { ...p, revisionCount: (p.revisionCount || 0) + 1 } : null));
   };
 
+  const decrementRevision = () => {
+    setLocalProject((p) =>
+      p ? { ...p, revisionCount: Math.max(0, (p.revisionCount || 0) - 1) } : null,
+    );
+  };
+
   return {
     handleGenerateInstallments,
     handleInstallmentChange,
@@ -184,5 +190,6 @@ export function useProjectFinancials(
     handleDeadlineChange,
     handleRemoveDeadline,
     incrementRevision,
+    decrementRevision,
   };
 }

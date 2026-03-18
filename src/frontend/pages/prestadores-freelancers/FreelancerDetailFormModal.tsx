@@ -99,6 +99,7 @@ export const FreelancerDetailFormModal: (props: {
                   {photoPreview ? 'Alterar' : 'Adicionar Foto'}
                 </Button>
                 <input
+                  id="freelancer-photo-upload"
                   type="file"
                   ref={fileInputRef}
                   onChange={handlePhotoChange}
@@ -218,6 +219,7 @@ export const FreelancerDetailFormModal: (props: {
             {FREELANCER_SPECIALTIES.map((s) => (
               <label key={s} className="flex items-center gap-2 text-sm cursor-pointer">
                 <input
+                  id={`freelancer-specialty-${s.replace(/\s+/g, '-').toLowerCase()}`}
                   type="checkbox"
                   checked={freelancer.specialties.includes(s)}
                   onChange={(e) => handleSpecialtyChange(s, e.target.checked)}

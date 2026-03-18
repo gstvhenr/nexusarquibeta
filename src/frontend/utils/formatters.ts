@@ -70,6 +70,23 @@ export const formatDateDayMonth = (isoDate: string | null | undefined) => {
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 };
 
+/**
+ * Format date as "dd de mmm. de yyyy (ddd)" — e.g. "18 de mar. de 2026 (qua)".
+ * Input: ISO date string (YYYY-MM-DD or full ISO). Output: formatted string or 'N/D'.
+ */
+export const formatDateLong = (isoDate: string | null | undefined): string => {
+  if (!isoDate) return 'N/D';
+  const date = parseDateString(isoDate);
+  if (!date || isNaN(date.getTime())) return 'N/D';
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = date.toLocaleDateString('pt-BR', { month: 'short' });
+  const year = date.getFullYear();
+  const weekday = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+
+  return `${day} de ${month} de ${year} (${weekday})`;
+};
+
 export const formatBytes = (bytes: number, decimals = 2): string => {
   if (!bytes || bytes === 0) return '0 Bytes';
   const k = 1024;

@@ -21,6 +21,7 @@ export function ImportDataModal({
           </strong>
         </p>
         <input
+          id="import-data-file"
           type="file"
           accept=".json"
           onChange={onImportData}

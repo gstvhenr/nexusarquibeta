@@ -9,6 +9,11 @@ export const PlusIcon: (props: { className?: string }) => React.ReactNode = ({ c
     <line x1="5" x2="19" y1="12" y2="12" />
   </Icon>
 );
+export const MinusIcon: (props: { className?: string }) => React.ReactNode = ({ className }) => (
+  <Icon className={className}>
+    <line x1="5" x2="19" y1="12" y2="12" />
+  </Icon>
+);
 export const EditIcon: (props: { className?: string }) => React.ReactNode = ({ className }) => (
   <Icon className={className}>
     <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />

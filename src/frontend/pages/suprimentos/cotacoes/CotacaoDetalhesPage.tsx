@@ -76,6 +76,7 @@ const AddProductModal: (props: {
             className="flex items-center gap-3 p-3 bg-background rounded-lg cursor-pointer hover:bg-border-color/50"
           >
             <input
+              id={`product-select-${p.id}`}
               type="checkbox"
               checked={selectedIds.has(p.id)}
               onChange={() =>

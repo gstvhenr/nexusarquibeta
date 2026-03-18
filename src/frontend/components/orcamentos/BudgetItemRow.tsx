@@ -43,6 +43,7 @@ export const BudgetItemRow: (props: BudgetItemRowProps) => React.ReactNode = ({
     >
       <td className="p-4 text-center">
         <input
+          id={`budget-item-include-${sectionId}-${item.id}`}
           type="checkbox"
           checked={item.included}
           onChange={onFieldChange(item.id, 'included')}
@@ -52,6 +53,7 @@ export const BudgetItemRow: (props: BudgetItemRowProps) => React.ReactNode = ({
       </td>
       <td className="px-6 py-4">
         <input
+          id={`budget-item-desc-${sectionId}-${item.id}`}
           type="text"
           value={item.description}
           onChange={onFieldChange(item.id, 'description')}
@@ -62,6 +64,7 @@ export const BudgetItemRow: (props: BudgetItemRowProps) => React.ReactNode = ({
       </td>
       <td className="px-6 py-4 text-right">
         <input
+          id={`budget-item-qty-${sectionId}-${item.id}`}
           type="number"
           min="0"
           value={item.quantity}
@@ -73,6 +76,7 @@ export const BudgetItemRow: (props: BudgetItemRowProps) => React.ReactNode = ({
       </td>
       <td className="px-6 py-4 text-right">
         <input
+          id={`budget-item-price-${sectionId}-${item.id}`}
           type="number"
           min="0"
           step="0.01"
@@ -85,6 +89,7 @@ export const BudgetItemRow: (props: BudgetItemRowProps) => React.ReactNode = ({
       </td>
       <td className="px-6 py-4 text-right">
         <input
+          id={`budget-item-hours-${sectionId}-${item.id}`}
           type="number"
           min="0"
           value={item.estimatedHours || ''}

@@ -1,4 +1,4 @@
-import type { TextareaHTMLAttributes } from 'react';
+import { useId, type TextareaHTMLAttributes } from 'react';
 
 interface TextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'> {
   /** Component size — controls padding and font */
@@ -19,10 +19,15 @@ export function Textarea({
   rows = 3,
   className = '',
   disabled,
+  id,
   ...rest
 }: TextareaProps) {
+  const generatedId = useId();
+  const textareaId = id ?? generatedId;
+
   return (
     <textarea
+      id={textareaId}
       rows={rows}
       disabled={disabled}
       className={`w-full bg-background border rounded-lg

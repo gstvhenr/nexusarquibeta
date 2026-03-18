@@ -118,7 +118,7 @@ function generateColumns(
       const dayNum = cursor.toLocaleDateString('pt-BR', { day: '2-digit' });
       const capitalWeekday = weekdayShort.charAt(0).toUpperCase() + weekdayShort.slice(1);
       columns.push({
-        label: `${capitalWeekday}. ${dayNum}`,
+        label: `${dayNum}\n${capitalWeekday}.`,
         startDate: new Date(cursor),
         endDate: next,
         isToday: startOfDay(cursor).getTime() === startOfDay(today).getTime(),
@@ -304,15 +304,39 @@ export function computeStats(sections: ProjectSection[]): GanttStats {
   return { total, completed, late, inProgress, dateRange };
 }
 
-export function computeTimelineMetrics(rows: TimelineRow[], viewMode: ViewMode): TimelineMetrics {
+export function computeTimelineMetrics(
+  rows: TimelineRow[],
+  viewMode: ViewMode,
+  minWidth = 0,
+): TimelineMetrics {
   const now = startOfDay(new Date());
+
+  /** Minimum end date so the timeline always shows a meaningful span. */
+  const ensureMinSpan = (start: Date, end: Date): Date => {
+    if (viewMode === 'day') {
+      // At least 30 days visible
+      const minEnd = addDays(start, 30);
+      return end < minEnd ? minEnd : end;
+    }
+    if (viewMode === 'week') {
+      // At least 4 weeks visible
+      const minEnd = addDays(start, 28);
+      return end < minEnd ? minEnd : end;
+    }
+    // month — at least 12 months visible
+    const minEnd = new Date(start.getFullYear(), start.getMonth() + 12, start.getDate());
+    return end < minEnd ? minEnd : end;
+  };
 
   if (rows.length === 0) {
     const start = addDays(now, -7);
-    const end = addDays(now, 30);
+    const end = ensureMinSpan(start, addDays(now, 30));
     const { columns, groups } = generateColumns(start, end, viewMode, now);
     const months = countMonths(start, end);
-    const totalWidth = Math.max(800, months * MONTH_COL_PX);
+    const totalWidth =
+      viewMode === 'month' && minWidth > 0
+        ? minWidth
+        : Math.max(800, months * MONTH_COL_PX, minWidth);
     const colWidth = totalWidth / columns.length;
 
     return {
@@ -336,11 +360,14 @@ export function computeTimelineMetrics(rows: TimelineRow[], viewMode: ViewMode):
 
   const padding = viewMode === 'day' ? 3 : viewMode === 'week' ? 7 : 15;
   const start = addDays(startOfDay(new Date(minDate)), -padding);
-  const end = addDays(startOfDay(new Date(maxDate)), padding);
+  const end = ensureMinSpan(start, addDays(startOfDay(new Date(maxDate)), padding));
 
   const { columns, groups } = generateColumns(start, end, viewMode, now);
   const months = countMonths(start, end);
-  const totalWidth = Math.max(800, months * MONTH_COL_PX);
+  const totalWidth =
+    viewMode === 'month' && minWidth > 0
+      ? minWidth
+      : Math.max(800, months * MONTH_COL_PX, minWidth);
   const colWidth = totalWidth / columns.length;
 
   const timelineStart = columns[0].startDate;

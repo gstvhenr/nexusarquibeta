@@ -193,6 +193,7 @@ export function ClienteDetalhesInfoTab({
                   />
                   <label className="flex items-center gap-1.5 text-sm whitespace-nowrap cursor-pointer">
                     <input
+                      id={`whatsapp-${contact.id}`}
                       type="checkbox"
                       checked={contact.hasWhatsApp}
                       onChange={(e) =>
@@ -344,6 +345,7 @@ export function ClienteDetalhesInfoTab({
                           className="flex items-center gap-2 p-2 hover:bg-background rounded-md cursor-pointer transition-colors text-sm"
                         >
                           <input
+                            id={`service-interest-${opt.replace(/\s+/g, '-').toLowerCase()}`}
                             type="checkbox"
                             checked={client.serviceInterests.includes(opt)}
                             onChange={(e) => handleServiceInterestChange(opt, e.target.checked)}

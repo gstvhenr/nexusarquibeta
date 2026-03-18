@@ -539,7 +539,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
                   focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent
                   transition-colors duration-150 border-border-color`}
                 aria-haspopup="true"
-                aria-expanded={isTasksOpen}
+                aria-expanded={isTasksOpen ? true : undefined}
               >
                 <span
                   className={`block truncate ${selectedTaskIds.length === 0 ? 'text-text-secondary' : 'text-text-primary'}`}
@@ -556,9 +556,9 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
               {isTasksOpen &&
                 typeof document !== 'undefined' &&
                 createPortal(
+                  /* Dynamic portal coordinates require inline style */
                   <div
                     ref={tasksDropdownRef}
-                    // dynamic portal coordinates
                     style={dropdownStyle}
                     className="bg-surface border border-border-color shadow-lifted rounded-lg max-h-56 overflow-y-auto custom-scrollbar flex flex-col my-1 z-[99999]"
                   >
@@ -579,6 +579,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
                             className="flex items-center gap-3 px-3 py-2.5 text-sm cursor-pointer hover:bg-background transition-colors border-b border-border-color/30 last:border-b-0"
                           >
                             <input
+                              id={`task-delegate-${task.id}`}
                               type="checkbox"
                               checked={selectedTaskIds.includes(task.id)}
                               onChange={() => handleTaskCheckboxClick(task.id)}

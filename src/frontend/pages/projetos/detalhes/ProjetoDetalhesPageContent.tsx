@@ -308,6 +308,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
     handleDeadlineChange,
     handleRemoveDeadline,
     incrementRevision,
+    decrementRevision,
   } = useProjectFinancials(
     setLocalProject,
     localProject,
@@ -403,6 +404,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
         handleLocalChange={handleLocalChange}
         handleAddressChange={handleAddressChange}
         incrementRevision={incrementRevision}
+        decrementRevision={decrementRevision}
         handleActionRequest={handleActionRequest}
         handleReactivate={handleReactivate}
         handleSectionChange={handleSectionChange}

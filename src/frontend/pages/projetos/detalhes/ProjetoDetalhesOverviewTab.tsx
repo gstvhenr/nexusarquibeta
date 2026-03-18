@@ -25,6 +25,7 @@ interface ProjetoDetalhesOverviewTabProps {
   handleAddressChange: (field: keyof ProjectAddress, value: string) => void;
   progress: number;
   incrementRevision: () => void;
+  decrementRevision: () => void;
   handleActionRequest: (type: ProjectActionType) => void;
   handleReactivate: () => void;
 }
@@ -37,6 +38,7 @@ export function ProjetoDetalhesOverviewTab({
   handleAddressChange,
   progress,
   incrementRevision,
+  decrementRevision,
   handleActionRequest,
   handleReactivate,
 }: ProjetoDetalhesOverviewTabProps) {
@@ -198,6 +200,7 @@ export function ProjetoDetalhesOverviewTab({
           count={localProject.revisionCount || 0}
           limit={localProject.revisionLimit || 3}
           onIncrement={incrementRevision}
+          onDecrement={decrementRevision}
         />
       </div>
 

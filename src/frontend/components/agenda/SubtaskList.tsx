@@ -92,6 +92,7 @@ function SubtaskList({
           <div className="flex-1 min-w-0">
             {editingId === sub.id ? (
               <input
+                id={`subtask-edit-${sub.id}`}
                 type="text"
                 value={editingTitle}
                 onChange={(e) => onEditingTitleChange(e.target.value)}

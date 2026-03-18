@@ -74,6 +74,7 @@ export {
 // --- COMMON ACTIONS (extracted to icons-common.tsx) ---
 export {
   PlusIcon,
+  MinusIcon,
   EditIcon,
   TrashIcon,
   ArchiveIcon,

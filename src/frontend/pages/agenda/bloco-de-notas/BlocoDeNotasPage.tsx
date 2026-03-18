@@ -224,7 +224,7 @@ const BlocoDeNotasPage: () => React.ReactNode = () => {
                     role="tab"
                     id={getTabId(tab.id)}
                     aria-controls={getPanelId(tab.id)}
-                    aria-selected={active ? 'true' : 'false'}
+                    aria-selected={active}
                     tabIndex={active ? 0 : -1}
                     className={`flex min-w-0 items-center gap-1.5 rounded-t-lg border border-b-0 px-3 py-2 text-xs font-medium transition-all ${
                       active
