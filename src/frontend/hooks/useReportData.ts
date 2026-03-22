@@ -5,20 +5,22 @@ import {
   useMarketingData,
   useSupplyChainData,
 } from '../context/DataContext';
+import { useSystemData } from '../context/SystemContext';
 import type { ReportDataInput } from '../services/reportService';
 
 /**
  * Assembles the narrowed ReportDataInput from domain contexts.
- * Encapsulates multi-context plumbing so pages don't rebuild this blob manually.
+ * Encapsulates multi-context plumbing so the reports page doesn't rebuild this blob manually.
  *
- * input  -> four domain contexts (Core, Finance, Marketing, SupplyChain)
+ * input  -> five domain contexts (Core, Finance, Marketing, SupplyChain, System)
  * output -> ReportDataInput (memoized)
  */
 export function useReportData(): ReportDataInput {
   const { projects, clients, proposals } = useCoreData();
-  const { commissions, manualExpenses } = useFinanceData();
-  const { marketingActivities } = useMarketingData();
-  const { freelancers } = useSupplyChainData();
+  const { commissions, manualExpenses, cashBoxExpenses, cashBoxCredits } = useFinanceData();
+  const { marketingActivities, prospects, socialNetworks } = useMarketingData();
+  const { freelancers, suppliers, quotations } = useSupplyChainData();
+  const { agendaEvents, hiredServices } = useSystemData();
 
   return useMemo(
     () => ({
@@ -29,7 +31,32 @@ export function useReportData(): ReportDataInput {
       commissions,
       manualExpenses,
       freelancers,
+      cashBoxExpenses: cashBoxExpenses ?? [],
+      cashBoxCredits: cashBoxCredits ?? [],
+      agendaEvents: agendaEvents ?? [],
+      hiredServices: hiredServices ?? [],
+      prospects: prospects ?? [],
+      socialNetworks: socialNetworks ?? [],
+      suppliers: suppliers ?? [],
+      quotations: quotations ?? [],
+      products: [],
     }),
-    [projects, clients, proposals, marketingActivities, commissions, manualExpenses, freelancers],
+    [
+      projects,
+      clients,
+      proposals,
+      marketingActivities,
+      commissions,
+      manualExpenses,
+      freelancers,
+      cashBoxExpenses,
+      cashBoxCredits,
+      agendaEvents,
+      hiredServices,
+      prospects,
+      socialNetworks,
+      suppliers,
+      quotations,
+    ],
   );
 }

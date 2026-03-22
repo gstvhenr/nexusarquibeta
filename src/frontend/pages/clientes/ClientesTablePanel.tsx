@@ -197,6 +197,5 @@ export const ClientesTablePanel = ({
         </tbody>
       </table>
     </div>
-
   </>
 );

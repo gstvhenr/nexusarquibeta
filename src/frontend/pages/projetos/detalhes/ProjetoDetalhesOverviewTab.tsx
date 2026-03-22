@@ -57,9 +57,9 @@ export function ProjetoDetalhesOverviewTab({
 
   const statusColorMap: Record<string, string> = {
     'Em Andamento': 'font-bold text-blue-500 bg-blue-500/10 border-blue-500/30',
-    'Pausado': 'font-bold text-yellow-500 bg-yellow-500/10 border-yellow-500/30',
-    'Concluído': 'font-bold text-green-500 bg-green-500/10 border-green-500/30',
-    'Cancelado': 'font-bold text-red-500 bg-red-500/10 border-red-500/30',
+    Pausado: 'font-bold text-yellow-500 bg-yellow-500/10 border-yellow-500/30',
+    Concluído: 'font-bold text-green-500 bg-green-500/10 border-green-500/30',
+    Cancelado: 'font-bold text-red-500 bg-red-500/10 border-red-500/30',
   };
 
   return (
@@ -77,7 +77,6 @@ export function ProjetoDetalhesOverviewTab({
             aria-label="Nome do projeto"
           />
         </FormField>
-
 
         <Select
           id="field-status"

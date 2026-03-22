@@ -11,7 +11,11 @@ const getInitialClient = (): Client => ({
   clientType: 'PF',
   birthDate: '',
   representative: { name: '', relationship: '', role: '' },
-  contacts: [{ id: uuidv4(), phone: '', hasWhatsApp: false, isPrimary: true }],
+  contacts: [
+    { id: uuidv4(), phone: '', hasWhatsApp: false, isPrimary: true },
+    { id: uuidv4(), phone: '', hasWhatsApp: false, isPrimary: false },
+    { id: uuidv4(), phone: '', hasWhatsApp: false, isPrimary: false },
+  ],
   email: '',
   status: 'Potencial Cliente',
   leadSource: 'Não informado',
@@ -78,6 +82,16 @@ export function useClientFormHandlers({
         phone: clientData.phone,
         hasWhatsApp: !!clientData.phoneHasWhatsApp,
         isPrimary: true,
+      });
+    }
+
+    // Pad contacts array to always have exactly 3 slots
+    while (clientData.contacts.length < 3) {
+      clientData.contacts.push({
+        id: uuidv4(),
+        phone: '',
+        hasWhatsApp: false,
+        isPrimary: clientData.contacts.length === 0,
       });
     }
 

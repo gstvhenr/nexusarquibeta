@@ -45,7 +45,11 @@ const Sidebar: (props: SidebarProps) => React.ReactNode = ({ isOpen, setOpen }) 
               </p>
             </div>
           </div>
-          <IconButton onClick={closeSidebar} aria-label="Fechar menu" className="-mr-2 shrink-0 md:hidden">
+          <IconButton
+            onClick={closeSidebar}
+            aria-label="Fechar menu"
+            className="-mr-2 shrink-0 md:hidden"
+          >
             <XIcon className="w-6 h-6" />
           </IconButton>
         </div>

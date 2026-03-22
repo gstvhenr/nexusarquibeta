@@ -47,10 +47,7 @@ const PropostaDetalhesPage = lazy(() => import('./pages/comercial/propostas/Prop
 const PropostasPage = lazy(() => import('./pages/comercial/propostas'));
 const ProspectsPage = lazy(() => import('./pages/comercial/prospects'));
 const RedesSociaisPage = lazy(() => import('./pages/gestao-marketing/redes-sociais'));
-const RelatoriosLayout = lazy(() => import('./pages/relatorios'));
-const RelatorioFinanceiroPage = lazy(() => import('./pages/relatorios/RelatorioFinanceiroPage'));
-const RelatorioProjetosPage = lazy(() => import('./pages/relatorios/RelatorioProjetosPage'));
-const RelatorioAquisicaoPage = lazy(() => import('./pages/relatorios/RelatorioAquisicaoPage'));
+const RelatoriosPage = lazy(() => import('./pages/relatorios'));
 const ServicosContratadosPage = lazy(
   () => import('./pages/prestadores-freelancers/servicos-contratados/ServicosContratadosPage'),
 );
@@ -186,12 +183,7 @@ const App: () => React.ReactNode = () => {
                   path="/prestadores-freelancers/servicos-contratados"
                   element={<ServicosContratadosPage />}
                 />
-                <Route path="/relatorios/*" element={<RelatoriosLayout />}>
-                  <Route index element={<Navigate to="/relatorios/financeiro" replace />} />
-                  <Route path="financeiro" element={<RelatorioFinanceiroPage />} />
-                  <Route path="projetos" element={<RelatorioProjetosPage />} />
-                  <Route path="aquisicao" element={<RelatorioAquisicaoPage />} />
-                </Route>
+                <Route path="/relatorios" element={<RelatoriosPage />} />
                 <Route path="/configuracoes" element={<ConfiguracoesPage />} />
               </Routes>
             </Suspense>

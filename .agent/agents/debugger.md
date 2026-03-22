@@ -155,6 +155,121 @@ npm run test -- src/test/golden-fixtures.test.ts
 
 ---
 
+## Árvores de Diagnóstico Rápido
+
+> Atalhos visuais para os bugs mais comuns. Use como primeiro passo antes da investigação profunda.
+
+### 🔴 "Componente não renderiza"
+
+```
+O componente está importado corretamente?
+├─ NÃO → Verificar import path e barrel exports
+└─ SIM → Tem <Route> correspondente em App.tsx (se for página)?
+         ├─ NÃO → Adicionar <Route> — consultar /nova-pagina workflow
+         └─ SIM → O componente retorna JSX válido?
+                  ├─ NÃO → Verificar return (falta return? retorna null?)
+                  └─ SIM → Props obrigatórias estão sendo passadas?
+                           ├─ NÃO → Verificar interface de Props no componente
+                           └─ SIM → Há condição que esconde (if, ternário, &&)?
+                                    ├─ SIM → Verificar lógica condicional e dados
+                                    └─ NÃO → React DevTools → o componente está na árvore?
+                                             ├─ SIM → Problema é CSS (ver "Estilo não aplica")
+                                             └─ NÃO → ErrorBoundary capturou? Console errors?
+```
+
+### 🟡 "Estilo/CSS não aplica"
+
+```
+A classe Tailwind existe no config (tailwind.config.cjs)?
+├─ NÃO → É token custom? Verificar theme.extend
+└─ SIM → O className está chegando ao elemento DOM?
+         ├─ NÃO → O componente aceita className como prop?
+         │        ├─ SIM → Está usando className no spread? (${className})
+         │        └─ NÃO → Adicionar className ao Props + template literal
+         └─ SIM → Há conflito de especificidade?
+                  ├─ SIM → Classes mais específicas sobrescrevem?
+                  │        → Verificar ordem no template literal
+                  └─ NÃO → O Tailwind está processando o arquivo?
+                           → Verificar content[] no tailwind.config.cjs
+                           → Arquivo está em src/frontend/?
+```
+
+### 🔵 "TypeScript reclama mas o código parece correto"
+
+```
+O erro é de tipo de Props?
+├─ SIM → A interface Props está atualizada com as props reais?
+│        ├─ NÃO → Atualizar interface em src/frontend/types/ ou no componente
+│        └─ SIM → Verificar se union types batem (ex: variant aceita 'ghost'?)
+└─ NÃO → O erro é de import?
+         ├─ SIM → O arquivo existe? O barrel export inclui o export correto?
+         │        → Rodar npm run validate:structure
+         └─ NÃO → O erro é de compatibilidade de tipos?
+                  ├─ SIM → Tipos em src/frontend/types/ sincronizados com services?
+                  │        → Rodar npm run contract-check (se disponível)
+                  └─ NÃO → Ler a mensagem COMPLETA do tsc
+                           → npm run typecheck para ver contexto total
+```
+
+### 🟢 "Estado não atualiza (useState, Context)"
+
+```
+É useState local?
+├─ SIM → Está mutando diretamente? (push, atribuição direta)
+│        ├─ SIM → Usar imutabilidade: [...arr, item], {...obj, key: val}
+│        └─ NÃO → O setState está sendo chamado?
+│                 ├─ NÃO → Verificar event handler (onClick, onChange)
+│                 └─ SIM → Closure stale? (valor antigo no callback)
+│                          ├─ SIM → Adicionar deps corretas em useCallback
+│                          └─ NÃO → Re-render happening? React DevTools Profiler
+│
+└─ NÃO → É Context API?
+         ├─ SIM → O Provider engloba o componente na árvore?
+         │        ├─ NÃO → Mover Provider para nível correto em App.tsx
+         │        └─ SIM → O value do Provider muda a cada render?
+         │                 ├─ SIM → Usar useMemo no objeto do value
+         │                 └─ NÃO → Componente dentro de React.memo bloqueando update?
+         └─ NÃO → É state derivado?
+                  → Não use useEffect para derivar state
+                  → Use useMemo ou cálculo direto no render
+```
+
+### 🟣 "Dados não persistem (IndexedDB / Storage)"
+
+```
+Os dados chegam ao service corretamente?
+├─ NÃO → Verificar o hook/componente que chama o service
+│        → console.log temporário nos params do service
+└─ SIM → O service chama a infraestrutura corretamente?
+         ├─ NÃO → Verificar src/frontend/services/<domain>Service.ts
+         └─ SIM → A transação IndexedDB completa sem erro?
+                  ├─ NÃO → Chrome DevTools → Application → IndexedDB
+                  │        → Store name correto? Schema atualizado?
+                  └─ SIM → Os dados carregam corretamente na próxima leitura?
+                           ├─ NÃO → Verificar loadData.ts (sequência de bootstrap)
+                           │        → Campo tipo/formato mudou? (migration necessária?)
+                           └─ SIM → O state React reflete os dados do IndexedDB?
+                                    → Problema no hook de hydration, não persistência
+```
+
+### 🟤 "Rota não resolve / página em branco"
+
+```
+A URL bate com o path definido em App.tsx?
+├─ NÃO → Verificar path exato (kebab-case, sem trailing /)
+└─ SIM → O import da página resolve?
+         ├─ NÃO → Arquivo existe? Nome correto (*Page.tsx)?
+         │        → npm run typecheck para ver erros de import
+         └─ SIM → A página está dentro do <Route> correto?
+                  ├─ NÃO → Verificar aninhamento de <Route> (pai/filho)
+                  └─ SIM → Lazy loading sem Suspense wrapper?
+                           ├─ SIM → Adicionar <Suspense fallback={...}>
+                           └─ NÃO → ErrorBoundary capturando silenciosamente?
+                                    → Verificar console para erros de runtime
+```
+
+---
+
 ## Relatório de Bug (Template)
 
 ```markdown

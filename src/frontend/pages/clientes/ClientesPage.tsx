@@ -116,7 +116,6 @@ const ClientesPage: () => React.ReactNode = () => {
     [sortedClients, filter, showArchived, paymentStatusByClientId],
   );
 
-
   const handleSelectClient = useCallback((id: string) => {
     setSelectedClientIds((prev) => {
       const newSet = new Set(prev);
@@ -315,8 +314,6 @@ const ClientesPage: () => React.ReactNode = () => {
           </Button>
         </div>
       </Modal>
-
-
     </div>
   );
 };

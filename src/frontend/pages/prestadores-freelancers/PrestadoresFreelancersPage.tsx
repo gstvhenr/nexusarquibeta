@@ -7,17 +7,13 @@ import type { Freelancer, HiredService } from '@/types';
 import { NAV_LINKS, SUBCONTRATACAO_LABEL } from '@/constants';
 import {
   Button,
-  Input,
   PlusIcon,
   UserCircleIcon,
   UsersIcon,
   ClipboardDocumentListIcon,
-  CashIcon,
   ArchiveIcon,
   UnarchiveIcon,
-  StarIcon,
 } from '@/components/ui';
-import { formatCurrency } from '@/utils/formatters';
 import { getInitials } from '@/utils/supplierHelpers';
 import { v4 as uuidv4 } from 'uuid';
 import { FreelancerDetailFormModal } from './FreelancerDetailFormModal';
@@ -42,16 +38,15 @@ const FreelancerSummaryPanel: (props: {
   freelancers: Freelancer[];
   hiredServices: HiredService[];
 }) => React.ReactNode = ({ freelancers, hiredServices }) => {
-  const { activeCount, totalDelegated, totalCost } = useMemo(() => {
+  const { activeCount, inProgressCount, totalDelegated } = useMemo(() => {
     const active = freelancers.filter((f) => !f.archived);
-    // Calculate based on the HiredServices global state for accuracy across the system
     const activeServices = hiredServices.filter((s) => !s.archived);
-    const totalCost = activeServices.reduce((sum, s) => sum + s.cost, 0);
+    const inProgressServices = activeServices.filter((s) => s.status === 'Em Andamento');
 
     return {
       activeCount: active.length,
+      inProgressCount: inProgressServices.length,
       totalDelegated: activeServices.length,
-      totalCost: totalCost,
     };
   }, [freelancers, hiredServices]);
 
@@ -63,14 +58,14 @@ const FreelancerSummaryPanel: (props: {
         icon={<UserCircleIcon className="w-8 h-8" />}
       />
       <SummaryCard
-        title="Serviços Contratados"
-        value={totalDelegated}
+        title="Serviços em Andamento"
+        value={inProgressCount}
         icon={<ClipboardDocumentListIcon className="w-8 h-8" />}
       />
       <SummaryCard
-        title="Custo Total"
-        value={formatCurrency(totalCost)}
-        icon={<CashIcon className="w-8 h-8" />}
+        title="Total de Serviços Terceirizados"
+        value={totalDelegated}
+        icon={<ClipboardDocumentListIcon className="w-8 h-8" />}
       />
     </div>
   );
@@ -90,46 +85,36 @@ const FreelancerCard: (props: {
     }}
     role="button"
     tabIndex={0}
-    className="bg-surface rounded-xl shadow-soft p-4 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-primary/50 group"
+    className="bg-surface rounded-xl shadow-soft p-4 flex flex-row items-center gap-4 cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:ring-2 hover:ring-primary/50 group"
   >
-    <div className="w-24 h-24 bg-background rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden border-2 border-border-color mb-3 group-hover:border-primary/30 transition-colors">
+    <div className="w-12 h-12 bg-background rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden border border-border-color group-hover:border-primary/30 transition-colors">
       {freelancer.photo ? (
         <img src={freelancer.photo} alt={freelancer.name} className="w-full h-full object-cover" />
       ) : (
-        <span className="text-3xl font-bold text-secondary">{getInitials(freelancer.name)}</span>
+        <span className="text-lg font-bold text-secondary">{getInitials(freelancer.name)}</span>
       )}
     </div>
-    <h4 className="font-bold text-text-primary text-lg mb-1 group-hover:text-primary transition-colors">
-      {freelancer.name}
-    </h4>
-    <div className="w-full flex-1 flex flex-col items-center justify-start mt-2 space-y-2">
-      {freelancer.location ? (
-        <span className="text-xs text-text-secondary font-medium px-2 truncate w-full text-center">
-          {freelancer.location}
-        </span>
-      ) : (
-        <span className="text-xs text-text-secondary opacity-50 px-2 truncate w-full text-center">
-          Local não informado
-        </span>
-      )}
 
-      <div className="flex items-center gap-1 text-warning">
-        <StarIcon className={`w-4 h-4 ${!freelancer.rating ? 'text-border-color' : ''}`} />
-        <span className="text-sm font-bold text-text-primary">
-          {freelancer.rating ? freelancer.rating.toFixed(1) : '-'}
-        </span>
+    <div className="flex-1 min-w-0">
+      <h4 className="font-bold text-text-primary text-base truncate group-hover:text-primary transition-colors">
+        {freelancer.name}
+      </h4>
+      <div className="text-sm text-text-secondary truncate mt-0.5">
+        {freelancer.location ? (
+          freelancer.location
+        ) : (
+          <span className="opacity-50">Local não informado</span>
+        )}
       </div>
+    </div>
 
-      <div className="w-full pt-2 mt-auto border-t border-border-color/30 flex justify-center items-center gap-3 text-[10px] text-text-secondary">
-        <span title="Cotações Efetivas / Solicitadas">
-          <strong className="text-text-primary">{freelancer.quotesApproved || 0}</strong> efetivas
-        </span>
-        <span className="opacity-50">•</span>
-        <span>
-          <strong className="text-text-primary">{freelancer.quotesRequested || 0}</strong>{' '}
-          requisições
-        </span>
-      </div>
+    <div className="hidden sm:flex flex-1 min-w-0 flex-col justify-center text-right">
+      <span className="text-sm text-text-primary font-medium truncate">
+        {freelancer.email || <span className="opacity-50 font-normal">S/ E-mail</span>}
+      </span>
+      <span className="text-xs text-text-secondary truncate mt-0.5">
+        {freelancer.phone || <span className="opacity-50">S/ Telefone</span>}
+      </span>
     </div>
   </div>
 );
@@ -137,7 +122,6 @@ const FreelancerCard: (props: {
 const PrestadoresFreelancersPage: () => React.ReactNode = () => {
   const { freelancers, setFreelancers } = useSupplyChainData();
   const { hiredServices } = useSystemData();
-  const [search, setSearch] = useState('');
   const [showArchived, setShowArchived] = useState(false);
 
   const detailDisclosure = useDisclosure();
@@ -148,15 +132,11 @@ const PrestadoresFreelancersPage: () => React.ReactNode = () => {
   const freelancersToDisplay = useMemo(() => {
     return freelancers
       .filter((f) => {
-        const matchesSearch = search
-          ? f.name.toLowerCase().includes(search.toLowerCase()) ||
-            f.specialties.some((s) => s.toLowerCase().includes(search.toLowerCase()))
-          : true;
         const matchesArchived = f.archived === showArchived;
-        return matchesSearch && matchesArchived;
+        return matchesArchived;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [freelancers, search, showArchived]);
+  }, [freelancers, showArchived]);
 
   const handleSaveFreelancer = useCallback(
     (freelancerToSave: Freelancer) => {
@@ -222,18 +202,8 @@ const PrestadoresFreelancersPage: () => React.ReactNode = () => {
         {!showArchived && (
           <FreelancerSummaryPanel freelancers={freelancers} hiredServices={hiredServices} />
         )}
-        <div className="p-4 bg-surface rounded-xl shadow-soft flex flex-wrap items-center justify-between gap-4 shrink-0 border border-border-color/50">
-          <Input
-            type="search"
-            placeholder="Buscar por nome ou especialidade"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="sm:w-64 p-2 rounded-md"
-            aria-label="Buscar freelancer"
-          />
-        </div>
         <div className="flex-1 overflow-y-auto -mx-2 custom-scrollbar">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 p-2">
+          <div className="flex flex-col space-y-3 p-2">
             {freelancersToDisplay.map((f) => (
               <FreelancerCard key={f.id} freelancer={f} onClick={() => openDetailModal(f)} />
             ))}
@@ -246,9 +216,7 @@ const PrestadoresFreelancersPage: () => React.ReactNode = () => {
                   Nenhum freelancer encontrado
                 </h3>
                 <p className="mt-1 text-sm">
-                  {showArchived
-                    ? 'Não há freelancers arquivados.'
-                    : 'Tente ajustar a busca ou adicione um novo freelancer.'}
+                  {showArchived ? 'Não há freelancers arquivados.' : 'Adicione um novo freelancer.'}
                 </p>
               </div>
             </div>
