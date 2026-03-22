@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PageHeader } from '@/components/layout';
 import { EventFormModal } from '@/components/agenda';
@@ -37,8 +37,6 @@ const ClienteDetalhesPage = () => {
   const [client, setClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState('info');
   const [isEditing, setIsEditing] = useState(false);
-  const [isInterestsDropdownOpen, setInterestsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
   const {
@@ -46,9 +44,6 @@ const ClienteDetalhesPage = () => {
     handleAddressChange,
     handleRepChange,
     handleContactChange,
-    handleAddContact,
-    handleRemoveContact,
-    handleServiceInterestChange,
     handleSave,
     handleCancel,
     getModifiedClass,
@@ -92,25 +87,22 @@ const ClienteDetalhesPage = () => {
 
   useEffect(() => {
     if (originalClient) {
-      setClient(JSON.parse(JSON.stringify(originalClient)));
+      const clientCopy: Client = JSON.parse(JSON.stringify(originalClient));
+      // Pad contacts to always have 3 slots
+      if (!clientCopy.contacts) {
+        clientCopy.contacts = [];
+      }
+      while (clientCopy.contacts.length < 3) {
+        clientCopy.contacts.push({
+          id: crypto.randomUUID(),
+          phone: '',
+          hasWhatsApp: false,
+          isPrimary: clientCopy.contacts.length === 0,
+        });
+      }
+      setClient(clientCopy);
     }
   }, [originalClient]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setInterestsDropdownOpen(false);
-      }
-    };
-
-    if (isInterestsDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isInterestsDropdownOpen]);
 
   const clientProjects = useMemo(() => {
     if (!client?.id) {
@@ -264,16 +256,10 @@ const ClienteDetalhesPage = () => {
             isPJ={client.clientType === 'PJ'}
             isEditing={isEditing}
             originalClient={originalClient}
-            dropdownRef={dropdownRef}
-            isInterestsDropdownOpen={isInterestsDropdownOpen}
-            setInterestsDropdownOpen={setInterestsDropdownOpen}
             handleChange={handleChange}
             handleAddressChange={handleAddressChange}
             handleRepChange={handleRepChange}
             handleContactChange={handleContactChange}
-            handleAddContact={handleAddContact}
-            handleRemoveContact={handleRemoveContact}
-            handleServiceInterestChange={handleServiceInterestChange}
             getModifiedClass={getModifiedClass}
           />
 

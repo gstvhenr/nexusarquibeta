@@ -1,1 +1,2 @@
-export { default } from './RelatoriosLayout';
+export { default } from './RelatoriosPage';
+export * from './RelatoriosPage';

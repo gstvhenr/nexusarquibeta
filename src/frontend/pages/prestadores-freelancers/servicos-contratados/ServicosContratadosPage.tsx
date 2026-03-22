@@ -337,12 +337,12 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
                     {project?.name || 'Projeto Desconhecido'}
                   </p>
                 </div>
-                <div className="bg-background rounded-full p-2 border border-border-color">
+                <div className="bg-background rounded-full overflow-hidden flex items-center justify-center border border-border-color shrink-0 w-12 h-12">
                   {freelancer?.photo ? (
                     <img
                       src={freelancer.photo}
                       alt={freelancer.name}
-                      className="w-8 h-8 rounded-full object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <UserCircleIcon className="w-8 h-8 text-secondary" />

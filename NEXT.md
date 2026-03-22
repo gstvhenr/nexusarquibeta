@@ -1,5 +1,37 @@
 # NEXT.md
 
+## Último estado conhecido (2026-03-22)
+
+Adição de dados sintéticos de Redes Sociais no `reportService.ts`, criação do componente base `SocialMediaReport` usando LineChart (recharts) para exibir evolução de seguidores, e refatoração completa da página de Relatórios (`RelatoriosPage.tsx`) para utilizar uma arquitetura de visualização baseada em Abas (Tabs), organizando melhor o volume extenso de componentes e categorias da página. Verificações rígidas executadas confirmando ausência de quebra de testes e de lints (Exit code: 0).
+
+### Checklist desta sessão
+
+- [x] Geração de dados simulados em `reportService.ts` com histórico mensal de seguidores para Instagram, LinkedIn e Pinterest.
+- [x] Criação do componente `SocialMediaReport` (em `ReportComponents.tsx`) com um dropdown seletor de rede e um gráfico de linha interativo.
+- [x] Adaptação da aba e reescrita de `RelatoriosPage.tsx` para usar um state de Abas (`activeTab`) a fim de otimizar a clareza e carregamento das seções.
+- [x] Solucionado bug formal de tipagem (nome vs name e data vs date) originado na tradução do DTO sintético.
+- [x] Executados lints, typechecks e build — 100% verde (Exit code: 0).
+
+### Concluído nesta sessão
+
+- `src/frontend/services/reportService.ts` — Mock array e estrutura de redes sociais inseridas na constante do Relatório.
+- `src/frontend/components/relatorios/ReportComponents.tsx` — Inclusão do componente isolado e interativo `SocialMediaReport`.
+- `src/frontend/pages/relatorios/RelatoriosPage.tsx` — Reestruturação severa para navegação baseada em tabs de conteúdo, e renderização da nova tag.
+
+## Evidências da sessão
+
+- `npm run typecheck && npm run lint` e `npm run build` processaram as mudanças nativamente sem erros (Exit code: 0).
+
+## Próximo passo exato
+
+1. Avaliar via interface web ("Relatórios") se o comportamento de navegação por Abas proporciona a experiência desejada e se a evolução das linhas do Gráfico se porta suavemente.
+
+## Bloqueios e dúvidas
+
+- Nenhum.
+
+---
+
 ## Último estado conhecido (2026-03-17)
 
 Refatoração da página de **Serviços Contratados** para permitir tanto a criação quanto a edição completa de serviços na mesma modal. Substituição do campo de seleção de Tarefas por um Dropdown multi-select customizado usando `createPortal`, garantindo que o comportamento seja idêntico a um Select nativo (flutuando sobre a UI sem quebrar áreas de scroll ou causar layout shift). Ajustado o input monetário de Custo para forçar o formato monetário local ("X.XXX,XX"). Atualização do ratchet de linhas para acomodar o aumento necessário de código e aprovação em todos os 9 gates do pipeline.

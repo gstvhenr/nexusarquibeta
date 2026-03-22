@@ -1,4 +1,3 @@
-import type React from 'react';
 import type { Client, ClientContact, Project, ProjectMeeting } from '@/types';
 
 export type FieldId = (name: string) => string;
@@ -34,16 +33,10 @@ export interface ClientFormInfoTabProps {
   isPJ: boolean;
   fieldId: FieldId;
   commonInputClass: string;
-  dropdownRef: React.RefObject<HTMLDivElement>;
-  isInterestsDropdownOpen: boolean;
-  onToggleInterestsDropdown: () => void;
   onChange: ClientChangeHandler;
   onAddressChange: ClientAddressChangeHandler;
   onRepChange: ClientRepresentativeChangeHandler;
   onContactChange: ClientContactChangeHandler;
-  onAddContact: () => void;
-  onRemoveContact: (id: string) => void;
-  onServiceInterestChange: (interest: string, checked: boolean) => void;
   getModifiedClass: (currentVal: unknown, originalVal: unknown) => string;
 }
 

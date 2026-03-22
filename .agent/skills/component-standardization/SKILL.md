@@ -165,17 +165,14 @@ Para cada candidato:
 ```tsx
 // src/components/ui/Button.tsx
 
-interface ButtonProps {
+// 1. Interface — SEMPRE PascalCase + sufixo Props
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
-  disabled?: boolean;
-  children: React.ReactNode;
-  onClick?: () => void;
-  type?: 'button' | 'submit' | 'reset';
-  className?: string;
 }
 
+// 2. Lookup tables — FORA do componente (evita recriação a cada render)
 const VARIANT_STYLES: Record<Required<ButtonProps>['variant'], string> = {
   primary: 'bg-primary text-primary-content hover:bg-primary-focus',
   secondary: 'bg-secondary text-secondary-content hover:bg-secondary-focus',
@@ -189,20 +186,18 @@ const SIZE_STYLES: Record<Required<ButtonProps>['size'], string> = {
   lg: 'px-6 py-3 text-base',
 };
 
+// 3. Componente — defaults na desestruturação, ...rest no elemento raiz
 export function Button({
   variant = 'primary',
   size = 'md',
   loading = false,
   disabled = false,
   children,
-  onClick,
-  type = 'button',
-  className = '',
+  className = '', // className passthrough OBRIGATÓRIO
+  ...rest // rest spread OBRIGATÓRIO
 }: ButtonProps) {
   return (
     <button
-      type={type}
-      onClick={onClick}
       disabled={disabled || loading}
       className={`
         inline-flex items-center justify-center font-medium
@@ -212,6 +207,8 @@ export function Button({
         ${SIZE_STYLES[size]}
         ${className}
       `.trim()}
+      data-testid="btn-action"
+      {...rest} // ← rest spread no elemento raiz
     >
       {loading ? <LoadingSpinner /> : children}
     </button>
@@ -219,14 +216,31 @@ export function Button({
 }
 ```
 
+> **Para inputs/form elements:** usar `forwardRef` para permitir ref forwarding:
+>
+> ```tsx
+> export const Input = forwardRef<HTMLInputElement, InputProps>(
+>   ({ label, error, className = '', ...rest }, ref) => (
+>     <input ref={ref} className={className} {...rest} />
+>   ),
+> );
+> ```
+
 ### Checklist de Qualidade por Componente
 
+- [ ] 1 componente = 1 arquivo (sem múltiplos componentes por arquivo)
 - [ ] Props tipadas com TypeScript strict (sem `any`)
-- [ ] Variantes via Record<string, string> (não ifs)
+- [ ] Props extends HTML attributes quando aplicável (`extends HTMLAttributes<HTMLDivElement>`)
+- [ ] Variantes via `Record<string, string>` fora do corpo da função (não ifs)
 - [ ] Tokens do design system (nunca hardcoded)
-- [ ] `className` como prop de escape (customização pontual)
+- [ ] `className = ''` na desestruturação (passthrough obrigatório)
+- [ ] `...rest` spread no elemento raiz (permite attrs HTML nativos)
+- [ ] `forwardRef` para inputs/form elements
+- [ ] `data-testid` em componentes interativos
 - [ ] Acessibilidade básica (role, aria-label, tabIndex)
 - [ ] Transição suave em hover/focus (`transition-colors duration-150`)
+- [ ] Named export (`export function X`) para componentes e hooks
+- [ ] Barrel export atualizado em `index.ts` do diretório pai
 
 ---
 
@@ -256,3 +270,84 @@ export { Modal } from './Modal';
 ```
 
 > Consumidores importam via: `import { Button, Card } from '../components/ui';`
+
+---
+
+## 8. Acessibilidade (a11y) — Obrigatório para Todo Componente Interativo
+
+> Um ERP que não é acessível é um ERP que exclui usuários.
+> Toda interação deve funcionar: mouse, teclado, leitor de tela.
+
+### Regras Universais
+
+| Regra                          | Implementação                                  | Quando                  |
+| ------------------------------ | ---------------------------------------------- | ----------------------- |
+| Botão sem texto visível        | `aria-label="Descrição da ação"`               | Botões com apenas ícone |
+| Input de formulário            | Prop `label` + `<label htmlFor>` internamente  | **Todos** os inputs     |
+| Imagem decorativa              | `aria-hidden="true"`                           | Ícones ilustrativos     |
+| Imagem informativa             | `alt="Descrição relevante"`                    | Logos, gráficos, fotos  |
+| Elemento clicável (não-button) | `role="button"` + `tabIndex={0}` + `onKeyDown` | Divs com onClick        |
+| Links visuais                  | `<a>` ou `<Link>` com texto descritivo         | Nunca "clique aqui"     |
+
+### Focus Management
+
+| Cenário             | Implementação                                 |
+| ------------------- | --------------------------------------------- |
+| Modal/Dialog aberto | Focus trap: foco fica preso dentro do modal   |
+| Modal fechado       | Retornar foco ao elemento que abriu o modal   |
+| Dropdown aberto     | Foco no primeiro item; Escape fecha e retorna |
+| Toast/Notificação   | `role="alert"` + `aria-live="polite"`         |
+| Loading state       | `aria-busy="true"` no container que carrega   |
+| Conteúdo dinâmico   | `aria-live="polite"` em regiões que atualizam |
+
+### Keyboard Navigation
+
+| Tecla             | Comportamento esperado                    |
+| ----------------- | ----------------------------------------- |
+| `Tab`             | Navega para o próximo elemento interativo |
+| `Shift+Tab`       | Navega para o anterior                    |
+| `Enter` / `Space` | Ativa botões e links                      |
+| `Escape`          | Fecha modais, dropdowns, popups           |
+| `Arrow Up/Down`   | Navega em listas, selects, menus          |
+| `Home` / `End`    | Vai ao primeiro/último item de lista      |
+
+```tsx
+// Padrão para elementos clicáveis não-nativos
+<div
+  role="button"
+  tabIndex={0}
+  onClick={handleAction}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleAction();
+    }
+  }}
+>
+```
+
+### Padrões ARIA para Componentes ERP
+
+| Componente             | ARIA obrigatório                                                        |
+| ---------------------- | ----------------------------------------------------------------------- |
+| **DataTable**          | `role="grid"`, `aria-label="Nome da tabela"`, headers com `scope="col"` |
+| **Select customizado** | `role="listbox"` no container, `role="option"` nos filhos               |
+| **Tabs**               | `role="tablist"`, `role="tab"`, `role="tabpanel"`, `aria-selected`      |
+| **Modal**              | `role="dialog"`, `aria-modal="true"`, `aria-labelledby` com título      |
+| **Badge/Status**       | `aria-label` descritivo (ex: "Status: Aprovado", não apenas cor)        |
+| **Tooltip**            | `role="tooltip"`, `aria-describedby` no elemento trigger                |
+| **Accordion**          | `aria-expanded`, `aria-controls` no header                              |
+| **Skeleton/Loading**   | `aria-busy="true"`, `aria-label="Carregando dados"`                     |
+| **EmptyState**         | `role="status"`, texto descritivo para screen reader                    |
+
+### Contraste de Cores
+
+- Usar **apenas** tokens da paleta do design system (garantem WCAG AA: ratio ≥ 4.5:1)
+- **Nunca** transmitir informação apenas por cor: StatusBadge deve ter ícone + texto + cor
+- Testar com Chrome DevTools → Rendering → Emulate vision deficiencies
+
+### Regra de Ouro
+
+> **Proibido:** Componente interativo sem **nenhum** mecanismo de acessibilidade.
+> Se não sabe qual ARIA usar → comece com semantic HTML (`<button>`, `<input>`, `<select>`).
+> HTML semântico já é acessível por padrão. Só use ARIA para preencher lacunas.

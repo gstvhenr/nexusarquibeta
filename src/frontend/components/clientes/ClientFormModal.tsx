@@ -42,18 +42,12 @@ export const ClientFormModal: (props: ClientFormModalProps) => React.ReactNode =
   const {
     client,
     clientProjects,
-    isInterestsDropdownOpen,
-    setInterestsDropdownOpen,
     newMeeting,
     setNewMeeting,
-    dropdownRef,
     handleChange,
     handleAddressChange,
     handleRepChange,
     handleContactChange,
-    handleAddContact,
-    handleRemoveContact,
-    handleServiceInterestChange,
     handleAddMeeting,
     handleDeleteMeeting,
     getModifiedClass,
@@ -135,16 +129,10 @@ export const ClientFormModal: (props: ClientFormModalProps) => React.ReactNode =
             isPJ={client.clientType === 'PJ'}
             fieldId={fieldId}
             commonInputClass={commonInputClass}
-            dropdownRef={dropdownRef}
-            isInterestsDropdownOpen={isInterestsDropdownOpen}
-            onToggleInterestsDropdown={() => setInterestsDropdownOpen((open) => !open)}
             onChange={handleChange}
             onAddressChange={handleAddressChange}
             onRepChange={handleRepChange}
             onContactChange={handleContactChange}
-            onAddContact={handleAddContact}
-            onRemoveContact={handleRemoveContact}
-            onServiceInterestChange={handleServiceInterestChange}
             getModifiedClass={getModifiedClass}
           />
         )}

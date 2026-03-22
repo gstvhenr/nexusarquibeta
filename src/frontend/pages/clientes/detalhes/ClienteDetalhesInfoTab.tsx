@@ -1,20 +1,7 @@
 import React from 'react';
 import { ClienteAddressFieldset } from './ClienteAddressFieldset';
-import {
-  Button,
-  ChevronDownIcon,
-  FormField,
-  IconButton,
-  Input,
-  PlusIcon,
-  Select,
-  TrashIcon,
-} from '@/components/ui';
-import {
-  LEAD_SOURCE_OPTIONS,
-  PIPELINE_STATUS_OPTIONS,
-  SERVICE_INTEREST_OPTIONS,
-} from '@/constants';
+import { FormField, Input, Select } from '@/components/ui';
+import { LEAD_SOURCE_OPTIONS, PIPELINE_STATUS_OPTIONS } from '@/constants';
 import { clientStatuses } from '@/types';
 import type { Client, ClientContact } from '@/types';
 import { formatCpfCnpj, formatDate, formatPhone } from '@/utils/formatters';
@@ -28,9 +15,6 @@ interface ClienteDetalhesInfoTabProps {
   isPJ: boolean;
   isEditing: boolean;
   originalClient: Client | undefined;
-  dropdownRef: React.RefObject<HTMLDivElement>;
-  isInterestsDropdownOpen: boolean;
-  setInterestsDropdownOpen: React.Dispatch<React.SetStateAction<boolean>>;
   handleChange: (field: keyof Client, value: Client[keyof Client]) => void;
   handleAddressChange: (field: keyof Client['address'], value: string) => void;
   handleRepChange: (field: keyof NonNullable<Client['representative']>, value: string) => void;
@@ -39,9 +23,6 @@ interface ClienteDetalhesInfoTabProps {
     field: keyof Omit<ClientContact, 'id'>,
     value: string | boolean,
   ) => void;
-  handleAddContact: () => void;
-  handleRemoveContact: (id: string) => void;
-  handleServiceInterestChange: (interest: string, checked: boolean) => void;
   getModifiedClass: (currentVal: unknown, originalVal: unknown) => string;
 }
 
@@ -51,16 +32,10 @@ export function ClienteDetalhesInfoTab({
   isPJ,
   isEditing,
   originalClient,
-  dropdownRef,
-  isInterestsDropdownOpen,
-  setInterestsDropdownOpen,
   handleChange,
   handleAddressChange,
   handleRepChange,
   handleContactChange,
-  handleAddContact,
-  handleRemoveContact,
-  handleServiceInterestChange,
   getModifiedClass,
 }: ClienteDetalhesInfoTabProps) {
   const DISABLED_SELECT_OVERRIDE =
@@ -167,77 +142,55 @@ export function ClienteDetalhesInfoTab({
                 </>
               )}
             </div>
-          </fieldset>
 
-          <fieldset className="space-y-4">
-            <legend className="text-lg font-bold text-secondary mb-4 border-b border-border-color pb-1 w-full">
-              Contatos
-            </legend>
-            <div className="space-y-3">
-              {client.contacts?.map((contact, index) => (
-                <div
-                  key={contact.id}
-                  className="grid grid-cols-[1fr,auto,auto,auto] gap-3 items-center bg-background/30 p-2 rounded-lg"
-                >
-                  <Input
-                    type="tel"
-                    value={contact.phone}
-                    onChange={(e) => handleContactChange(contact.id, 'phone', e.target.value)}
-                    onBlur={(e) =>
-                      handleContactChange(contact.id, 'phone', formatPhone(e.target.value))
-                    }
-                    className={`${DISABLED_OVERRIDE} ${originalClient?.contacts?.find((c) => c.id === contact.id)?.phone !== contact.phone ? 'border-warning ring-1 ring-warning/20' : 'border-border-color'}`}
-                    placeholder={`Telefone ${index + 1}`}
-                    disabled={!isEditing}
-                    aria-label={`Telefone ${index + 1}`}
-                  />
-                  <label className="flex items-center gap-1.5 text-sm whitespace-nowrap cursor-pointer">
-                    <input
-                      id={`whatsapp-${contact.id}`}
-                      type="checkbox"
-                      checked={contact.hasWhatsApp}
-                      onChange={(e) =>
-                        handleContactChange(contact.id, 'hasWhatsApp', e.target.checked)
-                      }
-                      className="rounded accent-primary"
-                      disabled={!isEditing}
-                    />{' '}
-                    WhatsApp
-                  </label>
-                  <label className="flex items-center gap-1.5 text-sm whitespace-nowrap cursor-pointer">
-                    <input
-                      type="radio"
-                      name="primary-contact"
-                      checked={contact.isPrimary}
-                      onChange={(e) =>
-                        handleContactChange(contact.id, 'isPrimary', e.target.checked)
-                      }
-                      className="accent-primary"
-                      disabled={!isEditing}
-                    />{' '}
-                    Principal
-                  </label>
-                  {isEditing && (
-                    <IconButton
-                      variant="danger"
-                      onClick={() => handleRemoveContact(contact.id)}
-                      aria-label="Remover telefone"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </IconButton>
-                  )}
-                </div>
-              ))}
-              {isEditing && (client.contacts?.length || 0) < 3 && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleAddContact}
-                  className="flex items-center gap-1"
-                >
-                  <PlusIcon className="w-4 h-4" /> Adicionar Telefone
-                </Button>
-              )}
+            <div className="mt-6">
+              <span className="block text-sm font-medium text-text-secondary mb-2">Telefones</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[0, 1, 2].map((index) => {
+                  const contact = client.contacts?.[index];
+                  const phoneLabel = `Telefone 0${index + 1}`;
+                  return (
+                    <FormField key={contact?.id ?? `phone-slot-${index}`} label={phoneLabel}>
+                      <Input
+                        type="tel"
+                        value={contact?.phone ?? ''}
+                        onChange={(e) => {
+                          if (contact) {
+                            handleContactChange(contact.id, 'phone', e.target.value);
+                          }
+                        }}
+                        onBlur={(e) => {
+                          if (contact) {
+                            handleContactChange(contact.id, 'phone', formatPhone(e.target.value));
+                          }
+                        }}
+                        className={`${DISABLED_OVERRIDE} ${contact && originalClient?.contacts?.find((c) => c.id === contact.id)?.phone !== contact.phone ? 'border-warning ring-1 ring-warning/20' : 'border-border-color'}`}
+                        placeholder={phoneLabel}
+                        disabled={!isEditing}
+                        aria-label={phoneLabel}
+                      />
+                      {contact && (
+                        <label className="flex items-center gap-1.5 text-xs whitespace-nowrap cursor-pointer mt-1">
+                          <input
+                            id={`whatsapp-${contact.id}`}
+                            type="checkbox"
+                            checked={contact.hasWhatsApp}
+                            onChange={(e) =>
+                              handleContactChange(contact.id, 'hasWhatsApp', e.target.checked)
+                            }
+                            className="rounded accent-primary"
+                            disabled={!isEditing}
+                          />{' '}
+                          WhatsApp
+                        </label>
+                      )}
+                    </FormField>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
               <FormField label="Email">
                 <Input
                   type="email"
@@ -314,61 +267,6 @@ export function ClienteDetalhesInfoTab({
                   disabled={!isEditing}
                   aria-label="Fonte do lead"
                 />
-              </div>
-
-              <div className="col-span-full">
-                <div className="relative" ref={dropdownRef}>
-                  <span className="block text-sm font-medium text-text-secondary mb-1">
-                    Serviços de Interesse
-                  </span>
-                  <Button
-                    variant="secondary"
-                    onClick={() => isEditing && setInterestsDropdownOpen(!isInterestsDropdownOpen)}
-                    className={`w-full bg-background p-2 rounded-md border text-left flex justify-between items-center ${!isEditing ? 'opacity-100 cursor-default' : 'cursor-pointer'} ${JSON.stringify(client.serviceInterests) !== JSON.stringify(originalClient?.serviceInterests) ? 'border-warning ring-1 ring-warning/20' : 'border-border-color'}`}
-                    disabled={!isEditing}
-                  >
-                    <span className="truncate block">
-                      {client.serviceInterests.length > 0
-                        ? `${client.serviceInterests.length} selecionado(s)`
-                        : 'Selecione os serviços...'}
-                    </span>
-                    <ChevronDownIcon
-                      className={`w-4 h-4 transition-transform ${isInterestsDropdownOpen ? 'rotate-180' : ''}`}
-                    />
-                  </Button>
-
-                  {isInterestsDropdownOpen && (
-                    <div className="absolute z-20 bottom-full left-0 right-0 mb-1 bg-surface border border-border-color rounded-lg shadow-lifted max-h-60 overflow-y-auto custom-scrollbar p-1">
-                      {SERVICE_INTEREST_OPTIONS.map((opt) => (
-                        <label
-                          key={opt}
-                          className="flex items-center gap-2 p-2 hover:bg-background rounded-md cursor-pointer transition-colors text-sm"
-                        >
-                          <input
-                            id={`service-interest-${opt.replace(/\s+/g, '-').toLowerCase()}`}
-                            type="checkbox"
-                            checked={client.serviceInterests.includes(opt)}
-                            onChange={(e) => handleServiceInterestChange(opt, e.target.checked)}
-                            className="rounded accent-primary w-4 h-4"
-                          />
-                          <span className="text-text-primary">{opt}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {client.serviceInterests.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {client.serviceInterests.map((interest) => (
-                      <span
-                        key={interest}
-                        className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full border border-primary/20"
-                      >
-                        {interest}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
               <div className="col-span-full text-xs text-text-secondary mt-1">
                 Cliente desde: {formatDate(client.registrationDate)}

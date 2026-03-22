@@ -174,45 +174,6 @@ export const FreelancerDetailFormModal: (props: {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <FormField label="Avaliação (0-5)">
-            <Input
-              type="number"
-              min="0"
-              max="5"
-              step="1"
-              value={freelancer.rating || 0}
-              onChange={(e) => handleChange('rating', Number(e.target.value))}
-              disabled={isReadOnly}
-              className={inputOverride}
-              aria-label="Avaliação do Freelancer"
-            />
-          </FormField>
-          <FormField label="Cotações Solicitadas">
-            <Input
-              type="number"
-              min="0"
-              step="1"
-              value={freelancer.quotesRequested || 0}
-              onChange={(e) => handleChange('quotesRequested', Number(e.target.value))}
-              disabled={isReadOnly}
-              className={inputOverride}
-              aria-label="Quantidade de cotações solicitadas"
-            />
-          </FormField>
-          <FormField label="Cotações Efetivas">
-            <Input
-              type="number"
-              min="0"
-              step="1"
-              value={freelancer.quotesApproved || 0}
-              onChange={(e) => handleChange('quotesApproved', Number(e.target.value))}
-              disabled={isReadOnly}
-              className={inputOverride}
-              aria-label="Quantidade de cotações efetivas"
-            />
-          </FormField>
-        </div>
         <div>
           <span className="block text-sm font-medium text-text-secondary mb-2">Especialidades</span>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-background/30 p-2 rounded-lg border border-border-color/50">

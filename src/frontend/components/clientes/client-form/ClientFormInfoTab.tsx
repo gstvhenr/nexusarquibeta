@@ -9,16 +9,10 @@ export const ClientFormInfoTab = ({
   isPJ,
   fieldId,
   commonInputClass,
-  dropdownRef,
-  isInterestsDropdownOpen,
-  onToggleInterestsDropdown,
   onChange,
   onAddressChange,
   onRepChange,
   onContactChange,
-  onAddContact,
-  onRemoveContact,
-  onServiceInterestChange,
   getModifiedClass,
 }: ClientFormInfoTabProps) => (
   <div className="space-y-6">
@@ -32,8 +26,6 @@ export const ClientFormInfoTab = ({
       onChange={onChange}
       onRepChange={onRepChange}
       onContactChange={onContactChange}
-      onAddContact={onAddContact}
-      onRemoveContact={onRemoveContact}
       getModifiedClass={getModifiedClass}
     />
     <ClientFormInfoAddressStatus
@@ -42,12 +34,8 @@ export const ClientFormInfoTab = ({
       isReadOnly={isReadOnly}
       fieldId={fieldId}
       commonInputClass={commonInputClass}
-      dropdownRef={dropdownRef}
-      isInterestsDropdownOpen={isInterestsDropdownOpen}
-      onToggleInterestsDropdown={onToggleInterestsDropdown}
       onChange={onChange}
       onAddressChange={onAddressChange}
-      onServiceInterestChange={onServiceInterestChange}
       getModifiedClass={getModifiedClass}
     />
   </div>
