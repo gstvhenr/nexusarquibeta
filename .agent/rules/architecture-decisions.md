@@ -28,7 +28,9 @@ src/frontend/types/       → Tipagens e contratos TypeScript (Data Contracts)
 ```
 É um componente UI?
 ├─ SIM → src/frontend/components/
-│        (Se o componente for estritamente privado de uma única route, fica em pages/{rota}/components/)
+│        Primitive/base? → src/frontend/components/ui/
+│        Domínio/feature? → src/frontend/components/<dominio>/
+│        NUNCA em src/frontend/pages/**, mesmo quando houver um único consumidor inicial
 │
 └─ NÃO → Usa React Hooks (useState, useEffect, etc.)?
          ├─ SIM → src/frontend/hooks/
@@ -179,7 +181,16 @@ Ao criar qualquer nova pasta em `src/frontend/`:
 ### Regras de Ouro de Posicionamento
 
 1. Nunca crie lógica de negócio forte em `src/frontend/pages/`.
-2. Nunca acesse `localStorage` ou APIs diretas em `src/frontend/components/`. Crie hooks ou services.
-3. Tipos devem sempre convergir para `src/frontend/types/` (Data Contracts) se compartilhados entre Backend Mock/Service e UI.
-4. Nunca crie arquivo em `src/frontend/` sem consultar `docs/PLACEMENT_RULES.md`.
-5. Após criar/mover arquivo, rodar `npm run validate:structure` e tratar violações como bloqueantes.
+2. `src/frontend/pages/**` existe apenas para rota, composição e conexão com hooks/context.
+3. `*Page.tsx` não pode importar `./Subcomponent.tsx` visual local; toda UI deve vir de `components/ui` ou `components/<dominio>`.
+4. Nunca acesse `localStorage` ou APIs diretas em `src/frontend/components/`. Crie hooks ou services.
+5. Tipos devem sempre convergir para `src/frontend/types/` (Data Contracts) se compartilhados entre Backend Mock/Service e UI.
+6. Nunca crie arquivo em `src/frontend/` sem consultar `docs/PLACEMENT_RULES.md`.
+7. Após criar/mover arquivo, rodar `npm run validate:structure` e tratar violações como bloqueantes.
+
+## Ratchet de composição visual
+
+1. Nenhuma página pode depender de componente visual co-localizado em `src/frontend/pages/**`.
+2. Todo primitive novo nasce em `src/frontend/components/ui/` com export via barrel.
+3. Componentes visuais reutilizáveis, mesmo com consumidor único inicial, nascem em `src/frontend/components/<dominio>/`.
+4. Hooks page-scoped continuam permitidos em `src/frontend/pages/**` apenas quando orquestram a page e não renderizam JSX.

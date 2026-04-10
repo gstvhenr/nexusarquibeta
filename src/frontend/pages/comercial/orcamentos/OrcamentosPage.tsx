@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BudgetSectionComponent } from '@/components/orcamentos';
+import { BudgetSectionComponent, SaveProposalModal } from '@/components/orcamentos';
 import { PageHeader } from '@/components/layout';
 import { Button, Input, Modal } from '@/components/ui';
 import { NAV_LINKS } from '@/constants';
@@ -17,7 +17,6 @@ import type {
 import { formatCurrency } from '@/utils/formatters';
 import { calculateBudgetTotals, initializeSections } from '@/utils/budgetHelpers';
 import { useDisclosure } from '@/hooks/useDisclosure';
-import { SaveProposalModal } from './SaveProposalModal';
 
 function OrcamentosPage(): JSX.Element {
   const { clients, setProposals } = useCoreData();

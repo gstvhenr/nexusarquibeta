@@ -9,3 +9,6 @@ export { CustomTooltip } from './chart/CustomTooltip';
 export { DonutTooltip } from './chart/DonutTooltip';
 export { default as CashBoxExpenseFormModal } from './CashBoxExpenseFormModal';
 export { default as CashBoxCreditFormModal } from './CashBoxCreditFormModal';
+export { CashBoxEntriesTable } from './CashBoxEntriesTable';
+export { CashBoxToast } from './CashBoxToast';
+export { CashBoxTotals } from './CashBoxTotals';

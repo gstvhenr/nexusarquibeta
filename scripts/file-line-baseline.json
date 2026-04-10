@@ -1,9 +1,16 @@
 {
+  "src/frontend/components/clientes/ClienteDetalhesSecondaryTabs.tsx": 428,
+  "src/frontend/components/comercial/ProspectCard.tsx": 307,
   "src/frontend/components/finance/FinanceLineChart.tsx": 418,
-  "src/frontend/components/projetos/tabs/project-finance/ProjectFinanceAddendumsSection.tsx": 421,
-  "src/frontend/pages/comercial/propostas/PropostaDetalhesPage.tsx": 519,
-  "src/frontend/pages/prestadores-freelancers/servicos-contratados/ServicosContratadosPage.tsx": 666,
-  "src/frontend/pages/projetos/detalhes/ProjetoDetalhesPageContent.tsx": 517,
-  "src/frontend/pages/suprimentos/cotacoes/CotacaoDetalhesPage.tsx": 762,
-  "src/frontend/services/agendaService.ts": 451
+  "src/frontend/components/projetos/ProjetoDetalhesOverviewTab.tsx": 318,
+  "src/frontend/components/projetos/ProjetoDetalhesPageContent.tsx": 519,
+  "src/frontend/components/projetos/ProjetoDetalhesTabs.tsx": 584,
+  "src/frontend/components/projetos/tabs/project-finance/ProjectFinanceAddendumsSection.tsx": 449,
+  "src/frontend/components/projetos/tabs/project-gantt/GanttTimeline.tsx": 303,
+  "src/frontend/components/relatorios/ReportComponents.tsx": 486,
+  "src/frontend/pages/comercial/propostas/PropostaDetalhesPage.tsx": 536,
+  "src/frontend/pages/prestadores-freelancers/servicos-contratados/ServicosContratadosPage.tsx": 668,
+  "src/frontend/pages/suprimentos/cotacoes/CotacaoDetalhesPage.tsx": 763,
+  "src/frontend/services/agendaService.ts": 451,
+  "src/frontend/services/reportService.ts": 454
 }

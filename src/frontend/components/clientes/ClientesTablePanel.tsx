@@ -1,14 +1,7 @@
-import { ClientTableRow } from '../../components/clientes';
-import {
-  ArchiveIcon,
-  IconButton,
-  Input,
-  Select,
-  TrashIcon,
-  UnarchiveIcon,
-} from '../../components/ui';
-import { clientStatuses, paymentStatuses } from '../../types';
-import type { Client, PaymentStatus } from '../../types';
+import { ClientTableRow } from './ClientTableRow';
+import { ArchiveIcon, IconButton, Input, Select, TrashIcon, UnarchiveIcon } from '@/components/ui';
+import { clientStatuses, paymentStatuses } from '@/types';
+import type { Client, PaymentStatus } from '@/types';
 import type { ClientesFilterState } from './types';
 
 const CLIENT_STATUS_OPTIONS = [

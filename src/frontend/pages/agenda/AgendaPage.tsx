@@ -1,23 +1,25 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
+import {
+  DayDetailSidebar,
+  EventFormModal,
+  MonthlyCalendarGrid,
+  SubtaskDetailModal,
+  WeeklyTimeGrid,
+} from '@/components/agenda';
+import { PageHeader } from '@/components/layout';
+import { Button, DeleteConfirmationModal, PlusIcon, ChevronDownIcon } from '@/components/ui';
 import { useSystemData } from '../../context/DataContext';
-import { PageHeader } from '../../components/layout';
 import { NAV_LINKS } from '../../constants';
-import { Button, PlusIcon, ChevronDownIcon } from '../../components/ui';
 import { agendaService } from '../../services/agendaService';
 import type { EventIndex } from '../../services/agendaService';
 import { AgendaEvent } from '../../types';
-import { EventFormModal, SubtaskDetailModal } from '../../components/agenda';
-import { DeleteConfirmationModal } from '../../components/ui';
 import { useUnifiedEvents } from '../../hooks/useUnifiedEvents';
 import useLocalStorage from '../../hooks/useLocalStorage';
 import { useDisclosure } from '../../hooks/useDisclosure';
 
-import type { CalendarViewMode } from './agendaConstants';
-import { MONTHS, CELL_HEIGHT_STORAGE_KEY } from './agendaConstants';
-import MonthlyCalendarGrid from './MonthlyCalendarGrid';
-import WeeklyTimeGrid from './WeeklyTimeGrid';
-import DayDetailSidebar from './DayDetailSidebar';
+import type { CalendarViewMode } from '@/components/agenda/agendaConstants';
+import { MONTHS, CELL_HEIGHT_STORAGE_KEY } from '@/components/agenda/agendaConstants';
 
 const AgendaPage: () => React.ReactNode = () => {
   const systemData = useSystemData();

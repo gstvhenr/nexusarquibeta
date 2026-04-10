@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ClienteDetalhesInfoTab, ClienteDetalhesSecondaryTabs } from '@/components/clientes';
 import { PageHeader } from '@/components/layout';
 import { EventFormModal } from '@/components/agenda';
 import {
@@ -16,8 +17,6 @@ import {
   TagIcon,
   UsersIcon,
 } from '@/components/ui';
-import { ClienteDetalhesInfoTab } from './ClienteDetalhesInfoTab';
-import { ClienteDetalhesSecondaryTabs } from './ClienteDetalhesSecondaryTabs';
 import { NAV_LINKS } from '@/constants';
 import { useCoreData, useSystemData } from '@/context/DataContext';
 import { useClienteDetalhesForm } from '@/hooks/useClienteDetalhesForm';

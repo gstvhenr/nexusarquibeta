@@ -1,4 +1,4 @@
-import type { PaymentStatus } from '../../types';
+import type { PaymentStatus } from '@/types';
 
 export interface ClientesFilterState {
   search: string;

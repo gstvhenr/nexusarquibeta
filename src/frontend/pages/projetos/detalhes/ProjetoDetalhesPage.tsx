@@ -1,5 +1,5 @@
 import React from 'react';
-import ProjetoDetalhesPageContent from './ProjetoDetalhesPageContent';
+import { ProjetoDetalhesPageContent } from '@/components/projetos';
 
 const ProjetoDetalhesPage: () => React.ReactNode = () => {
   return <ProjetoDetalhesPageContent />;

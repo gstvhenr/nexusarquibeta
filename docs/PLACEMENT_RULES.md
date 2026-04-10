@@ -79,7 +79,7 @@
 
 13. E componente de dominio/feature?
 
-- SIM -> criar em `src/frontend/components/<dominio>/*` ou co-locar na page quando estritamente page-scoped (ex.: `src/frontend/components/projetos/TaskDetailModal.tsx`)
+- SIM -> criar em `src/frontend/components/<dominio>/*` (ex.: `src/frontend/components/projetos/TaskDetailModal.tsx`)
 - NAO -> 14
 
 14. E funcao pura/helper sem side effects relevantes?
@@ -109,9 +109,10 @@
 ## Co-location Rules
 
 - Testes unitarios ficam no mesmo diretorio do arquivo testado.
-- Subcomponentes exclusivos de uma page ficam no mesmo diretorio da page.
+- `src/frontend/pages/**` aceita apenas `*Page.tsx`, `use*.ts` e `index.ts`.
+- Subcomponentes visuais exclusivos de uma page nao ficam na page: devem nascer em `src/frontend/components/<dominio>/`.
 - Hook page-scoped fica no diretorio da page (ou subpasta `hooks/` dentro da page).
-- `types.ts` local existe apenas quando o tipo nao e reutilizado globalmente.
+- `types.ts` local existe apenas quando o tipo nao e reutilizado globalmente e nao cria boundary invertido.
 - Sempre criar/atualizar `index.ts` quando um diretorio expuser 2+ modulos reutilizaveis.
 
 ## Anti-patterns

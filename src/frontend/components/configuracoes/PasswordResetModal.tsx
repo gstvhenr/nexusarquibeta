@@ -1,5 +1,4 @@
-import { Button, Modal } from '../../components/ui';
-import { PasswordInput } from './PasswordInput';
+import { Button, Modal, PasswordInput } from '@/components/ui';
 
 type PasswordResetModalProps = {
   isOpen: boolean;

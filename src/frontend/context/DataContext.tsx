@@ -17,10 +17,10 @@ import { MarketingContext } from './MarketingContext';
 import { SystemContext } from './SystemContext';
 import { DataHistoryContext } from './DataHistoryContext';
 
+import { useDomain } from '../hooks/useDomain';
 import { useLegacyCleanup } from '../hooks/useLegacyCleanup';
 import { useUndoRedo } from '../hooks/useUndoRedo';
 import type { SetFieldFn } from './createDomainSetter';
-import { useDomain } from './useDomain';
 
 // ---------------------------------------------------------------------------
 // Persistence helper (stable reference for useUndoRedo)

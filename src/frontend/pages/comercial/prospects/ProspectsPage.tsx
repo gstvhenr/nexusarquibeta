@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ProspectCard, ProspectFormModal } from '@/components/comercial';
 import { PageHeader } from '@/components/layout';
 import {
   ArchiveIcon,
@@ -14,10 +15,8 @@ import { NAV_LINKS } from '@/constants';
 import { useMarketingData } from '@/context/DataContext';
 import { useDisclosure } from '@/hooks';
 import type { Prospect } from '@/types';
-import { ProspectCard } from './ProspectCard';
-import { ProspectFormModal } from './ProspectFormModal';
 import { sortProspectsForRadar } from '@/utils/prospectUtils';
-import type { ProspectAction, ProspectStatusFilter } from './types';
+import type { ProspectAction, ProspectStatusFilter } from '@/components/comercial/types';
 
 function ProspectsPage(): JSX.Element {
   const { prospects, setProspects } = useMarketingData();

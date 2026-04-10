@@ -1,0 +1,1 @@
+export { FreelancerDetailFormModal } from './FreelancerDetailFormModal';

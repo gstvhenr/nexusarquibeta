@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { AppData } from '../services/infrastructure/api';
-import type { DomainContext } from './types';
-import type { SetFieldFn } from './createDomainSetter';
+import type { SetFieldFn } from '../context/createDomainSetter';
+import type { DomainContext } from '../context/types';
 
 /**
  * Factory hook that builds a memoized domain slice from AppData.
@@ -27,16 +27,14 @@ export function useDomain<K extends keyof AppData>(
   keys: K[],
 ): DomainContext<K> {
   // Spread individual data[key] values as deps — more granular than depending on the full data object.
-  const dataDeps = keys.map((k) => data[k]);
+  const dataDeps = keys.map((key) => data[key]);
 
   return useMemo(() => {
     const result = {} as DomainContext<K>;
 
     for (const key of keys) {
-      // Data value
       (result as Record<string, unknown>)[key as string] = data[key];
 
-      // Setter: set + Capitalized(key)
       const setterKey = `set${(key as string).charAt(0).toUpperCase()}${(key as string).slice(1)}`;
       (result as Record<string, unknown>)[setterKey] = (
         value: AppData[K] | ((prev: AppData[K]) => AppData[K]),

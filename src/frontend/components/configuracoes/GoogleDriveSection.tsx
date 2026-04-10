@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button } from '../../components/ui';
-import { googleDriveService } from '../../services/infrastructure/googleDriveService';
-import { localDriveService } from '../../services/infrastructure/localDriveService';
-import type { DriveState } from '../../services/infrastructure/googleDriveTypes';
-import { api } from '../../services/infrastructure/api';
-import { Section } from './Section';
+import { Button, Section } from '@/components/ui';
+import { api } from '@/services/infrastructure/api';
+import { googleDriveService } from '@/services/infrastructure/googleDriveService';
+import type { DriveState } from '@/services/infrastructure/googleDriveTypes';
+import { localDriveService } from '@/services/infrastructure/localDriveService';
 
 type DriveMode = 'local' | 'api' | 'none';
 

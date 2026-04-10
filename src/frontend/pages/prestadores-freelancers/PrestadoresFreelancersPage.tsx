@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { FreelancerDetailFormModal } from '@/components/prestadores-freelancers';
 import { useDisclosure } from '@/hooks';
 import { PageHeader } from '@/components/layout';
 import { DeleteConfirmationModal } from '@/components/ui';
@@ -16,7 +17,6 @@ import {
 } from '@/components/ui';
 import { getInitials } from '@/utils/supplierHelpers';
 import { v4 as uuidv4 } from 'uuid';
-import { FreelancerDetailFormModal } from './FreelancerDetailFormModal';
 
 const SummaryCard: (props: {
   title: string;

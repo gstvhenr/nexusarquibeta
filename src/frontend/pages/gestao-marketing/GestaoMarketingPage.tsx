@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { ActivityFormModal } from '../../components/marketing';
-import { PageHeader } from '../../components/layout';
-import { DeleteConfirmationModal, PlusIcon, Button } from '../../components/ui';
-import { NAV_LINKS } from '../../constants';
-import { useCoreData, useMarketingData } from '../../context/DataContext';
-import type { MarketingActivity } from '../../types';
-import { useDisclosure } from '../../hooks/useDisclosure';
-import { MarketingContentListView } from './MarketingContentListView';
+import { ActivityFormModal, MarketingContentListView } from '@/components/marketing';
+import { PageHeader } from '@/components/layout';
+import { DeleteConfirmationModal, PlusIcon, Button } from '@/components/ui';
+import { NAV_LINKS } from '@/constants';
+import { useCoreData, useMarketingData } from '@/context/DataContext';
+import type { MarketingActivity } from '@/types';
+import { useDisclosure } from '@/hooks/useDisclosure';
 
 function GestaoMarketingPage(): JSX.Element {
   const {

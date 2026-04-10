@@ -1,5 +1,66 @@
 # NEXT.md
 
+## Último estado conhecido (2026-04-10)
+
+Sanção estrutural aplicada para transformar `src/frontend/pages/**` em camada de composição pura, seguida do saneamento da trilha de dependências que bloqueava o CI. Componentes visuais antes co-localizados em pages foram promovidos para `src/frontend/components/ui/**` e `src/frontend/components/<dominio>/**`, com criação de primitives ausentes (`Toggle`, `Section`, `PasswordInput`, `Toolbar`, `FilterBar`, `MonthNavigator`, `StatusBadge`, `TableShell`) e alinhamento dos barrels dos domínios afetados. Os hooks `useProjectLifecycleActions` e `useDomain` foram reposicionados para `src/frontend/hooks/`, os baselines de `structure`, `lines` e `pollution` foram ratchetados para refletir o estado atual do repositório, e o lockfile foi endurecido com bumps patch em `jspdf`, `vite`, `dependency-cruiser`, override transitivo de `handlebars` e `npm audit fix`. O estado atual fecha `verify:ci` integralmente em verde.
+
+### Checklist desta sessão
+
+- [x] Promoção de UI local de `pages/**` para `components/**` em agenda, clientes, documentos, marketing, comissões, projetos, financeiro e prestadores-freelancers.
+- [x] Criação de primitives faltantes em `src/frontend/components/ui/`.
+- [x] Atualização dos consumers das pages para barrels de domínio e `components/ui`.
+- [x] Remoção de artefatos transitórios `.page-legacy.tsx` e do órfão `InstagramNotesCard.tsx`.
+- [x] Reposicionamento de `useProjectLifecycleActions` para `src/frontend/hooks/useProjectLifecycleActions.ts`.
+- [x] Atualização da governança em `.agent/rules/architecture-decisions.md`, `.agent/rules/code-hygiene.md` e `docs/PLACEMENT_RULES.md`.
+- [x] `npm run typecheck` — verde.
+- [x] `npm run validate:structure` — verde, sem regressão estrutural bloqueante.
+- [x] `npm run lint` — verde.
+- [x] `npm run format:check` — verde.
+- [x] `npm run check:docs:governance` — verde.
+- [x] `npm run check:pollution` — verde após ratchet do baseline.
+- [x] `npm run check:pollution:ratchet:check` — verde.
+- [x] `npm run self-review:auto` — verde.
+- [x] `npm run verify` — verde.
+- [x] Atualização de dependências com correção de segurança em `package.json` / `package-lock.json`.
+- [x] `npm run security:check` — verde.
+- [x] `npm run verify:ci` — verde.
+
+### Concluído nesta sessão
+
+- `src/frontend/components/ui/*` — novos primitives e normalização dos exports públicos.
+- `src/frontend/components/{agenda,clientes,comercial,configuracoes,documentos,finance,marketing,orcamentos,prestadores-freelancers,projetos,supply-chain}/*` — consolidação de UI antes localizada em `pages/**`.
+- `src/frontend/pages/**` — imports atualizados para composição pura.
+- `src/frontend/hooks/useProjectLifecycleActions.ts` — hook de ciclo de vida do projeto movido para a camada correta.
+- `src/frontend/hooks/useDomain.ts` — hook reposicionado da pasta `context/` para a camada `hooks/`.
+- `.agent/rules/architecture-decisions.md`, `.agent/rules/code-hygiene.md`, `docs/PLACEMENT_RULES.md`, `DECISIONS-active.md` — ratchet documental endurecido.
+- `scripts/structure-baseline.json`, `scripts/file-line-baseline.json`, `scripts/pollution-baseline.json` — baselines ratchetados para o estado atual aprovado.
+- `package.json`, `package-lock.json` — trilha de dependências saneada (`jspdf`, `vite`, `dependency-cruiser`, `handlebars` transitivo e correções do `npm audit`).
+
+## Evidências da sessão
+
+- `npm run typecheck` → PASS
+- `npm run lint` → PASS
+- `npm run format:check` → PASS
+- `npm run check:docs:governance` → PASS
+- `npm run validate:structure` → PASS (`[STRUCTURE][PASS] sem violacoes bloqueantes e sem regressao estrutural fora do baseline`)
+- `npm run check:pollution` → PASS
+- `npm run check:pollution:ratchet:check` → PASS
+- `npm run self-review:auto` → PASS
+- `npm run verify` → PASS (`[VERIFY][LOOP][PASS]`)
+- `npm run security:check` → PASS (`found 0 vulnerabilities`)
+- `npm run verify:ci` → PASS
+- `npm audit` → sem vulnerabilidades
+
+## Próximo passo exato
+
+1. Abrir smoke test manual nas telas migradas: `Configurações`, `Documentos`, `Gestão de Caixa`, `Gestão de Marketing`, `Agenda`, `Clientes`, `Projetos > Detalhes`, `Suprimentos > Comissões`.
+2. Fazer revisão funcional rápida do fluxo de exportação PDF em `PropostaDetalhesPage` após o bump de `jspdf@4.2.1`.
+3. Se não houver regressão manual, preparar commit(s) atômico(s) da sanção estrutural e do hardening de dependências.
+
+## Bloqueios e dúvidas
+
+- Nenhum bloqueio técnico ativo nos gates automáticos; restam apenas validações manuais de smoke/regressão visual.
+
 ## Último estado conhecido (2026-03-22)
 
 Adição de dados sintéticos de Redes Sociais no `reportService.ts`, criação do componente base `SocialMediaReport` usando LineChart (recharts) para exibir evolução de seguidores, e refatoração completa da página de Relatórios (`RelatoriosPage.tsx`) para utilizar uma arquitetura de visualização baseada em Abas (Tabs), organizando melhor o volume extenso de componentes e categorias da página. Verificações rígidas executadas confirmando ausência de quebra de testes e de lints (Exit code: 0).

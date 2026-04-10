@@ -2,15 +2,17 @@ import React, { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/layout';
 import { Button, DeleteConfirmationModal } from '@/components/ui';
 import { ArchiveIcon, PlusIcon, UnarchiveIcon } from '@/components/ui';
+import {
+  CommissionFormModal,
+  CommissionsFilterBar,
+  CommissionsSummaryCards,
+  CommissionsTable,
+  ConfirmPaymentModal,
+} from '@/components/supply-chain';
 import { NAV_LINKS } from '@/constants';
 import { useCoreData, useFinanceData, useSupplyChainData } from '@/context/DataContext';
 import { deriveQuotationForecasts } from '@/services/quotationCommissionService';
-import { CommissionFormModal } from './CommissionFormModal';
-import { CommissionsFilterBar } from './CommissionsFilterBar';
-import { CommissionsSummaryCards } from './CommissionsSummaryCards';
-import { CommissionsTable } from './CommissionsTable';
-import { ConfirmPaymentModal } from './ConfirmPaymentModal';
-import type { CommissionFilters } from './types';
+import type { CommissionFilters } from '@/components/supply-chain/types';
 import type { Commission } from '@/types';
 import { formatCurrency, parseDateString } from '@/utils/formatters';
 

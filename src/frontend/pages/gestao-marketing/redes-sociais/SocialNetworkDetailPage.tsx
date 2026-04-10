@@ -1,6 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { InstagramCredentialModal } from '@/components/marketing';
+import {
+  FacebookLatestSnapshotCard,
+  GoogleLatestSnapshotCard,
+  InstagramCredentialModal,
+  InstagramDetailHeader,
+  InstagramLatestSnapshotCard,
+  InstagramProfileInfoCard,
+  InstagramSnapshotHistoryTable,
+  InstagramTopBar,
+  NewSnapshotModal,
+} from '@/components/marketing';
 import { Button, FormField, IconButton, Input, Modal } from '@/components/ui';
 import { ArrowLeftIcon } from '@/components/ui/icons';
 import { SOCIAL_NETWORKS_SUPPORTED } from '@/constants';
@@ -11,15 +21,6 @@ import {
   INSTAGRAM_DEFAULT_URL,
   INSTAGRAM_INITIAL_SNAPSHOT,
 } from './constants';
-import { InstagramDetailHeader } from './InstagramDetailHeader';
-import { FacebookLatestSnapshotCard } from './FacebookLatestSnapshotCard';
-import { GoogleLatestSnapshotCard } from './GoogleLatestSnapshotCard';
-import { InstagramLatestSnapshotCard } from './InstagramLatestSnapshotCard';
-
-import { InstagramProfileInfoCard } from './InstagramProfileInfoCard';
-import { InstagramSnapshotHistoryTable } from './InstagramSnapshotHistoryTable';
-import { InstagramTopBar } from './InstagramTopBar';
-import { NewSnapshotModal } from './NewSnapshotModal';
 
 const SocialNetworkDetailPage: () => React.ReactNode = () => {
   const navigate = useNavigate();

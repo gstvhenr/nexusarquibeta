@@ -1,10 +1,8 @@
 import React from 'react';
 import { CheckCircleIcon, PlusIcon, TrashIcon } from '@/components/ui/icons';
-import { IconButton } from '@/components/ui';
+import { IconButton, StatusBadge, renderRecurrenceBadge } from '@/components/ui';
 import { formatCurrency } from '@/utils/formatters';
-import { OriginBadge } from './OriginBadge';
-import { RecurrenceBadge } from './RecurrenceBadge';
-import type { UnifiedEntry } from './types';
+import type { UnifiedEntry } from '@/types';
 
 type CashBoxEntriesTableProps = {
   entries: UnifiedEntry[];
@@ -25,6 +23,10 @@ export const CashBoxEntriesTable: (props: CashBoxEntriesTableProps) => React.Rea
   onDeleteEntry,
   formatDay,
 }) => {
+  const renderOriginBadge = (origin: UnifiedEntry['origin']) => (
+    <StatusBadge tone={origin === 'Profissional' ? 'primary' : 'accent'}>{origin}</StatusBadge>
+  );
+
   return (
     <div className="flex-1 overflow-y-auto -mx-6 mt-4 no-scrollbar">
       <table className="w-full text-sm text-left">
@@ -97,17 +99,15 @@ export const CashBoxEntriesTable: (props: CashBoxEntriesTableProps) => React.Rea
                   <td className="px-6 py-4 text-text-primary font-medium">
                     {formatDay(entry.date)}
                   </td>
-                  <td className="px-6 py-4">
-                    <OriginBadge origin={entry.origin} />
-                  </td>
+                  <td className="px-6 py-4">{renderOriginBadge(entry.origin)}</td>
                   <td className="px-6 py-4 text-text-secondary">{entry.description}</td>
                   <td className="px-6 py-4 text-center">
                     {entry.recurrence ? (
-                      <RecurrenceBadge
-                        recurrence={entry.recurrence}
-                        installmentNumber={entry.installmentNumber}
-                        installmentTotal={entry.installmentTotal}
-                      />
+                      renderRecurrenceBadge(
+                        entry.recurrence,
+                        entry.installmentNumber,
+                        entry.installmentTotal,
+                      )
                     ) : (
                       <span className="text-text-secondary/30">—</span>
                     )}

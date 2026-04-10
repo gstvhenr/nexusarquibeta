@@ -7,11 +7,13 @@ import { NAV_LINKS } from '../../constants';
 import type { DocumentFolder, DocumentItem, Project } from '../../types';
 import { openDocument } from '../../utils/documents';
 import { addItemToTree } from '../../utils/tree';
-import { AddModal } from './AddModal';
-import { DocumentsBreadcrumb } from './DocumentsBreadcrumb';
-import { DocumentsGridView } from './DocumentsGridView';
-import { DocumentsListView } from './DocumentsListView';
-import { DocumentsToolbar } from './DocumentsToolbar';
+import {
+  AddModal,
+  DocumentsBreadcrumb,
+  DocumentsGridView,
+  DocumentsListView,
+  DocumentsToolbar,
+} from '@/components/documentos';
 
 const DocumentosPage: () => React.ReactNode = () => {
   const { documentStorage, setDocumentStorage } = useSystemData();

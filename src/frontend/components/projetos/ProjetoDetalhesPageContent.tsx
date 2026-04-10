@@ -31,6 +31,7 @@ import { agendaService } from '@/services/agendaService';
 import { v4 as uuidv4 } from 'uuid';
 import { useProjectChecklist } from '@/hooks/useProjectChecklist';
 import { useProjectFinancials, type PaymentTarget } from '@/hooks/useProjectFinancials';
+import { useProjectLifecycleActions } from '@/hooks/useProjectLifecycleActions';
 import {
   TaskDetailModal,
   LinkQuotationModal,
@@ -41,7 +42,6 @@ import { appendAddendumAuditEntry, recalculateProjectTotals } from '@/utils/adde
 import { getLatestPriceFromHistory } from '@/utils/supplierHelpers';
 import { ProjetoDetalhesTabs } from './ProjetoDetalhesTabs';
 import type { BudgetServiceOption, ProjectDetailTabId } from './types';
-import { useProjectLifecycleActions } from './useProjectLifecycleActions';
 
 const ProjetoDetalhesPage: () => React.ReactNode = () => {
   const { id } = useParams<{ id: string }>();

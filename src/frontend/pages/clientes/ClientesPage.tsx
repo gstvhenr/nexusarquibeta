@@ -2,15 +2,14 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useDisclosure } from '../../hooks/useDisclosure';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/layout';
-import { ClientFormModal } from '../../components/clientes';
+import { ClientFormModal, ClientesTablePanel } from '../../components/clientes';
 import { Button, DeleteConfirmationModal, Modal } from '../../components/ui';
 import { useCoreData, useSystemData } from '../../context/DataContext';
 import type { Client, PaymentStatus } from '../../types';
 import { NAV_LINKS } from '../../constants';
 import { PlusIcon, ArchiveIcon, UnarchiveIcon } from '../../components/ui';
 import { getPaymentStatusByClientId, saveClientAndUpdateState } from '../../services/clientService';
-import { ClientesTablePanel } from './ClientesTablePanel';
-import type { ClientesFilterState } from './types';
+import type { ClientesFilterState } from '@/components/clientes/types';
 const ClientesPage: () => React.ReactNode = () => {
   const { clients, setClients, projects, setProjects, setProposals } = useCoreData();
   const { agendaEvents } = useSystemData();

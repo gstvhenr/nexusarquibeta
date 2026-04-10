@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { IconButton, Input } from '../../components/ui';
-import { EyeIcon, EyeOffIcon } from '../../components/ui/icons';
+import { IconButton } from './IconButton';
+import { Input } from './Input';
+import { EyeIcon, EyeOffIcon } from './icons';
 
 type PasswordInputProps = {
   value: string;
@@ -30,12 +31,11 @@ export function PasswordInput({
       <IconButton
         variant="primary"
         size="sm"
-        onClick={() => setVisible((prev) => !prev)}
+        onClick={() => setVisible((previous) => !previous)}
         aria-label={visible ? 'Ocultar senha' : 'Mostrar senha'}
-        tabIndex={-1}
         className="absolute right-2 top-1/2 -translate-y-1/2"
       >
-        {visible ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+        {visible ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
       </IconButton>
     </div>
   );

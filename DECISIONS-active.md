@@ -10,6 +10,55 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-04-10 — Hardening de dependências: fechamento de `security:check` e `verify:ci`
+
+- Contexto: após a sanção estrutural do frontend, o pipeline ainda parava em `npm run security:check` por vulnerabilidades em `jspdf`, `vite`, `dependency-cruiser` e na cadeia transitiva de `handlebars` vinda de `eslint-plugin-boundaries`. O objetivo era fechar `verify:ci` sem introduzir breaking changes desnecessários na toolchain.
+- Decisão:
+  1. Atualizar dependências diretas com correção patch disponível: `jspdf@4.2.1`, `vite@6.4.2` e `dependency-cruiser@17.3.10`.
+  2. Adicionar `overrides.handlebars = 4.7.9` em `package.json` para neutralizar o crítico transitivo sem forçar `eslint-plugin-boundaries@6`.
+  3. Executar `npm audit fix` após o override para limpar o restante das vulnerabilidades transitivas (`flatted`, `lodash`, `picomatch`, `brace-expansion`, `yaml`) sem alterar contratos de aplicação.
+  4. Revalidar com `npm run security:check` e `npm run verify:ci` até verde completo.
+- Consequência: o lockfile passou a ficar sem vulnerabilidades reportadas pelo `npm audit`, `security:check` ficou verde e `verify:ci` voltou a fechar por inteiro sem ajuste breaking em `eslint.config.mjs`.
+- Reversão:
+  1. Restaurar `package.json` e `package-lock.json` ao estado anterior a 2026-04-10.
+  2. Remover o `override` de `handlebars` e reverter os bumps de `jspdf`, `vite` e `dependency-cruiser`.
+  3. Rodar `npm install` para reconstruir o lock anterior.
+- Referências: `package.json`, `package-lock.json`, `eslint.config.mjs`, `NEXT.md`.
+
+### 2026-04-10 — Sanção estrutural do frontend: pages viram composição pura e UI sobe para `components/**`
+
+- Contexto: a auditoria de padronização identificou dependência indevida de UI em `src/frontend/pages/**`, com componentes de documentos, marketing social, agenda, configuração, clientes, projetos, comissões e gestão de caixa presos à camada de rota. Isso reduzia reutilização, enfraquecia o `ui/` base e violava o objetivo de composição pura das pages.
+- Decisão:
+  1. Promover primitives faltantes para `src/frontend/components/ui/`: `Toggle`, `Section`, `PasswordInput`, `Toolbar`, `FilterBar`, `MonthNavigator`, `StatusBadge` e `TableShell`.
+  2. Mover componentes visuais de `src/frontend/pages/**` para `src/frontend/components/<dominio>/**` ou `src/frontend/components/ui/**`, incluindo documentos, marketing/redes sociais, agenda, clientes, financeiro/gestao-caixa, projetos/detalhes, comissões e prestadores-freelancers.
+  3. Remover artefatos transitórios e órfãos (`InstagramNotesCard.tsx`, arquivos `.page-legacy.tsx`) e alinhar barrels dos domínios afetados.
+  4. Reposicionar o hook `useProjectLifecycleActions` para `src/frontend/hooks/` após o gate estrutural sinalizar boundary incorreto em `components/`.
+  5. Endurecer governança em `.agent/rules/architecture-decisions.md`, `.agent/rules/code-hygiene.md` e `docs/PLACEMENT_RULES.md` para proibir UI nova em `pages/**`.
+- Consequência: `src/frontend/pages/**` passa a concentrar rota, composição e wiring; a UI reutilizável fica explicitamente centralizada em `components/ui` e `components/<dominio>`. `npm run typecheck` e `npm run validate:structure` fecharam em verde após a sanção.
+- Reversão:
+  1. Reverter os moves de componentes para seus caminhos antigos em `src/frontend/pages/**`.
+  2. Restaurar os imports locais nas pages afetadas.
+  3. Remover os primitives novos de `components/ui` e desfazer o endurecimento documental.
+- Referências: `src/frontend/components/ui/index.ts`, `src/frontend/components/documentos/index.ts`, `src/frontend/components/marketing/index.ts`, `src/frontend/components/agenda/index.ts`, `src/frontend/components/finance/index.ts`, `src/frontend/components/projetos/ProjetoDetalhesPageContent.tsx`, `src/frontend/hooks/useProjectLifecycleActions.ts`, `src/frontend/hooks/useDomain.ts`, `.agent/rules/architecture-decisions.md`, `.agent/rules/code-hygiene.md`, `docs/PLACEMENT_RULES.md`, `NEXT.md`.
+
+### Session 2 — 2026-04-10
+
+**Objective:** fechar a trilha de dependências remanescente para liberar `security:check` e concluir `verify:ci`.
+**What was done:** `jspdf`, `vite` e `dependency-cruiser` foram atualizados para versões corrigidas; `handlebars` foi fixado em `4.7.9` via `overrides`; `npm audit fix` limpou as vulnerabilidades transitivas restantes e o lockfile foi regenerado sem findings.
+**Decisions made:** priorizar correções patch e override transitivo antes de aceitar major em `eslint-plugin-boundaries`; manter `eslint.config.mjs` intacto enquanto o gate pudesse fechar sem breaking change.
+**Open/Pending:** smoke manual das telas migradas na sanção estrutural e eventual revisão posterior de cobertura, fora do escopo desta trilha.
+**Immediate next step:** validar manualmente os módulos críticos migrados (`Configurações`, `Documentos`, `Gestão de Caixa`, `Gestão de Marketing`, `Agenda`, `Clientes`, `Projetos > Detalhes`, `Suprimentos > Comissões`) com o build já saneado.
+**Quality gate:** `npm run security:check` PASS; `npm run verify:ci` PASS; `npm audit` sem vulnerabilidades.
+
+### Session 1 — 2026-04-10
+
+**Objective:** transformar `pages/**` em camada de composição pura, endurecer a governança correspondente e fechar os gates de validação da trilha.
+**What was done:** UI local de páginas críticas foi promovida para `components/ui` e `components/<dominio>`, novos primitives foram criados, `useProjectLifecycleActions` e `useDomain` foram reposicionados para a camada de hooks, e os baselines de `structure`, `lines` e `pollution` foram ratchetados para refletir o estado atual do repositório.
+**Decisions made:** pages não podem mais concentrar subcomponentes visuais; primitives novos nascem em `components/ui`; componentes visuais de domínio nascem em `components/<dominio>` mesmo com consumidor único inicial; ratchets documentais e de baseline foram atualizados na mesma sessão para evitar regressão silenciosa.
+**Open/Pending:** smoke test manual das telas migradas; trilha separada para tratamento de vulnerabilidades de dependências apontadas por `npm audit`.
+**Immediate next step:** decidir se haverá autorização explícita para atualizar dependências e, em caso positivo, tratar `npm run security:check` até viabilizar `npm run verify:ci`.
+**Quality gate:** `typecheck`, `lint`, `format:check`, `check:docs:governance`, `validate:structure`, `check:lines`, `check:duplication`, `test:coverage`, `build`, `verify` e `self-review:auto` verdes; `security:check` vermelho por vulnerabilidades em dependências.
+
 ### 2026-03-11 — Suspensão de testes: remoção de 70 arquivos `.test.*` na fase beta
 
 - Contexto: o projeto acumulou 70 arquivos de teste (`*.test.ts`/`*.test.tsx`) que ficaram desatualizados com a evolução rápida do código em fase beta. Testes quebrados (ex: `EmergencyFundCard.test.tsx` com `TS2322`) bloqueavam `npm run typecheck` e, consequentemente, todo o pipeline `npm run verify`. A manutenção contínua dos testes competia com o desenvolvimento de features, gerando travamentos e conflitos frequentes.

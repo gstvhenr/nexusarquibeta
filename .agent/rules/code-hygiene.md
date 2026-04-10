@@ -74,6 +74,20 @@ Deletou ou renomeou um arquivo reutilizável em src/frontend/components/ ou src/
 - A lógica de UI idêntica em múltiplas páginas deve migrar para `src/frontend/components/`.
 - A lógica de mutação/fetch similar deve ir para hooks compartilhados ou abstrata em `src/frontend/services/`.
 
+### 6.1. UI local em `pages/**` é dívida bloqueante
+
+- Ao encontrar um `.tsx` visual dentro de `src/frontend/pages/**` que não seja `*Page.tsx`, mover para:
+  - `src/frontend/components/ui/` quando for primitive, shell ou padrão base
+  - `src/frontend/components/<dominio>/` quando for componente de domínio
+- Se o arquivo não tiver consumidores reais após a migração, deletar.
+- Nunca encerrar a sessão deixando UI nova em `pages/**`.
+
+### 6.2. Ratchet de reutilização
+
+- Nenhuma edição pode introduzir novo componente visual em `src/frontend/pages/**`.
+- Toda migração estrutural deve executar `npm run validate:structure` e `npm run check:pollution`.
+- Ao mover componente, atualizar barrels, imports consumidores e arquivos `types.ts` correlatos na mesma sessão.
+
 ### 7. Auto-manutenção da `.agent/` (OBRIGATÓRIO)
 
 A `.agent/` nunca pode ficar desatualizada em relação ao código. Se o `src/frontend/` mudou estruturalmente, a `.agent/` **obrigatoriamente** muda junto na mesma edição.

@@ -1,9 +1,15 @@
 import React, { useCallback, useMemo } from 'react';
 import { useState } from 'react';
 import { PageHeader } from '@/components/layout';
-import { Button, DeleteConfirmationModal } from '@/components/ui';
+import { Button, DeleteConfirmationModal, MonthNavigator } from '@/components/ui';
 import { PlusIcon } from '@/components/ui/icons';
-import { CashBoxCreditFormModal, CashBoxExpenseFormModal } from '@/components/finance';
+import {
+  CashBoxCreditFormModal,
+  CashBoxEntriesTable,
+  CashBoxExpenseFormModal,
+  CashBoxToast,
+  CashBoxTotals,
+} from '@/components/finance';
 import { useCoreData, useFinanceData, useSupplyChainData } from '@/context/DataContext';
 import { NAV_LINKS } from '@/constants';
 import { useAutoReset } from '@/hooks/useAutoReset';
@@ -17,11 +23,6 @@ import {
   confirmCredit as confirmCreditPure,
   type CreateExpenseInput,
 } from '@/services/cashBoxService';
-import { CashBoxEntriesTable } from './CashBoxEntriesTable';
-import { CashBoxToast } from './CashBoxToast';
-import { CashBoxTotals } from './CashBoxTotals';
-import { MonthNavigator } from './MonthNavigator';
-
 const FinanceiroGestaoCaixaPage: () => React.ReactNode = () => {
   const { cashBoxExpenses, setCashBoxExpenses, cashBoxCredits, setCashBoxCredits, commissions } =
     useFinanceData();
@@ -211,7 +212,27 @@ const FinanceiroGestaoCaixaPage: () => React.ReactNode = () => {
           <div className="flex-1 min-h-0">
             <div className="bg-surface rounded-2xl shadow-soft p-6 flex flex-col h-full">
               <div className="shrink-0">
-                <MonthNavigator currentDate={viewDate} onDateChange={setViewDate} />
+                <MonthNavigator
+                  label={viewDate.toLocaleDateString('pt-BR', {
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                  onPrevious={() =>
+                    setViewDate((previous) => {
+                      const nextDate = new Date(previous);
+                      nextDate.setMonth(previous.getMonth() - 1);
+                      return nextDate;
+                    })
+                  }
+                  onNext={() =>
+                    setViewDate((previous) => {
+                      const nextDate = new Date(previous);
+                      nextDate.setMonth(previous.getMonth() + 1);
+                      return nextDate;
+                    })
+                  }
+                  onToday={() => setViewDate(new Date())}
+                />
               </div>
 
               <CashBoxEntriesTable

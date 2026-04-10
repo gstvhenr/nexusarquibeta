@@ -1,19 +1,19 @@
 import { useCallback, useState } from 'react';
-import { Button, FormField, Input } from '../../components/ui';
-import { PageHeader } from '../../components/layout';
-import { useSystemData } from '../../context/DataContext';
-import { useFinancialSecurity } from '../../context/FinancialSecurityContext';
-import { useTheme } from '../../context/ThemeContext';
-import { useAutoReset } from '../../hooks/useAutoReset';
-import { useDisclosure } from '../../hooks/useDisclosure';
-import { api } from '../../services/infrastructure/api';
-import { ClearDataModal } from './ClearDataModal';
-import { GoogleDriveSection } from './GoogleDriveSection';
-import { ImportDataModal } from './ImportDataModal';
-import { PasswordResetModal } from './PasswordResetModal';
-import { Section } from './Section';
-import { Toggle } from './Toggle';
-import { getTodayDateOnly } from '../../utils/formatters';
+import { PageHeader } from '@/components/layout';
+import { Button, FormField, Input, Section, Toggle } from '@/components/ui';
+import {
+  ClearDataModal,
+  GoogleDriveSection,
+  ImportDataModal,
+  PasswordResetModal,
+} from '@/components/configuracoes';
+import { useSystemData } from '@/context/DataContext';
+import { useFinancialSecurity } from '@/context/FinancialSecurityContext';
+import { useTheme } from '@/context/ThemeContext';
+import { useAutoReset } from '@/hooks/useAutoReset';
+import { useDisclosure } from '@/hooks/useDisclosure';
+import { api } from '@/services/infrastructure/api';
+import { getTodayDateOnly } from '@/utils/formatters';
 
 function ConfiguracoesPage(): JSX.Element {
   const { theme, toggleTheme } = useTheme();
@@ -156,8 +156,8 @@ function ConfiguracoesPage(): JSX.Element {
               </p>
             </div>
             <Toggle
-              enabled={theme === 'dark'}
-              onChange={() => toggleTheme()}
+              checked={theme === 'dark'}
+              onCheckedChange={() => toggleTheme()}
               label="Alternar modo escuro"
             />
           </div>
@@ -177,8 +177,8 @@ function ConfiguracoesPage(): JSX.Element {
                 </p>
               </div>
               <Toggle
-                enabled={isLockEnabled}
-                onChange={toggleLock}
+                checked={isLockEnabled}
+                onCheckedChange={toggleLock}
                 label="Exigir senha para visualizar valores"
               />
             </div>
