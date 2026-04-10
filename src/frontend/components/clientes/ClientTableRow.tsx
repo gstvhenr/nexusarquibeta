@@ -129,7 +129,7 @@ export const ClientTableRow: (props: ClientTableRowProps) => React.ReactNode = R
         <td className="px-6 py-4 text-right">
           {nextDeadline ? (
             <div
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${isDeadlineUrgent ? 'bg-error text-white' : 'bg-surface border border-border-color text-text-primary'}`}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${isDeadlineUrgent ? 'bg-error text-primary-content' : 'bg-surface border border-border-color text-text-primary'}`}
             >
               {isDeadlineUrgent ? (
                 <AlertIcon className="w-4 h-4" />

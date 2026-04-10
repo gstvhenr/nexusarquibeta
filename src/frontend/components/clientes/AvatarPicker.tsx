@@ -81,7 +81,7 @@ export function AvatarPicker({
       {!isReadOnly && (
         <>
           <div
-            className="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full shadow cursor-pointer border-2 border-surface flex items-center justify-center w-6 h-6 hover:scale-110 transition-transform"
+            className="absolute bottom-0 right-0 bg-primary text-primary-content p-1 rounded-full shadow cursor-pointer border-2 border-surface flex items-center justify-center w-6 h-6 hover:scale-110 transition-transform"
             onClick={handleClick}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {

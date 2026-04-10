@@ -176,7 +176,7 @@ const BlocoDeNotasPage: () => React.ReactNode = () => {
   );
 
   return (
-    <div className="animate-fade-in-up h-full flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 overflow-hidden">
+    <div className="animate-fade-in-up h-full flex flex-col overflow-hidden">
       <PageHeader title="Anotações" icon={pageIcon}>
         <div className="flex items-center gap-2">
           <Button

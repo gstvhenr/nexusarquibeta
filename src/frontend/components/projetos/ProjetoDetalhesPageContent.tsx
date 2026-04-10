@@ -454,7 +454,7 @@ const ProjetoDetalhesPage: () => React.ReactNode = () => {
       )}
 
       {showSaveSuccess && (
-        <div className="fixed bottom-6 right-6 bg-success text-white px-6 py-3 rounded-xl shadow-lifted z-50 flex items-center gap-3 animate-fade-in-up">
+        <div className="fixed bottom-6 right-6 bg-success text-primary-content px-6 py-3 rounded-xl shadow-lifted z-50 flex items-center gap-3 animate-fade-in-up">
           <CheckCircleIcon className="w-6 h-6" />
           <span className="font-semibold">Alterações salvas com sucesso!</span>
         </div>

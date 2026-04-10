@@ -89,10 +89,7 @@ const App: () => React.ReactNode = () => {
     return unsubscribe;
   }, []);
 
-  const standardBottomPaddingClass = 'pb-4 md:pb-5';
-  const mainPaddingClass = isSpecialPage
-    ? standardBottomPaddingClass
-    : `px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 ${standardBottomPaddingClass}`;
+  const mainPaddingClass = 'px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 pb-4 md:pb-5';
 
   return (
     <div

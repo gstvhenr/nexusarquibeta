@@ -81,7 +81,7 @@ const FinanceiroPrevisaoCaixaPage: () => React.ReactNode = () => {
 
   return (
     <div className="animate-fade-in-up h-full flex flex-col">
-      <div className="flex-1 flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <div className="flex flex-col flex-1 min-h-0 gap-3">
           <PageHeader title="Previsão de Caixa" icon={financeiroIcon} contentGap="none" />
 

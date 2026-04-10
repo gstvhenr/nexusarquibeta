@@ -136,7 +136,7 @@ const LembretesPage: () => React.ReactNode = () => {
   };
 
   return (
-    <div className="animate-fade-in-up h-full flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6">
+    <div className="animate-fade-in-up h-full flex flex-col">
       <PageHeader title="Lembretes" icon={pageIcon}>
         <div className="flex items-center gap-3">
           {completedReminders.length > 0 && (

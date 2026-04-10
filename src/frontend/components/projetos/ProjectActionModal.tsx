@@ -58,9 +58,9 @@ export const ProjectActionModal: (props: {
   }[actionType];
 
   const colorClass = {
-    error: 'bg-error hover:bg-error/80 text-white',
-    warning: 'bg-warning hover:bg-warning/80 text-white',
-    success: 'bg-success hover:bg-success/80 text-white',
+    error: 'bg-error hover:bg-error/80 text-primary-content',
+    warning: 'bg-warning hover:bg-warning/80 text-primary-content',
+    success: 'bg-success hover:bg-success/80 text-primary-content',
   }[config.color];
 
   return (

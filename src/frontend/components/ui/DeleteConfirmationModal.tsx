@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from './Modal';
+import { Button } from './Button';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -25,20 +26,12 @@ export const DeleteConfirmationModal: (props: DeleteConfirmationModalProps) => R
         desfeita.
       </p>
       <div className="flex justify-end space-x-4">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color transition-colors"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          type="button"
-          onClick={onConfirm}
-          className="px-6 py-2 rounded-lg font-semibold text-white bg-error hover:opacity-90 transition-colors"
-        >
+        </Button>
+        <Button variant="danger" onClick={onConfirm}>
           Excluir
-        </button>
+        </Button>
       </div>
     </Modal>
   );

@@ -212,13 +212,13 @@ export const RelatoriosPage: React.FC = () => {
                 <ProgressBar
                   label="Taxa de Conclusão de Projetos"
                   value={report.projectMetrics.conclusionRate}
-                  color="bg-emerald-500"
+                  color="bg-success"
                 />
                 <div className="mt-8">
                   <ProgressBar
                     label={`Tarefas Concluídas (${report.projectMetrics.completedTasks}/${report.projectMetrics.totalTasks})`}
                     value={report.projectMetrics.taskCompletionRate}
-                    color="bg-blue-500"
+                    color="bg-info"
                   />
                 </div>
               </div>

@@ -12,7 +12,7 @@ export const CashBoxToast: (props: CashBoxToastProps) => React.ReactNode = ({ me
 
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up">
-      <div className="bg-success text-white px-5 py-3 rounded-xl shadow-lifted font-semibold text-sm flex items-center gap-2">
+      <div className="bg-success text-primary-content px-5 py-3 rounded-xl shadow-lifted font-semibold text-sm flex items-center gap-2">
         <CheckCircleIcon className="w-5 h-5" />
         {message}
       </div>

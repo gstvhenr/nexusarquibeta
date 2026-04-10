@@ -53,13 +53,15 @@ Sanção estrutural aplicada para transformar `src/frontend/pages/**` em camada 
 
 ## Próximo passo exato
 
-1. Abrir smoke test manual nas telas migradas: `Configurações`, `Documentos`, `Gestão de Caixa`, `Gestão de Marketing`, `Agenda`, `Clientes`, `Projetos > Detalhes`, `Suprimentos > Comissões`.
-2. Fazer revisão funcional rápida do fluxo de exportação PDF em `PropostaDetalhesPage` após o bump de `jspdf@4.2.1`.
-3. Se não houver regressão manual, preparar commit(s) atômico(s) da sanção estrutural e do hardening de dependências.
+1. ~~Preparar commit(s) atômico(s) da sanção estrutural e do hardening de dependências.~~ ✅ Feito: `6759db4` (refactor: frontend structural sanitation) + `2adde0b` (chore(deps): harden dependency versions and bump jspdf).
+2. **Smoke test manual** nas telas migradas: `Configurações`, `Documentos`, `Gestão de Caixa`, `Gestão de Marketing`, `Agenda`, `Clientes`, `Projetos > Detalhes`, `Suprimentos > Comissões`.
+3. **Revisão funcional** do fluxo de exportação PDF em `PropostaDetalhesPage` após o bump de `jspdf@4.2.1`.
+4. Avaliar archival de sessões antigas do NEXT.md (>100 linhas — regra de archival ativa).
 
 ## Bloqueios e dúvidas
 
 - Nenhum bloqueio técnico ativo nos gates automáticos; restam apenas validações manuais de smoke/regressão visual.
+- NEXT.md ultrapassou ~100 linhas significativamente — archival para `docs/changelog/session-log-2026-03.md` recomendado.
 
 ## Último estado conhecido (2026-03-22)
 

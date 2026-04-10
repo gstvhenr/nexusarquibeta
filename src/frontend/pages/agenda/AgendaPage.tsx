@@ -192,7 +192,7 @@ const AgendaPage: () => React.ReactNode = () => {
   );
 
   return (
-    <div className="animate-fade-in-up flex flex-col h-full max-h-full px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 overflow-hidden">
+    <div className="animate-fade-in-up flex flex-col h-full max-h-full overflow-hidden">
       <PageHeader title="Calendário" icon={agendaIcon}>
         {viewMode === 'monthly' && (
           <div className="flex items-center gap-2 px-3 h-9 rounded-lg bg-surface/80 border border-border-color/30 shadow-soft">

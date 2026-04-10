@@ -19,7 +19,7 @@ const FinanceiroHistoricoPage: () => React.ReactNode = () => {
 
   return (
     <div className="animate-fade-in-up flex h-full flex-col overflow-hidden">
-      <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6">
+      <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
         <div className="flex h-full min-h-0 flex-col">
           <PageHeader title="Histórico Financeiro" icon={financeiroIcon} contentGap="compact" />
           <div className="min-h-0 flex-1">

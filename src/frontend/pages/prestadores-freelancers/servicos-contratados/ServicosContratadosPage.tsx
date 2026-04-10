@@ -296,7 +296,7 @@ const ServicosContratadosPage: () => React.ReactNode = () => {
   )?.icon;
 
   return (
-    <div className="animate-fade-in-up h-full flex flex-col px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6">
+    <div className="animate-fade-in-up h-full flex flex-col">
       <PageHeader title="Serviços Contratados" icon={pageIcon}>
         <Button
           variant="secondary"

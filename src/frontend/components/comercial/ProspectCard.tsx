@@ -113,7 +113,7 @@ export function ProspectCard({
                 className={`
                   w-10 h-10 rounded-xl bg-gradient-to-br ${avatarGradient}
                   flex items-center justify-center shrink-0
-                  text-white font-bold text-sm shadow-sm
+                  text-primary-content font-bold text-sm shadow-sm
                   group-hover:scale-105 transition-transform duration-300
                 `}
               >

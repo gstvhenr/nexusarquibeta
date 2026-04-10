@@ -192,7 +192,7 @@ const FinanceiroGestaoCaixaPage: () => React.ReactNode = () => {
 
   return (
     <div className="animate-fade-in-up h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 min-h-0">
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="h-full flex flex-col">
           <PageHeader title="Gestão de Caixa" icon={financeiroIcon}>
             <div className="flex flex-wrap items-center gap-2">

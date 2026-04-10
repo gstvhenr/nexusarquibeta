@@ -172,7 +172,7 @@ function GoogleDriveSection(): JSX.Element {
             <div className="flex items-center justify-between rounded-lg bg-surface-hover px-4 py-3">
               <div className="flex items-center gap-2">
                 <span
-                  className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500"
+                  className="inline-block h-2.5 w-2.5 rounded-full bg-success"
                   aria-hidden="true"
                 />
                 <span className="text-sm text-text-primary">
@@ -208,7 +208,7 @@ function GoogleDriveSection(): JSX.Element {
 
             <div className="flex items-center gap-2">
               <span
-                className={`inline-block h-2.5 w-2.5 rounded-full ${isApiConnected ? 'bg-emerald-500' : 'bg-gray-400'}`}
+                className={`inline-block h-2.5 w-2.5 rounded-full ${isApiConnected ? 'bg-success' : 'bg-border-color'}`}
                 aria-hidden="true"
               />
               <span className="text-sm text-text-primary">
@@ -266,9 +266,7 @@ function GoogleDriveSection(): JSX.Element {
         {message && (
           <div
             className={`rounded-lg px-4 py-2 text-sm ${
-              message.type === 'success'
-                ? 'bg-emerald-500/10 text-emerald-400'
-                : 'bg-red-500/10 text-red-400'
+              message.type === 'success' ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
             }`}
           >
             {message.text}
