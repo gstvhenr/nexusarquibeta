@@ -10,6 +10,30 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-04-11 — Blindagem global contra refresh externo durante modais abertos
+
+- Contexto: diversos pop-ups podiam fechar ou perder contexto sem `window.location.reload()`, porque o frontend aplica atualizações externas em background via BroadcastChannel, `storage` sintético e Drive Sync. Esses refreshes podiam substituir snapshots e forçar rerender/remount no meio da interação.
+- Decisão:
+  1. Criar `uiInteractionLockService` em `src/frontend/services/` como contador global de locks de interação.
+  2. Fazer o `src/frontend/components/ui/Modal.tsx` adquirir/liberar esse lock automaticamente durante toda a vida útil do modal, incluindo a animação de fechamento.
+  3. Alterar `src/frontend/services/infrastructure/loadData.ts` para adiar atualizações externas vindas de snapshot persistido e de writes do Drive Sync enquanto o lock estiver ativo.
+  4. Ao liberar o último modal, descarregar as atualizações pendentes em lote, priorizando refresh completo de snapshot sobre writes pontuais de domínio.
+- Consequência: pop-ups que usam o modal compartilhado passam a ficar blindados contra refresh externo em background durante edição/leitura. A sincronização continua ocorrendo, mas só é aplicada após o fechamento do último modal aberto.
+- Reversão:
+  1. Remover `src/frontend/services/uiInteractionLockService.ts` e seu teste.
+  2. Retirar a integração do lock em `src/frontend/components/ui/Modal.tsx`.
+  3. Restaurar em `src/frontend/services/infrastructure/loadData.ts` a aplicação imediata de `refreshFromPersistentSnapshot()` e `writeLocal()`.
+- Referências: `src/frontend/services/uiInteractionLockService.ts`, `src/frontend/components/ui/Modal.tsx`, `src/frontend/services/infrastructure/loadData.ts`, `NEXT.md`.
+
+### Session 3 — 2026-04-11
+
+**Objective:** impedir que pop-ups do projeto inteiro fechem ou percam contexto por atualizações externas em background enquanto o usuário está interagindo com um modal.
+**What was done:** foi criado um lock global de interação, integrado ao `Modal` compartilhado, e `loadData.ts` passou a adiar refreshes externos de snapshot/Drive Sync até o fechamento do último modal. Também foram adicionados testes unitários do serviço de lock e revalidadas as suítes direcionadas do modal.
+**Decisions made:** centralizar a proteção no `Modal` compartilhado em vez de espalhar flags por tela; tratar snapshot persistido como fonte mais forte que writes de domínio enfileirados; manter o sync ativo, mas aplicar o merge somente após o unlock.
+**Open/Pending:** confirmar manualmente nos fluxos mais críticos que o modal permanece aberto mesmo após ciclos de sync em background, especialmente em telas fora de `Agenda`.
+**Immediate next step:** executar smoke manual em pop-ups de `Clientes`, `Projetos`, `Suprimentos`, `Configurações` e `Agenda`, deixando um modal aberto por mais de 60 segundos para validar que o polling não desmonta a UI.
+**Quality gate:** `npm run typecheck` PASS; `npx vitest run src/frontend/services/uiInteractionLockService.test.ts` PASS; `npx vitest run src/frontend/components/ui/Modal.test.tsx` PASS; `npx eslint` nos arquivos alterados PASS; `npx prettier --check` nos arquivos alterados PASS.
+
 ### 2026-04-10 — Hardening de dependências: fechamento de `security:check` e `verify:ci`
 
 - Contexto: após a sanção estrutural do frontend, o pipeline ainda parava em `npm run security:check` por vulnerabilidades em `jspdf`, `vite`, `dependency-cruiser` e na cadeia transitiva de `handlebars` vinda de `eslint-plugin-boundaries`. O objetivo era fechar `verify:ci` sem introduzir breaking changes desnecessários na toolchain.

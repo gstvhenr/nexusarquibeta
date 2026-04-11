@@ -80,7 +80,7 @@ const Sidebar: (props: SidebarProps) => React.ReactNode = ({ isOpen, setOpen }) 
         <div className="mt-auto p-6">
           <div className="pt-4 border-t border-border-color">
             <nav className="px-0">
-              <ul>
+              <ul className="mb-4">
                 <li>
                   <SidebarNavLink item={SETTINGS_LINK} onClick={closeSidebar} />
                 </li>

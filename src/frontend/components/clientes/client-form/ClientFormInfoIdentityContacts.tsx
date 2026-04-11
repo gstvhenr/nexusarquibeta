@@ -16,6 +16,7 @@ interface ClientFormInfoIdentityContactsProps {
   fieldId: FieldId;
   commonInputClass: string;
   onChange: ClientChangeHandler;
+  onAvatarChange?: (file: File | null, preview: string | null) => void;
   onRepChange: ClientRepresentativeChangeHandler;
   onContactChange: ClientContactChangeHandler;
 
@@ -30,6 +31,7 @@ export const ClientFormInfoIdentityContacts = ({
   fieldId,
   commonInputClass,
   onChange,
+  onAvatarChange,
   onRepChange,
   onContactChange,
   getModifiedClass,
@@ -43,7 +45,13 @@ export const ClientFormInfoIdentityContacts = ({
           name={client.name}
           avatarUrl={client.avatarUrl}
           isReadOnly={isReadOnly}
-          onChangeBase64={(base64) => onChange('avatarUrl', base64)}
+          onChangeFile={(file, base64) => {
+            if (onAvatarChange) onAvatarChange(file, base64);
+            onChange('avatarUrl', base64 || '');
+          }}
+          onChangeBase64={(base64) => {
+            if (!onAvatarChange) onChange('avatarUrl', base64);
+          }}
         />
         <div className="flex flex-col gap-2 pt-1">
           <label className="flex items-center gap-2 cursor-pointer">

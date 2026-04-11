@@ -49,7 +49,7 @@ function EventFormFields({
   availableProjects,
 }: EventFormFieldsProps) {
   return (
-    <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+    <div className="space-y-6 pr-2 custom-scrollbar">
       {/* Section 1: Basic Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { uiInteractionLockService } from '../../services/uiInteractionLockService';
 
 interface ModalProps {
   isOpen: boolean;
@@ -19,6 +20,10 @@ const Modal: (props: ModalProps) => React.ReactNode = ({
   const [isClosing, setIsClosing] = useState(false);
   const modalRoot = typeof window !== 'undefined' ? document.getElementById('modal-root') : null;
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const modalContentRef = useRef<HTMLDivElement | null>(null);
+  const modalBodyRef = useRef<HTMLDivElement | null>(null);
+  const previousFocusedElementRef = useRef<HTMLElement | null>(null);
+  const releaseInteractionLockRef = useRef<(() => void) | null>(null);
   const handleClose = useCallback(() => {
     setIsClosing(true);
     if (closeTimerRef.current !== null) {
@@ -32,12 +37,53 @@ const Modal: (props: ModalProps) => React.ReactNode = ({
   }, [onClose]);
 
   useEffect(() => {
+    if (!isOpen && !isClosing) {
+      if (releaseInteractionLockRef.current) {
+        releaseInteractionLockRef.current();
+        releaseInteractionLockRef.current = null;
+      }
+      return;
+    }
+
+    if (!releaseInteractionLockRef.current) {
+      releaseInteractionLockRef.current = uiInteractionLockService.acquire();
+    }
+
+    return () => {
+      if (releaseInteractionLockRef.current) {
+        releaseInteractionLockRef.current();
+        releaseInteractionLockRef.current = null;
+      }
+    };
+  }, [isOpen, isClosing]);
+
+  useEffect(() => {
     return () => {
       if (closeTimerRef.current !== null) {
         clearTimeout(closeTimerRef.current);
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      const previousFocusedElement = previousFocusedElementRef.current;
+      if (previousFocusedElement && document.contains(previousFocusedElement)) {
+        previousFocusedElement.focus();
+      }
+      previousFocusedElementRef.current = null;
+      return;
+    }
+
+    previousFocusedElementRef.current = document.activeElement as HTMLElement | null;
+    const focusableSelector =
+      'input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
+    const focusTarget =
+      modalBodyRef.current?.querySelector<HTMLElement>(focusableSelector) ??
+      modalContentRef.current;
+
+    focusTarget?.focus();
+  }, [isOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,25 +121,29 @@ const Modal: (props: ModalProps) => React.ReactNode = ({
   const animationClass = isClosing ? 'animate-fade-out-down' : 'animate-fade-in-up';
 
   const modalContent = (
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
     <div
       className="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 flex justify-center items-center p-4"
       onClick={handleClose}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') handleClose();
-      }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
       <div
-        className={`bg-surface rounded-xl shadow-lifted w-full p-6 sm:p-8 relative transform transition-all ${sizeClasses[size] || sizeClasses['lg']} ${animationClass}`}
+        ref={modalContentRef}
+        className={`bg-surface rounded-xl shadow-lifted w-full max-h-full overflow-y-auto p-6 sm:p-8 relative transform transition-all ${sizeClasses[size] || sizeClasses['lg']} ${animationClass}`}
         onClick={(e) => e.stopPropagation()}
+        onKeyDownCapture={(e) => e.stopPropagation()}
+        onKeyUpCapture={(e) => e.stopPropagation()}
         role="document"
+        tabIndex={-1}
       >
-        <header className="mb-6 pb-4 border-b border-border-color">
-          <h2 id="modal-title" className="font-serif text-3xl font-bold text-secondary">
+        <header className="mb-6 pb-4 pr-12 border-b border-border-color">
+          <h2
+            id="modal-title"
+            className="font-serif text-3xl font-bold leading-tight text-secondary break-words [overflow-wrap:anywhere]"
+          >
             {title}
           </h2>
         </header>
@@ -111,7 +161,7 @@ const Modal: (props: ModalProps) => React.ReactNode = ({
             ></path>
           </svg>
         </button>
-        <div>{children}</div>
+        <div ref={modalBodyRef}>{children}</div>
       </div>
     </div>
   );

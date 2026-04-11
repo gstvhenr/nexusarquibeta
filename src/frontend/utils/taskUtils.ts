@@ -15,6 +15,31 @@ export const allSubtasksDone = (task: AgendaEvent): boolean => {
   return task.subtasks.every((subtask) => subtask.completed);
 };
 
+export const archiveCompletedTask = (task: AgendaEvent): AgendaEvent => {
+  const isCompleted = task.completed || task.kanbanStatus === 'done';
+
+  if (!isCompleted) {
+    return task;
+  }
+
+  return {
+    ...task,
+    completed: true,
+    archived: true,
+    kanbanStatus: 'done',
+  };
+};
+
+export const isArchivedTask = (task: AgendaEvent): boolean =>
+  Boolean(task.archived || task.completed || task.kanbanStatus === 'done');
+
+export const reactivateArchivedTask = (task: AgendaEvent): AgendaEvent => ({
+  ...task,
+  archived: false,
+  completed: false,
+  kanbanStatus: 'todo',
+});
+
 export const KANBAN_COLUMNS: {
   id: KanbanStatus;
   title: string;

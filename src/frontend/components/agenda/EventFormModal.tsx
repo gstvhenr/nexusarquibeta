@@ -122,48 +122,52 @@ export const EventFormModal: (props: {
       title={event ? 'Editar Evento / Tarefa' : 'Novo Evento / Tarefa'}
       size="2xl"
     >
-      <EventFormFields
-        formId={formId}
-        editedEvent={editedEvent}
-        onChange={handleChange}
-        onClientChange={handleClientChange}
-        onProjectChange={handleProjectChange}
-        newSubtaskTitle={newSubtaskTitle}
-        onNewSubtaskTitleChange={setNewSubtaskTitle}
-        onAddSubtask={addSubtask}
-        onRemoveSubtask={removeSubtask}
-        noEndTime={noEndTime}
-        onNoEndTimeChange={setNoEndTime}
-        clients={clients}
-        availableProjects={availableProjects}
-      />
-      <div className="flex justify-between items-center mt-6 pt-4 border-t border-border-color">
-        <div>
-          {event && !event.isDeadlineEvent && (
+      <div className="flex max-h-[calc(100dvh-14rem)] flex-col">
+        <div className="min-h-0 overflow-y-auto pr-1 custom-scrollbar">
+          <EventFormFields
+            formId={formId}
+            editedEvent={editedEvent}
+            onChange={handleChange}
+            onClientChange={handleClientChange}
+            onProjectChange={handleProjectChange}
+            newSubtaskTitle={newSubtaskTitle}
+            onNewSubtaskTitleChange={setNewSubtaskTitle}
+            onAddSubtask={addSubtask}
+            onRemoveSubtask={removeSubtask}
+            noEndTime={noEndTime}
+            onNoEndTimeChange={setNoEndTime}
+            clients={clients}
+            availableProjects={availableProjects}
+          />
+        </div>
+        <div className="flex justify-between items-center mt-6 pt-4 border-t border-border-color">
+          <div>
+            {event && !event.isDeadlineEvent && (
+              <button
+                type="button"
+                onClick={() => onDelete(event.id)}
+                className="px-4 py-2 rounded-lg font-semibold text-error hover:bg-error/10"
+              >
+                Excluir
+              </button>
+            )}
+          </div>
+          <div className="flex space-x-4">
             <button
               type="button"
-              onClick={() => onDelete(event.id)}
-              className="px-4 py-2 rounded-lg font-semibold text-error hover:bg-error/10"
+              onClick={onClose}
+              className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
             >
-              Excluir
+              Cancelar
             </button>
-          )}
-        </div>
-        <div className="flex space-x-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-2 rounded-lg font-semibold text-text-primary bg-border-color/50 hover:bg-border-color"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
-          >
-            Salvar
-          </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
+            >
+              Salvar
+            </button>
+          </div>
         </div>
       </div>
     </Modal>

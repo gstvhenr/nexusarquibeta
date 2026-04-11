@@ -9,6 +9,8 @@ import type { Client, PaymentStatus } from '../../types';
 import { NAV_LINKS } from '../../constants';
 import { PlusIcon, ArchiveIcon, UnarchiveIcon } from '../../components/ui';
 import { getPaymentStatusByClientId, saveClientAndUpdateState } from '../../services/clientService';
+import { driveFileService } from '../../services/infrastructure/driveFileService';
+import { v4 as uuidv4 } from 'uuid';
 import type { ClientesFilterState } from '@/components/clientes/types';
 const ClientesPage: () => React.ReactNode = () => {
   const { clients, setClients, projects, setProjects, setProposals } = useCoreData();
@@ -145,8 +147,33 @@ const ClientesPage: () => React.ReactNode = () => {
   );
 
   const handleSaveClient = useCallback(
-    (clientToSave: Client, originalClient: Client | null) => {
-      const result = saveClientAndUpdateState(clientToSave, originalClient, clients);
+    async (clientToSave: Client, originalClient: Client | null, pendingAvatar?: File | null) => {
+      const finalClient = { ...clientToSave };
+      let clientId = finalClient.id;
+
+      // Assure ID exists before upload so we know the folder
+      if (!clientId) {
+        clientId = uuidv4();
+        finalClient.id = clientId;
+      }
+
+      if (pendingAvatar) {
+        try {
+          // Provide a specific fallback name if file.name is empty/missing
+          const relativePath = await driveFileService.uploadFeatureFile(
+            'clientes',
+            clientId,
+            pendingAvatar,
+            'avatar.jpg',
+          );
+          finalClient.avatarUrl = relativePath;
+        } catch (error) {
+          console.error('Erro ao fazer upload do avatar:', error);
+          alert('Não foi possível salvar o avatar, verifique o console para mais detalhes.');
+        }
+      }
+
+      const result = saveClientAndUpdateState(finalClient, originalClient, clients);
       if (result.error === 'duplicate_cpf_cnpj') {
         openDuplicateErrorModal();
         return;

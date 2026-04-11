@@ -208,6 +208,218 @@ async function initDisplayName(): Promise<string | null> {
   return cachedFolderName;
 }
 
+// ---------------------------------------------------------------------------
+// Granular file operations (for domain-level sync)
+// ---------------------------------------------------------------------------
+
+/**
+ * Navigates into a subfolder of the app folder, creating it if needed.
+ * Supports nested paths separated by '/'.
+ */
+async function getSubFolder(relativePath: string): Promise<FileSystemDirectoryHandle> {
+  const rootHandle = cachedHandle ?? (await loadHandle());
+  if (!rootHandle) throw new Error('Nenhuma pasta do Drive selecionada.');
+  if (!(await verifyPermission(rootHandle))) {
+    throw new Error('Permissão de escrita não concedida para a pasta.');
+  }
+
+  let current = await getAppFolder(rootHandle);
+  const segments = relativePath.split('/').filter((s) => s.length > 0);
+
+  for (const segment of segments) {
+    current = await current.getDirectoryHandle(segment, { create: true });
+  }
+
+  cachedHandle = rootHandle;
+  return current;
+}
+
+/**
+ * Writes text content to a file at a relative path inside the app folder.
+ * Creates intermediate directories as needed.
+ * Example: writeFile('data/clients.json', jsonString)
+ */
+async function writeFile(relativePath: string, content: string): Promise<void> {
+  const parts = relativePath.split('/');
+  const fileName = parts.pop();
+  if (!fileName) throw new Error('Caminho de arquivo inválido.');
+
+  const folder =
+    parts.length > 0 ? await getSubFolder(parts.join('/')) : await getAppFolder(cachedHandle!);
+  const fileHandle = await folder.getFileHandle(fileName, { create: true });
+
+  const writable = await fileHandle.createWritable();
+  try {
+    await writable.write(content);
+  } finally {
+    await writable.close();
+  }
+}
+
+/**
+ * Reads text content from a file at a relative path inside the app folder.
+ * Returns null if the file does not exist.
+ */
+async function readFile(relativePath: string): Promise<string | null> {
+  try {
+    const rootHandle = cachedHandle ?? (await loadHandle());
+    if (!rootHandle) return null;
+    if (!(await verifyPermission(rootHandle))) return null;
+
+    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const parts = relativePath.split('/').filter((s) => s.length > 0);
+    const fileName = parts.pop();
+    if (!fileName) return null;
+
+    for (const segment of parts) {
+      current = await current.getDirectoryHandle(segment);
+    }
+
+    const fileHandle = await current.getFileHandle(fileName);
+    const file = await fileHandle.getFile();
+    cachedHandle = rootHandle;
+    return await file.text();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Writes binary content (File/Blob) to a file at a relative path inside the app folder.
+ */
+async function writeBinaryFile(relativePath: string, fileOrBlob: File | Blob): Promise<void> {
+  const parts = relativePath.split('/');
+  const fileName = parts.pop();
+  if (!fileName) throw new Error('Caminho de arquivo inválido.');
+
+  const folder =
+    parts.length > 0 ? await getSubFolder(parts.join('/')) : await getAppFolder(cachedHandle!);
+  const fileHandle = await folder.getFileHandle(fileName, { create: true });
+
+  const writable = await fileHandle.createWritable();
+  try {
+    await writable.write(fileOrBlob);
+  } finally {
+    await writable.close();
+  }
+}
+
+/**
+ * Reads binary content (File) from a file at a relative path inside the app folder.
+ */
+async function readBinaryFile(relativePath: string): Promise<File | null> {
+  try {
+    const rootHandle = cachedHandle ?? (await loadHandle());
+    if (!rootHandle) return null;
+    if (!(await verifyPermission(rootHandle))) return null;
+
+    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const parts = relativePath.split('/').filter((s) => s.length > 0);
+    const fileName = parts.pop();
+    if (!fileName) return null;
+
+    for (const segment of parts) {
+      current = await current.getDirectoryHandle(segment);
+    }
+
+    const fileHandle = await current.getFileHandle(fileName);
+    const file = await fileHandle.getFile();
+    cachedHandle = rootHandle;
+    return file;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Checks if a file exists at a relative path inside the app folder.
+ */
+async function fileExists(relativePath: string): Promise<boolean> {
+  try {
+    const rootHandle = cachedHandle ?? (await loadHandle());
+    if (!rootHandle) return false;
+    if (!(await verifyPermission(rootHandle))) return false;
+
+    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const parts = relativePath.split('/').filter((s) => s.length > 0);
+    const fileName = parts.pop();
+    if (!fileName) return false;
+
+    for (const segment of parts) {
+      current = await current.getDirectoryHandle(segment);
+    }
+
+    await current.getFileHandle(fileName);
+    cachedHandle = rootHandle;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Gets the last modified time of a file at a relative path.
+ * Returns null if the file does not exist.
+ */
+async function getFileModifiedTime(relativePath: string): Promise<number | null> {
+  try {
+    const rootHandle = cachedHandle ?? (await loadHandle());
+    if (!rootHandle) return null;
+    if (!(await verifyPermission(rootHandle))) return null;
+
+    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const parts = relativePath.split('/').filter((s) => s.length > 0);
+    const fileName = parts.pop();
+    if (!fileName) return null;
+
+    for (const segment of parts) {
+      current = await current.getDirectoryHandle(segment);
+    }
+
+    const fileHandle = await current.getFileHandle(fileName);
+    const file = await fileHandle.getFile();
+    cachedHandle = rootHandle;
+    return file.lastModified;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Deletes a file at a relative path inside the app folder.
+ */
+async function deleteFile(relativePath: string): Promise<void> {
+  try {
+    const rootHandle = cachedHandle ?? (await loadHandle());
+    if (!rootHandle) return;
+    if (!(await verifyPermission(rootHandle))) return;
+
+    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const parts = relativePath.split('/').filter((s) => s.length > 0);
+    const fileName = parts.pop();
+    if (!fileName) return;
+
+    for (const segment of parts) {
+      current = await current.getDirectoryHandle(segment);
+    }
+
+    await current.removeEntry(fileName);
+    cachedHandle = rootHandle;
+  } catch {
+    // Ignore if file doesn't exist or can't be deleted
+  }
+}
+
+/**
+ * Placeholder para compatibilidade da API de cota.
+ * A API do sistema de arquivos relacional (Origin Private File System ou local)
+ * não fornece um método confiável padronizado para cota de disco do usuário,
+ * portanto ignoramos na sincronia local.
+ */
+async function getStorageQuota(): Promise<{ limitBytes: number; usageBytes: number } | null> {
+  return null;
+}
+
 export const localDriveService = {
   selectFolder,
   hasSavedFolder,
@@ -217,4 +429,12 @@ export const localDriveService = {
   clearSavedFolder,
   getFolderDisplayName,
   initDisplayName,
+  writeFile,
+  readFile,
+  writeBinaryFile,
+  readBinaryFile,
+  fileExists,
+  getFileModifiedTime,
+  deleteFile,
+  getStorageQuota,
 };

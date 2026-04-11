@@ -181,7 +181,7 @@ export const saveClientAndUpdateState = (
     return { updatedClients };
   } else {
     // New client
-    finalClient.id = uuidv4();
+    finalClient.id = finalClient.id || uuidv4();
     finalClient.registrationDate = new Date().toISOString();
     finalClient.auditLog = [
       {

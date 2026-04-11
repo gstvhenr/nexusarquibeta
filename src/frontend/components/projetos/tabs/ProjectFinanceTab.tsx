@@ -8,14 +8,25 @@ import { formatCurrency, getTodayDateOnly } from '@/utils/formatters';
 import { ProjectFinanceAddendumsSection } from './project-finance/ProjectFinanceAddendumsSection';
 import { ProjectFinanceConfigSection } from './project-finance/ProjectFinanceConfigSection';
 import { ProjectFinanceTransactionsSection } from './project-finance/ProjectFinanceTransactionsSection';
+import { ProjectFinanceOverviewSubTab } from './project-finance/ProjectFinanceOverviewSubTab';
 import type { FinanceTabProps } from './project-finance/types';
-import { CashIcon, ClipboardDocumentListIcon, SettingsIcon } from '@/components/ui/icons';
+import {
+  ChartBarIcon,
+  CashIcon,
+  ClipboardDocumentListIcon,
+  SettingsIcon,
+} from '@/components/ui/icons';
 
-type FinanceSubTab = 'contrato' | 'pagamento';
+type FinanceSubTab = 'visao_geral' | 'contrato' | 'pagamento';
 
 const SUB_TABS: readonly { id: FinanceSubTab; label: string; icon: React.ReactNode }[] = [
+  { id: 'visao_geral', label: 'Visão Geral', icon: <ChartBarIcon className="w-4 h-4" /> },
   { id: 'contrato', label: 'Contrato & Aditivos', icon: <SettingsIcon className="w-4 h-4" /> },
-  { id: 'pagamento', label: 'Pagamento', icon: <ClipboardDocumentListIcon className="w-4 h-4" /> },
+  {
+    id: 'pagamento',
+    label: 'Pagamentos (Parcelas)',
+    icon: <ClipboardDocumentListIcon className="w-4 h-4" />,
+  },
 ];
 
 export const ProjectFinanceTab: (props: FinanceTabProps) => React.ReactNode = ({
@@ -34,7 +45,7 @@ export const ProjectFinanceTab: (props: FinanceTabProps) => React.ReactNode = ({
   potentialCommissionTotal: _potentialCommissionTotal = 0,
 }) => {
   const financials = project.financials;
-  const [activeSubTab, setActiveSubTab] = useState<FinanceSubTab>('contrato');
+  const [activeSubTab, setActiveSubTab] = useState<FinanceSubTab>('visao_geral');
   const [showSettings, setShowSettings] = useState(false);
 
   const [newAddendum, setNewAddendum] = useState({
@@ -166,6 +177,21 @@ export const ProjectFinanceTab: (props: FinanceTabProps) => React.ReactNode = ({
 
         {/* ── Content ── */}
         <div className="p-6">
+          {/* ── Tab: Visão Geral ── */}
+          {activeSubTab === 'visao_geral' && (
+            <div className="space-y-6 animate-fade-in-up">
+              <ProjectFinanceOverviewSubTab
+                project={project}
+                financials={financials}
+                baseContractValue={baseContractValue}
+                totalValue={totalValue}
+                totalPaid={totalPaid}
+                totalToPay={totalToPay}
+                totalAddendums={totalAddendums}
+              />
+            </div>
+          )}
+
           {/* ── Tab: Pagamento ── */}
           {activeSubTab === 'pagamento' && (
             <div className="space-y-6 animate-fade-in-up">

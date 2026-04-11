@@ -10,11 +10,14 @@ export const ClientFormInfoTab = ({
   fieldId,
   commonInputClass,
   onChange,
+  onAvatarChange,
   onAddressChange,
   onRepChange,
   onContactChange,
   getModifiedClass,
-}: ClientFormInfoTabProps) => (
+}: ClientFormInfoTabProps & {
+  onAvatarChange?: (file: File | null, preview: string | null) => void;
+}) => (
   <div className="space-y-6">
     <ClientFormInfoIdentityContacts
       client={client}
@@ -24,6 +27,7 @@ export const ClientFormInfoTab = ({
       fieldId={fieldId}
       commonInputClass={commonInputClass}
       onChange={onChange}
+      onAvatarChange={onAvatarChange}
       onRepChange={onRepChange}
       onContactChange={onContactChange}
       getModifiedClass={getModifiedClass}

@@ -22,8 +22,10 @@ import {
   TrashIcon,
   CheckCircleIcon,
   ArchiveIcon,
+  UnarchiveIcon,
 } from '@/components/ui';
 import type { Reminder } from '@/types';
+import { archiveReminder, isArchivedReminder, reactivateReminder } from '@/utils/reminderUtils';
 
 // ─── MAIN PAGE ───────────────────────────────────────────────
 const LembretesPage: () => React.ReactNode = () => {
@@ -34,16 +36,23 @@ const LembretesPage: () => React.ReactNode = () => {
   const [selected, setSelected] = useState<Reminder | null>(null);
   const [toDelete, setToDelete] = useState<Reminder | null>(null);
   const [rescheduleMode, setRescheduleMode] = useState(false);
-  const [showCompleted, setShowCompleted] = useState(false);
+  const [historyMode, setHistoryMode] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
-  // Active = not completed
-  const activeReminders = useMemo(() => reminders.filter((r) => !r.completedAt), [reminders]);
+  const activeReminders = useMemo(
+    () => reminders.filter((reminder) => !isArchivedReminder(reminder)),
+    [reminders],
+  );
 
-  const completedReminders = useMemo(
+  const archivedReminders = useMemo(
     () =>
       reminders
-        .filter((r) => !!r.completedAt)
-        .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime()),
+        .filter((reminder) => isArchivedReminder(reminder))
+        .sort(
+          (a, b) =>
+            new Date(b.completedAt || b.createdAt).getTime() -
+            new Date(a.completedAt || a.createdAt).getTime(),
+        ),
     [reminders],
   );
 
@@ -64,16 +73,25 @@ const LembretesPage: () => React.ReactNode = () => {
   const openAdd = () => {
     setSelected(null);
     setRescheduleMode(false);
+    setHistoryMode(false);
     formModal.open();
   };
   const openEdit = (r: Reminder) => {
     setSelected(r);
     setRescheduleMode(false);
+    setHistoryMode(false);
+    formModal.open();
+  };
+  const openHistory = (r: Reminder) => {
+    setSelected(r);
+    setRescheduleMode(false);
+    setHistoryMode(true);
     formModal.open();
   };
   const openReschedule = (r: Reminder) => {
     setSelected(r);
     setRescheduleMode(true);
+    setHistoryMode(false);
     formModal.open();
   };
   const confirmDelete = (r: Reminder) => {
@@ -107,9 +125,7 @@ const LembretesPage: () => React.ReactNode = () => {
 
   const markComplete = useCallback(
     (id: string) => {
-      setReminders((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, completedAt: new Date().toISOString() } : r)),
-      );
+      setReminders((prev) => prev.map((r) => (r.id === id ? archiveReminder(r) : r)));
     },
     [setReminders],
   );
@@ -139,18 +155,18 @@ const LembretesPage: () => React.ReactNode = () => {
     <div className="animate-fade-in-up h-full flex flex-col">
       <PageHeader title="Lembretes" icon={pageIcon}>
         <div className="flex items-center gap-3">
-          {completedReminders.length > 0 && (
+          {archivedReminders.length > 0 && (
             <Button
-              variant="ghost"
-              onClick={() => setShowCompleted((v) => !v)}
-              className={`px-4 py-2 text-sm font-semibold border gap-2 ${
-                showCompleted
-                  ? 'bg-success/10 text-success border-success/30 dark:border-success/50'
-                  : 'bg-surface text-text-secondary border-border-color hover:bg-background'
-              }`}
+              variant="secondary"
+              onClick={() => setShowArchived((value) => !value)}
+              className="px-4 py-2 text-sm font-semibold border gap-2"
             >
-              <ArchiveIcon className="w-4 h-4" />
-              Concluídos ({completedReminders.length})
+              {showArchived ? (
+                <UnarchiveIcon className="w-4 h-4" />
+              ) : (
+                <ArchiveIcon className="w-4 h-4" />
+              )}
+              {showArchived ? 'Ver Ativos' : `Arquivados (${archivedReminders.length})`}
             </Button>
           )}
           <Button
@@ -167,12 +183,12 @@ const LembretesPage: () => React.ReactNode = () => {
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar py-4">
         {/* Subtle board area */}
         <div className="relative min-h-full rounded-2xl p-6 bg-surface/40 border border-border-color/50 bg-[radial-gradient(circle,_var(--border-color,_rgba(var(--color-shadow-rgb),0.06))_1px,_transparent_1px)] bg-[length:24px_24px]">
-          {sorted.length === 0 && !showCompleted ? (
+          {sorted.length === 0 && !showArchived ? (
             <ReminderEmptyState />
           ) : (
             <div className="relative z-10 space-y-8">
               {/* Active reminders grid */}
-              {sorted.length > 0 && (
+              {!showArchived && sorted.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {sorted.map((reminder, i) => {
                     const style = getReminderColorStyle(reminder.color);
@@ -336,50 +352,92 @@ const LembretesPage: () => React.ReactNode = () => {
                 </div>
               )}
 
-              {/* ── Completed section (collapsible) ── */}
-              {showCompleted && completedReminders.length > 0 && (
+              {showArchived && (
                 <div className="pt-2">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-px flex-1 bg-border-color/30" />
                     <span className="text-xs font-bold text-text-secondary/60 uppercase tracking-widest flex items-center gap-2">
-                      <CheckCircleIcon className="w-4 h-4" /> Concluídos
+                      <ArchiveIcon className="w-4 h-4" /> Arquivados
                     </span>
                     <div className="h-px flex-1 bg-border-color/30" />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {completedReminders.map((reminder) => {
-                      const style = getReminderColorStyle(reminder.color);
-                      return (
-                        <div
-                          key={reminder.id}
-                          className={`relative rounded-lg border p-5 opacity-50 grayscale-[40%] shadow-[0_1px_4px_rgba(var(--color-shadow-rgb),0.06)] min-h-[120px] ${style.bg} ${style.border}`}
-                        >
-                          <h3 className="font-bold text-text-primary text-sm leading-snug mb-1 line-through">
-                            {reminder.title}
-                          </h3>
-                          {reminder.comment && (
-                            <p className="text-xs text-text-secondary leading-relaxed mb-2 line-clamp-2">
-                              {reminder.comment}
-                            </p>
-                          )}
-                          <div className="flex items-center justify-between mt-auto">
-                            <span className="text-[10px] text-text-secondary/60 italic">
-                              Concluído em {formatDateTime(reminder.completedAt!)}
-                            </span>
-                            <IconButton
-                              variant="danger"
-                              size="sm"
-                              onClick={() => confirmDelete(reminder)}
-                              aria-label="Excluir"
-                              title="Excluir"
-                            >
-                              <TrashIcon className="w-3 h-3" />
-                            </IconButton>
+                  {archivedReminders.length === 0 ? (
+                    <div className="h-40 flex flex-col items-center justify-center border-2 border-dashed border-border-color/50 rounded-xl">
+                      <ArchiveIcon className="w-8 h-8 text-text-secondary/30 mb-2" />
+                      <p className="text-sm font-medium text-text-secondary/50">
+                        Nenhum lembrete arquivado
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {archivedReminders.map((reminder) => {
+                        const style = getReminderColorStyle(reminder.color);
+                        return (
+                          <div
+                            key={reminder.id}
+                            className={`relative cursor-pointer rounded-lg border p-5 opacity-70 grayscale-[25%] hover:opacity-100 hover:grayscale-0 transition shadow-[0_1px_4px_rgba(var(--color-shadow-rgb),0.06)] min-h-[120px] ${style.bg} ${style.border}`}
+                            onClick={() => openHistory(reminder)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                openHistory(reminder);
+                              }
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Visualizar histórico do lembrete: ${reminder.title}`}
+                          >
+                            <h3 className="font-bold text-text-primary text-sm leading-snug mb-1 line-through">
+                              {reminder.title}
+                            </h3>
+                            {reminder.comment && (
+                              <p className="text-xs text-text-secondary leading-relaxed mb-2 line-clamp-2">
+                                {reminder.comment}
+                              </p>
+                            )}
+                            <div className="flex items-center justify-between mt-auto gap-2">
+                              <span className="text-[10px] text-text-secondary/60 italic">
+                                Arquivado em{' '}
+                                {formatDateTime(reminder.completedAt || reminder.createdAt)}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <IconButton
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setReminders((prev) =>
+                                      prev.map((current) =>
+                                        current.id === reminder.id
+                                          ? reactivateReminder(current)
+                                          : current,
+                                      ),
+                                    );
+                                  }}
+                                  aria-label="Desarquivar"
+                                  title="Desarquivar"
+                                >
+                                  <UnarchiveIcon className="w-3 h-3" />
+                                </IconButton>
+                                <IconButton
+                                  variant="danger"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    confirmDelete(reminder);
+                                  }}
+                                  aria-label="Excluir"
+                                  title="Excluir"
+                                >
+                                  <TrashIcon className="w-3 h-3" />
+                                </IconButton>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -393,10 +451,12 @@ const LembretesPage: () => React.ReactNode = () => {
         onClose={() => {
           formModal.close();
           setRescheduleMode(false);
+          setHistoryMode(false);
         }}
         onSave={handleSave}
         initial={selected}
         rescheduleMode={rescheduleMode}
+        readOnly={historyMode}
         colorOptions={POST_IT_COLORS}
       />
 

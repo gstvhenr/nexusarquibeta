@@ -5,6 +5,7 @@ import { PlusIcon, ClockIcon } from '../ui/icons';
 import { v4 as uuidv4 } from 'uuid';
 import { priorityLabels, formatDateBR } from './agendaFormHelpers';
 import SubtaskList from './SubtaskList';
+import { isArchivedTask } from '@/utils/taskUtils';
 
 /**
  * Modal for viewing and managing subtasks of a Kanban task.
@@ -33,6 +34,7 @@ export const SubtaskDetailModal: (props: {
   const subtasks = task.subtasks || [];
   const completedCount = subtasks.filter((s) => s.completed).length;
   const priority = priorityLabels[task.priority] || priorityLabels[3];
+  const isHistoryView = isArchivedTask(task);
 
   const toggleSubtask = (subId: string) => {
     const updated: Subtask[] = subtasks.map((s) => {
@@ -133,8 +135,14 @@ export const SubtaskDetailModal: (props: {
           )}
         </div>
 
+        {isHistoryView && (
+          <div className="rounded-lg border border-border-color/40 bg-background/50 px-3 py-2 text-xs font-medium text-text-secondary">
+            Histórico arquivado: esta tarefa concluída permanece disponível apenas para consulta.
+          </div>
+        )}
+
         {/* Reschedule */}
-        {isRescheduling ? (
+        {!isHistoryView && isRescheduling ? (
           <div className="flex items-end gap-2 p-3 rounded-lg bg-surface/50 border border-border-color/40">
             <div className="flex-1">
               <label
@@ -161,7 +169,7 @@ export const SubtaskDetailModal: (props: {
               Cancelar
             </Button>
           </div>
-        ) : (
+        ) : !isHistoryView ? (
           <button
             type="button"
             onClick={openReschedule}
@@ -170,7 +178,7 @@ export const SubtaskDetailModal: (props: {
             <ClockIcon className="w-3.5 h-3.5" />
             Reagendar
           </button>
-        )}
+        ) : null}
 
         {/* Progress Bar */}
         {subtasks.length > 0 && (
@@ -186,6 +194,7 @@ export const SubtaskDetailModal: (props: {
 
         <SubtaskList
           subtasks={subtasks}
+          readOnly={isHistoryView}
           editingId={editingId}
           editingTitle={editingTitle}
           onToggle={toggleSubtask}
@@ -200,25 +209,27 @@ export const SubtaskDetailModal: (props: {
         />
 
         {/* Add Subtask */}
-        <div className="flex gap-2 pt-2 border-t border-border-color/30">
-          <input
-            type="text"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addSubtask()}
-            placeholder="Nova subtarefa..."
-            aria-label="Adicionar subtarefa"
-            className="flex-1 bg-background p-2.5 rounded-lg border border-border-color focus:border-accent text-sm text-text-primary placeholder:text-text-secondary/50 transition"
-          />
-          <button
-            onClick={addSubtask}
-            type="button"
-            className="px-3 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
-            aria-label="Adicionar subtarefa"
-          >
-            <PlusIcon className="w-5 h-5" />
-          </button>
-        </div>
+        {!isHistoryView && (
+          <div className="flex gap-2 pt-2 border-t border-border-color/30">
+            <input
+              type="text"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addSubtask()}
+              placeholder="Nova subtarefa..."
+              aria-label="Adicionar subtarefa"
+              className="flex-1 bg-background p-2.5 rounded-lg border border-border-color focus:border-accent text-sm text-text-primary placeholder:text-text-secondary/50 transition"
+            />
+            <button
+              onClick={addSubtask}
+              type="button"
+              className="px-3 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+              aria-label="Adicionar subtarefa"
+            >
+              <PlusIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </div>
     </Modal>
   );

@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3001",
     "prepare": "husky",
     "baseline": "git status --short && npm run typecheck",
     "typecheck": "tsc --noEmit",

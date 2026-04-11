@@ -57,6 +57,7 @@ export function useClientFormHandlers({
     reason: '',
     notes: '',
   });
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -100,6 +101,7 @@ export function useClientFormHandlers({
     }
 
     setClient(clientData);
+    setPendingAvatarFile(null);
     setNewMeeting({ date: getTodayDateOnly(), reason: '', notes: '' });
     setInterestsDropdownOpen(false);
   }, [initialClient, isOpen]);
@@ -127,6 +129,10 @@ export function useClientFormHandlers({
 
   const handleChange = useCallback((field: keyof Client, value: Client[keyof Client]) => {
     setClient((current) => ({ ...current, [field]: value }));
+  }, []);
+
+  const handleAvatarChange = useCallback((file: File | null) => {
+    setPendingAvatarFile(file);
   }, []);
 
   const handleAddressChange = useCallback((field: keyof Client['address'], value: string) => {
@@ -247,8 +253,10 @@ export function useClientFormHandlers({
     setInterestsDropdownOpen,
     newMeeting,
     setNewMeeting,
+    pendingAvatarFile,
     dropdownRef,
     handleChange,
+    handleAvatarChange,
     handleAddressChange,
     handleRepChange,
     handleContactChange,

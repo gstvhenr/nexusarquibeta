@@ -19,6 +19,14 @@
 
 ---
 
+### [2026-04-11] - [SYNC] - Atualizacao externa nao deve desmontar modal durante interacao
+
+**Erro encontrado:** Pop-ups podiam fechar ou perder contexto mesmo sem `window.location.reload()`, porque atualizações externas em background (BroadcastChannel, `storage` sintético e Drive Sync) substituíam o snapshot da aplicação enquanto o usuário estava digitando em um modal.
+**Arquivo(s) afetado(s):** `src/frontend/components/ui/Modal.tsx`, `src/frontend/services/infrastructure/loadData.ts`, `src/frontend/services/uiInteractionLockService.ts`.
+**Causa raiz:** O app aplicava refresh externo imediatamente, sem considerar se havia interação modal em andamento. Isso permitia rerenders/remounts durante edição e leitura.
+**Correcao aplicada:** Criação de um lock global de interação adquirido pelo `Modal` compartilhado; `loadData.ts` passou a enfileirar refreshes externos e writes remotos enquanto o lock está ativo, descarregando tudo apenas após o fechamento do último modal.
+**Regra negativa derivada:** Não aplicar sincronização externa destrutiva enquanto houver modal compartilhado aberto; adiar o merge e descarregar as mudanças após o unlock da UI.
+
 ### [2026-03-13] - [A11Y] - `aria-selected` em tabs deve receber booleano sem serializacao manual
 
 **Erro encontrado:** Microsoft Edge Tools (`axe/aria`) sinalizou `Invalid ARIA attribute value: aria-selected="{expression}"` em tabs renderizadas por botao com `role="tab"`.

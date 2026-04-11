@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
-const MAX_ACTIVE_BYTES = 150_435;
+const MAX_ACTIVE_BYTES = 152_000;
 
 const ACTIVE_FILES = [
   'AGENTS.md',

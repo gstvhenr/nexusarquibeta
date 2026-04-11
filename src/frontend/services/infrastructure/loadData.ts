@@ -4,6 +4,9 @@ import { migrateClients, type LegacyClientRecord } from './migrations';
 import { applySeedReminders } from './seedReminders';
 import { applySeedAgendaEvents } from './seedAgendaEvents';
 import { applySeedProspects } from './seedProspects';
+import { driveSyncEngine } from './driveSyncEngine';
+import { ARRAY_DOMAIN_KEYS, SCALAR_CONFIG_KEYS } from './driveSyncTypes';
+import { uiInteractionLockService } from '../uiInteractionLockService';
 import type {
   AppData,
   Project,
@@ -239,6 +242,10 @@ let persistenceQueue: Promise<void> = Promise.resolve();
 const PERSIST_DEBOUNCE_MS = 300;
 let pendingSnapshot: AppData | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingExternalSnapshotRefresh = false;
+const pendingExternalDomainWrites = new Map<string, unknown>();
+let interactionLockBound = false;
+let isFlushingDeferredExternalUpdates = false;
 
 const hasWindow = (): boolean => typeof window !== 'undefined';
 const dataSyncChannel: BroadcastChannel | null =
@@ -281,7 +288,29 @@ const queuePersistSnapshot = (snapshot: AppData): void => {
   debounceTimer = setTimeout(flushDebouncedPersist, PERSIST_DEBOUNCE_MS);
 };
 
-const refreshFromPersistentSnapshot = async (): Promise<void> => {
+const hasQueuedExternalUpdates = (): boolean =>
+  pendingExternalSnapshotRefresh || pendingExternalDomainWrites.size > 0;
+
+const applyQueuedExternalDomainWrites = (): void => {
+  if (pendingExternalDomainWrites.size === 0) {
+    return;
+  }
+
+  if (!appData) {
+    appData = createDefaultAppData();
+  }
+
+  let nextSnapshot = appData;
+  for (const [domainKey, data] of pendingExternalDomainWrites) {
+    nextSnapshot = { ...nextSnapshot, [domainKey]: data } as AppData;
+  }
+
+  pendingExternalDomainWrites.clear();
+  appData = nextSnapshot;
+  notifySyncListeners(null);
+};
+
+const applyPersistentSnapshotRefresh = async (): Promise<void> => {
   if (!hasWindow()) {
     return;
   }
@@ -300,6 +329,44 @@ const refreshFromPersistentSnapshot = async (): Promise<void> => {
   notifySyncListeners(null);
 };
 
+const flushDeferredExternalUpdates = async (): Promise<void> => {
+  if (
+    isFlushingDeferredExternalUpdates ||
+    uiInteractionLockService.isLocked() ||
+    !hasQueuedExternalUpdates()
+  ) {
+    return;
+  }
+
+  isFlushingDeferredExternalUpdates = true;
+
+  try {
+    if (pendingExternalSnapshotRefresh) {
+      pendingExternalSnapshotRefresh = false;
+      pendingExternalDomainWrites.clear();
+      await applyPersistentSnapshotRefresh();
+      return;
+    }
+
+    applyQueuedExternalDomainWrites();
+  } finally {
+    isFlushingDeferredExternalUpdates = false;
+
+    if (!uiInteractionLockService.isLocked() && hasQueuedExternalUpdates()) {
+      void flushDeferredExternalUpdates();
+    }
+  }
+};
+
+const refreshFromPersistentSnapshot = async (): Promise<void> => {
+  if (uiInteractionLockService.isLocked()) {
+    pendingExternalSnapshotRefresh = true;
+    return;
+  }
+
+  await applyPersistentSnapshotRefresh();
+};
+
 const bindSyncChannelIfNeeded = (): void => {
   if (!dataSyncChannel || syncChannelBound) return;
   dataSyncChannel.onmessage = (event: MessageEvent) => {
@@ -313,6 +380,20 @@ const bindSyncChannelIfNeeded = (): void => {
     }
   };
   syncChannelBound = true;
+};
+
+const bindInteractionLockIfNeeded = (): void => {
+  if (interactionLockBound) {
+    return;
+  }
+
+  uiInteractionLockService.subscribe((isLocked) => {
+    if (!isLocked) {
+      void flushDeferredExternalUpdates();
+    }
+  });
+
+  interactionLockBound = true;
 };
 
 /**
@@ -353,6 +434,7 @@ const storageKeyMap: { [P in keyof AppData]: string } = {
  */
 export async function initializeDataStore(): Promise<void> {
   bindSyncChannelIfNeeded();
+  bindInteractionLockIfNeeded();
 
   if (isInitialized) {
     return;
@@ -368,6 +450,7 @@ export async function initializeDataStore(): Promise<void> {
     if (persistedEntityState && Object.keys(persistedEntityState).length > 0) {
       appData = normalizePersistedSnapshot(persistedEntityState);
       isInitialized = true;
+      startDriveSyncInBackground();
       return;
     }
 
@@ -378,12 +461,14 @@ export async function initializeDataStore(): Promise<void> {
         cloneSnapshot(appData) as unknown as Record<string, unknown>,
       );
       isInitialized = true;
+      startDriveSyncInBackground();
       return;
     }
 
     appData = createDefaultAppData();
     await persistence.writeSnapshot(cloneSnapshot(appData));
     isInitialized = true;
+    startDriveSyncInBackground();
   })()
     .catch((error) => {
       console.error('Failed to initialize data store:', error);
@@ -406,6 +491,7 @@ export async function initializeDataStore(): Promise<void> {
  */
 export function loadData(): AppData {
   bindSyncChannelIfNeeded();
+  bindInteractionLockIfNeeded();
 
   if (appData) {
     return cloneSnapshot(appData);
@@ -431,6 +517,7 @@ export function updateData<K extends keyof AppData>(key: K, data: AppData[K]): v
   }
   appData = { ...appData, [key]: data };
   queuePersistSnapshot(appData);
+  driveSyncEngine.notifyDomainChanged(key);
 }
 
 /**
@@ -440,6 +527,14 @@ export function updateData<K extends keyof AppData>(key: K, data: AppData[K]): v
 export function replaceData(snapshot: AppData): void {
   appData = cloneSnapshot(snapshot);
   queuePersistSnapshot(appData);
+
+  // Notify sync engine of all domains (undo/redo changes multiple keys)
+  for (const key of ARRAY_DOMAIN_KEYS) {
+    driveSyncEngine.notifyDomainChanged(key);
+  }
+  for (const key of SCALAR_CONFIG_KEYS) {
+    driveSyncEngine.notifyDomainChanged(key);
+  }
 }
 
 /**
@@ -482,6 +577,9 @@ export function resetPersistentDataAndNotify(): void {
     debounceTimer = null;
   }
   pendingSnapshot = null;
+  pendingExternalSnapshotRefresh = false;
+  pendingExternalDomainWrites.clear();
+  isFlushingDeferredExternalUpdates = false;
 
   appData = null;
   isInitialized = false;
@@ -526,9 +624,46 @@ export function resetForTest(): void {
     debounceTimer = null;
   }
   pendingSnapshot = null;
+  pendingExternalSnapshotRefresh = false;
+  pendingExternalDomainWrites.clear();
   appData = null;
   isInitialized = false;
   initializationPromise = null;
   persistenceQueue = Promise.resolve();
   syncChannelBound = false;
+  interactionLockBound = false;
+  isFlushingDeferredExternalUpdates = false;
+  uiInteractionLockService.resetForTest();
+  driveSyncEngine.destroy();
+}
+
+// ---------------------------------------------------------------------------
+// Drive Sync Engine integration
+// ---------------------------------------------------------------------------
+
+/**
+ * Starts the Drive Sync Engine in a non-blocking background task.
+ * Called after local data is loaded and the app is ready.
+ */
+function startDriveSyncInBackground(): void {
+  const readLocal = async (domainKey: string): Promise<unknown> => {
+    if (!appData) return null;
+    return (appData as unknown as Record<string, unknown>)[domainKey] ?? null;
+  };
+
+  const writeLocal = async (domainKey: string, data: unknown): Promise<void> => {
+    if (uiInteractionLockService.isLocked()) {
+      pendingExternalDomainWrites.set(domainKey, data);
+      return;
+    }
+
+    if (!appData) appData = createDefaultAppData();
+    appData = { ...appData, [domainKey]: data } as AppData;
+    notifySyncListeners(domainKey);
+  };
+
+  // Fire and forget — sync errors are handled internally by the engine
+  driveSyncEngine.initialize(readLocal, writeLocal).catch((error) => {
+    console.warn('[loadData] Drive sync initialization failed (non-blocking):', error);
+  });
 }

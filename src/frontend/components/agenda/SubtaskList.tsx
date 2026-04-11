@@ -6,6 +6,7 @@ import { formatDateTime } from './agendaFormHelpers';
 
 interface SubtaskListProps {
   subtasks: Subtask[];
+  readOnly?: boolean;
   editingId: string | null;
   editingTitle: string;
   onToggle: (subId: string) => void;
@@ -21,6 +22,7 @@ interface SubtaskListProps {
 
 function SubtaskList({
   subtasks,
+  readOnly = false,
   editingId,
   editingTitle,
   onToggle,
@@ -38,10 +40,10 @@ function SubtaskList({
       {subtasks.map((sub, idx) => (
         <div
           key={sub.id}
-          draggable
-          onDragStart={() => onDragStart(idx)}
-          onDragEnter={() => onDragEnter(idx)}
-          onDragEnd={onDragEnd}
+          draggable={!readOnly}
+          onDragStart={readOnly ? undefined : () => onDragStart(idx)}
+          onDragEnter={readOnly ? undefined : () => onDragEnter(idx)}
+          onDragEnd={readOnly ? undefined : onDragEnd}
           onDragOver={(e) => e.preventDefault()}
           className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
             sub.completed
@@ -51,8 +53,12 @@ function SubtaskList({
         >
           {/* Drag handle */}
           <span
-            className="cursor-grab active:cursor-grabbing text-text-secondary/40 hover:text-text-secondary shrink-0 select-none"
-            title="Arrastar para reordenar"
+            className={`text-text-secondary/40 shrink-0 select-none ${
+              readOnly
+                ? 'opacity-40'
+                : 'cursor-grab active:cursor-grabbing hover:text-text-secondary'
+            }`}
+            title={readOnly ? 'Histórico arquivado' : 'Arrastar para reordenar'}
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <circle cx="9" cy="6" r="1.5" />
@@ -67,7 +73,8 @@ function SubtaskList({
           {/* Checkbox */}
           <button
             type="button"
-            onClick={() => onToggle(sub.id)}
+            onClick={readOnly ? undefined : () => onToggle(sub.id)}
+            disabled={readOnly}
             className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
               sub.completed
                 ? 'bg-success border-success text-white'
@@ -130,6 +137,7 @@ function SubtaskList({
             variant="primary"
             size="sm"
             onClick={() => onStartEditing(sub)}
+            disabled={readOnly}
             aria-label={`Editar subtarefa "${sub.title}"`}
             title="Editar subtarefa"
           >
@@ -141,6 +149,7 @@ function SubtaskList({
             variant="danger"
             size="sm"
             onClick={() => onRemove(sub.id)}
+            disabled={readOnly}
             aria-label={`Excluir subtarefa "${sub.title}"`}
             title="Excluir subtarefa"
           >

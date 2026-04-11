@@ -1,12 +1,14 @@
-import { type ChangeEvent, useRef } from 'react';
+import { type ChangeEvent, useRef, useState, useEffect } from 'react';
 import { getInitials } from '../../utils/supplierHelpers';
 import { CameraIcon } from '../ui/icons-common';
+import { driveFileService } from '../../services/infrastructure/driveFileService';
 
 interface AvatarPickerProps {
   name: string;
   avatarUrl?: string;
   isReadOnly?: boolean;
-  onChangeBase64: (base64: string) => void;
+  onChangeFile?: (file: File | null, base64Preview: string | null) => void;
+  onChangeBase64?: (base64: string) => void; // Legacy support
 }
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
@@ -15,9 +17,42 @@ export function AvatarPicker({
   name,
   avatarUrl,
   isReadOnly = false,
+  onChangeFile,
   onChangeBase64,
 }: AvatarPickerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!avatarUrl) {
+      setResolvedUrl(null);
+      return;
+    }
+
+    if (
+      avatarUrl.startsWith('data:image/') ||
+      avatarUrl.startsWith('blob:') ||
+      avatarUrl.startsWith('http')
+    ) {
+      setResolvedUrl(avatarUrl);
+      return;
+    }
+
+    // Resolve relative path using driveFileService
+    driveFileService
+      .getFileUrl(avatarUrl)
+      .then((url) => {
+        if (active && url) {
+          setResolvedUrl(url);
+        }
+      })
+      .catch(console.error);
+
+    return () => {
+      active = false;
+    };
+  }, [avatarUrl]);
 
   const handleClick = () => {
     if (isReadOnly) return;
@@ -45,7 +80,8 @@ export function AvatarPicker({
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
-      onChangeBase64(base64String);
+      if (onChangeBase64) onChangeBase64(base64String);
+      if (onChangeFile) onChangeFile(file, base64String);
     };
     reader.readAsDataURL(file);
 
@@ -71,8 +107,8 @@ export function AvatarPicker({
         role={isReadOnly ? 'img' : 'button'}
         aria-label="Atualizar Avatar do Cliente"
       >
-        {avatarUrl ? (
-          <img src={avatarUrl} alt={`Avatar de ${name}`} className="w-full h-full object-cover" />
+        {resolvedUrl ? (
+          <img src={resolvedUrl} alt={`Avatar de ${name}`} className="w-full h-full object-cover" />
         ) : (
           getInitials(name || '?')
         )}

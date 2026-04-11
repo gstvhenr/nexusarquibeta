@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Section } from '@/components/ui';
-import { api } from '@/services/infrastructure/api';
+import { useDriveSync } from '../../hooks/useDriveSync';
 import { googleDriveService } from '@/services/infrastructure/googleDriveService';
 import type { DriveState } from '@/services/infrastructure/googleDriveTypes';
 import { localDriveService } from '@/services/infrastructure/localDriveService';
+import { SyncStatusIndicator } from '../layout/SyncStatusIndicator';
 
 type DriveMode = 'local' | 'api' | 'none';
 
@@ -16,9 +17,15 @@ function formatTimestamp(timestamp: number | null): string {
 }
 
 function GoogleDriveSection(): JSX.Element {
+  const { forcePush, forcePull, status: syncStatus, lastSyncTimestamp } = useDriveSync();
   const [folderName, setFolderName] = useState<string | null>(null);
   const [driveMode, setDriveMode] = useState<DriveMode>('none');
-  const [apiState, setApiState] = useState<DriveState>(googleDriveService.getState);
+  const [apiState, setApiState] = useState<DriveState>({
+    status: 'disconnected',
+    userEmail: null,
+    lastSyncTimestamp: null,
+    errorMessage: null,
+  });
   const [syncing, setSyncing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [message, setMessage] = useState<{
@@ -40,12 +47,16 @@ function GoogleDriveSection(): JSX.Element {
   useEffect(() => {
     const unsubscribe = googleDriveService.subscribe((state) => {
       setApiState(state);
-      if (state.status === 'connected' && driveMode !== 'local') {
-        setDriveMode('api');
-      }
     });
+
+    // Dynamic api state (from the core service object structure, usually we check if there's a user)
+    // Here we can subscribe if we had the direct googleDriveService, but since we rely on sync status:
+    if (syncStatus !== 'offline' && driveMode !== 'local') {
+      setDriveMode('api');
+    }
+
     return unsubscribe;
-  }, [driveMode]);
+  }, [driveMode, syncStatus]);
 
   useEffect(() => {
     if (!message) return;
@@ -87,73 +98,45 @@ function GoogleDriveSection(): JSX.Element {
     setSyncing(true);
     setMessage(null);
     try {
-      const jsonString = api.exportData();
-
-      if (driveMode === 'local') {
-        await localDriveService.writeSnapshot(jsonString);
-        setMessage({
-          type: 'success',
-          text: 'Dados salvos na pasta local do Google Drive!',
-        });
-      } else {
-        const snapshot = JSON.parse(jsonString) as unknown;
-        await googleDriveService.uploadSnapshot(snapshot);
-        setMessage({
-          type: 'success',
-          text: 'Dados sincronizados via API do Google Drive!',
-        });
-      }
+      await forcePush();
+      setMessage({
+        type: 'success',
+        text: 'Dados enviados para a nuvem!',
+      });
     } catch (error) {
       setMessage({
         type: 'error',
-        text: `Erro ao sincronizar: ${error instanceof Error ? error.message : 'Desconhecido'}`,
+        text: `Erro ao subir dados: ${error instanceof Error ? error.message : 'Desconhecido'}`,
       });
     } finally {
       setSyncing(false);
     }
-  }, [driveMode]);
+  }, [forcePush]);
 
   const handleRestore = useCallback(async () => {
     const confirmed = window.confirm(
-      'Restaurar dados do Google Drive? Isso substituirá os dados atuais.',
+      'Baixar dados na núvem? Isso unirá e possivelmente substituirá dados locais pelo que estiver remoto.',
     );
     if (!confirmed) return;
 
     setRestoring(true);
     setMessage(null);
     try {
-      let jsonString: string | null = null;
-
-      if (driveMode === 'local') {
-        jsonString = await localDriveService.readSnapshot();
-      } else {
-        const snapshot = await googleDriveService.downloadSnapshot<unknown>();
-        jsonString = snapshot ? JSON.stringify(snapshot) : null;
-      }
-
-      if (!jsonString) {
-        setMessage({
-          type: 'error',
-          text: 'Nenhum backup encontrado no Google Drive.',
-        });
-        return;
-      }
-
-      api.importData(jsonString);
+      await forcePull();
       setMessage({
         type: 'success',
-        text: 'Dados restaurados! A página será recarregada.',
+        text: 'Baixado com sucesso! Recarregando...',
       });
       setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
       setMessage({
         type: 'error',
-        text: `Erro ao restaurar: ${error instanceof Error ? error.message : 'Desconhecido'}`,
+        text: `Erro ao baixar resgate: ${error instanceof Error ? error.message : 'Desconhecido'}`,
       });
     } finally {
       setRestoring(false);
     }
-  }, [driveMode]);
+  }, [forcePull]);
 
   const isApiConnected = apiState.status === 'connected';
   const canSync = driveMode === 'local' || (driveMode === 'api' && isApiConnected);
@@ -257,7 +240,13 @@ function GoogleDriveSection(): JSX.Element {
               <span className="font-semibold">
                 {driveMode === 'local' ? 'Pasta Local' : 'API Web'}
               </span>
-              {' · '}Última sincronização: {formatTimestamp(apiState.lastSyncTimestamp)}
+              {' · '}Última sincronização:{' '}
+              {formatTimestamp(lastSyncTimestamp ? new Date(lastSyncTimestamp).getTime() : null)}
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <span className="font-semibold text-text-primary">Status do Motor de Sincronia:</span>
+              <SyncStatusIndicator />
             </div>
           </div>
         )}

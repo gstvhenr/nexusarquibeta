@@ -79,6 +79,8 @@ export interface Reminder {
   createdAt: string;
   /** Whether this reminder is pinned to the top of the board. */
   pinned?: boolean;
+  /** Whether this reminder is archived and only available in history view. */
+  archived?: boolean;
   /** ISO datetime when marked as completed; null = active. */
   completedAt?: string | null;
   /** Optional external URL associated with this reminder. */

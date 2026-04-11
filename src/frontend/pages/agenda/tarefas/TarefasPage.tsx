@@ -19,7 +19,13 @@ import {
 import { NAV_LINKS } from '@/constants';
 import { useSystemData } from '@/context/DataContext';
 import type { AgendaEvent, KanbanStatus } from '@/types';
-import { allSubtasksDone, KANBAN_COLUMNS } from '@/utils/taskUtils';
+import {
+  allSubtasksDone,
+  archiveCompletedTask,
+  isArchivedTask,
+  KANBAN_COLUMNS,
+  reactivateArchivedTask,
+} from '@/utils/taskUtils';
 
 const KANBAN_COLUMN_ACCENT_CLASS = {
   info: 'border-info',
@@ -51,12 +57,13 @@ function TarefasPage(): JSX.Element {
       agendaEvents
         .filter((event) => !event.isFinancialEvent)
         .map((event) => {
-          if (!event.kanbanStatus) {
-            return { ...event, kanbanStatus: event.completed ? 'done' : ('todo' as KanbanStatus) };
-          }
-          return event;
+          const normalizedTask = !event.kanbanStatus
+            ? { ...event, kanbanStatus: event.completed ? 'done' : ('todo' as KanbanStatus) }
+            : event;
+
+          return archiveCompletedTask(normalizedTask);
         })
-        .filter((event) => (event.archived || false) === showArchived),
+        .filter((event) => isArchivedTask(event) === showArchived),
     [agendaEvents, showArchived],
   );
 
@@ -85,11 +92,20 @@ function TarefasPage(): JSX.Element {
       previous.map((current) => {
         if (current.id === taskId) {
           const isCompleted = newStatus === 'done';
-          return { ...current, kanbanStatus: newStatus, completed: isCompleted };
+          return archiveCompletedTask({
+            ...current,
+            kanbanStatus: newStatus,
+            completed: isCompleted,
+            archived: isCompleted ? true : current.archived,
+          });
         }
         return current;
       }),
     );
+
+    if (newStatus === 'done') {
+      showToast('Tarefa concluída e enviada para Arquivadas.');
+    }
   };
 
   const handleSaveEvent = (event: AgendaEvent) => {
@@ -99,11 +115,12 @@ function TarefasPage(): JSX.Element {
       type: event.type || 'Desenvolvimento de Projeto',
       kanbanStatus: status,
     };
+    const normalizedTaskEvent = archiveCompletedTask(taskEvent);
 
     setAgendaEvents((previous) =>
       previous.find((current) => current.id === event.id)
-        ? previous.map((current) => (current.id === event.id ? taskEvent : current))
-        : [...previous, taskEvent],
+        ? previous.map((current) => (current.id === event.id ? normalizedTaskEvent : current))
+        : [...previous, normalizedTaskEvent],
     );
 
     taskModal.close();
@@ -184,7 +201,7 @@ function TarefasPage(): JSX.Element {
             onUnarchive={(task) =>
               setAgendaEvents((previous) =>
                 previous.map((event) =>
-                  event.id === task.id ? { ...event, archived: false } : event,
+                  event.id === task.id ? reactivateArchivedTask(event) : event,
                 ),
               )
             }

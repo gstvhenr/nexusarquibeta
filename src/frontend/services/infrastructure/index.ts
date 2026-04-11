@@ -11,3 +11,6 @@ export * from './seedProspects';
 export * from './seedReminders';
 export * from './storageQuotaService';
 export * from './uiPreferenceService';
+export * from './driveSyncEngine';
+export * from './driveFileService';
+export * from './driveSyncTypes';

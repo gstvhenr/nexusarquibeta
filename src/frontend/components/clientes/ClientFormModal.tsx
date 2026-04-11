@@ -18,7 +18,7 @@ import { useClientFormHandlers } from '../../hooks/useClientFormHandlers';
 interface ClientFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (client: Client, originalClient: Client | null) => void;
+  onSave: (client: Client, originalClient: Client | null, pendingAvatar?: File | null) => void;
   initialClient: Client | null;
   isReadOnly: boolean;
   onSwitchToEdit: () => void;
@@ -45,12 +45,14 @@ export const ClientFormModal: (props: ClientFormModalProps) => React.ReactNode =
     newMeeting,
     setNewMeeting,
     handleChange,
+    handleAvatarChange,
     handleAddressChange,
     handleRepChange,
     handleContactChange,
     handleAddMeeting,
     handleDeleteMeeting,
     getModifiedClass,
+    pendingAvatarFile,
   } = useClientFormHandlers({ isOpen, initialClient, projects });
 
   const financialSummaries = useMemo<ClientFinancialSummary[]>(
@@ -130,6 +132,7 @@ export const ClientFormModal: (props: ClientFormModalProps) => React.ReactNode =
             fieldId={fieldId}
             commonInputClass={commonInputClass}
             onChange={handleChange}
+            onAvatarChange={handleAvatarChange}
             onAddressChange={handleAddressChange}
             onRepChange={handleRepChange}
             onContactChange={handleContactChange}
@@ -173,7 +176,7 @@ export const ClientFormModal: (props: ClientFormModalProps) => React.ReactNode =
         isReadOnly={isReadOnly}
         onClose={onClose}
         onSwitchToEdit={onSwitchToEdit}
-        onSave={() => onSave(client, initialClient)}
+        onSave={() => onSave(client, initialClient, pendingAvatarFile)}
       />
     </Modal>
   );

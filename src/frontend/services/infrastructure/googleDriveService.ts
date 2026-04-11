@@ -16,6 +16,9 @@ const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/res
 const APP_FOLDER_NAME = 'NexusArqui';
 const SNAPSHOT_FILE_NAME = 'nexus-data.json';
 
+/** In-memory cache of folder path -> folderId to avoid redundant API calls. */
+const folderIdCache = new Map<string, string>();
+
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY ?? '';
 
@@ -299,7 +302,7 @@ async function downloadJsonFile<T>(fileId: string): Promise<T> {
 }
 
 // ---------------------------------------------------------------------------
-// High-level operations
+// High-level operations (legacy — kept for backward compat)
 // ---------------------------------------------------------------------------
 
 async function uploadSnapshot<T>(snapshot: T): Promise<void> {
@@ -338,6 +341,292 @@ async function getLastSyncInfo(): Promise<{ modifiedTime: string } | null> {
 }
 
 // ---------------------------------------------------------------------------
+// Granular file operations (for domain-level sync)
+// ---------------------------------------------------------------------------
+
+/**
+ * Navigates into a subfolder (by path) under the app root, creating folders as needed.
+ * Uses in-memory cache to avoid redundant API calls.
+ * Example: getOrCreateSubFolder('data') → folderId for NexusArqui/data
+ */
+async function getOrCreateSubFolder(relativePath: string): Promise<string> {
+  if (folderIdCache.has(relativePath)) {
+    return folderIdCache.get(relativePath)!;
+  }
+
+  const segments = relativePath.split('/').filter((s) => s.length > 0);
+  let parentId = await getOrCreateAppFolder();
+
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    const pathSoFar = segments.slice(0, i + 1).join('/');
+
+    if (folderIdCache.has(pathSoFar)) {
+      parentId = folderIdCache.get(pathSoFar)!;
+      continue;
+    }
+
+    const searchResponse = await window.gapi!.client.request({
+      path: '/drive/v3/files',
+      method: 'GET',
+      params: {
+        q: `name='${segment}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        fields: 'files(id,name)',
+        spaces: 'drive',
+      },
+    });
+
+    const existing = (searchResponse.result.files as DriveFileMetadata[] | undefined) ?? [];
+    if (existing.length > 0) {
+      parentId = existing[0].id;
+    } else {
+      const createResponse = await window.gapi!.client.request({
+        path: '/drive/v3/files',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: segment,
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: [parentId],
+        }),
+      });
+      parentId = (createResponse.result as unknown as DriveFileMetadata).id;
+    }
+
+    folderIdCache.set(pathSoFar, parentId);
+  }
+
+  return parentId;
+}
+
+/**
+ * Uploads a text file at a relative path inside the app folder via Drive API.
+ * Creates intermediate folders as needed.
+ * Example: uploadFileByPath('data/clients.json', jsonString)
+ */
+async function uploadFileByPath(relativePath: string, content: string): Promise<void> {
+  const parts = relativePath.split('/');
+  const fileName = parts.pop();
+  if (!fileName) throw new Error('Caminho de arquivo inválido.');
+
+  const folderId =
+    parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+
+  const existingFileId = await findFileInFolder(fileName, folderId);
+
+  const boundary = '-------nexusarqui_boundary';
+  const metadata: Record<string, unknown> = {
+    name: fileName,
+    mimeType: 'application/json',
+  };
+
+  if (!existingFileId) {
+    metadata.parents = [folderId];
+  }
+
+  const requestBody =
+    `--${boundary}\r\n` +
+    `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+    `${JSON.stringify(metadata)}\r\n` +
+    `--${boundary}\r\n` +
+    `Content-Type: application/json\r\n\r\n` +
+    `${content}\r\n` +
+    `--${boundary}--`;
+
+  const uploadMethod = existingFileId ? 'PATCH' : 'POST';
+  const token = window.gapi!.client.getToken();
+
+  const response = await fetch(
+    `https://www.googleapis.com/upload/drive/v3/files${existingFileId ? `/${existingFileId}` : ''}?uploadType=multipart`,
+    {
+      method: uploadMethod,
+      headers: {
+        Authorization: `Bearer ${token!.access_token}`,
+        'Content-Type': `multipart/related; boundary=${boundary}`,
+      },
+      body: requestBody,
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Upload failed for ${relativePath}: ${response.statusText}`);
+  }
+}
+
+/**
+ * Downloads a text file at a relative path inside the app folder via Drive API.
+ * Returns null if the file does not exist.
+ */
+async function downloadFileByPath(relativePath: string): Promise<string | null> {
+  const parts = relativePath.split('/');
+  const fileName = parts.pop();
+  if (!fileName) return null;
+
+  const folderId =
+    parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+
+  const fileId = await findFileInFolder(fileName, folderId);
+  if (!fileId) return null;
+
+  const token = window.gapi!.client.getToken();
+  const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    headers: { Authorization: `Bearer ${token!.access_token}` },
+  });
+
+  if (!response.ok) return null;
+  return await response.text();
+}
+
+/**
+ * Uploads a binary file at a relative path inside the app folder via Drive API.
+ */
+async function uploadBinaryFileByPath(relativePath: string, file: File): Promise<void> {
+  const parts = relativePath.split('/');
+  const fileName = parts.pop();
+  if (!fileName) throw new Error('Caminho de arquivo inválido.');
+
+  const folderId =
+    parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+
+  const existingFileId = await findFileInFolder(fileName, folderId);
+
+  const boundary = '-------nexusarqui_boundary';
+  const metadata: Record<string, unknown> = {
+    name: fileName,
+    mimeType: file.type || 'application/octet-stream',
+  };
+
+  if (!existingFileId) {
+    metadata.parents = [folderId];
+  }
+
+  const metadataBlob = new Blob([
+    `--${boundary}\r\n`,
+    `Content-Type: application/json; charset=UTF-8\r\n\r\n`,
+    `${JSON.stringify(metadata)}\r\n`,
+    `--${boundary}\r\n`,
+    `Content-Type: ${file.type || 'application/octet-stream'}\r\n\r\n`,
+  ]);
+
+  const endBlob = new Blob([`\r\n--${boundary}--`]);
+  const requestBody = new Blob([metadataBlob, file, endBlob]);
+
+  const uploadMethod = existingFileId ? 'PATCH' : 'POST';
+  const token = window.gapi!.client.getToken();
+
+  const response = await fetch(
+    `https://www.googleapis.com/upload/drive/v3/files${existingFileId ? `/${existingFileId}` : ''}?uploadType=multipart`,
+    {
+      method: uploadMethod,
+      headers: {
+        Authorization: `Bearer ${token!.access_token}`,
+        'Content-Type': `multipart/related; boundary=${boundary}`,
+      },
+      body: requestBody,
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Upload failed for ${relativePath}: ${response.statusText}`);
+  }
+}
+
+/**
+ * Downloads a binary file at a relative path inside the app folder via Drive API.
+ */
+async function downloadBinaryFileByPath(relativePath: string): Promise<Blob | null> {
+  const parts = relativePath.split('/');
+  const fileName = parts.pop();
+  if (!fileName) return null;
+
+  const folderId =
+    parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+
+  const fileId = await findFileInFolder(fileName, folderId);
+  if (!fileId) return null;
+
+  const token = window.gapi!.client.getToken();
+  const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    headers: { Authorization: `Bearer ${token!.access_token}` },
+  });
+
+  if (!response.ok) return null;
+  return await response.blob();
+}
+
+/**
+ * Gets the last modified time (epoch ms) of a file by relative path.
+ * Returns null if the file does not exist.
+ */
+async function getFileModifiedTimeByPath(relativePath: string): Promise<number | null> {
+  const parts = relativePath.split('/');
+  const fileName = parts.pop();
+  if (!fileName) return null;
+
+  const folderId =
+    parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+
+  const response = await window.gapi!.client.request({
+    path: '/drive/v3/files',
+    method: 'GET',
+    params: {
+      q: `name='${fileName}' and '${folderId}' in parents and trashed=false`,
+      fields: 'files(id,name,modifiedTime)',
+      spaces: 'drive',
+    },
+  });
+
+  const files = (response.result.files as DriveFileMetadata[] | undefined) ?? [];
+  if (files.length === 0) return null;
+
+  return new Date(files[0].modifiedTime).getTime();
+}
+
+/**
+ * Checks if a file exists at a relative path inside the app folder.
+ */
+async function fileExistsByPath(relativePath: string): Promise<boolean> {
+  const parts = relativePath.split('/');
+  const fileName = parts.pop();
+  if (!fileName) return false;
+
+  try {
+    const folderId =
+      parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+
+    const fileId = await findFileInFolder(fileName, folderId);
+    return fileId !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Deletes a file at a relative path inside the app folder via Drive API.
+ */
+async function deleteFileByPath(relativePath: string): Promise<void> {
+  const parts = relativePath.split('/');
+  const fileName = parts.pop();
+  if (!fileName) return;
+
+  try {
+    const folderId =
+      parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+
+    const fileId = await findFileInFolder(fileName, folderId);
+    if (!fileId) return;
+
+    const token = window.gapi!.client.getToken();
+    await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token!.access_token}` },
+    });
+  } catch {
+    // Ignore errors on delete to avoid breaking flows
+  }
+}
+
+// ---------------------------------------------------------------------------
 // State management
 // ---------------------------------------------------------------------------
 
@@ -354,6 +643,36 @@ function subscribe(listener: StateListener): () => void {
 // Public API
 // ---------------------------------------------------------------------------
 
+/**
+ * Obtém a cota de armazenamento e o uso da conta do Google Drive via API.
+ * Retorna log de limite e uso em bytes.
+ */
+async function getStorageQuota(): Promise<{ limitBytes: number; usageBytes: number } | null> {
+  if (!isSignedIn()) return null;
+  const token = window.gapi!.client.getToken();
+  if (!token) return null;
+
+  try {
+    const response = await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token.access_token}` },
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    if (data.storageQuota) {
+      return {
+        limitBytes: Number(data.storageQuota.limit || 15 * 1024 * 1024 * 1024), // Fallback padrão 15GB
+        usageBytes: Number(data.storageQuota.usage || 0),
+      };
+    }
+  } catch {
+    // Falha silenciosa
+  }
+  return null;
+}
+
 export const googleDriveService = {
   handleRedirectCallback,
   signIn,
@@ -364,4 +683,14 @@ export const googleDriveService = {
   getLastSyncInfo,
   getState,
   subscribe,
+  uploadFileByPath,
+  downloadFileByPath,
+  uploadBinaryFileByPath,
+  downloadBinaryFileByPath,
+  getFileModifiedTimeByPath,
+  fileExistsByPath,
+  deleteFileByPath,
+  getOrCreateSubFolder,
+  ensureInitialized,
+  getStorageQuota,
 };
