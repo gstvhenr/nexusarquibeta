@@ -34,6 +34,15 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 **Immediate next step:** executar smoke manual em pop-ups de `Clientes`, `Projetos`, `Suprimentos`, `Configurações` e `Agenda`, deixando um modal aberto por mais de 60 segundos para validar que o polling não desmonta a UI.
 **Quality gate:** `npm run typecheck` PASS; `npx vitest run src/frontend/services/uiInteractionLockService.test.ts` PASS; `npx vitest run src/frontend/components/ui/Modal.test.tsx` PASS; `npx eslint` nos arquivos alterados PASS; `npx prettier --check` nos arquivos alterados PASS.
 
+### Session 4 — 2026-04-11
+
+**Objective:** reproduzir a falha do commit `48bd409` no GitHub, corrigir o gate quebrado e subir o estado vigente do projeto com o pipeline novamente verde.
+**What was done:** a falha foi reproduzida localmente em `npm run verify`, que caía em `format:check` por `src/frontend/components/projetos/tabs/project-finance/ProjectFinanceKpiRow.tsx`. O arquivo foi formatado com Prettier; também foi saneado `ProjectFinanceTab.tsx`, removendo imports órfãos (`formatCurrency`, `CashIcon`). Depois disso, `npm run verify` e `npm run security:check` passaram.
+**Decisions made:** tratar o problema como falha real de CI reproduzida localmente antes de qualquer push; limitar a correção ao módulo efetivamente apontado pelo gate e ao lint órfão do mesmo domínio, sem refactor adicional.
+**Open/Pending:** consolidar commit/push em `main` e confirmar no GitHub que o workflow `CI` reprocessou em verde.
+**Immediate next step:** criar o commit com as correções desta sessão e fazer `git push` para atualizar `upstream/main`.
+**Quality gate:** `npx eslint src/frontend/components/projetos/tabs/ProjectFinanceTab.tsx` PASS; `npx prettier --check src/frontend/components/projetos/tabs/ProjectFinanceTab.tsx` PASS; `npm run security:check` PASS; `npm run verify` PASS (`[VERIFY][LOOP][PASS]`).
+
 ### 2026-04-10 — Hardening de dependências: fechamento de `security:check` e `verify:ci`
 
 - Contexto: após a sanção estrutural do frontend, o pipeline ainda parava em `npm run security:check` por vulnerabilidades em `jspdf`, `vite`, `dependency-cruiser` e na cadeia transitiva de `handlebars` vinda de `eslint-plugin-boundaries`. O objetivo era fechar `verify:ci` sem introduzir breaking changes desnecessários na toolchain.
@@ -73,15 +82,6 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 **Open/Pending:** smoke manual das telas migradas na sanção estrutural e eventual revisão posterior de cobertura, fora do escopo desta trilha.
 **Immediate next step:** validar manualmente os módulos críticos migrados (`Configurações`, `Documentos`, `Gestão de Caixa`, `Gestão de Marketing`, `Agenda`, `Clientes`, `Projetos > Detalhes`, `Suprimentos > Comissões`) com o build já saneado.
 **Quality gate:** `npm run security:check` PASS; `npm run verify:ci` PASS; `npm audit` sem vulnerabilidades.
-
-### Session 1 — 2026-04-10
-
-**Objective:** transformar `pages/**` em camada de composição pura, endurecer a governança correspondente e fechar os gates de validação da trilha.
-**What was done:** UI local de páginas críticas foi promovida para `components/ui` e `components/<dominio>`, novos primitives foram criados, `useProjectLifecycleActions` e `useDomain` foram reposicionados para a camada de hooks, e os baselines de `structure`, `lines` e `pollution` foram ratchetados para refletir o estado atual do repositório.
-**Decisions made:** pages não podem mais concentrar subcomponentes visuais; primitives novos nascem em `components/ui`; componentes visuais de domínio nascem em `components/<dominio>` mesmo com consumidor único inicial; ratchets documentais e de baseline foram atualizados na mesma sessão para evitar regressão silenciosa.
-**Open/Pending:** smoke test manual das telas migradas; trilha separada para tratamento de vulnerabilidades de dependências apontadas por `npm audit`.
-**Immediate next step:** decidir se haverá autorização explícita para atualizar dependências e, em caso positivo, tratar `npm run security:check` até viabilizar `npm run verify:ci`.
-**Quality gate:** `typecheck`, `lint`, `format:check`, `check:docs:governance`, `validate:structure`, `check:lines`, `check:duplication`, `test:coverage`, `build`, `verify` e `self-review:auto` verdes; `security:check` vermelho por vulnerabilidades em dependências.
 
 ### 2026-03-11 — Suspensão de testes: remoção de 70 arquivos `.test.*` na fase beta
 

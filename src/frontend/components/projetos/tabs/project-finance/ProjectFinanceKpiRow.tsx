@@ -25,9 +25,7 @@ export const ProjectFinanceKpiRow: React.FC<ProjectFinanceKpiRowProps> = ({
           <p className="text-[11px] font-semibold text-text-secondary uppercase tracking-wide">
             Recebido
           </p>
-          <p className="text-lg font-bold text-success tabular-nums">
-            {formatCurrency(totalPaid)}
-          </p>
+          <p className="text-lg font-bold text-success tabular-nums">{formatCurrency(totalPaid)}</p>
         </div>
       </div>
       <div className="bg-surface rounded-xl border border-border-color p-4 flex items-center gap-3">

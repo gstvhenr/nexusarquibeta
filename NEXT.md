@@ -2,6 +2,46 @@
 
 ## Último estado conhecido (2026-04-11)
 
+Saneamento do pipeline do domínio `Projetos > Financeiro` para destravar o commit `48bd409` no GitHub. A falha que reproduzi localmente não era de importação do projeto em si, mas do CI: `npm run verify` caía em `format:check` por `src/frontend/components/projetos/tabs/project-finance/ProjectFinanceKpiRow.tsx` fora do padrão do Prettier. Na mesma sessão também foi removido o lint órfão de `ProjectFinanceTab.tsx` (`formatCurrency` e `CashIcon`), preservando comportamento, markup e contratos.
+
+### Checklist desta sessão
+
+- [x] Leitura dos artefatos obrigatórios de sessão (`AGENTS.md`, `CONTEXT.md`, `NEXT.md`, `ARCHITECTURE.md`, `DECISIONS-active.md`, `.agent/lessons-learned.md`).
+- [x] Mapeamento do impacto direto de `ProjectFinanceTab.tsx` e confirmação do consumer em `ProjetoDetalhesTabs.tsx`.
+- [x] Remoção dos imports não utilizados `formatCurrency` e `CashIcon`.
+- [x] Reprodução local da falha do GitHub via `npm run verify` apontando `format:check` em `ProjectFinanceKpiRow.tsx`.
+- [x] Aplicação de `prettier --write` em `src/frontend/components/projetos/tabs/project-finance/ProjectFinanceKpiRow.tsx`.
+- [x] `npx eslint src/frontend/components/projetos/tabs/ProjectFinanceTab.tsx` — verde.
+- [x] `npx prettier --check src/frontend/components/projetos/tabs/ProjectFinanceTab.tsx` — verde.
+- [x] `npm run verify` — verde (`[VERIFY][LOOP][PASS]`).
+- [x] `npm run security:check` — verde.
+
+### Concluído nesta sessão
+
+- `src/frontend/components/projetos/tabs/ProjectFinanceTab.tsx` — remoção de imports órfãos sem delta funcional.
+- `src/frontend/components/projetos/tabs/project-finance/ProjectFinanceKpiRow.tsx` — formatação alinhada ao Prettier para fechar o gate de CI.
+
+## Evidências da sessão
+
+- `npx eslint src/frontend/components/projetos/tabs/ProjectFinanceTab.tsx` → PASS.
+- `npx prettier --write src/frontend/components/projetos/tabs/ProjectFinanceTab.tsx` → aplicado.
+- `npx prettier --check src/frontend/components/projetos/tabs/ProjectFinanceTab.tsx` → PASS.
+- `npx prettier --write src/frontend/components/projetos/tabs/project-finance/ProjectFinanceKpiRow.tsx` → aplicado.
+- `npm run security:check` → PASS.
+- `npm run verify` → PASS (`[VERIFY][LOOP][PASS]`).
+
+## Próximo passo exato
+
+1. Confirmar no GitHub que o novo commit em `main` reprocessou o workflow `CI` sem o `X` vermelho do `48bd409`.
+
+## Bloqueios e dúvidas
+
+- Nenhum bloqueio técnico conhecido para esta correção.
+
+---
+
+## Último estado conhecido (2026-04-11)
+
 Blindagem global contra fechamento/reset de pop-ups por sincronização externa em background. A correção foi centralizada no `Modal` compartilhado, que agora adquire um lock global de interação, e em `loadData.ts`, que passou a adiar refreshes externos de snapshot/Drive Sync enquanto qualquer modal estiver aberto. Quando o último modal fecha, as atualizações pendentes são aplicadas em lote, evitando remounts no meio da edição.
 
 ### Checklist desta sessão

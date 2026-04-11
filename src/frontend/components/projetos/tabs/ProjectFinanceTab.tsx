@@ -4,19 +4,14 @@ import {
   getProjectLumpSumValue,
   getProjectTotalContractValue,
 } from '@/utils/projectFinancials';
-import { formatCurrency, getTodayDateOnly } from '@/utils/formatters';
+import { getTodayDateOnly } from '@/utils/formatters';
 import { ProjectFinanceAddendumsSection } from './project-finance/ProjectFinanceAddendumsSection';
 import { ProjectFinanceConfigSection } from './project-finance/ProjectFinanceConfigSection';
 import { ProjectFinanceTransactionsSection } from './project-finance/ProjectFinanceTransactionsSection';
 import { ProjectFinanceOverviewSubTab } from './project-finance/ProjectFinanceOverviewSubTab';
 import { ProjectFinanceKpiRow } from './project-finance/ProjectFinanceKpiRow';
 import type { FinanceTabProps } from './project-finance/types';
-import {
-  ChartBarIcon,
-  CashIcon,
-  ClipboardDocumentListIcon,
-  SettingsIcon,
-} from '@/components/ui/icons';
+import { ChartBarIcon, ClipboardDocumentListIcon, SettingsIcon } from '@/components/ui/icons';
 
 type FinanceSubTab = 'visao_geral' | 'contrato' | 'pagamento';
 
