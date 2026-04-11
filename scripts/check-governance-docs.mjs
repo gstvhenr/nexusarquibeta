@@ -1,4 +1,4 @@
-/* eslint-env node */
+/* global console, process */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
