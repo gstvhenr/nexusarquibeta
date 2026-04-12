@@ -34,7 +34,7 @@ export const SubtaskDetailModal: (props: {
   const subtasks = task.subtasks || [];
   const completedCount = subtasks.filter((s) => s.completed).length;
   const priority = priorityLabels[task.priority] || priorityLabels[3];
-  const isHistoryView = isArchivedTask(task);
+  const isHistoryView = task.completed || task.archived || isArchivedTask(task);
 
   const toggleSubtask = (subId: string) => {
     const updated: Subtask[] = subtasks.map((s) => {

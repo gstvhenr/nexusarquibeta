@@ -10,6 +10,62 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-04-11 — Autenticação do app separada da autorização do Google Drive
+
+- Contexto: o login obrigatório do NexusArqui estava usando diretamente o fluxo OAuth de token do Google Drive (`initTokenClient`) como se ele fosse a autenticação primária do app. Quando o popup de autorização fechava sem entregar o callback esperado, o `AuthGuard` não consolidava sessão e o usuário retornava para a `LoginPage`, mesmo após selecionar a conta Google.
+- Decisão:
+  1. Passar a autenticação do app para o fluxo oficial de identidade do Google (`google.accounts.id`), usando o credential JWT apenas para bootstrap da sessão frontend (`AUTH_FLAG_KEY` + `USER_EMAIL_KEY`).
+  2. Manter a autorização do Google Drive como etapa separada, ainda via `oauth2.initTokenClient`, acionada silenciosamente após o login e manualmente pela UI quando necessário.
+  3. Tratar “usuário autenticado no app” e “token do Drive disponível” como estados relacionados, porém distintos; a UI operacional de Drive deve usar `isSignedIn()` para refletir conectividade real da API.
+- Consequência: o usuário consegue entrar no NexusArqui mesmo quando a autorização do Drive falha ou não retorna no popup, eliminando o loop de voltar para a tela de login. A conexão com Drive continua disponível como autorização adicional e explícita.
+- Reversão:
+  1. Remover a inicialização de `google.accounts.id` no frontend.
+  2. Voltar a depender exclusivamente do token OAuth do Drive para liberar o `AuthGuard`.
+  3. Restaurar os indicadores de UI para interpretar `state.status === connected` como “Drive API conectada”.
+- Referências: `src/frontend/components/auth/LoginPage.tsx`, `src/frontend/services/infrastructure/googleDriveService.ts`, `src/frontend/components/configuracoes/GoogleDriveSection.tsx`, `src/frontend/App.tsx`, `NEXT.md`.
+
+### Session 6 — 2026-04-11
+
+**Objective:** corrigir o fluxo em que o popup do Google fechava após a escolha de conta e devolvia o usuário para a tela de login, sem abrir o NexusArqui.
+**What was done:** o login do app foi desacoplado da autorização do Drive. A tela de login passou a usar o fluxo oficial de identidade do Google para estabelecer a sessão do NexusArqui, enquanto a autorização do Drive continuou separada e pode ser tentada silenciosamente ou acionada manualmente em Configurações. Também foram ajustados os indicadores para não tratar “usuário autenticado” como sinônimo de “Drive API conectada”.
+**Decisions made:** usar `google.accounts.id` para bootstrap da sessão frontend; preservar `oauth2.initTokenClient` apenas para escopo do Drive; manter o app acessível mesmo sem token imediato do Drive.
+**Open/Pending:** validar manualmente em navegador real o fluxo de login após clique no botão Google, confirmar abertura do app e testar a reconexão manual do Drive na área de Configurações.
+**Immediate next step:** executar o fluxo real no navegador: entrar pela `LoginPage`, confirmar transição para o app e validar o botão “Conectar Google Drive” quando a API ainda não estiver autorizada.
+**Quality gate:** `npx vitest run src/frontend/utils/googleIdentity.test.ts` PASS; `npx eslint` nos arquivos alterados PASS; `npx prettier --check` nos arquivos alterados PASS; `npm run verify` pendente nesta sessão.
+
+### 2026-04-11 — Persistência total no Google Drive com fila resiliente, preferências sincronizadas e tombstones
+
+- Contexto: o aplicativo já persistia `AppData` localmente e conseguia sincronizar domínios com o Google Drive, mas ainda havia lacunas críticas para a promessa de continuidade entre dispositivos: preferências ficavam só no device, o engine não se rearmava automaticamente após mudanças de acesso, alterações pendentes podiam se perder em reload/offline, exclusões físicas de arquivos não eram propagadas e arrays identificáveis ainda dependiam de overwrite por arquivo inteiro.
+- Decisão:
+  1. Reescrever o `driveSyncEngine` para manter fila persistida de alterações pendentes, retry com backoff, flush em `visibilitychange/pagehide`, reconexão automática por eventos de `googleDriveService`/`localDriveService` e limpeza remota pendente de `files/`.
+  2. Introduzir `preferences.json` como artefato remoto dedicado para preferências sincronizáveis (`theme`, `financial_password`, `financial_lock_enabled`), separado de `config.json`.
+  3. Adotar merge `last write wins` por registro quando o domínio é um array de entidades com `id`, com tombstones por domínio para impedir ressurreição de exclusões entre dispositivos.
+  4. Manter `config.json` e demais valores escalares do `AppData` em política `last write wins` por chave/arquivo, sem refactor transversal dos contratos de negócio.
+  5. Evoluir `driveFileService` para substituição/remoção segura de binários gerenciados pelo Drive, iniciando pelos avatares de clientes.
+- Consequência: o NexusArqui passa a ter recuperação automática de sync, convergência mais previsível entre dispositivos, preferências portáveis e exclusões remotas consistentes sem depender de ações manuais do usuário.
+- Reversão:
+  1. Restaurar o `driveSyncEngine` anterior sem fila persistida, retry e merge por registro.
+  2. Remover `preferences.json` e voltar a tratar preferências apenas no storage local.
+  3. Remover tombstones e retornar ao overwrite por arquivo inteiro para arrays.
+  4. Reverter a substituição/remoção automática de arquivos binários gerenciados.
+- Referências: `src/frontend/services/infrastructure/driveSyncEngine.ts`, `src/frontend/services/infrastructure/loadData.ts`, `src/frontend/services/infrastructure/driveSyncPreferences.ts`, `src/frontend/services/infrastructure/driveSyncMerge.ts`, `src/frontend/hooks/useLocalStorage.ts`, `src/frontend/services/infrastructure/driveFileService.ts`, `NEXT.md`.
+
+### Session 5 — 2026-04-11
+
+**Objective:** garantir persistência total no Google Drive para dados e preferências, com sync resiliente para inclusão, alteração e exclusão entre dispositivos.
+**What was done:** o motor de sync foi endurecido com fila persistida, retry com backoff, flush em lifecycle do browser e reconexão automática por mudanças de acesso. Preferências (`theme`, `financial_password`, `financial_lock_enabled`) passaram a sincronizar em `preferences.json`. Foi introduzido merge `last write wins` por registro com tombstones para arrays identificáveis e cleanup remoto de `files/` no reset global. Também entrou remoção/substituição segura do avatar de cliente no Drive.
+**Decisions made:** manter Google Drive como fonte remota canônica; usar `last write wins` por registro quando houver `id`; preservar `_backups`; manter tokens/sessão OAuth fora do sync de negócio.
+**Open/Pending:** validar manualmente cenários de dois dispositivos, conflito simultâneo no mesmo registro, reset global com limpeza remota de `files/` e propagação cross-device das preferências.
+**Immediate next step:** executar smoke em dois perfis do navegador cobrindo criação, edição, exclusão, troca de avatar, reset global e sincronização de preferências sem reload manual.
+**Quality gate:** `npm run typecheck` PASS; `npx eslint` nos arquivos alterados PASS; `npx prettier --check` nos arquivos alterados PASS; `npx vitest run src/frontend/services/infrastructure/driveSyncMerge.test.ts` PASS.
+
+### 2026-04-11 — Google Drive API como fonte canônica de verdade
+
+- Contexto: a precedência de acesso era `local > api > none`. Quando a pasta local perdia permissão no navegador, o engine entrava em `accessMode = 'none'` e ficava offline indefinidamente, mesmo com a API REST disponível e autenticada.
+- Decisão: inverter a precedência para `api > local > none`. O boot em `App.tsx` verifica `isSignedIn()` antes de testar pasta local. O banner `DriveSyncReconnector` diferencia entre API saudável (informativo) e offline total (alerta).
+- Consequência: sync cross-device funciona sem depender de permissão local. A pasta local torna-se espelho opcional (menor latência). O banner não bloqueia mais o sync global se a API estiver saudável.
+- Como reverter: restaurar a precedência anterior em `detectAccessMode()` (`local > api > none`) e o curto-circuito em `hasSavedFolder()` no `connectDrive()` de `App.tsx`.
+
 ### 2026-04-11 — Blindagem global contra refresh externo durante modais abertos
 
 - Contexto: diversos pop-ups podiam fechar ou perder contexto sem `window.location.reload()`, porque o frontend aplica atualizações externas em background via BroadcastChannel, `storage` sintético e Drive Sync. Esses refreshes podiam substituir snapshots e forçar rerender/remount no meio da interação.

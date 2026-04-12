@@ -89,3 +89,32 @@
   - `getEmergencyFundInsight(fund, monthlyExpenseBaseline)`
 - Regra:
   - `targetValue` continua opcional para permitir acompanhamento por meses de fôlego quando não houver meta explícita.
+
+## Contrato de sincronização Google Drive
+
+- Arquivos canônicos:
+  - `src/frontend/services/infrastructure/driveSyncTypes.ts`
+  - `src/frontend/services/infrastructure/driveSyncPreferences.ts`
+  - `src/frontend/services/infrastructure/driveSyncMerge.ts`
+- Artefatos remotos:
+  - `data/_meta.json` — metadados de sincronização por domínio, metadados de preferências e tombstones.
+  - `data/config.json` — valores escalares do `AppData`.
+  - `data/preferences.json` — preferências sincronizáveis do usuário.
+  - `files/**` — ativos binários gerenciados no Drive.
+- Contratos canônicos:
+  - `SyncMetaFile`:
+    - `domains: Record<string, DomainSyncMeta>`
+    - `preferences?: PreferenceSyncMeta`
+    - `tombstones?: Record<string, Record<string, number>>`
+  - `SyncedPreferencesFile`:
+    - `Record<string, { value: unknown; updatedAt: number }>`
+  - `SYNCED_PREFERENCE_KEYS`:
+    - `theme`
+    - `financial_password`
+    - `financial_lock_enabled`
+- Regra de conflito:
+  - arrays de entidades com `id` usam merge `last write wins` por registro;
+  - exclusões usam tombstones por domínio;
+  - config/preferências usam `last write wins` por chave/arquivo.
+- Regra de limpeza:
+  - reset global zera os arquivos ativos remotos e preserva apenas `_backups`.

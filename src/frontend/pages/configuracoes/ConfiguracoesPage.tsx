@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '@/components/layout';
 import { Button, FormField, Input, Section, Toggle } from '@/components/ui';
 import {
@@ -8,17 +8,34 @@ import {
   PasswordResetModal,
 } from '@/components/configuracoes';
 import { useSystemData } from '@/context/DataContext';
+import { googleDriveService } from '@/services/infrastructure/googleDriveService';
+import type { DriveState } from '@/services/infrastructure/googleDriveTypes';
 import { useFinancialSecurity } from '@/context/FinancialSecurityContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useAutoReset } from '@/hooks/useAutoReset';
 import { useDisclosure } from '@/hooks/useDisclosure';
+import useLocalStorage from '@/hooks/useLocalStorage';
 import { api } from '@/services/infrastructure/api';
 import { getTodayDateOnly } from '@/utils/formatters';
 
 function ConfiguracoesPage(): JSX.Element {
   const { theme, toggleTheme } = useTheme();
   const { contractDeadlines, setContractDeadlines } = useSystemData();
-  const { isLockEnabled, toggleLock, changePassword } = useFinancialSecurity();
+  const { isLockEnabled, toggleLock, changePassword, hasRegisteredPassword, registerPassword } =
+    useFinancialSecurity();
+
+  const [googleAccount, setGoogleAccount] = useState<DriveState>(googleDriveService.getState());
+
+  useEffect(() => {
+    return googleDriveService.subscribe((next) => setGoogleAccount(next));
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    if (window.confirm('Deseja realmente sair da conta Google?')) {
+      googleDriveService.signOut();
+      window.location.reload();
+    }
+  }, []);
 
   const importModal = useDisclosure();
   const clearModal = useDisclosure();
@@ -33,12 +50,12 @@ function ConfiguracoesPage(): JSX.Element {
   const [pwdSuccess, setPwdSuccess] = useAutoReset(false, 1500);
 
   const resetPasswordModal = useCallback(() => {
-    setPwdStep('current');
+    setPwdStep(hasRegisteredPassword ? 'current' : 'new');
     setCurrentPwd('');
     setNewPwd('');
     setConfirmPwd('');
     setPwdError('');
-  }, []);
+  }, [hasRegisteredPassword]);
 
   const openPasswordModal = useCallback(() => {
     resetPasswordModal();
@@ -70,14 +87,25 @@ function ConfiguracoesPage(): JSX.Element {
       return;
     }
 
-    const result = changePassword(currentPwd, newPwd);
+    const result = hasRegisteredPassword
+      ? changePassword(currentPwd, newPwd)
+      : registerPassword(newPwd);
+
     if (result.success) {
       setPwdSuccess(true);
       setPwdError('');
     } else {
       setPwdError(result.error || 'Erro ao alterar a senha.');
     }
-  }, [newPwd, confirmPwd, currentPwd, changePassword, setPwdSuccess]);
+  }, [
+    newPwd,
+    confirmPwd,
+    currentPwd,
+    changePassword,
+    registerPassword,
+    hasRegisteredPassword,
+    setPwdSuccess,
+  ]);
 
   const handleExportData = () => {
     try {
@@ -138,8 +166,50 @@ function ConfiguracoesPage(): JSX.Element {
     }
   };
 
+  const [localDeadlines, setLocalDeadlines] = useState(contractDeadlines);
+  const isPrazosChanged =
+    localDeadlines.defaultPreliminarDeadlineDays !==
+      contractDeadlines.defaultPreliminarDeadlineDays ||
+    localDeadlines.defaultExecutiveDeadlineDays !== contractDeadlines.defaultExecutiveDeadlineDays;
+  const isRevisoesChanged =
+    localDeadlines.defaultRevisionLimit !== contractDeadlines.defaultRevisionLimit;
+
+  useEffect(() => {
+    setLocalDeadlines(contractDeadlines);
+  }, [contractDeadlines]);
+
   const handleDeadlineChange = (field: keyof typeof contractDeadlines, value: number) => {
-    setContractDeadlines((previous) => ({ ...previous, [field]: value }));
+    setLocalDeadlines((previous) => ({ ...previous, [field]: value }));
+  };
+
+  const saveDeadlines = () => {
+    setContractDeadlines(localDeadlines);
+    alert('Prazos e revisões atualizados com sucesso!');
+  };
+
+  // --- User Profile Form ---
+  const [storedProfile, setStoredProfile] = useLocalStorage<{
+    name: string;
+    cau: string;
+    phone: string;
+    address: string;
+  }>('user_profile_info', {
+    name: 'Rafael Soares Munaro',
+    cau: 'A231798-2',
+    phone: '(19) 99690-8104',
+    address: 'Rua Padre Fabiano, 1072 - Centro, Capivari-SP',
+  });
+
+  const [profileForm, setProfileForm] = useState(storedProfile);
+  const isProfileChanged = JSON.stringify(profileForm) !== JSON.stringify(storedProfile);
+
+  const handleProfileChange = (field: keyof typeof profileForm, value: string) => {
+    setProfileForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const saveProfile = () => {
+    setStoredProfile(profileForm);
+    alert('Informações do usuário atualizadas com sucesso!');
   };
 
   return (
@@ -147,13 +217,53 @@ function ConfiguracoesPage(): JSX.Element {
       <PageHeader title="Configurações" />
 
       <div className="divide-y divide-border-color">
+        <Section
+          title="Conta Google"
+          description="Conta utilizada para autenticação e sincronização."
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-primary/10 text-accent-primary">
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h4 className="font-semibold text-text-primary">
+                  {googleAccount.userEmail ?? 'Conta conectada'}
+                </h4>
+                <p className="text-xs text-text-secondary">
+                  {googleAccount.status === 'connected' ? 'Autenticado via Google' : 'Sessão ativa'}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="secondary"
+              className="border-error/30 text-error hover:bg-error/10 hover:border-error flex-shrink-0"
+              onClick={handleLogout}
+            >
+              Sair da Conta
+            </Button>
+          </div>
+        </Section>
+
         <Section title="Aparência" description="Customize a aparência da interface.">
           <div className="flex items-center justify-between">
             <div>
               <h4 className="font-semibold text-text-primary">Modo Escuro</h4>
-              <p className="text-sm text-text-secondary">
-                Reduza o cansaço visual em ambientes com pouca luz.
-              </p>
+              <p className="text-sm text-text-secondary">Reduza o cansaço visual.</p>
             </div>
             <Toggle
               checked={theme === 'dark'}
@@ -171,10 +281,7 @@ function ConfiguracoesPage(): JSX.Element {
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="font-semibold text-text-primary">Exigir Senha</h4>
-                <p className="text-sm text-text-secondary">
-                  Quando habilitado, valores financeiros ficam ocultos com *** até que a senha seja
-                  inserida.
-                </p>
+                <p className="text-sm text-text-secondary">Valores financeiros ocultados.</p>
               </div>
               <Toggle
                 checked={isLockEnabled}
@@ -185,13 +292,17 @@ function ConfiguracoesPage(): JSX.Element {
 
             <div className="flex items-center justify-between border-t border-border-color/50 pt-5">
               <div>
-                <h4 className="font-semibold text-text-primary">Redefinir Senha</h4>
+                <h4 className="font-semibold text-text-primary">
+                  {!hasRegisteredPassword ? 'Cadastrar Senha' : 'Redefinir Senha'}
+                </h4>
                 <p className="text-sm text-text-secondary">
-                  Altere a senha utilizada para desbloquear os valores financeiros.
+                  {!hasRegisteredPassword
+                    ? 'Configurar senha de acesso para ocultar valores financeiros exibidos na página.'
+                    : 'Alterar senha de acesso para desbloquear os valores financeiros.'}
                 </p>
               </div>
               <Button variant="secondary" onClick={openPasswordModal}>
-                Redefinir
+                {!hasRegisteredPassword ? 'Cadastrar' : 'Redefinir'}
               </Button>
             </div>
           </div>
@@ -207,7 +318,8 @@ function ConfiguracoesPage(): JSX.Element {
                 <Input
                   type="number"
                   min="1"
-                  value={contractDeadlines.defaultPreliminarDeadlineDays}
+                  className="text-right"
+                  value={localDeadlines.defaultPreliminarDeadlineDays}
                   onChange={(event) =>
                     handleDeadlineChange(
                       'defaultPreliminarDeadlineDays',
@@ -216,14 +328,14 @@ function ConfiguracoesPage(): JSX.Element {
                   }
                 />
               </FormField>
-              <p className="text-xs text-text-secondary mt-1">Geralmente 7 dias úteis.</p>
             </div>
             <div>
               <FormField label="Prazo Projeto Executivo (dias)">
                 <Input
                   type="number"
                   min="1"
-                  value={contractDeadlines.defaultExecutiveDeadlineDays}
+                  className="text-right"
+                  value={localDeadlines.defaultExecutiveDeadlineDays}
                   onChange={(event) =>
                     handleDeadlineChange(
                       'defaultExecutiveDeadlineDays',
@@ -232,24 +344,31 @@ function ConfiguracoesPage(): JSX.Element {
                   }
                 />
               </FormField>
-              <p className="text-xs text-text-secondary mt-1">
-                Geralmente 30 dias úteis após aprovação do preliminar.
-              </p>
             </div>
           </div>
+
+          {isPrazosChanged && (
+            <div className="flex justify-end pt-2 border-t border-border-color/50 mt-4">
+              <Button variant="primary" onClick={saveDeadlines}>
+                Salvar
+              </Button>
+            </div>
+          )}
         </Section>
 
         <Section
           title="Revisões de Projeto"
           description="Defina o limite padrão de revisões aplicado ao criar novos projetos."
+          contentClassName="!py-3"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <div className="sm:col-start-2">
               <FormField label="Limite de Revisões Padrão">
                 <Input
                   type="number"
                   min="0"
-                  value={contractDeadlines.defaultRevisionLimit ?? 3}
+                  className="text-right"
+                  value={localDeadlines.defaultRevisionLimit ?? 3}
                   onChange={(event) =>
                     handleDeadlineChange(
                       'defaultRevisionLimit',
@@ -258,44 +377,62 @@ function ConfiguracoesPage(): JSX.Element {
                   }
                 />
               </FormField>
-              <p className="text-xs text-text-secondary mt-1">
-                Cada projeto mantém seu próprio limite após criação. Este valor é usado como base
-                inicial.
-              </p>
             </div>
+          </div>
+
+          {isRevisoesChanged && (
+            <div className="flex justify-end pt-2 border-t border-border-color/50 mt-4">
+              <Button variant="primary" onClick={saveDeadlines}>
+                Salvar
+              </Button>
+            </div>
+          )}
+        </Section>
+
+        <Section title="Informações do Usuário" description="Informações sobre o usuário.">
+          <div className="space-y-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField label="Nome">
+                <Input
+                  value={profileForm.name}
+                  className="text-right"
+                  onChange={(e) => handleProfileChange('name', e.target.value)}
+                />
+              </FormField>
+              <FormField label="CAU">
+                <Input
+                  value={profileForm.cau}
+                  className="text-right"
+                  onChange={(e) => handleProfileChange('cau', e.target.value)}
+                />
+              </FormField>
+              <FormField label="Telefone">
+                <Input
+                  value={profileForm.phone}
+                  className="text-right"
+                  onChange={(e) => handleProfileChange('phone', e.target.value)}
+                />
+              </FormField>
+              <FormField label="Endereço">
+                <Input
+                  value={profileForm.address}
+                  className="text-right"
+                  onChange={(e) => handleProfileChange('address', e.target.value)}
+                />
+              </FormField>
+            </div>
+
+            {isProfileChanged && (
+              <div className="flex justify-end pt-2 border-t border-border-color/50">
+                <Button variant="primary" onClick={saveProfile}>
+                  Salvar Informações
+                </Button>
+              </div>
+            )}
           </div>
         </Section>
 
-        <Section
-          title="Informações do Usuário"
-          description="Estes dados podem ser usados em propostas e relatórios."
-        >
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center">
-              <span className="w-24 font-semibold text-text-secondary">Nome:</span>
-              <span className="text-text-primary">Rafael Soares Munaro</span>
-            </div>
-            <div className="flex items-center">
-              <span className="w-24 font-semibold text-text-secondary">CAU:</span>
-              <span className="text-text-primary">A231798-2</span>
-            </div>
-            <div className="flex items-center">
-              <span className="w-24 font-semibold text-text-secondary">Telefone:</span>
-              <span className="text-text-primary">(19) 99690-8104</span>
-            </div>
-            <div className="flex items-center">
-              <span className="w-24 font-semibold text-text-secondary">Endereço:</span>
-              <span className="text-text-primary">
-                Rua Padre Fabiano, 1072 - Centro, Capivari-SP
-              </span>
-            </div>
-          </div>
-        </Section>
-
-        <Section
-          title="Dados do Aplicativo"
-          description="Gerencie os dados salvos no seu navegador."
-        >
+        <Section title="Dados do Aplicativo" description="Gerencie os dados salvos no NexusArqui.">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -312,7 +449,7 @@ function ConfiguracoesPage(): JSX.Element {
               <div>
                 <h4 className="font-semibold text-text-primary">Importar Dados</h4>
                 <p className="text-sm text-text-secondary">
-                  Carrega dados de um arquivo de backup. Substitui os dados atuais.
+                  Carrega os dados de um arquivo de backup e substitui todos os dados atuais.
                 </p>
               </div>
               <Button variant="secondary" onClick={importModal.open}>
@@ -353,6 +490,7 @@ function ConfiguracoesPage(): JSX.Element {
       <PasswordResetModal
         isOpen={passwordModal.isOpen}
         onClose={closePasswordModal}
+        isFirstTimeSetup={!hasRegisteredPassword}
         pwdSuccess={pwdSuccess}
         pwdStep={pwdStep}
         currentPwd={currentPwd}

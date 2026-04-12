@@ -6,6 +6,12 @@ import { applySeedAgendaEvents } from './seedAgendaEvents';
 import { applySeedProspects } from './seedProspects';
 import { driveSyncEngine } from './driveSyncEngine';
 import { ARRAY_DOMAIN_KEYS, SCALAR_CONFIG_KEYS } from './driveSyncTypes';
+import {
+  SYNCED_PREFERENCE_DEFAULTS,
+  SYNCED_PREFERENCE_KEYS,
+  type SyncedPreferenceKey,
+} from './driveSyncPreferences';
+import { uiPreferenceService } from './uiPreferenceService';
 import { uiInteractionLockService } from '../uiInteractionLockService';
 import type {
   AppData,
@@ -515,9 +521,10 @@ export function updateData<K extends keyof AppData>(key: K, data: AppData[K]): v
   if (!appData) {
     appData = createDefaultAppData();
   }
+  const previousData = appData[key];
   appData = { ...appData, [key]: data };
   queuePersistSnapshot(appData);
-  driveSyncEngine.notifyDomainChanged(key);
+  driveSyncEngine.notifyDomainChanged(key, previousData, data);
 }
 
 /**
@@ -525,15 +532,24 @@ export function updateData<K extends keyof AppData>(key: K, data: AppData[K]): v
  * Used by undo/redo to avoid per-key fan-out of persistence writes.
  */
 export function replaceData(snapshot: AppData): void {
+  const previousSnapshot = appData ? cloneSnapshot(appData) : createDefaultAppData();
   appData = cloneSnapshot(snapshot);
   queuePersistSnapshot(appData);
 
   // Notify sync engine of all domains (undo/redo changes multiple keys)
   for (const key of ARRAY_DOMAIN_KEYS) {
-    driveSyncEngine.notifyDomainChanged(key);
+    driveSyncEngine.notifyDomainChanged(
+      key,
+      previousSnapshot[key as keyof AppData],
+      appData[key as keyof AppData],
+    );
   }
   for (const key of SCALAR_CONFIG_KEYS) {
-    driveSyncEngine.notifyDomainChanged(key);
+    driveSyncEngine.notifyDomainChanged(
+      key,
+      previousSnapshot[key as keyof AppData],
+      appData[key as keyof AppData],
+    );
   }
 }
 
@@ -581,10 +597,24 @@ export function resetPersistentDataAndNotify(): void {
   pendingExternalDomainWrites.clear();
   isFlushingDeferredExternalUpdates = false;
 
-  appData = null;
-  isInitialized = false;
+  const defaultSnapshot = createDefaultAppData();
+  appData = defaultSnapshot;
+  isInitialized = true;
+  driveSyncEngine.handleLocalReset();
   persistenceQueue = persistenceQueue
-    .then(() => persistence.clearSnapshot())
+    .then(async () => {
+      await persistence.clearSnapshot();
+      await persistence.writeSnapshot(cloneSnapshot(defaultSnapshot));
+      await persistence.writeEntityState(
+        cloneSnapshot(defaultSnapshot) as unknown as Record<string, unknown>,
+      );
+      for (const key of SYNCED_PREFERENCE_KEYS) {
+        await uiPreferenceService.setItem(key, SYNCED_PREFERENCE_DEFAULTS[key], {
+          source: 'system',
+          silent: true,
+        });
+      }
+    })
     .then(() => {
       if (dataSyncChannel) {
         dataSyncChannel.postMessage({ type: 'snapshot-updated' });
@@ -662,8 +692,17 @@ function startDriveSyncInBackground(): void {
     notifySyncListeners(domainKey);
   };
 
+  const readPreference = async (key: SyncedPreferenceKey): Promise<unknown> =>
+    uiPreferenceService.getItem(key, SYNCED_PREFERENCE_DEFAULTS[key]);
+
+  const writePreference = async (key: SyncedPreferenceKey, value: unknown): Promise<void> => {
+    await uiPreferenceService.setItem(key, value, { source: 'remote' });
+  };
+
   // Fire and forget — sync errors are handled internally by the engine
-  driveSyncEngine.initialize(readLocal, writeLocal).catch((error) => {
-    console.warn('[loadData] Drive sync initialization failed (non-blocking):', error);
-  });
+  driveSyncEngine
+    .initialize(readLocal, writeLocal, readPreference, writePreference)
+    .catch((error) => {
+      console.warn('[loadData] Drive sync initialization failed (non-blocking):', error);
+    });
 }

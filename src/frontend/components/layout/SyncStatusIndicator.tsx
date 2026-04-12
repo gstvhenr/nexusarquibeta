@@ -20,8 +20,17 @@ const formatBytes = (bytes: number) => {
 };
 
 export const SyncStatusIndicator: React.FC = () => {
-  const { status, errorMessage, lastSyncTimestamp, dirtyDomains, forcePull, quota } =
-    useDriveSync();
+  const {
+    status,
+    errorMessage,
+    lastSyncTimestamp,
+    dirtyDomains,
+    dirtyPreferences,
+    retryScheduledAt,
+    pendingChangesCount,
+    forcePull,
+    quota,
+  } = useDriveSync();
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
@@ -53,12 +62,12 @@ export const SyncStatusIndicator: React.FC = () => {
       case 'error':
         return {
           icon: <AlertIcon className="h-4 w-4 text-danger" aria-label="Erro na sincronização" />,
-          label: 'Erro na Sincronização',
+          label: retryScheduledAt ? 'Erro com nova tentativa agendada' : 'Erro na Sincronização',
           color: 'text-danger',
         };
       case 'idle':
       default:
-        if (dirtyDomains.length > 0) {
+        if (dirtyDomains.length > 0 || dirtyPreferences.length > 0) {
           // Pendente para subir (aguardando debounce)
           return {
             icon: (
@@ -67,7 +76,10 @@ export const SyncStatusIndicator: React.FC = () => {
                 aria-label="Sincronização pendente..."
               />
             ),
-            label: 'Alterações Pendentes',
+            label:
+              pendingChangesCount > 0
+                ? `${pendingChangesCount} alteração(ões) pendente(s)`
+                : 'Alterações Pendentes',
             color: 'text-warning',
           };
         }
@@ -101,7 +113,7 @@ export const SyncStatusIndicator: React.FC = () => {
   return (
     <div
       className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-hover cursor-pointer transition-colors"
-      title={`Última tentativa: ${formatLastSync(lastSyncTimestamp)}\n${errorMessage ? `Erro: ${errorMessage}` : ''}`}
+      title={`Última tentativa: ${formatLastSync(lastSyncTimestamp)}\n${retryScheduledAt ? `Nova tentativa: ${formatLastSync(retryScheduledAt)}` : ''}\n${errorMessage ? `Erro: ${errorMessage}` : ''}`}
       onPointerDown={handlePointerDown}
       role="button"
       tabIndex={0}

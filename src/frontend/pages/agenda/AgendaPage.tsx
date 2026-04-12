@@ -15,11 +15,10 @@ import { agendaService } from '../../services/agendaService';
 import type { EventIndex } from '../../services/agendaService';
 import { AgendaEvent } from '../../types';
 import { useUnifiedEvents } from '../../hooks/useUnifiedEvents';
-import useLocalStorage from '../../hooks/useLocalStorage';
 import { useDisclosure } from '../../hooks/useDisclosure';
 
 import type { CalendarViewMode } from '@/components/agenda/agendaConstants';
-import { MONTHS, CELL_HEIGHT_STORAGE_KEY } from '@/components/agenda/agendaConstants';
+import { MONTHS } from '@/components/agenda/agendaConstants';
 
 const AgendaPage: () => React.ReactNode = () => {
   const systemData = useSystemData();
@@ -29,16 +28,7 @@ const AgendaPage: () => React.ReactNode = () => {
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<CalendarViewMode>('weekly');
-  const [cellHeightScale, setCellHeightScale] = useLocalStorage<number>(CELL_HEIGHT_STORAGE_KEY, 1);
-  const normalizedCellHeightScale = Math.min(1.5, Math.max(0.5, cellHeightScale));
-
-  const handleCellHeightChange = useCallback(
-    (scale: number) => {
-      setCellHeightScale(Math.min(1.5, Math.max(0.5, scale)));
-    },
-    [setCellHeightScale],
-  );
+  const [viewMode, setViewMode] = useState<CalendarViewMode>('monthly');
 
   // Modals
   const eventModal = useDisclosure();
@@ -194,24 +184,6 @@ const AgendaPage: () => React.ReactNode = () => {
   return (
     <div className="animate-fade-in-up flex flex-col h-full max-h-full overflow-hidden">
       <PageHeader title="Calendário" icon={agendaIcon}>
-        {viewMode === 'monthly' && (
-          <div className="flex items-center gap-2 px-3 h-9 rounded-lg bg-surface/80 border border-border-color/30 shadow-soft">
-            <span className="text-xs text-text-secondary select-none">Altura</span>
-            <input
-              type="range"
-              min="0.5"
-              max="1.5"
-              step="0.1"
-              value={normalizedCellHeightScale}
-              onChange={(e) => handleCellHeightChange(parseFloat(e.target.value))}
-              className="w-20 h-1 accent-primary cursor-pointer"
-              aria-label="Altura das células do calendário"
-            />
-            <span className="text-xs text-text-secondary tabular-nums select-none w-6">
-              {normalizedCellHeightScale.toFixed(1)}x
-            </span>
-          </div>
-        )}
         <Button
           variant="primary"
           onClick={() => {
@@ -297,7 +269,6 @@ const AgendaPage: () => React.ReactNode = () => {
               eventIndex={eventIndex}
               selectedDate={selectedDate}
               currentDate={currentDate}
-              normalizedCellHeightScale={normalizedCellHeightScale}
               onDateClick={handleDateClick}
             />
           ) : (

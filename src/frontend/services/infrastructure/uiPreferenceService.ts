@@ -4,23 +4,65 @@ const persistence = createPersistenceAdapter();
 
 const KEY_PREFIX = 'ui_pref:';
 
+export type PreferenceChangeSource = 'local' | 'remote' | 'system';
+
+export interface PreferenceChangeEvent<T = unknown> {
+  key: string;
+  value: T | null;
+  source: PreferenceChangeSource;
+}
+
+type PreferenceListener = (event: PreferenceChangeEvent) => void;
+const listeners = new Set<PreferenceListener>();
+
 const normalizeKey = (key: string): string => `${KEY_PREFIX}${key}`;
+
+function notifyListeners(event: PreferenceChangeEvent): void {
+  listeners.forEach((listener) => listener(event));
+}
 
 async function getItem<T>(key: string, initialValue: T): Promise<T> {
   const persistedValue = await persistence.readPreference<T>(normalizeKey(key));
   return persistedValue ?? initialValue;
 }
 
-async function setItem<T>(key: string, value: T): Promise<void> {
+async function setItem<T>(
+  key: string,
+  value: T,
+  options?: { source?: PreferenceChangeSource; silent?: boolean },
+): Promise<void> {
   await persistence.writePreference(normalizeKey(key), value);
+  if (!options?.silent) {
+    notifyListeners({
+      key,
+      value,
+      source: options?.source ?? 'system',
+    });
+  }
 }
 
-async function removeItem(key: string): Promise<void> {
+async function removeItem(
+  key: string,
+  options?: { source?: PreferenceChangeSource; silent?: boolean },
+): Promise<void> {
   await persistence.removePreference(normalizeKey(key));
+  if (!options?.silent) {
+    notifyListeners({
+      key,
+      value: null,
+      source: options?.source ?? 'system',
+    });
+  }
+}
+
+function subscribe(listener: PreferenceListener): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
 }
 
 export const uiPreferenceService = {
   getItem,
   setItem,
   removeItem,
+  subscribe,
 };

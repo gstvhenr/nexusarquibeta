@@ -28,15 +28,20 @@ const isProjectDetailsModule = (id: string): boolean =>
     '/src/frontend/components/projetos/',
   ].some((modulePath) => id.includes(modulePath));
 
+const googleIdentityHeaders = {
+  'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+  'Referrer-Policy': 'no-referrer-when-downgrade',
+};
+
 export default defineConfig({
   base: './',
   server: {
     port: 3000,
     host: '0.0.0.0',
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-    },
+    headers: googleIdentityHeaders,
+  },
+  preview: {
+    headers: googleIdentityHeaders,
   },
   plugins: [react()],
   resolve: {

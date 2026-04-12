@@ -27,6 +27,14 @@
 **Correcao aplicada:** Criação de um lock global de interação adquirido pelo `Modal` compartilhado; `loadData.ts` passou a enfileirar refreshes externos e writes remotos enquanto o lock está ativo, descarregando tudo apenas após o fechamento do último modal.
 **Regra negativa derivada:** Não aplicar sincronização externa destrutiva enquanto houver modal compartilhado aberto; adiar o merge e descarregar as mudanças após o unlock da UI.
 
+### [2026-04-11] - [AUTH] - Checks de sessao nao podem assumir `gapi.client` inicializado
+
+**Erro encontrado:** A rota `Configurações` podia cair no `RouteErrorBoundary` logo após o novo fluxo de login, porque `GoogleDriveSection` consultava `googleDriveService.isSignedIn()` durante o render e esse método assumia que `window.gapi.client` já existia.
+**Arquivo(s) afetado(s):** `src/frontend/services/infrastructure/googleDriveService.ts`, `src/frontend/services/infrastructure/googleDriveService.test.ts`.
+**Causa raiz:** O script global `gapi` pode estar presente antes do `client` ser inicializado; o serviço tratava a presença parcial do SDK como se a API já estivesse pronta.
+**Correcao aplicada:** Introdução de leitura segura do token atual (`getCurrentGapiToken`) e teste automatizado cobrindo o cenário com `gapi.client` ausente.
+**Regra negativa derivada:** Em integrações com SDK global carregado de forma assíncrona, nunca acessar submódulos como `gapi.client` diretamente em checks de render; encapsular a leitura com guard clauses tolerantes a inicialização parcial.
+
 ### [2026-03-13] - [A11Y] - `aria-selected` em tabs deve receber booleano sem serializacao manual
 
 **Erro encontrado:** Microsoft Edge Tools (`axe/aria`) sinalizou `Invalid ARIA attribute value: aria-selected="{expression}"` em tabs renderizadas por botao com `role="tab"`.

@@ -63,8 +63,12 @@ export interface AgendaEvent {
   completed?: boolean;
   freelancerServiceId?: string;
   kanbanStatus?: KanbanStatus;
+  completedAt?: string;
   archived?: boolean;
+  category?: 'Evento' | 'Tarefa'; // Nova tipagem obrigatória para criação/edição em UI
   subtasks?: Subtask[]; // Added subtasks for Kanban granularity
+  attachments?: { id: string; name: string; driveRelativePath: string }[];
+  links?: string[];
 }
 
 /** Post-it reminder displayed on the Lembretes board. */

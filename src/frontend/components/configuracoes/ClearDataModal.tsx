@@ -19,8 +19,8 @@ export function ClearDataModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Confirmar Exclusão de Dados">
       <div className="space-y-4">
         <p className="text-text-primary">
-          Esta é uma ação irreversível. Todos os seus projetos, clientes, propostas e configurações
-          (exceto o tema) serão <strong className="text-error">permanentemente excluídos</strong>.
+          Esta é uma ação irreversível. Todas as informações do NexusArqui serão{' '}
+          <strong className="text-error">permanentemente excluídos</strong>.
         </p>
         <p className="text-text-primary">
           Para confirmar, digite <strong className="text-error font-mono">EXCLUIR</strong> no campo

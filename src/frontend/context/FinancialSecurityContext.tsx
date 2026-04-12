@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
+import {
+  DEFAULT_FINANCIAL_LOCK_ENABLED,
+  DEFAULT_FINANCIAL_PASSWORD,
+} from '../constants/preferences';
 
 // --- Constants (never exposed in UI) ---
 const ADMIN_MASTER_PASSWORD = 'vjhx4c00jkrp';
-const DEFAULT_PASSWORD = '#Umbrella911';
 
 // --- Types ---
 interface FinancialSecurityContextType {
@@ -25,6 +28,10 @@ interface FinancialSecurityContextType {
     currentPassword: string,
     newPassword: string,
   ) => { success: boolean; error?: string };
+  /** Whether the user has registered a custom password yet */
+  hasRegisteredPassword: boolean;
+  /** Register a new password for the first time without needing the current one */
+  registerPassword: (newPassword: string) => { success: boolean; error?: string };
 }
 
 const FinancialSecurityContext = createContext<FinancialSecurityContextType | undefined>(undefined);
@@ -33,9 +40,17 @@ const FinancialSecurityContext = createContext<FinancialSecurityContextType | un
 export const FinancialSecurityProvider: (props: {
   children: React.ReactNode;
 }) => React.ReactNode = ({ children }) => {
-  const [password, setPassword] = useLocalStorage<string>('financial_password', DEFAULT_PASSWORD);
-  const [isLockEnabled, setLockEnabled] = useLocalStorage<boolean>('financial_lock_enabled', false);
+  const [password, setPassword] = useLocalStorage<string>(
+    'financial_password',
+    DEFAULT_FINANCIAL_PASSWORD,
+  );
+  const [isLockEnabled, setLockEnabled] = useLocalStorage<boolean>(
+    'financial_lock_enabled',
+    DEFAULT_FINANCIAL_LOCK_ENABLED,
+  );
   const [isUnlocked, setUnlocked] = useState(false);
+
+  const hasRegisteredPassword = password !== DEFAULT_FINANCIAL_PASSWORD;
 
   const toggleLock = useCallback(
     (enabled: boolean) => {
@@ -78,6 +93,20 @@ export const FinancialSecurityProvider: (props: {
     [password, setPassword],
   );
 
+  const registerPassword = useCallback(
+    (newPassword: string): { success: boolean; error?: string } => {
+      if (hasRegisteredPassword) {
+        return { success: false, error: 'A senha já foi cadastrada anteriormente.' };
+      }
+      if (!newPassword || newPassword.length < 4) {
+        return { success: false, error: 'A senha deve ter pelo menos 4 caracteres.' };
+      }
+      setPassword(newPassword);
+      return { success: true };
+    },
+    [hasRegisteredPassword, setPassword],
+  );
+
   const value: FinancialSecurityContextType = {
     isLockEnabled,
     isUnlocked,
@@ -85,6 +114,8 @@ export const FinancialSecurityProvider: (props: {
     unlock,
     lockNow,
     changePassword,
+    hasRegisteredPassword,
+    registerPassword,
   };
 
   return (

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, Dispatch, SetStateAction } from 'react';
 import { uiPreferenceService } from '../services/infrastructure/uiPreferenceService';
+import { driveSyncEngine } from '../services/infrastructure/driveSyncEngine';
 
 const useLocalStorage = <T>(key: string, initialValue: T): [T, Dispatch<SetStateAction<T>>] => {
   const [storedValue, setStoredValue] = useState<T>(initialValue);
@@ -7,6 +8,7 @@ const useLocalStorage = <T>(key: string, initialValue: T): [T, Dispatch<SetState
   const initialValueRef = useRef(initialValue);
   const lastHydrationKeyRef = useRef(key);
   const hasPendingUpdateBeforeHydrationRef = useRef(false);
+  const skipNextPersistRef = useRef(false);
 
   initialValueRef.current = initialValue;
 
@@ -45,10 +47,28 @@ const useLocalStorage = <T>(key: string, initialValue: T): [T, Dispatch<SetState
   }, [key]);
 
   useEffect(() => {
-    if (!isHydrated) return;
-    void uiPreferenceService.setItem(key, storedValue).catch((error) => {
-      console.warn(`Error setting persisted UI preference key "${key}":`, error);
+    return uiPreferenceService.subscribe((event) => {
+      if (event.key !== key) return;
+      skipNextPersistRef.current = true;
+      setStoredValue((event.value ?? initialValueRef.current) as T);
     });
+  }, [key]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (skipNextPersistRef.current) {
+      skipNextPersistRef.current = false;
+      return;
+    }
+
+    void uiPreferenceService
+      .setItem(key, storedValue, { source: 'local' })
+      .then(() => {
+        driveSyncEngine.notifyPreferenceChanged(key);
+      })
+      .catch((error) => {
+        console.warn(`Error setting persisted UI preference key "${key}":`, error);
+      });
   }, [isHydrated, key, storedValue]);
 
   return [storedValue, setValue];

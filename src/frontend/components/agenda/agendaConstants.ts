@@ -5,9 +5,6 @@ export const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 export const HOURS = Array.from({ length: 24 }, (_, i) => i);
 export const HOUR_HEIGHT_PX = 56;
 
-export const DEFAULT_CELL_HEIGHT_REM = 5;
-export const CELL_HEIGHT_STORAGE_KEY = 'nexus-agenda-cell-height-scale';
-
 export const MONTHS = [
   'Janeiro',
   'Fevereiro',

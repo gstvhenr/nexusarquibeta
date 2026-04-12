@@ -22,6 +22,13 @@ export interface GisTokenResponse {
   error?: string;
 }
 
+/** Credential response from Google Sign-In (ID token). */
+export interface GoogleIdCredentialResponse {
+  credential: string;
+  select_by?: string;
+  clientId?: string;
+}
+
 /** Connection status for Google Drive. */
 export type DriveConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
@@ -47,6 +54,8 @@ declare global {
   interface FileSystemDirectoryHandle {
     queryPermission(descriptor: { mode: 'read' | 'readwrite' }): Promise<PermissionState>;
     requestPermission(descriptor: { mode: 'read' | 'readwrite' }): Promise<PermissionState>;
+    entries(): AsyncIterableIterator<[string, FileSystemHandle]>;
+    removeEntry(name: string, options?: { recursive?: boolean }): Promise<void>;
   }
 
   interface Window {
@@ -55,13 +64,37 @@ declare global {
     }) => Promise<FileSystemDirectoryHandle>;
     google?: {
       accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: GoogleIdCredentialResponse) => void;
+            auto_select?: boolean;
+            cancel_on_tap_outside?: boolean;
+            use_fedcm_for_prompt?: boolean;
+          }) => void;
+          renderButton: (
+            parent: HTMLElement,
+            options: {
+              type?: 'standard' | 'icon';
+              theme?: 'outline' | 'filled_blue' | 'filled_black';
+              size?: 'large' | 'medium' | 'small';
+              text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+              shape?: 'rectangular' | 'pill' | 'circle' | 'square';
+              width?: string | number;
+              logo_alignment?: 'left' | 'center';
+            },
+          ) => void;
+          prompt: () => void;
+        };
         oauth2: {
           initTokenClient: (config: {
             client_id: string;
             scope: string;
             callback: (response: GisTokenResponse) => void;
+            error_callback?: (error: { type: string; message?: string }) => void;
             ux_mode?: 'popup' | 'redirect';
             redirect_uri?: string;
+            hint?: string;
           }) => GisTokenClient;
           revoke: (token: string, callback: () => void) => void;
         };

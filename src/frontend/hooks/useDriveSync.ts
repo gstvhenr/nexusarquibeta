@@ -5,6 +5,9 @@ import type { SyncEngineState } from '../services/infrastructure/driveSyncTypes'
 export function useDriveSync(): SyncEngineState & {
   forcePush: () => Promise<void>;
   forcePull: () => Promise<void>;
+  flushPendingWrites: () => Promise<void>;
+  reconnect: () => Promise<void>;
+  reconnectWithRepermission: () => Promise<boolean>;
 } {
   const [state, setState] = useState<SyncEngineState>(driveSyncEngine.getState());
 
@@ -23,5 +26,8 @@ export function useDriveSync(): SyncEngineState & {
     ...state,
     forcePush: driveSyncEngine.forcePush,
     forcePull: driveSyncEngine.forcePull,
+    flushPendingWrites: driveSyncEngine.flushPendingWrites,
+    reconnect: driveSyncEngine.reconnect,
+    reconnectWithRepermission: driveSyncEngine.reconnectWithRepermission,
   };
 }

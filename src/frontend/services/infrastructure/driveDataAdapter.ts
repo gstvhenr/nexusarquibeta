@@ -19,8 +19,10 @@ import {
   SCALAR_CONFIG_KEYS,
   CONFIG_FILE_NAME,
   META_FILE_NAME,
+  PREFERENCES_FILE_NAME,
   DATA_FOLDER_NAME,
   type DriveAccessMode,
+  type SyncedPreferencesFile,
   type SyncMetaFile,
 } from './driveSyncTypes';
 
@@ -30,19 +32,42 @@ import {
 
 /**
  * Determines the best access mode for the current session.
- * Prefers local folder (faster, no API quota) over REST API.
+ * Precedence: api > local > none.
+ * The REST API is the canonical source of truth; the local folder
+ * (Google Drive Desktop) is an optional mirror for lower latency.
  */
 async function detectAccessMode(): Promise<DriveAccessMode> {
   try {
+    if (googleDriveService.isSignedIn()) return 'api';
+  } catch {
+    // Drive API not available
+  }
+
+  try {
     const hasLocal = await localDriveService.hasSavedFolder();
     if (hasLocal) {
-      const hasAccess = await localDriveService.verifyAccess();
+      const hasAccess = await localDriveService.hasActivePermission();
       if (hasAccess) return 'local';
     }
   } catch {
-    // File System Access API not available or permission denied
+    // File System Access API not available — fallback silencioso
   }
 
+  return 'none';
+}
+
+/**
+ * Tenta re-adquirir permissão para o modo local.
+ * Retorna o novo modo de acesso após a tentativa.
+ */
+async function tryReacquireLocalAccess(): Promise<DriveAccessMode> {
+  const hasLocal = await localDriveService.hasSavedFolder();
+  if (!hasLocal) return 'none';
+
+  const granted = await localDriveService.requestRepermission();
+  if (granted) return 'local';
+
+  // Se usuário negou permissão, tentar API REST como fallback
   try {
     if (googleDriveService.isSignedIn()) return 'api';
   } catch {
@@ -68,6 +93,10 @@ function getConfigFilePath(): string {
 
 function getMetaFilePath(): string {
   return `${DATA_FOLDER_NAME}/${META_FILE_NAME}`;
+}
+
+function getPreferencesFilePath(): string {
+  return `${DATA_FOLDER_NAME}/${PREFERENCES_FILE_NAME}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -177,6 +206,21 @@ async function deleteFile(mode: DriveAccessMode, relativePath: string): Promise<
   }
 }
 
+async function clearFolder(
+  mode: DriveAccessMode,
+  relativePath: string,
+  preserveNames: string[] = [],
+): Promise<void> {
+  switch (mode) {
+    case 'local':
+      return localDriveService.clearFolder(relativePath, preserveNames);
+    case 'api':
+      return googleDriveService.deleteFolderByPath(relativePath, preserveNames);
+    case 'none':
+      throw new Error('Nenhum modo de acesso ao Drive disponível.');
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Checksum
 // ---------------------------------------------------------------------------
@@ -270,6 +314,29 @@ async function readConfig(mode: DriveAccessMode): Promise<Record<string, unknown
   }
 }
 
+async function writePreferences(
+  mode: DriveAccessMode,
+  preferences: SyncedPreferencesFile,
+): Promise<string> {
+  const filePath = getPreferencesFilePath();
+  const content = JSON.stringify(preferences, null, 2);
+  await writeFileToMode(mode, filePath, content);
+  return computeChecksum(content);
+}
+
+async function readPreferences(mode: DriveAccessMode): Promise<SyncedPreferencesFile | null> {
+  const filePath = getPreferencesFilePath();
+  const content = await readFileFromMode(mode, filePath);
+  if (!content) return null;
+
+  try {
+    return JSON.parse(content) as SyncedPreferencesFile;
+  } catch {
+    console.error('[DriveDataAdapter] Failed to parse preferences.json');
+    return null;
+  }
+}
+
 /**
  * Writes the sync metadata file (_meta.json).
  */
@@ -321,15 +388,19 @@ async function getStorageQuota(
 
 export const driveDataAdapter = {
   detectAccessMode,
+  tryReacquireLocalAccess,
   writeDomain,
   readDomain,
   writeConfig,
   readConfig,
+  writePreferences,
+  readPreferences,
   writeMeta,
   readMeta,
   hasBeenInitialized,
   computeChecksum,
   deleteFile,
+  clearFolder,
   writeRawFile,
   writeRawBinaryFile,
   readRawBinaryFile,

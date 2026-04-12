@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { agendaService } from '../../services/agendaService';
 import type { EventIndex } from '../../services/agendaService';
-import { DAYS, DEFAULT_CELL_HEIGHT_REM, priorityColors } from './agendaConstants';
+import { DAYS, priorityColors } from './agendaConstants';
 import { toDateOnlyString } from '../../utils/formatters';
 
 interface MonthlyCalendarGridProps {
@@ -9,7 +9,6 @@ interface MonthlyCalendarGridProps {
   eventIndex: EventIndex;
   selectedDate: Date;
   currentDate: Date;
-  normalizedCellHeightScale: number;
   onDateClick: (date: Date) => void;
 }
 
@@ -18,7 +17,6 @@ function MonthlyCalendarGrid({
   eventIndex,
   selectedDate,
   currentDate,
-  normalizedCellHeightScale,
   onDateClick,
 }: MonthlyCalendarGridProps) {
   const renderDayCell = useCallback(
@@ -99,11 +97,7 @@ function MonthlyCalendarGrid({
           }}
           role="button"
           tabIndex={0}
-          className={`
-                    relative rounded-xl flex flex-col p-2 cursor-pointer transition-all duration-200 ease-in-out group
-                    ${bgClass} ${borderClass}
-                `}
-          style={{ minHeight: `${DEFAULT_CELL_HEIGHT_REM * normalizedCellHeightScale}rem` }} // NOSONAR
+          className={`relative rounded-xl flex flex-col p-2 cursor-pointer transition-all duration-200 ease-in-out group ${bgClass} ${borderClass} h-full`}
         >
           <div className="flex justify-center">
             <span
@@ -116,8 +110,10 @@ function MonthlyCalendarGrid({
         </div>
       );
     },
-    [eventIndex, selectedDate, currentDate, onDateClick, normalizedCellHeightScale],
+    [eventIndex, selectedDate, currentDate, onDateClick],
   );
+
+  const numWeeks = Math.ceil(calendarGrid.length / 7);
 
   return (
     <>
@@ -131,7 +127,10 @@ function MonthlyCalendarGrid({
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-1 flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar content-start p-1">
+      <div
+        className="grid grid-cols-7 gap-1 flex-1 min-h-0 p-1"
+        style={{ gridTemplateRows: `repeat(${numWeeks}, minmax(0, 1fr))` }}
+      >
         {calendarGrid.map((date) => renderDayCell(date))}
       </div>
     </>

@@ -30,8 +30,7 @@ export const archiveCompletedTask = (task: AgendaEvent): AgendaEvent => {
   };
 };
 
-export const isArchivedTask = (task: AgendaEvent): boolean =>
-  Boolean(task.archived || task.completed || task.kanbanStatus === 'done');
+export const isArchivedTask = (task: AgendaEvent): boolean => Boolean(task.archived);
 
 export const reactivateArchivedTask = (task: AgendaEvent): AgendaEvent => ({
   ...task,
@@ -48,6 +47,6 @@ export const KANBAN_COLUMNS: {
 }[] = [
   { id: 'todo', title: 'A Fazer', tone: 'info', canAdd: true },
   { id: 'in_progress', title: 'Em Andamento', tone: 'warning', canAdd: true },
-  { id: 'review', title: 'Aguardando Retorno', tone: 'accent', canAdd: true },
+  { id: 'review', title: 'Aguardando', tone: 'accent', canAdd: true },
   { id: 'done', title: 'Concluído', tone: 'success', canAdd: false },
 ];

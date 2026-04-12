@@ -21,11 +21,33 @@ export interface DomainSyncMeta {
   sizeBytes: number;
 }
 
+/** Metadata for the synchronized user preferences artifact. */
+export interface PreferenceSyncMeta {
+  checksum: string;
+  lastModified: number;
+  keyCount: number;
+  sizeBytes: number;
+}
+
+/** Tombstone registry for deletions on identifiable array domains. */
+export type SyncTombstones = Record<string, Record<string, number>>;
+
+/** Persisted shape for a single synchronized preference entry. */
+export interface SyncedPreferenceEntry<T = unknown> {
+  value: T;
+  updatedAt: number;
+}
+
+/** Artifact stored on Drive for synchronized user preferences. */
+export type SyncedPreferencesFile = Record<string, SyncedPreferenceEntry>;
+
 /** Structure of the _meta.json file on Drive. */
 export interface SyncMetaFile {
   version: number;
   lastFullSync: string;
   domains: Record<string, DomainSyncMeta>;
+  preferences?: PreferenceSyncMeta;
+  tombstones?: SyncTombstones;
 }
 
 /** State exposed by the sync engine for UI consumption. */
@@ -39,8 +61,11 @@ export interface SyncEngineState {
   accessMode: DriveAccessMode;
   lastSyncTimestamp: number | null;
   dirtyDomains: string[];
+  dirtyPreferences: string[];
   errorMessage: string | null;
   quota: StorageQuota | null;
+  retryScheduledAt: number | null;
+  pendingChangesCount: number;
 }
 
 /** Listener callback for sync engine state changes. */
@@ -86,6 +111,9 @@ export const SCALAR_CONFIG_KEYS = [
 
 /** Filename for grouped scalar config. */
 export const CONFIG_FILE_NAME = 'config.json';
+
+/** Filename for synchronized user preferences. */
+export const PREFERENCES_FILE_NAME = 'preferences.json';
 
 /** Filename for sync metadata. */
 export const META_FILE_NAME = '_meta.json';

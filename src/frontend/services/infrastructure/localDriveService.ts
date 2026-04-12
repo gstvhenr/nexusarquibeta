@@ -83,15 +83,25 @@ async function deleteHandle(): Promise<void> {
 
 let cachedHandle: FileSystemDirectoryHandle | null = null;
 let cachedFolderName: string | null = null;
+type LocalDriveListener = () => void;
+const listeners = new Set<LocalDriveListener>();
+
+function notifyListeners(): void {
+  listeners.forEach((listener) => listener());
+}
 
 // ---------------------------------------------------------------------------
 // Permission helpers
 // ---------------------------------------------------------------------------
 
-async function verifyPermission(handle: FileSystemDirectoryHandle): Promise<boolean> {
+async function verifyPermission(
+  handle: FileSystemDirectoryHandle,
+  promptUser = false,
+): Promise<boolean> {
   const options = { mode: 'readwrite' as const };
 
   if ((await handle.queryPermission(options)) === 'granted') return true;
+  if (!promptUser) return false;
   if ((await handle.requestPermission(options)) === 'granted') return true;
 
   return false;
@@ -122,6 +132,7 @@ async function selectFolder(): Promise<string> {
 
   cachedHandle = rootHandle;
   cachedFolderName = rootHandle.name;
+  notifyListeners();
 
   return rootHandle.name;
 }
@@ -131,12 +142,12 @@ async function hasSavedFolder(): Promise<boolean> {
   return handle !== null;
 }
 
-async function verifyAccess(): Promise<boolean> {
+async function verifyAccess(promptUser = false): Promise<boolean> {
   try {
     const handle = cachedHandle ?? (await loadHandle());
     if (!handle) return false;
 
-    const granted = await verifyPermission(handle);
+    const granted = await verifyPermission(handle, promptUser);
     if (granted) {
       cachedHandle = handle;
       cachedFolderName = handle.name;
@@ -145,6 +156,36 @@ async function verifyAccess(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Tenta re-adquirir permissão explicitamente quando ela expirou.
+ * Retorna true se o usuário concedeu permissão, false caso contrário.
+ */
+async function requestRepermission(): Promise<boolean> {
+  try {
+    const handle = await loadHandle();
+    if (!handle) return false;
+
+    // Forçar solicitação de permissão ao usuário
+    const granted = await verifyPermission(handle, true);
+    if (granted) {
+      cachedHandle = handle;
+      cachedFolderName = handle.name;
+      notifyListeners();
+    }
+    return granted;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Verifica se a permissão está ativa SEM solicitar interação.
+ * Usado pelo driveDataAdapter para detectar modo de acesso.
+ */
+async function hasActivePermission(): Promise<boolean> {
+  return verifyAccess(false);
 }
 
 async function writeSnapshot(jsonString: string): Promise<void> {
@@ -191,6 +232,7 @@ async function clearSavedFolder(): Promise<void> {
   await deleteHandle();
   cachedHandle = null;
   cachedFolderName = null;
+  notifyListeners();
 }
 
 function getFolderDisplayName(): string | null {
@@ -410,6 +452,41 @@ async function deleteFile(relativePath: string): Promise<void> {
   }
 }
 
+async function clearFolder(relativePath: string, preserveNames: string[] = []): Promise<void> {
+  try {
+    const rootHandle = cachedHandle ?? (await loadHandle());
+    if (!rootHandle) return;
+    if (!(await verifyPermission(rootHandle))) return;
+
+    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const parts = relativePath.split('/').filter((segment) => segment.length > 0);
+
+    for (const segment of parts) {
+      current = await current.getDirectoryHandle(segment);
+    }
+
+    for await (const [entryName, handle] of current.entries()) {
+      if (preserveNames.includes(entryName)) {
+        continue;
+      }
+
+      if (handle.kind === 'directory') {
+        await current.removeEntry(entryName, { recursive: true });
+        continue;
+      }
+
+      await current.removeEntry(entryName);
+    }
+  } catch {
+    // Ignore missing folders or transient permission failures
+  }
+}
+
+function subscribe(listener: LocalDriveListener): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
 /**
  * Placeholder para compatibilidade da API de cota.
  * A API do sistema de arquivos relacional (Origin Private File System ou local)
@@ -424,6 +501,8 @@ export const localDriveService = {
   selectFolder,
   hasSavedFolder,
   verifyAccess,
+  requestRepermission,
+  hasActivePermission,
   writeSnapshot,
   readSnapshot,
   clearSavedFolder,
@@ -436,5 +515,7 @@ export const localDriveService = {
   fileExists,
   getFileModifiedTime,
   deleteFile,
+  clearFolder,
   getStorageQuota,
+  subscribe,
 };

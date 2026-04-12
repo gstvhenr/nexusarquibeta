@@ -160,10 +160,11 @@ const ClientesPage: () => React.ReactNode = () => {
       if (pendingAvatar) {
         try {
           // Provide a specific fallback name if file.name is empty/missing
-          const relativePath = await driveFileService.uploadFeatureFile(
+          const relativePath = await driveFileService.replaceFeatureFile(
             'clientes',
             clientId,
             pendingAvatar,
+            originalClient?.avatarUrl,
             'avatar.jpg',
           );
           finalClient.avatarUrl = relativePath;
@@ -187,8 +188,9 @@ const ClientesPage: () => React.ReactNode = () => {
     },
     [clients, openDuplicateErrorModal, closeFormModal, setClients],
   );
-  const handleDeleteConfirm = useCallback(() => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (currentClient) {
+      await driveFileService.deleteManagedFile(currentClient.avatarUrl);
       setClients((prev) => prev.filter((c) => c.id !== currentClient.id));
     }
     closeDeleteModal();
@@ -235,7 +237,7 @@ const ClientesPage: () => React.ReactNode = () => {
     setSelectedClientIds(new Set());
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (selectedClientIds.size === 0) return;
     const clientsToDelete = Array.from(selectedClientIds);
     const hasProjects = clientsToDelete.some((id) => projects.some((p) => p.clientId === id));
@@ -252,6 +254,12 @@ const ClientesPage: () => React.ReactNode = () => {
         `Tem certeza que deseja excluir ${selectedClientIds.size} clientes selecionados?`,
       )
     ) {
+      const clientsMarkedForDeletion = clients.filter((client) => selectedClientIds.has(client.id));
+      await Promise.all(
+        clientsMarkedForDeletion.map((client) =>
+          driveFileService.deleteManagedFile(client.avatarUrl),
+        ),
+      );
       setClients((prev) => prev.filter((c) => !selectedClientIds.has(c.id)));
       setSelectedClientIds(new Set());
     }

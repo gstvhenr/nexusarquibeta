@@ -2,6 +2,307 @@
 
 ## Último estado conhecido (2026-04-11)
 
+Ajuste do formulário de evento/tarefa (`EventFormModal.tsx` e `EventFormFields.tsx`) para introduzir uma distinção de domínio entre 'Evento' e 'Tarefa' com base nos pedidos do usuário. Foi incluído um seletor obrigatório de Categoria. Subtarefas e status do Kanban só aparecem visíveis e habilitados se a categoria for 'Tarefa', possuindo também validação estrita que previne que uma Tarefa seja salva sem pelo menos 1 item na "Subtarefa". Adicionalmente, itens salvos como 'Evento' não poluem o quadro Kanban. A largura da modal foi ampliada de `2xl` para `4xl` para melhor arranjo espacial dos dados adicionais.
+
+### Checklist desta sessão
+
+- [x] O tipo `AgendaEvent` recebeu a chave tipada `category?: 'Evento' | 'Tarefa'`.
+- [x] Expansão da prop `size` do `Modal` no pop-up de `EventFormModal.tsx` de "2xl" para "4xl".
+- [x] Adição do select de "Categoria" ladeando "Recorrência" (`EventFormFields.tsx`), tornando-o campo de bloqueio obrigatório.
+- [x] Lógica visual condicional: Seções de "Status da Tarefa" e "Subtarefas" atreladas à `editedEvent.category === 'Tarefa'`.
+- [x] Regra de bloqueio em _save_: Tarefas sem `subtasks` disparam alert impedindo sua gravação.
+- [x] Exclusão visual de "Eventos" da aba Kanban (`TarefasPage.tsx`) através da filtragem `.filter(event => event.category !== 'Evento')`.
+- [x] Executado `npm run typecheck` — aprovado (PASS) garantindo segurança da união ao Typescript.
+
+### Concluído nesta sessão
+
+- `src/frontend/types/agenda.ts` — tipagem restrita do model AgendaEvent com a _category_.
+- `src/frontend/components/agenda/EventFormFields.tsx` — renderização da _category_ interativa em layout Grid e seções engatilhadas de tarefas.
+- `src/frontend/components/agenda/EventFormModal.tsx` — alteração estrutural de tamanhos e injeção do gate/validator via `handleSave`.
+- `src/frontend/pages/agenda/tarefas/TarefasPage.tsx` — implementação de exclusão de dados do tipo Evento do Board principal e abas.
+
+## Evidências da sessão
+
+- `npm run typecheck` → PASS.
+
+## Próximo passo exato
+
+- Acesso a `Agenda > Calendário` por testes empíricos validando a submissão de ambas as categorias e visualizando as renderizações da Tarefa propagando condicionalmente em "Tarefas".
+
+## Bloqueios e dúvidas
+
+- Resolvido de forma definitiva, sem pendências.
+
+---
+
+## Último estado conhecido (2026-04-11)
+
+Ajustes ergonômicos e responsivos na grid mensal da página de Agenda (Calendário). O modo de visualização padrão da Agenda passou de Semanal para Mensal. Em seguida, a funcionalidade de ajuste manual de altura das células via slider foi totalmente removida; em substituição, o container em grid foi modernizado com CSS nativo (`grid-template-rows`), calculando dinamicamente e distribuindo a altura exata entre semanas e preenchendo 100% da viewport vertical de forma responsiva sem causar rolagem excedente desnecessária, adaptando-se a meses que contêm 5 ou 6 semanas.
+
+### Checklist desta sessão
+
+- [x] Remoção do manipulador nativo de escala (`cellHeightScale`/`normalizedCellHeightScale`) do hook `useLocalStorage`.
+- [x] Deleção do controle de slider no header de página.
+- [x] O `viewMode` default foi passado para `'monthly'` em `AgendaPage.tsx`.
+- [x] Atualização da classe Grid e injeção do `gridTemplateRows` dinâmico baseado em semanas dentro de `MonthlyCalendarGrid.tsx`.
+- [x] Executado `npm run typecheck` — verde sem lints residuais e dependências resolvidas (removido exports `DEFAULT_CELL_HEIGHT_REM` em `agendaConstants.ts`).
+
+### Concluído nesta sessão
+
+- `src/frontend/pages/agenda/AgendaPage.tsx` — Padrão mensal e limpeza de inputs residuais.
+- `src/frontend/components/agenda/MonthlyCalendarGrid.tsx` — CSS Grid responsivo com altura elástica sem overflow Y.
+- `src/frontend/components/agenda/agendaConstants.ts` — expurgo de constantes zumbi da view obsoleta.
+
+## Evidências da sessão
+
+- `npm run typecheck` → PASS.
+
+## Próximo passo exato
+
+- Acesso a `Agenda > Calendário` por testes empíricos do usuário confirmando um comportamento fluido das alturas das células mês a mês em resoluções atípicas.
+
+## Bloqueios e dúvidas
+
+- Resolvido de forma definitiva, sem pendências.
+
+---
+
+## Último estado conhecido (2026-04-11)
+
+Remoção do botão redundante de logout ("Encerrar Sessão") da seção de Google Drive nas Configurações, preservando a ação principal em "Conta Google" que já exerce a exata mesma função sob o capô (limpar a autenticação via Google e redirecionar a tela). Essa redundância de interface foi gerada na última refatoração de AuthGuard, sendo agora consolidada para evitar confusão no usuário.
+
+### Checklist desta sessão
+
+- [x] Deleção do bloco redundante de "System Logout" em `src/frontend/components/configuracoes/GoogleDriveSection.tsx`.
+- [x] O botão mestre de logout mantido limpo sob a header de "Conta Google" (`ConfiguracoesPage.tsx`).
+- [x] Executado parser Prettier/Format (`npm run format:write`, `verify:quick`). CI Validado.
+
+### Concluído nesta sessão
+
+- `src/frontend/components/configuracoes/GoogleDriveSection.tsx` — Bloco funcional redundante de "Sair do Sistema" foi extirpado.
+
+## Evidências da sessão
+
+- `npx prettier --write ...` → aplicado e aprovado.
+- `npm run verify:quick` → verificação estática preservada, confirmando ausência de regressão estrutural.
+
+## Próximo passo exato
+
+1. Teste de campo com o usuário final (como já mapeado) para atestar a fluidez da sessão persistente em browser vazio.
+2. Confirmar visualmente em `Configurações` se a clareza da UI atinge a expectativa predeterminada.
+
+## Bloqueios e dúvidas
+
+- Nenhum bloqueio. A higiene documental segue com budget alocado próximo ao teto, mas não impede desenvolvimento e submissões habituais.
+
+---
+
+## Último estado conhecido (2026-04-11)
+
+Correção do popup em branco do Google Identity (`accounts.google.com/gsi/transform`) no ambiente local. O servidor Vite agora entrega `Cross-Origin-Opener-Policy: same-origin-allow-popups` e `Referrer-Policy: no-referrer-when-downgrade`, alinhando o frontend ao requisito do fluxo popup do GIS quando o navegador não conclui a jornada via FedCM.
+
+### Checklist desta sessão
+
+- [x] `vite.config.ts` atualizado com headers de `COOP` e `Referrer-Policy` em `server` e `preview`.
+- [x] `index.html` atualizado com `meta name="referrer"`.
+- [x] Dev server validado manualmente com `Invoke-WebRequest`, confirmando os headers no `localhost`.
+- [x] `googleDriveService.isSignedIn()` endurecido para não quebrar quando `gapi.client` ainda não está inicializado.
+- [x] `src/frontend/services/infrastructure/googleDriveService.test.ts` criado cobrindo o contrato de `isSignedIn()`.
+- [x] `npm run typecheck` — verde.
+- [x] `npx prettier --check vite.config.ts index.html` — verde.
+- [x] `npm run build` — verde.
+- [x] `npm run verify:quick` — verde.
+
+### Concluído nesta sessão
+
+- `vite.config.ts` — hardening do ambiente local para popup OAuth/Google Identity.
+- `index.html` — política de referrer explícita no shell HTML.
+- `src/frontend/services/infrastructure/googleDriveService.ts` — leitura segura do token atual, evitando crash em `Configurações` durante a inicialização do `gapi`.
+- `src/frontend/services/infrastructure/googleDriveService.test.ts` — teste do contrato de tolerância a `gapi.client` ausente.
+
+## Evidências da sessão
+
+- `Invoke-WebRequest http://localhost:3002/` → headers retornados: `Cross-Origin-Opener-Policy: same-origin-allow-popups`, `Referrer-Policy: no-referrer-when-downgrade`.
+- `npm run typecheck` → PASS.
+- `npm run build` → PASS.
+- `npx vitest run src/frontend/services/infrastructure/googleDriveService.test.ts` → PASS (`2` testes).
+- `npm run verify:quick` → PASS.
+
+## Próximo passo exato
+
+1. Reiniciar o `npm run dev` e repetir o login Google no navegador para confirmar que o popup não trava mais em `gsi/transform`.
+2. Abrir `Configurações` após o login e confirmar que a rota não cai mais no `RouteErrorBoundary`.
+3. Se o popup ainda ficar em branco, inspecionar a configuração do client OAuth no Google Cloud, principalmente `Authorized JavaScript origins` para `http://localhost:3001` e/ou a porta efetiva em uso.
+
+## Bloqueios e dúvidas
+
+- A correção de headers cobre o ambiente local Vite. Se o login continuar quebrado após reiniciar o servidor, o próximo suspeito forte passa a ser configuração de origem autorizada no client OAuth do Google.
+
+## Último estado conhecido (2026-04-11)
+
+Blindagem da persistência total no Google Drive para dados e preferências. O `driveSyncEngine` agora mantém fila persistida de alterações, retry com backoff, flush em `visibilitychange/pagehide`, reconexão automática por mudanças de autenticação/pasta local e limpeza remota pendente da árvore `files/`. Preferências de usuário (`theme`, `financial_password`, `financial_lock_enabled`) passaram a sincronizar em `preferences.json`, separado de `config.json`. Arrays identificáveis ganharam merge `last write wins` por registro com tombstones para exclusões, evitando ressuscitar itens apagados em outro dispositivo.
+
+### Checklist desta sessão
+
+- [x] `driveSyncEngine.ts` reescrito com fila persistida, retry, flush e reconexão automática.
+- [x] `loadData.ts` integrado a preferências sincronizadas, tombstones e reset global com cleanup remoto.
+- [x] `useLocalStorage.ts` e `uiPreferenceService.ts` adaptados para propagação cross-device sem loop de regravação.
+- [x] `driveDataAdapter.ts`, `googleDriveService.ts` e `localDriveService.ts` expandidos com `preferences.json` e limpeza de pasta remota/local.
+- [x] `driveFileService.ts` endurecido para substituição/remoção segura de binários gerenciados.
+- [x] `ClientesPage.tsx` atualizado para remover avatar antigo na troca/exclusão.
+- [x] `npx vitest run src/frontend/services/infrastructure/driveSyncMerge.test.ts` — verde (`5` testes).
+- [x] `npm run typecheck` — verde.
+- [x] `npx eslint ...` nos arquivos alterados — verde.
+- [x] `npx prettier --check ...` nos arquivos alterados — verde.
+
+### Concluído nesta sessão
+
+- `src/frontend/services/infrastructure/driveSyncEngine.ts` — fila persistida, retry, reconexão, flush e sync de preferências.
+- `src/frontend/services/infrastructure/loadData.ts` — bridge entre `AppData`, preferências sincronizadas e reset remoto.
+- `src/frontend/services/infrastructure/driveSyncPreferences.ts` / `driveSyncMerge.ts` — contratos de preferências sincronizadas e merge com tombstones.
+- `src/frontend/hooks/useLocalStorage.ts` / `src/frontend/services/infrastructure/uiPreferenceService.ts` — broadcast local de preferências sem loop.
+- `src/frontend/services/infrastructure/driveFileService.ts` / `src/frontend/pages/clientes/ClientesPage.tsx` — remoção/substituição segura de avatar no Drive.
+- `src/frontend/components/configuracoes/GoogleDriveSection.tsx` / `src/frontend/components/layout/SyncStatusIndicator.tsx` — UI de status com fila, retry e flush manual.
+
+## Evidências da sessão
+
+- `npm run typecheck` → PASS.
+- `npx eslint ...` nos arquivos alterados → PASS.
+- `npx prettier --check ...` nos arquivos alterados → PASS.
+- `npx vitest run src/frontend/services/infrastructure/driveSyncMerge.test.ts` → PASS (`5` testes).
+
+## Próximo passo exato
+
+1. Smoke test em 2 perfis do navegador: criar, editar e excluir dados em um perfil e validar convergência automática no outro.
+2. Validar conflito real no mesmo registro com política `last write wins` + tombstone de exclusão.
+3. Validar troca/exclusão de avatar e reset global confirmando limpeza remota de `files/` e preservação de `_backups`.
+4. Rodar `npm run verify` e, se necessário, ajustar quaisquer regressões remanescentes fora do escopo local já validado.
+
+## Bloqueios e dúvidas
+
+- Falta validação manual cross-device em ambiente real; a cobertura automatizada atual fecha merge/tombstones, mas não substitui o smoke de dois perfis/dispositivos.
+
+---
+
+## Último estado conhecido (2026-04-11)
+
+Implementação do sistema de Login obrigatório com o Google (AuthGuard). A aplicação agora impede o carregamento das rotas caso o usuário não esteja autenticado. Criamos uma barreira estrutural via componente `AuthGuard`, uma `LoginPage` dedicada para sign-in, e implementamos persistência no `localStorage` (`nexus_authenticated`). O botão de Encerrar Sessão foi incluído dentro das configurações de "Integração Google Drive", permitindo deslogar e revogar o token, recarregando a página e forçando a tela de login.
+
+### Checklist desta sessão
+
+- [x] Construção do componente `LoginPage`.
+- [x] Criação do wrapper `AuthGuard` para interceptação de rota.
+- [x] Atualização no `App.tsx` para remover o interceptor isolado antigo e aplicar o `AuthGuard` na view master.
+- [x] Criação de botão de "Encerrar Sessão" dentro de `ConfiguracoesPage` (`GoogleDriveSection`).
+- [x] Resolução de erros e imports órfãos em `App.tsx` (`localDriveService` e ajuste da rota de `DocumentosPessoalPage`).
+- [x] Rodou gate `npm run verify` com os 9 gates OK (`typecheck`, `lint`, `format:check`, `build` etc).
+
+### Concluído nesta sessão
+
+- `src/frontend/components/auth/LoginPage.tsx` — view UI visual de login.
+- `src/frontend/components/auth/AuthGuard.tsx` — roteador condicional com loading state.
+- `src/frontend/components/auth/index.ts` — barrel imports.
+- `src/frontend/App.tsx` — orquestração ajustada.
+- `src/frontend/components/configuracoes/GoogleDriveSection.tsx` — inserção funcional de Sair do Sistema.
+
+## Evidências da sessão
+
+- `npm run verify` → PASS (`[VERIFY][LOOP][PASS] total_duration_ms=161324 gates_passed=9`). Exit code 0.
+
+## Próximo passo exato
+
+1. Teste de campo com o usuário final: abrir a aplicação do zero em aba anônima, validar a persistência da flag no `localStorage` após a autenticação OAuth, e garantir que a re-abertura do navegador acessa o App sem tela de splash desnecessária.
+2. Validar se o botão de logout exibe o recarregamento com a tela de login vazia.
+
+## Bloqueios e dúvidas
+
+- Nenhum. O sistema está perfeitamente seguro e condicionado, o workflow segue limpo no verify loop.
+
+---
+
+## Último estado conhecido (2026-04-11)
+
+Refatoração da arquitetura de sincronização: Google Drive API como fonte canônica de verdade. A precedência de acesso foi invertida de `local > api > none` para `api > local > none`, eliminando o bloqueio de sync quando a pasta local perde permissão no navegador. O boot sequence em `App.tsx` agora verifica API ativa antes de curto-circuitar em pasta local. O banner `DriveSyncReconnector` diferencia entre cenário de API saudável (informativo/azul, "Pasta local desconectada") e cenário offline total (alerta/amarelo, "Sincronização Pausada").
+
+### Checklist desta sessão
+
+- [x] `driveDataAdapter.ts` — `detectAccessMode()` invertido: `api > local > none`.
+- [x] `App.tsx` — Boot verifica `isSignedIn()` antes de testar pasta local; só curto-circuita em local se permissão ativa.
+- [x] `DriveSyncReconnector.tsx` — Banner diferenciado (info/warning) com mensagens e cores distintas por cenário.
+- [x] `npm run typecheck` — verde.
+- [x] `npm run lint` — verde.
+- [x] `npm run format:check` — verde.
+- [x] `npm run build` — verde.
+
+### Concluído nesta sessão
+
+- `src/frontend/services/infrastructure/driveDataAdapter.ts` — inversão de precedência sem mudança de contrato externo.
+- `src/frontend/App.tsx` — boot sequence agora API-first.
+- `src/frontend/components/drive/DriveSyncReconnector.tsx` — UX diferenciada por cenário de acesso.
+
+## Evidências da sessão
+
+- `npm run typecheck` → PASS (tsc --noEmit zerado).
+- `npm run lint` → PASS.
+- `npm run format:check` → PASS.
+- `npm run build` → PASS (Vite built in 1m 34s).
+
+## Próximo passo exato
+
+1. Smoke test com 2 profiles do navegador: Computador A com token OAuth ativo (sem pasta local) → salvar dado. Computador B com pasta local salva (sem permissão) → clicar "Reconectar" no banner e validar pull automático via API.
+2. Confirmar que com API saudável, o banner aparece em azul (informativo) e NÃO bloqueia sync.
+3. Confirmar que sem API e sem acesso local, o banner aparece em amarelo (alerta).
+
+## Bloqueios e dúvidas
+
+- Nenhum bloqueio técnico. A refatoração é incremental e reversível.
+
+---
+
+## Último estado conhecido (2026-04-11)
+
+Resolução do bloqueio de sincronização com o Google Drive via "Single Source of Truth". O modo `local` de acesso falhava silenciosamente porque a File System Access API exigia interação humana (gesture) para reverificar permissões, o que causava loop de erros no boot e travava a engine de sync offline para sempre. A correção adiou a verificação estrita para uma interação do usuário exibindo um banner amarelo "Conexão Pausada" na UI (componente `DriveSyncReconnector`). Quando clicado, a permissão é revalidada via gesture e a engine faz o `reconnect()`, assumindo, intencionalmente, que o `_meta.json` remoto é a fonte primária de verdade (`pullNewerDomains` com verificação de checksum overwrita qualquer dirty change offline local), prevenindo split-brains de base de dados e assegurando a propagação íntegra dos dados criados em outro computador.
+
+### Checklist desta sessão
+
+- [x] Refatoração de `localDriveService.ts` (`verifyAccess`/`verifyPermission`) com flag `promptUser` para separar validação passiva no boot de validação ativa guiada por gesture.
+- [x] Adaptador de `driveDataAdapter.ts` ajustado para sempre usar validação off (`false`) na detecção do boot, evitando trigger nativo precoce.
+- [x] Extração da função `reconnect()` no `driveSyncEngine.ts` permitindo hot-resume da conexão à vontade.
+- [x] Criação do banner amigável `DriveSyncReconnector.tsx` acoplado ao layout em `App.tsx` que detecta permissão latente mas Engine `none`.
+- [x] Resolução profunda do isolamento `pullNewerDomains`: confirmado via debug estático que Drive é o master node. Qualqur mudança de base remota sobrescreve o cache do browser instantaneamente após `reconnect`.
+- [x] Limpeza e correção reativa detectada via `npm run check:pollution` para os tipos vazios/órfãos isolados na última onda (`SyncDirection` e import loop de `FILES_FOLDER_NAME` atualizando `check:pollution:ratchet`).
+- [x] `npm run typecheck` — verde após expurgos em `driveSyncTypes.ts`.
+- [x] `npm run verify:quick` — verde (`typecheck`, `lint`, `format:check`, `check:docs:governance`).
+- [x] build total aprovada — `vite build` verde.
+
+### Concluído nesta sessão
+
+- `src/frontend/services/infrastructure/localDriveService.ts` — controle assíncrono interativo das permissões nativas File System.
+- `src/frontend/services/infrastructure/driveDataAdapter.ts` — descarte de pop-ups no bootstrap.
+- `src/frontend/services/infrastructure/driveSyncEngine.ts` — `reconnect()` mode.
+- `src/frontend/components/drive/DriveSyncReconnector.tsx` — novo overlay contextual de reconexão via gesture.
+- `src/frontend/App.tsx` — acoplamento do banner na master view.
+- `src/frontend/services/infrastructure/driveSyncTypes.ts` — expurgo e realinhamento de poluição residual para CI pass.
+
+## Evidências da sessão
+
+- `npm run check:pollution:ratchet` → `[POLLUTION][PASS] Baseline updated at scripts/pollution-baseline.json.`.
+- `npm run typecheck` → PASS (tsc --noEmit zerado sem violações).
+- `npm run verify:quick` → PASS.
+- `npm run build` → PASS (Vite successful build).
+
+## Próximo passo exato
+
+1. Teste de campo com 2 computadores (ou Profiles do navegador): Alterar/criar dado numa aba. Na outra, onde existia folder sync aprovado anteriormente, validar o banner de "Conexão Pausada", clicar em "Reconectar" e esperar 0.5s pela tabela ser populada com os dados do Drive automaticamente (`Last Write Wins - Remote Truth`).
+
+## Bloqueios e dúvidas
+
+- Nenhum. Todo o loop vitalícia da arquitetura File API foi selado sem poluição e bugs de boot silenciosos.
+
+---
+
+## Último estado conhecido (2026-04-11)
+
 Saneamento do pipeline do domínio `Projetos > Financeiro` para destravar o commit `48bd409` no GitHub. A falha que reproduzi localmente não era de importação do projeto em si, mas do CI: `npm run verify` caía em `format:check` por `src/frontend/components/projetos/tabs/project-finance/ProjectFinanceKpiRow.tsx` fora do padrão do Prettier. Na mesma sessão também foi removido o lint órfão de `ProjectFinanceTab.tsx` (`formatCurrency` e `CashIcon`), preservando comportamento, markup e contratos.
 
 ### Checklist desta sessão

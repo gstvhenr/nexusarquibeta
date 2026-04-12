@@ -8,7 +8,14 @@
  *   const restored = await googleDriveService.downloadSnapshot();
  */
 
-import type { DriveFileMetadata, DriveState, GisTokenClient } from './googleDriveTypes';
+import type {
+  DriveFileMetadata,
+  DriveState,
+  GisTokenClient,
+  GisTokenResponse,
+  GoogleIdCredentialResponse,
+} from './googleDriveTypes';
+import { extractGoogleCredentialEmail } from '@/utils/googleIdentity';
 
 const SCOPES =
   'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
@@ -22,10 +29,15 @@ const folderIdCache = new Map<string, string>();
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY ?? '';
 
-let tokenClient: GisTokenClient | null = null;
+let popupTokenClient: GisTokenClient | null = null;
 let gapiInitialized = false;
 let gisInitialized = false;
+let googleIdentityInitialized = false;
 let appFolderId: string | null = null;
+
+const TOKEN_STORAGE_KEY = 'nexus_google_token';
+const AUTH_FLAG_KEY = 'nexus_authenticated';
+const USER_EMAIL_KEY = 'nexus_user_email';
 
 const state: DriveState = {
   status: 'disconnected',
@@ -45,6 +57,17 @@ function notifyListeners(): void {
 function updateState(partial: Partial<DriveState>): void {
   Object.assign(state, partial);
   notifyListeners();
+}
+
+function getCurrentGapiToken(): { access_token: string } | null {
+  const client = window.gapi?.client;
+  if (!client || typeof client.getToken !== 'function') return null;
+
+  try {
+    return client.getToken();
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -77,100 +100,382 @@ function initGisTokenClient(): void {
     throw new Error('Google Identity Services not loaded. Check index.html script tags.');
   }
 
-  tokenClient = window.google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    ux_mode: 'redirect',
-    redirect_uri: window.location.origin + window.location.pathname,
-    callback: () => {
-      /* not used in redirect mode */
-    },
-  });
+  // Apenas marcamos como inicializado. O cliente real será criado no escopo do signIn()
+  // no momento do clique para contornar problemas de popup blocker e callbacks fantasmas.
   gisInitialized = true;
 }
 
-async function ensureInitialized(): Promise<void> {
-  if (!gapiInitialized) {
-    await loadGapiClient();
+function initGoogleIdentityClient(): void {
+  if (!window.google) {
+    throw new Error('Google Identity Services not loaded. Check index.html script tags.');
   }
-  if (!gisInitialized) {
-    initGisTokenClient();
-  }
+
+  window.google.accounts.id.initialize({
+    client_id: CLIENT_ID,
+    callback: handleGoogleIdentityResponse,
+    auto_select: false,
+    cancel_on_tap_outside: true,
+    use_fedcm_for_prompt: true,
+  });
+
+  googleIdentityInitialized = true;
 }
 
 // ---------------------------------------------------------------------------
-// Auth
+// Token persistence
 // ---------------------------------------------------------------------------
 
-/**
- * Parseia o access_token do hash da URL após redirect do Google.
- * Retorna true se encontrou token e conectou, false se não havia token no hash.
- */
-async function handleRedirectCallback(): Promise<boolean> {
-  const hash = window.location.hash;
-  if (!hash || !hash.includes('access_token')) return false;
+function persistToken(accessToken: string, expiresIn: number): void {
+  const data = {
+    access_token: accessToken,
+    expires_at: Date.now() + expiresIn * 1000,
+  };
+  localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(AUTH_FLAG_KEY, '1');
+}
 
-  await ensureInitialized();
-
-  const params = new URLSearchParams(hash.substring(1));
-  const accessToken = params.get('access_token');
-  if (!accessToken) return false;
-
-  // Limpar hash da URL sem recarregar a página
-  window.history.replaceState(null, '', window.location.pathname + window.location.search);
-
-  // Setar token no gapi client
-  window.gapi!.client.setToken({ access_token: accessToken });
-
-  updateState({ status: 'connecting', errorMessage: null });
+function restoreToken(): { access_token: string } | null {
+  const raw = localStorage.getItem(TOKEN_STORAGE_KEY);
+  if (!raw) return null;
 
   try {
-    const email = await fetchUserEmail(accessToken);
-    updateState({ status: 'connected', userEmail: email, errorMessage: null });
+    const parsed = JSON.parse(raw) as { access_token: string; expires_at: number };
+    // Token expirado — não restaurar
+    if (parsed.expires_at <= Date.now()) {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      return null;
+    }
+    return { access_token: parsed.access_token };
   } catch {
-    updateState({ status: 'connected', userEmail: null, errorMessage: null });
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    return null;
+  }
+}
+
+function clearPersistedToken(): void {
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+  localStorage.removeItem(AUTH_FLAG_KEY);
+  localStorage.removeItem(USER_EMAIL_KEY);
+}
+
+function persistAuthenticatedUser(email: string): void {
+  localStorage.setItem(AUTH_FLAG_KEY, '1');
+  localStorage.setItem(USER_EMAIL_KEY, email);
+}
+
+async function handleGoogleIdentityResponse(response: GoogleIdCredentialResponse): Promise<void> {
+  if (!response.credential) {
+    updateState({
+      status: 'disconnected',
+      errorMessage: 'Falha ao validar sua conta Google. Tente novamente.',
+    });
+    return;
   }
 
+  const email = extractGoogleCredentialEmail(response.credential);
+  if (!email) {
+    updateState({
+      status: 'disconnected',
+      errorMessage: 'Nao foi possivel obter o e-mail da conta Google selecionada.',
+    });
+    return;
+  }
+
+  persistAuthenticatedUser(email);
+  updateState({ status: 'connected', userEmail: email, errorMessage: null });
+
+  try {
+    await trySilentReauth();
+  } catch {
+    // App auth permanece valida mesmo sem token Drive imediato.
+  }
+}
+
+/**
+ * Tenta restaurar a sessão a partir de token persistido no localStorage.
+ * Se o token ainda for válido, seta no gapi e atualiza o estado.
+ */
+async function tryRestoreSession(): Promise<boolean> {
+  // 1. Verificar se temos identidade salva (auth gate)
+  const savedEmail = localStorage.getItem(USER_EMAIL_KEY);
+  const authFlag = localStorage.getItem(AUTH_FLAG_KEY);
+
+  if (!savedEmail || !authFlag) return false;
+
+  // 2. Inicializar SDKs — se falhar, limpar dados corrompidos e mostrar login
+  try {
+    await ensureInitialized();
+  } catch {
+    clearPersistedToken();
+    return false;
+  }
+
+  // 3. Tentar restaurar access_token do Drive
+  const token = restoreToken();
+  if (token) {
+    window.gapi!.client.setToken(token);
+    try {
+      await fetchUserEmail(token.access_token);
+      updateState({ status: 'connected', userEmail: savedEmail, errorMessage: null });
+      return true;
+    } catch {
+      // Token expirado ou revogado — mas identidade OK
+      window.gapi!.client.setToken(null);
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+    }
+  }
+
+  // 4. Identidade salva mas sem token Drive válido
+  // Marcar como autenticado mesmo assim — Drive sync tentará token depois
+  updateState({ status: 'connected', userEmail: savedEmail, errorMessage: null });
   return true;
 }
 
 /**
- * Inicia o fluxo de autenticação.
- * Se já tem token ativo, resolve imediatamente.
- * Caso contrário, redireciona ao Google para autorização.
+ * Tenta re-autenticar silenciosamente via popup GIS (prompt: '').
+ * Se o usuário já deu consentimento, o popup abre e fecha automaticamente.
+ * Inclui timeout para evitar travamento caso popup seja bloqueado.
  */
-async function signIn(): Promise<void> {
+async function trySilentReauth(): Promise<boolean> {
   await ensureInitialized();
 
-  // Se já tem token válido, apenas atualizar estado
-  const existingToken = window.gapi?.client.getToken();
-  if (existingToken) {
+  if (!window.google || !CLIENT_ID) return false;
+
+  return new Promise<boolean>((resolve) => {
+    let resolved = false;
+    const safeResolve = (value: boolean) => {
+      if (resolved) return;
+      resolved = true;
+      clearTimeout(timeoutId);
+      resolve(value);
+    };
+
+    // Timeout de segurança: se nada acontecer em 4s, desiste silenciosamente
+    const timeoutId = setTimeout(() => safeResolve(false), 4000);
+
+    popupTokenClient = window.google!.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (response: GisTokenResponse) => {
+        if (response.error || !response.access_token) {
+          safeResolve(false);
+          return;
+        }
+
+        window.gapi!.client.setToken({ access_token: response.access_token });
+        persistToken(response.access_token, response.expires_in);
+
+        try {
+          const email = await fetchUserEmail(response.access_token);
+          updateState({ status: 'connected', userEmail: email, errorMessage: null });
+        } catch {
+          updateState({
+            status: 'connected',
+            userEmail: localStorage.getItem(USER_EMAIL_KEY) ?? state.userEmail,
+            errorMessage: null,
+          });
+        }
+        safeResolve(true);
+      },
+      error_callback: () => {
+        safeResolve(false);
+      },
+    });
+
     try {
-      const email = await fetchUserEmail(existingToken.access_token);
-      updateState({ status: 'connected', userEmail: email, errorMessage: null });
+      popupTokenClient!.requestAccessToken({ prompt: '' });
     } catch {
-      updateState({ status: 'connected', userEmail: null, errorMessage: null });
+      safeResolve(false);
     }
+  });
+}
+
+/** Polls for a global to appear (async script tags may not be ready immediately). */
+function waitForGlobal(name: 'gapi' | 'google', timeoutMs = 5000): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (window[name]) {
+      resolve(true);
+      return;
+    }
+    const start = Date.now();
+    const interval = setInterval(() => {
+      if (window[name]) {
+        clearInterval(interval);
+        resolve(true);
+      } else if (Date.now() - start > timeoutMs) {
+        clearInterval(interval);
+        resolve(false);
+      }
+    }, 100);
+  });
+}
+
+async function ensureGoogleIdentityReady(): Promise<void> {
+  const googleReady = await waitForGlobal('google');
+  if (!googleReady) {
+    throw new Error('Google Identity Services nao carregou dentro do tempo esperado.');
+  }
+
+  if (!googleIdentityInitialized) {
+    initGoogleIdentityClient();
+  }
+}
+
+async function ensureInitialized(): Promise<void> {
+  if (!gapiInitialized) {
+    const gapiReady = await waitForGlobal('gapi');
+    if (!gapiReady) throw new Error('gapi failed to load within timeout');
+    await loadGapiClient();
+  }
+  if (!gisInitialized) {
+    const gisReady = await waitForGlobal('google');
+    if (!gisReady) throw new Error('GIS failed to load within timeout');
+    initGisTokenClient();
+  }
+}
+
+async function renderLoginButton(container: HTMLElement): Promise<void> {
+  if (!CLIENT_ID) {
+    throw new Error('CLIENT_ID não configurado. Verifique .env.');
+  }
+
+  await ensureGoogleIdentityReady();
+
+  container.innerHTML = '';
+  window.google!.accounts.id.renderButton(container, {
+    type: 'standard',
+    theme: 'outline',
+    size: 'large',
+    text: 'continue_with',
+    shape: 'rectangular',
+    width: Math.max(container.clientWidth, 280),
+    logo_alignment: 'left',
+  });
+}
+
+/**
+ * Inicia o fluxo de autenticação via popup OAuth2 (initTokenClient).
+ * Chama ensureInitialized() para garantir que gapi e GIS estejam prontos.
+ * Usa ux_mode 'popup' explicitamente e timeout de segurança.
+ */
+async function signIn(): Promise<void> {
+  if (!CLIENT_ID) {
+    updateState({
+      status: 'disconnected',
+      errorMessage: 'CLIENT_ID não configurado. Verifique .env.',
+    });
     return;
   }
 
-  if (!tokenClient) {
-    throw new Error('Token client not initialized.');
+  updateState({ status: 'connecting', errorMessage: null });
+
+  // Garantir que gapi e GIS estejam carregados antes de prosseguir
+  try {
+    await ensureInitialized();
+  } catch {
+    updateState({
+      status: 'disconnected',
+      errorMessage: 'Falha ao carregar Google SDK. Verifique sua conexão e recarregue.',
+    });
+    return;
   }
 
-  // Redireciona ao Google — a página vai recarregar com token no hash
-  tokenClient.requestAccessToken({ prompt: '' });
+  if (!window.google) {
+    updateState({
+      status: 'disconnected',
+      errorMessage: 'Google Identity Services não carregou. Recarregue a página.',
+    });
+    return;
+  }
+
+  // Timeout de segurança: se nenhum callback disparar em 20s, resetar
+  let callbackFired = false;
+  const safetyTimeout = setTimeout(() => {
+    if (!callbackFired) {
+      updateState({
+        status: 'disconnected',
+        errorMessage:
+          'Tempo esgotado. O popup pode ter sido bloqueado ou mostrou um erro. Tente novamente.',
+      });
+    }
+  }, 20000);
+
+  const markCallbackFired = () => {
+    callbackFired = true;
+    clearTimeout(safetyTimeout);
+  };
+
+  popupTokenClient = window.google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    ux_mode: 'popup',
+    callback: async (tokenResponse: GisTokenResponse) => {
+      markCallbackFired();
+
+      if (tokenResponse.error || !tokenResponse.access_token) {
+        updateState({
+          status: 'disconnected',
+          errorMessage: tokenResponse.error ?? 'Falha na autenticação. Tente novamente.',
+        });
+        return;
+      }
+
+      window.gapi!.client.setToken({ access_token: tokenResponse.access_token });
+      persistToken(tokenResponse.access_token, tokenResponse.expires_in);
+
+      localStorage.setItem(AUTH_FLAG_KEY, '1');
+
+      try {
+        const email = await fetchUserEmail(tokenResponse.access_token);
+        localStorage.setItem(USER_EMAIL_KEY, email);
+        updateState({ status: 'connected', userEmail: email, errorMessage: null });
+      } catch {
+        updateState({
+          status: 'connected',
+          userEmail: localStorage.getItem(USER_EMAIL_KEY) ?? state.userEmail,
+          errorMessage: null,
+        });
+      }
+    },
+    error_callback: (err: { type: string; message?: string }) => {
+      markCallbackFired();
+
+      if (err.type === 'popup_closed') {
+        updateState({ status: 'disconnected', errorMessage: null });
+      } else {
+        updateState({
+          status: 'disconnected',
+          errorMessage: 'Popup bloqueado pelo navegador. Permita popups para este site.',
+        });
+      }
+    },
+  });
+
+  try {
+    popupTokenClient.requestAccessToken({ prompt: 'select_account' });
+  } catch {
+    markCallbackFired();
+    updateState({
+      status: 'disconnected',
+      errorMessage: 'Erro ao iniciar autenticação. Recarregue a página.',
+    });
+  }
 }
 
 function signOut(): void {
-  const token = window.gapi?.client.getToken();
+  // Revogar token no servidor do Google
+  const token = getCurrentGapiToken();
   if (token) {
     window.google?.accounts.oauth2.revoke(token.access_token, () => {
       /* revoked */
     });
-    window.gapi?.client.setToken(null);
+    if (window.gapi?.client && typeof window.gapi.client.setToken === 'function') {
+      window.gapi.client.setToken(null);
+    }
   }
+  popupTokenClient = null;
   appFolderId = null;
+  clearPersistedToken();
   updateState({
     status: 'disconnected',
     userEmail: null,
@@ -179,7 +484,7 @@ function signOut(): void {
 }
 
 function isSignedIn(): boolean {
-  return window.gapi?.client.getToken() !== null && window.gapi?.client.getToken() !== undefined;
+  return getCurrentGapiToken() !== null;
 }
 
 async function fetchUserEmail(accessToken: string): Promise<string> {
@@ -244,6 +549,21 @@ async function findFileInFolder(fileName: string, folderId: string): Promise<str
 
   const files = (response.result.files as DriveFileMetadata[] | undefined) ?? [];
   return files.length > 0 ? files[0].id : null;
+}
+
+async function listChildrenInFolder(folderId: string): Promise<DriveFileMetadata[]> {
+  const response = await window.gapi!.client.request({
+    path: '/drive/v3/files',
+    method: 'GET',
+    params: {
+      q: `'${folderId}' in parents and trashed=false`,
+      fields: 'files(id,name,mimeType,modifiedTime,size)',
+      spaces: 'drive',
+      pageSize: '1000',
+    },
+  });
+
+  return (response.result.files as DriveFileMetadata[] | undefined) ?? [];
 }
 
 async function uploadJsonFile<T>(fileName: string, data: T, folderId: string): Promise<string> {
@@ -393,6 +713,41 @@ async function getOrCreateSubFolder(relativePath: string): Promise<string> {
       parentId = (createResponse.result as unknown as DriveFileMetadata).id;
     }
 
+    folderIdCache.set(pathSoFar, parentId);
+  }
+
+  return parentId;
+}
+
+async function findFolderByPath(relativePath: string): Promise<string | null> {
+  const segments = relativePath.split('/').filter((segment) => segment.length > 0);
+  let parentId = await getOrCreateAppFolder();
+
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    const pathSoFar = segments.slice(0, i + 1).join('/');
+
+    if (folderIdCache.has(pathSoFar)) {
+      parentId = folderIdCache.get(pathSoFar)!;
+      continue;
+    }
+
+    const searchResponse = await window.gapi!.client.request({
+      path: '/drive/v3/files',
+      method: 'GET',
+      params: {
+        q: `name='${segment}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        fields: 'files(id,name)',
+        spaces: 'drive',
+      },
+    });
+
+    const existing = (searchResponse.result.files as DriveFileMetadata[] | undefined) ?? [];
+    if (existing.length === 0) {
+      return null;
+    }
+
+    parentId = existing[0].id;
     folderIdCache.set(pathSoFar, parentId);
   }
 
@@ -626,6 +981,33 @@ async function deleteFileByPath(relativePath: string): Promise<void> {
   }
 }
 
+async function deleteFolderByPath(
+  relativePath: string,
+  preserveNames: string[] = [],
+): Promise<void> {
+  const folderId = await findFolderByPath(relativePath);
+  if (!folderId) return;
+
+  const token = window.gapi!.client.getToken();
+  if (!token) return;
+
+  try {
+    const children = await listChildrenInFolder(folderId);
+    for (const child of children) {
+      if (preserveNames.includes(child.name)) {
+        continue;
+      }
+
+      await fetch(`https://www.googleapis.com/drive/v3/files/${child.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token.access_token}` },
+      });
+    }
+  } catch {
+    // Ignore folder cleanup failures to avoid blocking user flows
+  }
+}
+
 // ---------------------------------------------------------------------------
 // State management
 // ---------------------------------------------------------------------------
@@ -674,10 +1056,12 @@ async function getStorageQuota(): Promise<{ limitBytes: number; usageBytes: numb
 }
 
 export const googleDriveService = {
-  handleRedirectCallback,
+  renderLoginButton,
   signIn,
   signOut,
   isSignedIn,
+  tryRestoreSession,
+  trySilentReauth,
   uploadSnapshot,
   downloadSnapshot,
   getLastSyncInfo,
@@ -690,6 +1074,7 @@ export const googleDriveService = {
   getFileModifiedTimeByPath,
   fileExistsByPath,
   deleteFileByPath,
+  deleteFolderByPath,
   getOrCreateSubFolder,
   ensureInitialized,
   getStorageQuota,

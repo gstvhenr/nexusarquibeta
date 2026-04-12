@@ -13,15 +13,14 @@
     "moduleDetection": "force",
     "allowJs": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/frontend/*"],
-      "@components/*": ["src/frontend/components/*"],
-      "@services/*": ["src/frontend/services/*"],
-      "@hooks/*": ["src/frontend/hooks/*"],
-      "@context/*": ["src/frontend/context/*"],
-      "@utils/*": ["src/frontend/utils/*"],
-      "@types": ["src/frontend/types.ts"]
+      "@/*": ["./src/frontend/*"],
+      "@components/*": ["./src/frontend/components/*"],
+      "@services/*": ["./src/frontend/services/*"],
+      "@hooks/*": ["./src/frontend/hooks/*"],
+      "@context/*": ["./src/frontend/context/*"],
+      "@utils/*": ["./src/frontend/utils/*"],
+      "@types": ["./src/frontend/types.ts"]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true

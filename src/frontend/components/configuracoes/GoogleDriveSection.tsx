@@ -4,20 +4,21 @@ import { useDriveSync } from '../../hooks/useDriveSync';
 import { googleDriveService } from '@/services/infrastructure/googleDriveService';
 import type { DriveState } from '@/services/infrastructure/googleDriveTypes';
 import { localDriveService } from '@/services/infrastructure/localDriveService';
-import { SyncStatusIndicator } from '../layout/SyncStatusIndicator';
+import { GoogleDriveSyncPanel } from './GoogleDriveSyncPanel';
 
 type DriveMode = 'local' | 'api' | 'none';
 
-function formatTimestamp(timestamp: number | null): string {
-  if (!timestamp) return 'Nunca';
-  return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(new Date(timestamp));
-}
-
 function GoogleDriveSection(): JSX.Element {
-  const { forcePush, forcePull, status: syncStatus, lastSyncTimestamp } = useDriveSync();
+  const {
+    forcePush,
+    forcePull,
+    flushPendingWrites,
+    reconnect,
+    lastSyncTimestamp,
+    pendingChangesCount,
+    retryScheduledAt,
+    dirtyPreferences,
+  } = useDriveSync();
   const [folderName, setFolderName] = useState<string | null>(null);
   const [driveMode, setDriveMode] = useState<DriveMode>('none');
   const [apiState, setApiState] = useState<DriveState>({
@@ -34,11 +35,12 @@ function GoogleDriveSection(): JSX.Element {
   } | null>(null);
 
   useEffect(() => {
+    setApiState(googleDriveService.getState());
     localDriveService.initDisplayName().then((name) => {
       if (name) {
         setFolderName(name);
         setDriveMode('local');
-      } else if (googleDriveService.getState().status === 'connected') {
+      } else if (googleDriveService.isSignedIn()) {
         setDriveMode('api');
       }
     });
@@ -47,16 +49,13 @@ function GoogleDriveSection(): JSX.Element {
   useEffect(() => {
     const unsubscribe = googleDriveService.subscribe((state) => {
       setApiState(state);
+      if (!folderName) {
+        setDriveMode(googleDriveService.isSignedIn() ? 'api' : 'none');
+      }
     });
 
-    // Dynamic api state (from the core service object structure, usually we check if there's a user)
-    // Here we can subscribe if we had the direct googleDriveService, but since we rely on sync status:
-    if (syncStatus !== 'offline' && driveMode !== 'local') {
-      setDriveMode('api');
-    }
-
     return unsubscribe;
-  }, [driveMode, syncStatus]);
+  }, [folderName]);
 
   useEffect(() => {
     if (!message) return;
@@ -72,6 +71,7 @@ function GoogleDriveSection(): JSX.Element {
       const name = await localDriveService.selectFolder();
       setFolderName(name);
       setDriveMode('local');
+      await reconnect();
       setMessage({
         type: 'success',
         text: `Pasta selecionada: ${name}/01. NexusArqui`,
@@ -83,14 +83,15 @@ function GoogleDriveSection(): JSX.Element {
         text: `Erro ao selecionar pasta: ${error instanceof Error ? error.message : 'Desconhecido'}`,
       });
     }
-  }, []);
+  }, [reconnect]);
 
   const handleRemoveFolder = useCallback(async () => {
     await localDriveService.clearSavedFolder();
     setFolderName(null);
-    setDriveMode(apiState.status === 'connected' ? 'api' : 'none');
+    setDriveMode(googleDriveService.isSignedIn() ? 'api' : 'none');
+    await reconnect();
     setMessage({ type: 'success', text: 'Pasta local removida.' });
-  }, [apiState.status]);
+  }, [reconnect]);
 
   // ---------- Sync / Restore ----------
 
@@ -113,6 +114,18 @@ function GoogleDriveSection(): JSX.Element {
     }
   }, [forcePush]);
 
+  const handleConnectApi = useCallback(async () => {
+    setMessage(null);
+    try {
+      await googleDriveService.signIn();
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: `Erro ao conectar Google Drive: ${error instanceof Error ? error.message : 'Desconhecido'}`,
+      });
+    }
+  }, []);
+
   const handleRestore = useCallback(async () => {
     const confirmed = window.confirm(
       'Baixar dados na núvem? Isso unirá e possivelmente substituirá dados locais pelo que estiver remoto.',
@@ -125,9 +138,8 @@ function GoogleDriveSection(): JSX.Element {
       await forcePull();
       setMessage({
         type: 'success',
-        text: 'Baixado com sucesso! Recarregando...',
+        text: 'Dados remotos aplicados com sucesso.',
       });
-      setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
       setMessage({
         type: 'error',
@@ -138,7 +150,7 @@ function GoogleDriveSection(): JSX.Element {
     }
   }, [forcePull]);
 
-  const isApiConnected = apiState.status === 'connected';
+  const isApiConnected = googleDriveService.isSignedIn();
   const canSync = driveMode === 'local' || (driveMode === 'api' && isApiConnected);
 
   return (
@@ -152,7 +164,7 @@ function GoogleDriveSection(): JSX.Element {
           <h4 className="mb-2 font-semibold text-text-primary">Pasta Local do Google Drive</h4>
 
           {folderName ? (
-            <div className="flex items-center justify-between rounded-lg bg-surface-hover px-4 py-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-3">
               <div className="flex items-center gap-2">
                 <span
                   className="inline-block h-2.5 w-2.5 rounded-full bg-success"
@@ -162,7 +174,7 @@ function GoogleDriveSection(): JSX.Element {
                   {folderName}/<span className="font-semibold">01. NexusArqui</span>
                 </span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <Button variant="secondary" onClick={handleSelectFolder}>
                   Alterar
                 </Button>
@@ -172,7 +184,7 @@ function GoogleDriveSection(): JSX.Element {
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between rounded-lg border border-dashed border-border-color/50 px-4 py-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-3 rounded-lg border border-dashed border-border-color/50 px-4 py-3">
               <p className="text-sm text-text-secondary">
                 Nenhuma pasta selecionada. Selecione a pasta raiz do Google Drive (ex: O:\Meu
                 Drive).
@@ -189,16 +201,24 @@ function GoogleDriveSection(): JSX.Element {
           <div className="border-t border-border-color/50 pt-5">
             <h4 className="mb-2 font-semibold text-text-primary">Conexão via API</h4>
 
-            <div className="flex items-center gap-2">
-              <span
-                className={`inline-block h-2.5 w-2.5 rounded-full ${isApiConnected ? 'bg-success' : 'bg-border-color'}`}
-                aria-hidden="true"
-              />
-              <span className="text-sm text-text-primary">
-                {isApiConnected ? 'Conectado' : 'Desconectado'}
-              </span>
-              {apiState.userEmail && (
-                <span className="text-sm text-text-secondary">({apiState.userEmail})</span>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-block h-2.5 w-2.5 rounded-full ${isApiConnected ? 'bg-success' : 'bg-border-color'}`}
+                  aria-hidden="true"
+                />
+                <span className="text-sm text-text-primary">
+                  {isApiConnected ? 'Conectado' : 'Desconectado'}
+                </span>
+                {apiState.userEmail && (
+                  <span className="text-sm text-text-secondary">({apiState.userEmail})</span>
+                )}
+              </div>
+
+              {!isApiConnected && (
+                <Button variant="secondary" onClick={() => void handleConnectApi()}>
+                  {apiState.status === 'connecting' ? 'Conectando...' : 'Conectar Google Drive'}
+                </Button>
               )}
             </div>
           </div>
@@ -206,49 +226,19 @@ function GoogleDriveSection(): JSX.Element {
 
         {/* Sync actions */}
         {canSync && (
-          <div className="space-y-4 border-t border-border-color/50 pt-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-semibold text-text-primary">Sincronizar com Drive</h4>
-                <p className="text-sm text-text-secondary">
-                  {driveMode === 'local'
-                    ? 'Salva os dados na pasta local do Google Drive.'
-                    : 'Envia os dados via API para o Google Drive.'}
-                </p>
-              </div>
-              <Button variant="secondary" onClick={handleSync} disabled={syncing}>
-                {syncing ? 'Sincronizando…' : 'Sincronizar'}
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-semibold text-text-primary">Restaurar do Drive</h4>
-                <p className="text-sm text-text-secondary">
-                  {driveMode === 'local'
-                    ? 'Restaura dados da pasta local do Google Drive.'
-                    : 'Baixa dados via API do Google Drive.'}
-                </p>
-              </div>
-              <Button variant="secondary" onClick={handleRestore} disabled={restoring}>
-                {restoring ? 'Restaurando…' : 'Restaurar'}
-              </Button>
-            </div>
-
-            <div className="text-xs text-text-secondary">
-              Modo ativo:{' '}
-              <span className="font-semibold">
-                {driveMode === 'local' ? 'Pasta Local' : 'API Web'}
-              </span>
-              {' · '}Última sincronização:{' '}
-              {formatTimestamp(lastSyncTimestamp ? new Date(lastSyncTimestamp).getTime() : null)}
-            </div>
-
-            <div className="flex items-center gap-2 pt-2">
-              <span className="font-semibold text-text-primary">Status do Motor de Sincronia:</span>
-              <SyncStatusIndicator />
-            </div>
-          </div>
+          <GoogleDriveSyncPanel
+            driveMode={driveMode}
+            syncing={syncing}
+            restoring={restoring}
+            lastSyncTimestamp={lastSyncTimestamp}
+            pendingChangesCount={pendingChangesCount}
+            dirtyPreferencesCount={dirtyPreferences.length}
+            retryScheduledAt={retryScheduledAt}
+            onSync={handleSync}
+            onRestore={handleRestore}
+            onFlush={() => void flushPendingWrites()}
+            onReconnect={() => void reconnect()}
+          />
         )}
 
         {/* Feedback message */}

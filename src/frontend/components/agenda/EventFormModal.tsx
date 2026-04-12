@@ -5,6 +5,7 @@ import type { AgendaEvent, Subtask, KanbanStatus } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 import { getInitialEvent } from './agendaFormHelpers';
 import EventFormFields from './EventFormFields';
+import { driveFileService } from '../../services/infrastructure/driveFileService';
 
 export const EventFormModal: (props: {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export const EventFormModal: (props: {
             ...getInitialEvent(dateForNewEvent),
             id: '',
             kanbanStatus: initialKanbanStatus || 'todo',
+            ...(initialKanbanStatus ? { category: 'Tarefa' as const } : {}),
           },
     [event, dateForNewEvent, initialKanbanStatus],
   );
@@ -40,11 +42,20 @@ export const EventFormModal: (props: {
   const [editedEvent, setEditedEvent] = useState<Partial<AgendaEvent>>(getInitial());
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [noEndTime, setNoEndTime] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Links and Attachments state
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [filesToDelete, setFilesToDelete] = useState<string[]>([]);
+  const [newLink, setNewLink] = useState('');
 
   useEffect(() => {
     const initial = getInitial();
     setEditedEvent(initial);
     setNoEndTime(false);
+    setNewFiles([]);
+    setFilesToDelete([]);
+    setNewLink('');
   }, [isOpen, getInitial]);
 
   const handleChange = (field: keyof AgendaEvent, value: AgendaEvent[keyof AgendaEvent]) => {
@@ -88,7 +99,7 @@ export const EventFormModal: (props: {
     setEditedEvent((prev) => ({ ...prev, subtasks: prev.subtasks?.filter((s) => s.id !== subId) }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editedEvent.title?.trim()) {
       alert('O título é obrigatório.');
       return;
@@ -97,16 +108,57 @@ export const EventFormModal: (props: {
       alert('Selecione um tipo de evento.');
       return;
     }
-    const finalRecurrence = editedEvent.recurrence || 'none';
-    const status = editedEvent.kanbanStatus || (editedEvent.completed ? 'done' : 'todo');
-    const finalEvent: AgendaEvent = {
-      ...getInitialEvent(new Date(editedEvent.date || Date.now())),
-      ...editedEvent,
-      recurrence: finalRecurrence,
-      id: editedEvent.id || `evt_${Date.now()}`,
-      kanbanStatus: status,
-    };
-    onSave(finalEvent);
+    if (!editedEvent.category) {
+      alert('Selecione a categoria (Evento ou Tarefa).');
+      return;
+    }
+    if (
+      editedEvent.category === 'Tarefa' &&
+      (!editedEvent.subtasks || editedEvent.subtasks.length === 0)
+    ) {
+      alert('Tarefas devem obrigatoriamente conter ao menos 01 subtarefa.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const finalId = editedEvent.id || `evt_${Date.now()}`;
+
+      // Delete removed attachments
+      for (const path of filesToDelete) {
+        await driveFileService.deleteManagedFile(path);
+      }
+
+      // Upload new attachments
+      const uploadedAttachments = [];
+      for (const file of newFiles) {
+        const drivePath = await driveFileService.uploadFeatureFile('agenda', finalId, file);
+        uploadedAttachments.push({
+          id: uuidv4(),
+          name: file.name,
+          driveRelativePath: drivePath,
+        });
+      }
+
+      const finalRecurrence = editedEvent.recurrence || 'none';
+      const status = editedEvent.kanbanStatus || (editedEvent.completed ? 'done' : 'todo');
+      const finalEvent: AgendaEvent = {
+        ...getInitialEvent(new Date(editedEvent.date || Date.now())),
+        ...editedEvent,
+        attachments: [...(editedEvent.attachments || []), ...uploadedAttachments],
+        recurrence: finalRecurrence,
+        id: finalId,
+        kanbanStatus: status,
+      };
+      onSave(finalEvent);
+    } catch (error) {
+      console.error('Erro ao salvar evento/tarefa:', error);
+      alert(
+        'Ocorreu um erro ao salvar o evento. Verifique a conexão com o Google Drive, caso tenha anexado arquivos.',
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -119,8 +171,8 @@ export const EventFormModal: (props: {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={event ? 'Editar Evento / Tarefa' : 'Novo Evento / Tarefa'}
-      size="2xl"
+      title={event ? 'Editar Evento / Tarefa' : 'Adicionar Novo Evento'}
+      size="4xl"
     >
       <div className="flex max-h-[calc(100dvh-14rem)] flex-col">
         <div className="min-h-0 overflow-y-auto pr-1 custom-scrollbar">
@@ -138,6 +190,12 @@ export const EventFormModal: (props: {
             onNoEndTimeChange={setNoEndTime}
             clients={clients}
             availableProjects={availableProjects}
+            newFiles={newFiles}
+            onNewFilesChange={setNewFiles}
+            filesToDelete={filesToDelete}
+            onFilesToDeleteChange={setFilesToDelete}
+            newLink={newLink}
+            onNewLinkChange={setNewLink}
           />
         </div>
         <div className="flex justify-between items-center mt-6 pt-4 border-t border-border-color">
@@ -163,9 +221,12 @@ export const EventFormModal: (props: {
             <button
               type="button"
               onClick={handleSave}
-              className="px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus"
+              disabled={isSaving}
+              className={`px-6 py-2 rounded-lg font-semibold text-primary-content bg-primary hover:bg-primary-focus ${
+                isSaving ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              Salvar
+              {isSaving ? 'Salvando...' : 'Salvar'}
             </button>
           </div>
         </div>

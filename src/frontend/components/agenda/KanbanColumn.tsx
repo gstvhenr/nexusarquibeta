@@ -7,12 +7,13 @@ type KanbanColumnProps = {
   title: string;
   tasks: AgendaEvent[];
   onDragStart: (event: React.DragEvent, id: string) => void;
-  onDragOver: (event: React.DragEvent) => void;
+  onDragOver: (event: React.DragEvent, status: KanbanStatus) => void;
   onDrop: (event: React.DragEvent, status: KanbanStatus) => void;
   onEdit: (event: AgendaEvent) => void;
   onViewDetails: (event: AgendaEvent) => void;
   onDelete: (event: AgendaEvent) => void;
   onArchive: (event: AgendaEvent) => void;
+  onComplete?: (task: AgendaEvent) => void;
   onAddToColumn?: () => void;
   accentColor: string;
 };
@@ -28,13 +29,14 @@ export function KanbanColumn({
   onViewDetails,
   onDelete,
   onArchive,
+  onComplete,
   onAddToColumn,
   accentColor,
 }: KanbanColumnProps): JSX.Element {
   return (
     <div
       className="flex flex-col h-full bg-background/30 rounded-2xl border border-border-color/60 overflow-hidden backdrop-blur-sm transition-colors"
-      onDragOver={onDragOver}
+      onDragOver={(event) => onDragOver(event, status)}
       onDrop={(event) => onDrop(event, status)}
     >
       <div
@@ -73,6 +75,7 @@ export function KanbanColumn({
               onEdit={onEdit}
               onDelete={onDelete}
               onArchiveToggle={onArchive}
+              onComplete={onComplete}
               onDragStart={onDragStart}
             />
           );

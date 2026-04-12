@@ -1,31 +1,17 @@
-import { useMemo, useState } from 'react';
-import { useAutoReset } from '@/hooks/useAutoReset';
+import { useEffect, useMemo, useState } from 'react';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import {
   ArchivedTasksView,
   EventFormModal,
   KanbanColumn,
   SubtaskDetailModal,
-  TaskToast,
 } from '@/components/agenda';
 import { PageHeader } from '@/components/layout';
-import {
-  ArchiveIcon,
-  Button,
-  DeleteConfirmationModal,
-  PlusIcon,
-  UnarchiveIcon,
-} from '@/components/ui';
+import { ArchiveIcon, Button, DeleteConfirmationModal, UnarchiveIcon } from '@/components/ui';
 import { NAV_LINKS } from '@/constants';
 import { useSystemData } from '@/context/DataContext';
 import type { AgendaEvent, KanbanStatus } from '@/types';
-import {
-  allSubtasksDone,
-  archiveCompletedTask,
-  isArchivedTask,
-  KANBAN_COLUMNS,
-  reactivateArchivedTask,
-} from '@/utils/taskUtils';
+import { isArchivedTask, KANBAN_COLUMNS, reactivateArchivedTask } from '@/utils/taskUtils';
 
 const KANBAN_COLUMN_ACCENT_CLASS = {
   info: 'border-info',
@@ -46,66 +32,87 @@ function TarefasPage(): JSX.Element {
   const [eventToView, setEventToView] = useState<AgendaEvent | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [initialKanbanStatus, setInitialKanbanStatus] = useState<KanbanStatus>('todo');
-  const [toast, setToast] = useAutoReset<string | null>(null, 3500);
 
-  const showToast = (message: string) => {
-    setToast(message);
-  };
+  const filteredTasks = useMemo(() => {
+    const tasks = agendaEvents
+      .filter((event) => !event.isFinancialEvent && event.category !== 'Evento')
+      .map((event) => {
+        const normalizedTask = !event.kanbanStatus
+          ? { ...event, kanbanStatus: (event.completed ? 'done' : 'todo') as KanbanStatus }
+          : event;
+        return normalizedTask;
+      });
 
-  const filteredTasks = useMemo(
-    () =>
-      agendaEvents
-        .filter((event) => !event.isFinancialEvent)
-        .map((event) => {
-          const normalizedTask = !event.kanbanStatus
-            ? { ...event, kanbanStatus: event.completed ? 'done' : ('todo' as KanbanStatus) }
-            : event;
+    return tasks.filter((event) => isArchivedTask(event) === showArchived);
+  }, [agendaEvents, showArchived]);
 
-          return archiveCompletedTask(normalizedTask);
-        })
-        .filter((event) => isArchivedTask(event) === showArchived),
-    [agendaEvents, showArchived],
-  );
+  // Hook to automatically persist architectural archival rules
+  useEffect(() => {
+    const activeDoneTasks = agendaEvents.filter((t) => t.kanbanStatus === 'done' && !t.archived);
+    if (activeDoneTasks.length > 3) {
+      const sorted = [...activeDoneTasks].sort((a, b) => {
+        const timeA = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+        const timeB = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+        return timeA - timeB; // oldest first
+      });
+      const toArchiveIds = new Set(sorted.slice(0, sorted.length - 3).map((t) => t.id));
+
+      setAgendaEvents((previous) =>
+        previous.map((evt) => (toArchiveIds.has(evt.id) ? { ...evt, archived: true } : evt)),
+      );
+    }
+  }, [agendaEvents, setAgendaEvents]);
 
   const handleDragStart = (event: React.DragEvent, id: string) => {
     event.dataTransfer.setData('taskId', id);
   };
 
-  const handleDragOver = (event: React.DragEvent) => {
+  const handleDragOver = (event: React.DragEvent, status: KanbanStatus) => {
+    if (status === 'done') return; // Do not allow drop into done
     event.preventDefault();
   };
 
   const handleDrop = (event: React.DragEvent, newStatus: KanbanStatus) => {
+    if (newStatus === 'done') return;
+
     event.preventDefault();
     const taskId = event.dataTransfer.getData('taskId');
-    const task = agendaEvents.find((current) => current.id === taskId);
-
-    if (task && !allSubtasksDone(task)) {
-      const currentStatus = task.kanbanStatus || 'todo';
-      if (currentStatus !== newStatus) {
-        showToast('Complete todas as subtarefas antes de mover esta tarefa para outra coluna.');
-        return;
-      }
-    }
 
     setAgendaEvents((previous) =>
       previous.map((current) => {
         if (current.id === taskId) {
-          const isCompleted = newStatus === 'done';
-          return archiveCompletedTask({
+          return {
             ...current,
             kanbanStatus: newStatus,
-            completed: isCompleted,
-            archived: isCompleted ? true : current.archived,
-          });
+            completed: false, // Since it cannot be done, it is false
+            completedAt: undefined,
+          };
         }
         return current;
       }),
     );
+  };
 
-    if (newStatus === 'done') {
-      showToast('Tarefa concluída e enviada para Arquivadas.');
-    }
+  const handleCompleteTask = (task: AgendaEvent) => {
+    setAgendaEvents((previous) =>
+      previous.map((current) => {
+        if (current.id === task.id) {
+          const updatedSubtasks = (current.subtasks || []).map((s) => ({
+            ...s,
+            completed: true,
+            completedAt: s.completedAt || new Date().toISOString(),
+          }));
+          return {
+            ...current,
+            kanbanStatus: 'done',
+            completed: true,
+            completedAt: new Date().toISOString(),
+            subtasks: updatedSubtasks,
+          };
+        }
+        return current;
+      }),
+    );
   };
 
   const handleSaveEvent = (event: AgendaEvent) => {
@@ -114,13 +121,15 @@ function TarefasPage(): JSX.Element {
       ...event,
       type: event.type || 'Desenvolvimento de Projeto',
       kanbanStatus: status,
+      ...(status === 'done' && event.kanbanStatus !== 'done'
+        ? { completedAt: new Date().toISOString() }
+        : {}),
     };
-    const normalizedTaskEvent = archiveCompletedTask(taskEvent);
 
     setAgendaEvents((previous) =>
       previous.find((current) => current.id === event.id)
-        ? previous.map((current) => (current.id === event.id ? normalizedTaskEvent : current))
-        : [...previous, normalizedTaskEvent],
+        ? previous.map((current) => (current.id === event.id ? taskEvent : current))
+        : [...previous, taskEvent],
     );
 
     taskModal.close();
@@ -181,14 +190,6 @@ function TarefasPage(): JSX.Element {
             )}
             {showArchived ? 'Ver Ativas' : 'Ver Arquivadas'}
           </Button>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={() => openAddModal('todo')}
-            className="flex items-center gap-2 hover:translate-y-px hover:shadow-none"
-          >
-            <PlusIcon className="w-5 h-5" /> Nova Tarefa
-          </Button>
         </div>
       </PageHeader>
 
@@ -223,6 +224,7 @@ function TarefasPage(): JSX.Element {
                 onViewDetails={openDetailModal}
                 onDelete={confirmDelete}
                 onAddToColumn={column.canAdd ? () => openAddModal(column.id) : undefined}
+                onComplete={handleCompleteTask}
                 onArchive={(task) =>
                   setAgendaEvents((previous) =>
                     previous.map((event) =>
@@ -260,8 +262,6 @@ function TarefasPage(): JSX.Element {
         itemName={eventToDelete?.title || ''}
         itemType="Tarefa"
       />
-
-      {toast && <TaskToast message={toast} />}
     </div>
   );
 }

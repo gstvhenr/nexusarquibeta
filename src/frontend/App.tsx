@@ -3,8 +3,10 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Header, Sidebar, RouteErrorBoundary } from './components/layout';
 import LoadingFallback from './components/ui/LoadingFallback';
 import { DriveApiToast } from './components/drive/DriveApiToast';
-import { localDriveService } from './services/infrastructure/localDriveService';
+import { DriveSyncReconnector } from './components/drive/DriveSyncReconnector';
 import { googleDriveService } from './services/infrastructure/googleDriveService';
+
+import { AuthGuard } from './components/auth';
 
 // Critical-path page: loaded eagerly for instant first paint.
 import HomePage from './pages/home/HomePage';
@@ -64,25 +66,8 @@ const App: () => React.ReactNode = () => {
   const [showDriveToast, setShowDriveToast] = useState(false);
 
   useEffect(() => {
-    async function connectDrive(): Promise<void> {
-      // 1. Verificar se voltamos de um redirect do Google (token no hash)
-      const connected = await googleDriveService.handleRedirectCallback();
-      if (connected) return;
-
-      // 2. Se tem pasta local, não precisa de API
-      const hasFolder = await localDriveService.hasSavedFolder();
-      if (hasFolder) return;
-
-      // 3. Sem pasta local e sem token → redirecionar ao Google
-      googleDriveService.signIn().catch(() => {
-        /* redirect em progresso ou erro silenciado */
-      });
-    }
-
-    connectDrive();
-
     const unsubscribe = googleDriveService.subscribe((driveState) => {
-      if (driveState.status === 'connected') {
+      if (driveState.status === 'connected' && googleDriveService.isSignedIn()) {
         setShowDriveToast(true);
       }
     });
@@ -92,104 +77,116 @@ const App: () => React.ReactNode = () => {
   const mainPaddingClass = 'px-2 pt-2 md:px-4 md:pt-4 lg:px-6 lg:pt-6 pb-4 md:pb-5';
 
   return (
-    <div
-      className={`bg-background font-sans text-text-primary ${isSpecialPage ? 'h-screen overflow-hidden' : ''}`}
-    >
-      <Sidebar isOpen={isSidebarOpen} setOpen={setSidebarOpen} />
-
+    <AuthGuard>
       <div
-        className={`flex flex-col md:pl-64 lg:pl-80 ${isSpecialPage ? 'h-full' : 'min-h-screen'}`}
+        className={`bg-background font-sans text-text-primary ${isSpecialPage ? 'h-screen overflow-hidden' : ''}`}
       >
-        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <Sidebar isOpen={isSidebarOpen} setOpen={setSidebarOpen} />
 
-        <main className={`flex-1 flex flex-col min-h-0 ${mainPaddingClass}`}>
-          <RouteErrorBoundary key={location.pathname}>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
+        <div
+          className={`flex flex-col md:pl-64 lg:pl-80 ${isSpecialPage ? 'h-full' : 'min-h-screen'}`}
+        >
+          <DriveSyncReconnector />
+          <Header onMenuClick={() => setSidebarOpen(true)} />
 
-                <Route path="/agenda" element={<Navigate to="/agenda/calendario" replace />} />
-                <Route path="/agenda/calendario" element={<AgendaPage />} />
-                <Route path="/agenda/tarefas" element={<TarefasPage />} />
-                <Route path="/agenda/lembretes" element={<LembretesPage />} />
-                <Route path="/agenda/bloco-de-notas" element={<BlocoDeNotasPage />} />
+          <main className={`flex-1 flex flex-col min-h-0 ${mainPaddingClass}`}>
+            <RouteErrorBoundary key={location.pathname}>
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
 
-                <Route path="/prospects" element={<ProspectsPage />} />
-                <Route path="/propostas" element={<PropostasPage />} />
-                <Route path="/propostas/:id" element={<PropostaDetalhesPage />} />
-                <Route path="/clientes" element={<ClientesPage />} />
-                <Route path="/clientes/:id" element={<ClienteDetalhesPage />} />
-                <Route path="/orcamentos" element={<OrcamentosPage />} />
-                <Route path="/projetos" element={<ProjetosPage />} />
-                <Route path="/projetos/:id" element={<ProjetoDetalhesPage />} />
-                <Route
-                  path="/financeiro"
-                  element={<Navigate to="/financeiro/visao-geral" replace />}
-                />
-                <Route path="/financeiro/visao-geral" element={<FinanceiroVisaoGeralPage />} />
-                <Route
-                  path="/financeiro/previsao-caixa"
-                  element={<FinanceiroPrevisaoCaixaPage />}
-                />
-                <Route path="/financeiro/historico" element={<FinanceiroHistoricoPage />} />
-                <Route
-                  path="/financeiro/recebiveis"
-                  element={<Navigate to="/financeiro/historico?tipo=credit" replace />}
-                />
-                <Route
-                  path="/financeiro/debitos"
-                  element={<Navigate to="/financeiro/historico?tipo=debit" replace />}
-                />
-                <Route path="/financeiro/gestao-caixa" element={<FinanceiroGestaoCaixaPage />} />
-                <Route path="/documentos" element={<Navigate to="/documentos/pessoal" replace />} />
-                <Route path="/documentos/pessoal" element={<DocumentosPessoalPage />} />
-                <Route path="/documentos/projetos" element={<DocumentosProjetosPage />} />
-                <Route path="/fornecedores" element={<FornecedoresPage />} />
-                <Route path="/catalogo" element={<CatalogoPage />} />
-                <Route path="/cotacoes" element={<CotacoesPage />} />
-                <Route path="/cotacoes/:id" element={<CotacaoDetalhesPage />} />
-                <Route path="/comissoes" element={<ComissoesPage />} />
-                <Route
-                  path="/gestao-marketing"
-                  element={<Navigate to="/gestao-marketing/conteudos" replace />}
-                />
-                <Route
-                  path="/gestao-marketing/conteudos"
-                  element={<GestaoMarketingConteudosPage />}
-                />
+                  <Route path="/agenda" element={<Navigate to="/agenda/calendario" replace />} />
+                  <Route path="/agenda/calendario" element={<AgendaPage />} />
+                  <Route path="/agenda/tarefas" element={<TarefasPage />} />
+                  <Route path="/agenda/lembretes" element={<LembretesPage />} />
+                  <Route path="/agenda/bloco-de-notas" element={<BlocoDeNotasPage />} />
 
-                <Route path="/gestao-marketing/redes-sociais" element={<RedesSociaisPage />} />
-                <Route
-                  path="/gestao-marketing/redes-sociais/Instagram"
-                  element={<InstagramPage />}
-                />
-                <Route path="/gestao-marketing/redes-sociais/Facebook" element={<FacebookPage />} />
-                <Route path="/gestao-marketing/redes-sociais/LinkedIn" element={<LinkedInPage />} />
-                <Route path="/gestao-marketing/redes-sociais/TikTok" element={<TikTokPage />} />
-                <Route path="/gestao-marketing/redes-sociais/YouTube" element={<YouTubePage />} />
-                <Route path="/gestao-marketing/redes-sociais/Google" element={<GooglePage />} />
-                <Route
-                  path="/prestadores-freelancers"
-                  element={<Navigate to="/prestadores-freelancers/visao-geral" replace />}
-                />
-                <Route
-                  path="/prestadores-freelancers/visao-geral"
-                  element={<PrestadoresFreelancersPage />}
-                />
-                <Route
-                  path="/prestadores-freelancers/servicos-contratados"
-                  element={<ServicosContratadosPage />}
-                />
-                <Route path="/relatorios" element={<RelatoriosPage />} />
-                <Route path="/configuracoes" element={<ConfiguracoesPage />} />
-              </Routes>
-            </Suspense>
-          </RouteErrorBoundary>
-        </main>
+                  <Route path="/prospects" element={<ProspectsPage />} />
+                  <Route path="/propostas" element={<PropostasPage />} />
+                  <Route path="/propostas/:id" element={<PropostaDetalhesPage />} />
+                  <Route path="/clientes" element={<ClientesPage />} />
+                  <Route path="/clientes/:id" element={<ClienteDetalhesPage />} />
+                  <Route path="/orcamentos" element={<OrcamentosPage />} />
+                  <Route path="/projetos" element={<ProjetosPage />} />
+                  <Route path="/projetos/:id" element={<ProjetoDetalhesPage />} />
+                  <Route
+                    path="/financeiro"
+                    element={<Navigate to="/financeiro/visao-geral" replace />}
+                  />
+                  <Route path="/financeiro/visao-geral" element={<FinanceiroVisaoGeralPage />} />
+                  <Route
+                    path="/financeiro/previsao-caixa"
+                    element={<FinanceiroPrevisaoCaixaPage />}
+                  />
+                  <Route path="/financeiro/historico" element={<FinanceiroHistoricoPage />} />
+                  <Route
+                    path="/financeiro/recebiveis"
+                    element={<Navigate to="/financeiro/historico?tipo=credit" replace />}
+                  />
+                  <Route
+                    path="/financeiro/debitos"
+                    element={<Navigate to="/financeiro/historico?tipo=debit" replace />}
+                  />
+                  <Route path="/financeiro/gestao-caixa" element={<FinanceiroGestaoCaixaPage />} />
+                  <Route
+                    path="/documentos"
+                    element={<Navigate to="/documentos/pessoal" replace />}
+                  />
+                  <Route path="/documentos/pessoal" element={<DocumentosPessoalPage />} />
+                  <Route path="/documentos/projetos" element={<DocumentosProjetosPage />} />
+                  <Route path="/fornecedores" element={<FornecedoresPage />} />
+                  <Route path="/catalogo" element={<CatalogoPage />} />
+                  <Route path="/cotacoes" element={<CotacoesPage />} />
+                  <Route path="/cotacoes/:id" element={<CotacaoDetalhesPage />} />
+                  <Route path="/comissoes" element={<ComissoesPage />} />
+                  <Route
+                    path="/gestao-marketing"
+                    element={<Navigate to="/gestao-marketing/conteudos" replace />}
+                  />
+                  <Route
+                    path="/gestao-marketing/conteudos"
+                    element={<GestaoMarketingConteudosPage />}
+                  />
+
+                  <Route path="/gestao-marketing/redes-sociais" element={<RedesSociaisPage />} />
+                  <Route
+                    path="/gestao-marketing/redes-sociais/Instagram"
+                    element={<InstagramPage />}
+                  />
+                  <Route
+                    path="/gestao-marketing/redes-sociais/Facebook"
+                    element={<FacebookPage />}
+                  />
+                  <Route
+                    path="/gestao-marketing/redes-sociais/LinkedIn"
+                    element={<LinkedInPage />}
+                  />
+                  <Route path="/gestao-marketing/redes-sociais/TikTok" element={<TikTokPage />} />
+                  <Route path="/gestao-marketing/redes-sociais/YouTube" element={<YouTubePage />} />
+                  <Route path="/gestao-marketing/redes-sociais/Google" element={<GooglePage />} />
+                  <Route
+                    path="/prestadores-freelancers"
+                    element={<Navigate to="/prestadores-freelancers/visao-geral" replace />}
+                  />
+                  <Route
+                    path="/prestadores-freelancers/visao-geral"
+                    element={<PrestadoresFreelancersPage />}
+                  />
+                  <Route
+                    path="/prestadores-freelancers/servicos-contratados"
+                    element={<ServicosContratadosPage />}
+                  />
+                  <Route path="/relatorios" element={<RelatoriosPage />} />
+                  <Route path="/configuracoes" element={<ConfiguracoesPage />} />
+                </Routes>
+              </Suspense>
+            </RouteErrorBoundary>
+          </main>
+        </div>
+
+        <DriveApiToast visible={showDriveToast} onDismiss={() => setShowDriveToast(false)} />
       </div>
-
-      <DriveApiToast visible={showDriveToast} onDismiss={() => setShowDriveToast(false)} />
-    </div>
+    </AuthGuard>
   );
 };
 

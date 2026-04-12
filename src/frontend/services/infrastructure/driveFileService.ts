@@ -52,6 +52,34 @@ async function deleteFile(relativePath: string): Promise<void> {
   await driveDataAdapter.deleteFile(mode, relativePath);
 }
 
+function isManagedDriveFile(relativePath: string | null | undefined): relativePath is string {
+  return typeof relativePath === 'string' && relativePath.startsWith(`${FILES_FOLDER_NAME}/`);
+}
+
+async function deleteManagedFile(relativePath: string | null | undefined): Promise<void> {
+  if (!isManagedDriveFile(relativePath)) {
+    return;
+  }
+
+  await deleteFile(relativePath);
+}
+
+async function replaceFeatureFile(
+  feature: string,
+  entityId: string,
+  file: File,
+  previousRelativePath?: string | null,
+  filenameOverride?: string,
+): Promise<string> {
+  const nextRelativePath = await uploadFeatureFile(feature, entityId, file, filenameOverride);
+
+  if (previousRelativePath && previousRelativePath !== nextRelativePath) {
+    await deleteManagedFile(previousRelativePath);
+  }
+
+  return nextRelativePath;
+}
+
 /**
  * Utility to generate an object URL from a relative Drive path.
  * Remember to call URL.revokeObjectURL when the URL is no longer needed to prevent memory leaks.
@@ -64,7 +92,10 @@ async function getFileUrl(relativePath: string): Promise<string | null> {
 
 export const driveFileService = {
   uploadFeatureFile,
+  replaceFeatureFile,
   downloadFile,
   deleteFile,
+  deleteManagedFile,
+  isManagedDriveFile,
   getFileUrl,
 };

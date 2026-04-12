@@ -3,6 +3,7 @@ import { Button, Modal, PasswordInput } from '@/components/ui';
 type PasswordResetModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  isFirstTimeSetup: boolean;
   pwdSuccess: boolean;
   pwdStep: 'current' | 'new';
   currentPwd: string;
@@ -20,6 +21,7 @@ type PasswordResetModalProps = {
 export function PasswordResetModal({
   isOpen,
   onClose,
+  isFirstTimeSetup,
   pwdSuccess,
   pwdStep,
   currentPwd,
@@ -34,7 +36,11 @@ export function PasswordResetModal({
   onBackToCurrent,
 }: PasswordResetModalProps): JSX.Element {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Redefinir Senha Financeira">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isFirstTimeSetup ? 'Cadastrar Senha Financeira' : 'Redefinir Senha Financeira'}
+    >
       {pwdSuccess ? (
         <div className="text-center py-6">
           <div className="w-14 h-14 mx-auto rounded-full bg-success/10 flex items-center justify-center mb-4">
@@ -51,9 +57,11 @@ export function PasswordResetModal({
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
           </div>
-          <p className="text-text-primary font-semibold">Senha alterada com sucesso!</p>
+          <p className="text-text-primary font-semibold">
+            {isFirstTimeSetup ? 'Senha cadastrada com sucesso!' : 'Senha alterada com sucesso!'}
+          </p>
         </div>
-      ) : pwdStep === 'current' ? (
+      ) : pwdStep === 'current' && !isFirstTimeSetup ? (
         <div className="space-y-4">
           <p className="text-text-secondary text-sm">
             Para sua segurança, insira a senha atual antes de redefini-la.
@@ -116,16 +124,23 @@ export function PasswordResetModal({
             </p>
           )}
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="secondary" onClick={onBackToCurrent} size="sm">
-              Voltar
-            </Button>
+            {!isFirstTimeSetup && (
+              <Button variant="secondary" onClick={onBackToCurrent} size="sm">
+                Voltar
+              </Button>
+            )}
+            {isFirstTimeSetup && (
+              <Button variant="secondary" onClick={onClose} size="sm">
+                Cancelar
+              </Button>
+            )}
             <Button
               variant="primary"
               onClick={onNewPwdSubmit}
               disabled={!newPwd || !confirmPwd}
               size="sm"
             >
-              Alterar Senha
+              {isFirstTimeSetup ? 'Cadastrar Senha' : 'Alterar Senha'}
             </Button>
           </div>
         </div>

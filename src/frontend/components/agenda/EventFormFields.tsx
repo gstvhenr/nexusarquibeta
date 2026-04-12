@@ -5,6 +5,7 @@ import type {
   AgendaEventRecurrence,
   Client,
   Project,
+  KanbanStatus,
 } from '../../types';
 import { agendaEventTypes } from '../../types';
 import { PlusIcon, TrashIcon } from '../ui/icons';
@@ -31,6 +32,12 @@ interface EventFormFieldsProps {
   onNoEndTimeChange: (checked: boolean) => void;
   clients: Client[];
   availableProjects: Project[];
+  newFiles?: File[];
+  onNewFilesChange?: (files: File[]) => void;
+  filesToDelete?: string[];
+  onFilesToDeleteChange?: (paths: string[]) => void;
+  newLink?: string;
+  onNewLinkChange?: (link: string) => void;
 }
 
 function EventFormFields({
@@ -47,12 +54,18 @@ function EventFormFields({
   onNoEndTimeChange,
   clients,
   availableProjects,
+  newFiles,
+  onNewFilesChange,
+  filesToDelete,
+  onFilesToDeleteChange,
+  newLink,
+  onNewLinkChange,
 }: EventFormFieldsProps) {
   return (
     <div className="space-y-6 pr-2 custom-scrollbar">
       {/* Section 1: Basic Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="md:col-span-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-3">
           <label className={labelClass} htmlFor={`${formId}-title`}>
             Título
           </label>
@@ -100,6 +113,24 @@ function EventFormFields({
             <option value="none">Não se repete</option>
             <option value="weekly">Semanalmente (toda semana)</option>
             <option value="monthly">Mensalmente (todo mês)</option>
+          </select>
+        </div>
+        <div>
+          <label className={labelClass} htmlFor={`${formId}-category`}>
+            Categoria
+          </label>
+          <select
+            id={`${formId}-category`}
+            value={editedEvent.category || ''}
+            onChange={(e) => onChange('category', e.target.value as 'Evento' | 'Tarefa')}
+            className={`${inputClass} ${editedEvent.id ? 'opacity-60 cursor-not-allowed bg-background/50' : ''}`}
+            disabled={!!editedEvent.id}
+          >
+            <option value="" disabled hidden>
+              Selecione...
+            </option>
+            <option value="Evento">Evento</option>
+            <option value="Tarefa">Tarefa</option>
           </select>
         </div>
       </div>
@@ -207,52 +238,73 @@ function EventFormFields({
       </div>
 
       {/* Subtasks Section */}
-      <div>
-        <label htmlFor="field-subtarefas" className={labelClass}>
-          Subtarefas
-        </label>
-        <div className="flex gap-2 mb-3">
-          <input
-            id="field-subtarefas"
-            type="text"
-            value={newSubtaskTitle}
-            onChange={(e) => onNewSubtaskTitleChange(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onAddSubtask()}
-            placeholder="Adicionar item..."
-            aria-label="Adicionar subtarefa"
-            className="flex-1 bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm"
-          />
-          <button
-            onClick={onAddSubtask}
-            type="button"
-            className="px-3 bg-primary/10 text-primary rounded-md hover:bg-primary/20"
-            aria-label="Adicionar subtarefa"
-          >
-            <PlusIcon className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="space-y-2">
-          {editedEvent.subtasks?.map((sub) => (
-            <div
-              key={sub.id}
-              className="flex items-center justify-between p-2 bg-background/50 rounded-md border border-border-color/30"
+      {editedEvent.category === 'Tarefa' && (
+        <div className="space-y-4">
+          <div className="pt-4 border-t border-border-color/30">
+            <h3 className="text-md font-semibold text-text-primary mb-3">Detalhes da Tarefa</h3>
+            <label htmlFor="field-status-tarefa" className={labelClass}>
+              Status da Tarefa
+            </label>
+            <select
+              id="field-status-tarefa"
+              value={editedEvent.kanbanStatus || 'todo'}
+              onChange={(e) => onChange('kanbanStatus', e.target.value as KanbanStatus)}
+              className={`${inputClass}`}
             >
-              <span className="text-sm text-text-primary truncate">{sub.title}</span>
+              <option value="todo">A Fazer</option>
+              <option value="in_progress">Em Andamento</option>
+              <option value="review">Aguardando</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="field-subtarefas" className={labelClass}>
+              Subtarefas (Mínimo de 1 subtarefa exigido)
+            </label>
+            <div className="flex gap-2 mb-3">
+              <input
+                id="field-subtarefas"
+                type="text"
+                value={newSubtaskTitle}
+                onChange={(e) => onNewSubtaskTitleChange(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && onAddSubtask()}
+                placeholder="Adicionar item..."
+                aria-label="Adicionar subtarefa"
+                className="flex-1 bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm"
+              />
               <button
+                onClick={onAddSubtask}
                 type="button"
-                onClick={() => onRemoveSubtask(sub.id)}
-                className="text-text-secondary hover:text-error"
-                aria-label={`Remover subtarefa ${sub.title}`}
+                className="px-3 bg-primary/10 text-primary rounded-md hover:bg-primary/20"
+                aria-label="Adicionar subtarefa"
               >
-                <TrashIcon className="w-4 h-4" />
+                <PlusIcon className="w-5 h-5" />
               </button>
             </div>
-          ))}
-          {(!editedEvent.subtasks || editedEvent.subtasks.length === 0) && (
-            <p className="text-xs text-text-secondary italic">Nenhuma subtarefa.</p>
-          )}
+            <div className="space-y-2">
+              {editedEvent.subtasks?.map((sub) => (
+                <div
+                  key={sub.id}
+                  className="flex items-center justify-between p-2 bg-background/50 rounded-md border border-border-color/30"
+                >
+                  <span className="text-sm text-text-primary truncate">{sub.title}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveSubtask(sub.id)}
+                    className="text-text-secondary hover:text-error"
+                    aria-label={`Remover subtarefa ${sub.title}`}
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              {(!editedEvent.subtasks || editedEvent.subtasks.length === 0) && (
+                <p className="text-xs text-text-secondary italic">Nenhuma subtarefa.</p>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <div>
         <label className={labelClass} htmlFor={`${formId}-description`}>
@@ -265,6 +317,146 @@ function EventFormFields({
           rows={3}
           className={inputClass}
         />
+      </div>
+
+      {/* Links Section */}
+      <div>
+        <label htmlFor="field-new-link" className={labelClass}>
+          Links HTML (Sites, Docs)
+        </label>
+        <div className="flex gap-2 mb-3">
+          <input
+            id="field-new-link"
+            type="url"
+            value={newLink || ''}
+            onChange={(e) => onNewLinkChange?.(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (newLink && newLink.trim()) {
+                  onChange('links', [...(editedEvent.links || []), newLink.trim()]);
+                  onNewLinkChange?.('');
+                }
+              }
+            }}
+            placeholder="https://..."
+            aria-label="Adicionar link"
+            className="flex-1 bg-background p-2 rounded-md border border-border-color focus:border-accent text-sm"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              if (newLink && newLink.trim()) {
+                onChange('links', [...(editedEvent.links || []), newLink.trim()]);
+                onNewLinkChange?.('');
+              }
+            }}
+            className="px-3 bg-primary/10 text-primary rounded-md hover:bg-primary/20"
+            aria-label="Adicionar link"
+          >
+            <PlusIcon className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="space-y-2">
+          {editedEvent.links?.map((link, idx) => (
+            <div
+              key={idx}
+              className="flex items-center justify-between p-2 bg-background/50 rounded-md border border-border-color/30"
+            >
+              <a
+                href={link}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm text-accent hover:underline truncate"
+              >
+                {link}
+              </a>
+              <button
+                type="button"
+                onClick={() =>
+                  onChange(
+                    'links',
+                    editedEvent.links?.filter((_, i) => i !== idx),
+                  )
+                }
+                className="text-text-secondary hover:text-error"
+                aria-label="Remover link"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Attachments Section */}
+      <div>
+        <label htmlFor="field-anexos" className={labelClass}>
+          Arquivos Anexos (Drive)
+        </label>
+        <div className="mb-3">
+          <input
+            type="file"
+            multiple
+            id="field-anexos"
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files && onNewFilesChange) {
+                onNewFilesChange([...(newFiles || []), ...Array.from(e.target.files)]);
+              }
+              e.target.value = '';
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => document.getElementById('field-anexos')?.click()}
+            className="px-4 py-2 border border-border-color rounded-md text-sm font-medium hover:bg-background/80 text-text-primary"
+          >
+            Selecionar Arquivos...
+          </button>
+        </div>
+        <div className="space-y-2">
+          {/* Existing files */}
+          {editedEvent.attachments
+            ?.filter((a) => !filesToDelete?.includes(a.driveRelativePath))
+            .map((att) => (
+              <div
+                key={att.id}
+                className="flex items-center justify-between p-2 bg-background/50 rounded-md border border-border-color/30"
+              >
+                <span className="text-sm text-text-primary truncate">{att.name}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onFilesToDeleteChange?.([...(filesToDelete || []), att.driveRelativePath]);
+                  }}
+                  className="text-text-secondary hover:text-error"
+                  aria-label="Remover arquivo"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          {/* New files to upload */}
+          {newFiles?.map((file, idx) => (
+            <div
+              key={`new-${file.name}-${idx}`}
+              className="flex items-center justify-between p-2 bg-secondary/10 rounded-md border border-secondary/20"
+            >
+              <span className="text-sm text-text-primary truncate">{file.name}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  onNewFilesChange?.(newFiles.filter((_, i) => i !== idx));
+                }}
+                className="text-text-secondary hover:text-error"
+                aria-label="Remover arquivo selecionado"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div>

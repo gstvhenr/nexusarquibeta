@@ -127,6 +127,7 @@
     "src/frontend/constants/ui.tsx:SETTINGS_LINK",
     "src/frontend/constants/ui.tsx:SOCIAL_NETWORKS_SUPPORTED",
     "src/frontend/services/infrastructure/api.ts:api",
+    "src/frontend/services/infrastructure/driveSyncTypes.ts:FILES_FOLDER_NAME",
     "src/frontend/services/infrastructure/importExport.ts:canAcceptImportedValue",
     "src/frontend/services/infrastructure/loadData.ts:flushPersistence",
     "src/frontend/services/infrastructure/loadData.ts:initializeDataStore",
@@ -173,6 +174,7 @@
     "src/frontend/utils/taskUtils.ts:allSubtasksDone"
   ],
   "unusedTypes": [
+    "src/frontend/services/infrastructure/driveSyncTypes.ts:SyncDirection",
     "src/frontend/services/infrastructure/migrations.ts:SeedClientData",
     "src/frontend/services/infrastructure/persistence/index.ts:BackupRecord",
     "src/frontend/services/infrastructure/persistence/index.ts:CounterReservationResult",

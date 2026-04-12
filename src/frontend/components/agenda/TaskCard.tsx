@@ -5,6 +5,7 @@ import {
   IconButton,
   TrashIcon,
   UnarchiveIcon,
+  CheckCircleIcon,
 } from '@/components/ui';
 import type { AgendaEvent } from '@/types';
 import { formatDateDayMonth } from '@/utils/formatters';
@@ -18,6 +19,7 @@ type TaskCardProps = {
   onEdit: (task: AgendaEvent) => void;
   onDelete: (task: AgendaEvent) => void;
   onArchiveToggle?: (task: AgendaEvent) => void;
+  onComplete?: (task: AgendaEvent) => void;
   onDragStart?: (event: React.DragEvent, id: string) => void;
 };
 
@@ -54,6 +56,7 @@ export function TaskCard({
   onEdit,
   onDelete,
   onArchiveToggle,
+  onComplete,
   onDragStart,
 }: TaskCardProps): JSX.Element {
   const priority = priorityConfig[task.priority] || priorityConfig[3];
@@ -62,6 +65,7 @@ export function TaskCard({
   const subtasks = task.subtasks || [];
   const completedSubs = subtasks.filter((subtask) => subtask.completed).length;
   const hasSubtasks = subtasks.length > 0;
+  const isLocked = task.completed || task.archived;
 
   return (
     <div
@@ -90,19 +94,21 @@ export function TaskCard({
           {priority.label}
         </span>
         <div className="flex items-center gap-1">
-          <IconButton
-            variant="primary"
-            size="sm"
-            onClick={(event) => {
-              event.stopPropagation();
-              onEdit(task);
-            }}
-            aria-label="Editar Tarefa"
-            title="Editar Tarefa"
-            className="-mt-1 -mr-1"
-          >
-            <EditIcon className="w-3.5 h-3.5" />
-          </IconButton>
+          {!isLocked && (
+            <IconButton
+              variant="primary"
+              size="sm"
+              onClick={(event) => {
+                event.stopPropagation();
+                onEdit(task);
+              }}
+              aria-label="Editar Tarefa"
+              title="Editar Tarefa"
+              className="-mt-1 -mr-1"
+            >
+              <EditIcon className="w-3.5 h-3.5" />
+            </IconButton>
+          )}
 
           {showArchiveButton && onArchiveToggle && (
             <IconButton
@@ -170,18 +176,35 @@ export function TaskCard({
             {task.time && <span className="ml-1 text-text-secondary/70">• {task.time}</span>}
           </span>
 
-          <IconButton
-            variant="danger"
-            size="sm"
-            onClick={(event) => {
-              event.stopPropagation();
-              onDelete(task);
-            }}
-            aria-label="Excluir Tarefa"
-            title="Excluir Tarefa"
-          >
-            <TrashIcon className="w-3.5 h-3.5" />
-          </IconButton>
+          <div className="flex items-center gap-1">
+            <IconButton
+              variant="danger"
+              size="sm"
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete(task);
+              }}
+              aria-label="Excluir Tarefa"
+              title="Excluir Tarefa"
+            >
+              <TrashIcon className="w-3.5 h-3.5" />
+            </IconButton>
+
+            {onComplete && !task.completed && (
+              <IconButton
+                variant="secondary"
+                size="sm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onComplete(task);
+                }}
+                aria-label="Concluir Tarefa"
+                title="Concluir Tarefa"
+              >
+                <CheckCircleIcon className="w-4 h-4 text-success" />
+              </IconButton>
+            )}
+          </div>
         </div>
       </div>
     </div>

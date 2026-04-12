@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
 import { tokens } from '../constants/theme';
+import { DEFAULT_THEME } from '../constants/preferences';
 
 type Theme = 'light' | 'dark';
 interface ThemeContextType {
@@ -77,7 +78,7 @@ const ThemeStyle = () => {
 export const ThemeProvider: (props: { children: React.ReactNode }) => React.ReactNode = ({
   children,
 }) => {
-  const [theme, setTheme] = useLocalStorage<Theme>('theme', 'dark');
+  const [theme, setTheme] = useLocalStorage<Theme>('theme', DEFAULT_THEME);
 
   useEffect(() => {
     const root = window.document.documentElement;
