@@ -2,12 +2,13 @@
 
 ## Último estado conhecido (2026-04-12)
 
-Erro publicado de configuração do app e falha do SQLite WASM diagnosticados e corrigidos. O problema combinava duas causas: o browser publicado dependia apenas de envs embutidas no build para inicializar Firebase, e o caminho SQLite ainda tentava acessar a tabela inexistente `document_storage`. A correção aplicada nesta sessão foi:
+Erro publicado de configuração do app e falha do SQLite WASM diagnosticados e corrigidos. O problema combinava duas causas: o browser publicado dependia apenas de envs embutidas no build para inicializar Firebase, e o caminho SQLite ainda tentava acessar a tabela inexistente `document_storage`. Na continuidade desta sessão foi confirmado que o fix já estava em `upstream/main` (`796d88e`), mas o repositório `origin/main` ainda estava parado em `497b30f`, mantendo o deploy remoto defasado. O estado atual é:
 
 - `server.mjs` agora injeta `window.__NEXUS_ARQUI_RUNTIME_CONFIG` com `VITE_PERSISTENCE_ADAPTER` e `VITE_FIREBASE_*` no HTML servido em produção;
 - `firebaseConfig.ts` e `createPersistenceAdapter.ts` passaram a priorizar a configuração pública de runtime antes de usar `import.meta.env`;
 - `sqlite` foi bloqueado em host publicado, com fallback automático para Firebase ou IndexedDB;
 - `documentStorage` foi removido do `ENTITY_TABLE_MAP` do SQLite, encerrando a consulta inválida a `document_storage`.
+- `origin/main` foi alinhado com `upstream/main`, publicando o commit de correção no GitHub que provavelmente alimenta o deploy.
 
 O contrato anterior de deploy para Cloud Run/Developer Connect continua válido: `Dockerfile` multi-stage, `server.mjs` como runtime HTTP, `.dockerignore`, `gcp-build`, `start` e `engines.node = 22.x`.
 
@@ -23,18 +24,18 @@ O contrato anterior de deploy para Cloud Run/Developer Connect continua válido:
 - [x] `README.md`, `.agent/lessons-learned.md` e `DECISIONS-active.md` atualizados com o novo contrato de runtime publicado.
 - [x] `npm run verify`.
 - [x] Smoke local do runtime com `PORT=8080 npm run start`.
-- [ ] Publicação do commit corrigido no GitHub.
+- [x] Publicação do commit corrigido no GitHub (`origin/main` alinhado em `796d88e`).
 
 ## Próximo passo exato
 
-1. Publicar o commit com a correção de runtime em `upstream/main`.
+1. Aguardar o redeploy automático do provedor conectado ao GitHub e validar que ele subiu a revisão com o commit `796d88e` ou posterior.
 2. Confirmar no ambiente remoto que as `VITE_FIREBASE_*` estão definidas no serviço publicado.
-3. Validar no navegador publicado que o app inicia sem o erro de configuração e sem tentativas de `sqlite/document_storage`.
+3. Validar no navegador publicado que o app inicia sem o erro de configuração, sem tentativas de `sqlite/document_storage` e com imagens/avatares resolvendo normalmente via Firebase Storage.
 
 ## Bloqueios e dúvidas
 
-- A correção de código resolve a leitura de env pública em runtime, mas o app remoto ainda depende de o serviço publicado expor `VITE_FIREBASE_*`; se o provedor não estiver com essas variáveis definidas, o Firebase continuará indisponível.
-- A confirmação final do resultado exige o redeploy externo após o push.
+- A correção de código já foi publicada no GitHub, mas o app remoto ainda depende de o serviço publicado expor `VITE_FIREBASE_*`; se o provedor não estiver com essas variáveis definidas, o Firebase continuará indisponível.
+- A confirmação final do resultado depende da conclusão do redeploy externo e de um smoke no navegador publicado.
 
 ---
 

@@ -35,6 +35,15 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 **Immediate next step:** publicar o commit em `upstream/main` e acompanhar o redeploy remoto para verificar inicialização do Firebase e ausência dos erros `document_storage`/SQLite no navegador.
 **Quality gate:** `npx vitest run src/frontend/services/infrastructure/persistence/runtimePublicEnv.test.ts src/frontend/services/infrastructure/persistence/createPersistenceAdapter.test.ts src/frontend/services/infrastructure/firebaseAuthService.test.ts src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.test.ts` PASS; `npm run verify` PASS (`[VERIFY][LOOP][PASS]`); `PORT=8080 npm run start` PASS; `Invoke-WebRequest http://127.0.0.1:8080` PASS; `Invoke-WebRequest http://127.0.0.1:8080/clientes` PASS.
 
+### Session 11 — 2026-04-12
+
+**Objective:** alinhar o GitHub que alimenta o deploy com o commit de correção de runtime já aprovado localmente.
+**What was done:** foi confirmado que `upstream/main` já apontava para `796d88e` (`fix(runtime): restore published firebase bootstrap`), enquanto `origin/main` permanecia em `497b30f`. O gate canônico `npm run verify` foi reexecutado com sucesso sobre o commit corrigido e, em seguida, o branch `main` foi publicado em `origin`, alinhando os dois remotos na revisão que remove a dependência exclusiva de `import.meta.env` no browser publicado e elimina a consulta SQLite a `document_storage`.
+**Decisions made:** tratar a divergência `upstream` x `origin` como a causa operacional mais provável do erro persistir em produção; não havia necessidade de nova mudança funcional de código além da publicação do commit correto no remoto conectado ao deploy.
+**Open/Pending:** validar após o redeploy que o provedor realmente subiu a revisão nova e que as variáveis públicas `VITE_FIREBASE_*` seguem definidas no ambiente publicado.
+**Immediate next step:** abrir o site publicado após o build automático, confirmar ausência dos erros `document_storage`/SQLite no console e verificar o carregamento normal de imagens/avatares via Firebase Storage.
+**Quality gate:** `git ls-remote origin refs/heads/main` mostrou `497b30f` antes da publicação; `git ls-remote upstream refs/heads/main` mostrou `796d88e`; `npm run verify` PASS (`[VERIFY][LOOP][PASS]`); `git push origin main` PASS.
+
 ### 2026-04-12 — Contrato explícito de deploy para Cloud Run/Developer Connect
 
 - Contexto: o push em `main` disparava o check externo `cloudrun-nexusarqui-git-southamerica-east1-*`, enquanto o repositório continha apenas o build Vite do frontend. Não havia `Dockerfile`, `start` script nem servidor HTTP de produção. Na reprodução local, `npm run start` falhou por ausência do script e um install produção-only (`npm ci --omit=dev`) quebrou em `prepare` (`husky`) e `build` (`vite` não instalado).
