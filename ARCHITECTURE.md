@@ -9,6 +9,23 @@
 - `src/frontend/utils`: funções puras.
 - `src/frontend/services/infrastructure`: persistência e integrações sensíveis.
 
+## Infraestrutura de persistência ativa
+
+- `src/frontend/services/infrastructure/persistence/*`: seleção e implementação do backend de persistência.
+- `src/frontend/services/infrastructure/persistence/firebaseConfig.ts`: bootstrap seguro de `firebase/app`, `firebase/auth`, `firebase/firestore` e `firebase/storage` a partir de `import.meta.env`.
+- `src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.ts`: adaptador primário de persistência com Firestore realtime + cache local.
+- `src/frontend/services/infrastructure/firebaseAuthService.ts`: autenticação do app via Firebase Auth + Google provider.
+- `src/frontend/services/infrastructure/firebaseFileService.ts`: arquivos gerenciados no Firebase Storage.
+- `src/frontend/services/infrastructure/firebaseSyncEngine.ts`: estado de sincronização exposto à UI.
+- `src/frontend/services/infrastructure/cloud*`: contratos e helpers agnósticos ao provider para merge, preferências sincronizadas e status de sync.
+
+## Fonte de verdade de persistência
+
+- Firestore é a fonte primária de verdade remota.
+- Firebase Storage é a fonte primária para binários.
+- IndexedDB permanece como cache/offline local e fallback explícito quando Firebase não estiver configurado.
+- Google Drive não faz mais parte do runtime do frontend.
+
 ## Domains
 
 - `home`: visão inicial e dashboard.

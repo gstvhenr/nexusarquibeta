@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, Dispatch, SetStateAction } from 'react';
 import { uiPreferenceService } from '../services/infrastructure/uiPreferenceService';
-import { driveSyncEngine } from '../services/infrastructure/driveSyncEngine';
+import { firebaseSyncEngine } from '../services/infrastructure/firebaseSyncEngine';
 
 const useLocalStorage = <T>(key: string, initialValue: T): [T, Dispatch<SetStateAction<T>>] => {
   const [storedValue, setStoredValue] = useState<T>(initialValue);
@@ -64,7 +64,7 @@ const useLocalStorage = <T>(key: string, initialValue: T): [T, Dispatch<SetState
     void uiPreferenceService
       .setItem(key, storedValue, { source: 'local' })
       .then(() => {
-        driveSyncEngine.notifyPreferenceChanged(key);
+        firebaseSyncEngine.notifyPreferenceChanged(key);
       })
       .catch((error) => {
         console.warn(`Error setting persisted UI preference key "${key}":`, error);

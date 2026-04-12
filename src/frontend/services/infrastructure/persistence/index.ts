@@ -11,6 +11,7 @@ export type {
   WriteBackupOptions,
   CounterReservationResult,
 } from './PersistencePort';
+export { isRealtimePersistencePort } from './PersistencePort';
 export { IndexedDbPersistenceAdapter } from './IndexedDbPersistenceAdapter';
 export { SqlitePersistenceAdapter } from './SqlitePersistenceAdapter';
 export {

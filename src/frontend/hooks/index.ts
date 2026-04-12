@@ -1,3 +1,3 @@
 export { useNavigation } from './useNavigation';
 export { useDisclosure } from './useDisclosure';
-export * from './useDriveSync';
+export * from './useCloudSync';

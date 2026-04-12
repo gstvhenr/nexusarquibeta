@@ -1,4 +1,4 @@
 export { ClearDataModal } from './ClearDataModal';
-export { GoogleDriveSection } from './GoogleDriveSection';
+export { CloudSyncSection } from './CloudSyncSection';
 export { ImportDataModal } from './ImportDataModal';
 export { PasswordResetModal } from './PasswordResetModal';

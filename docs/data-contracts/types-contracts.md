@@ -90,62 +90,58 @@
 - Regra:
   - `targetValue` continua opcional para permitir acompanhamento por meses de fôlego quando não houver meta explícita.
 
-## Contrato de sincronização Google Drive
+## Contrato de sincronização Firebase
 
 - Arquivos canônicos:
-  - `src/frontend/services/infrastructure/driveSyncTypes.ts`
-  - `src/frontend/services/infrastructure/driveSyncPreferences.ts`
-  - `src/frontend/services/infrastructure/driveSyncMerge.ts`
-  - `src/frontend/services/infrastructure/driveAppFolder.ts`
-- Artefatos remotos:
-  - `data/_meta.json` — metadados de sincronização por domínio, metadados de preferências e tombstones.
-  - `data/config.json` — valores escalares do `AppData`.
-  - `data/preferences.json` — preferências sincronizáveis do usuário.
-  - `files/**` — ativos binários gerenciados no Drive.
-- Raiz lógica do app no Drive:
-  - nome canônico: `01. NexusArqui`
-  - alias legado compatível: `NexusArqui`
-  - resolução determinística:
-    - preferir pasta com `data/_meta.json`
-    - depois pasta com `nexus-data.json`
-    - depois a mais recente
-    - em empate, preferir o nome canônico
+  - `src/frontend/services/infrastructure/cloudSyncTypes.ts`
+  - `src/frontend/services/infrastructure/cloudSyncPreferences.ts`
+  - `src/frontend/services/infrastructure/cloudConflictMerge.ts`
+  - `src/frontend/services/infrastructure/firebaseSyncEngine.ts`
+  - `src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.ts`
+- Estrutura remota canônica:
+  - `users/{uid}` — metadados do workspace (`schemaVersion`, `migratedAt`, `lastSeenAt`).
+  - `users/{uid}/domains/{domain}` — metadados por domínio e payload de valores escalares.
+  - `users/{uid}/domains/{domain}/items/{recordId}` — coleções identificáveis por `id`.
+  - `users/{uid}/domains/documentStorage/nodes/{nodeId}` — árvore documental normalizada.
+  - `users/{uid}/preferences/ui` — preferências sincronizadas em `entries`.
+  - `users/{uid}/counters/globalIdentifier` — alocação transacional do contador global.
+  - `users/{uid}/backups/{backupId}` — metadados dos backups.
+- Estrutura canônica de Storage:
+  - `users/{uid}/documents/{fileId}/{sourceId}/{fileName}`
+  - `users/{uid}/attachments/{feature}/{entityId}/{fileName}`
+  - `users/{uid}/avatars/{clientId}/avatar.jpg`
+  - `users/{uid}/backups/{backupId}.json`
 - Contratos canônicos:
-  - `SyncMetaFile`:
-    - `domains: Record<string, DomainSyncMeta>`
-    - `preferences?: PreferenceSyncMeta`
-    - `tombstones?: Record<string, Record<string, number>>`
-  - `SyncedPreferencesFile`:
-    - `Record<string, { value: unknown; updatedAt: number }>`
-  - `SYNCED_PREFERENCE_KEYS`:
-    - `theme`
-    - `financial_password`
-    - `financial_lock_enabled`
+  - `SyncEngineState`:
+    - `status: 'idle' | 'syncing' | 'error' | 'offline' | 'initializing'`
+    - `accessMode: 'firebase' | 'none'`
+    - `lastSyncTimestamp: number | null`
+    - `dirtyDomains: string[]`
+    - `dirtyPreferences: string[]`
+    - `errorMessage: string | null`
+    - `retryScheduledAt: number | null`
+    - `pendingChangesCount: number`
   - `SyncOperationResult`:
     - `ok: boolean`
     - `action: 'flushPendingWrites' | 'forcePush' | 'forcePull' | 'reconnectWithRepermission'`
-    - `cause: 'success' | 'no_changes' | 'no_access' | 'local_permission_required' | 'api_auth_required' | 'remote_meta_invalid' | 'push_failed' | 'pull_failed' | 'reconnect_failed'`
-    - `accessMode: 'local' | 'api' | 'none'`
+    - `cause: 'success' | 'no_changes' | 'no_access' | 'push_failed' | 'pull_failed' | 'reconnect_failed'`
+    - `accessMode: 'firebase' | 'none'`
     - `message: string | null`
-    - `performedPush: boolean`
-    - `performedPull: boolean`
-    - `attemptedLocalRepermission: boolean`
-    - `attemptedApiReauth: boolean`
-    - `pendingChangesCount: number`
-- Operações manuais com retorno estruturado:
-  - `driveSyncEngine.flushPendingWrites()`
-  - `driveSyncEngine.forcePush()`
-  - `driveSyncEngine.forcePull()`
-  - `driveSyncEngine.reconnectWithRepermission()`
-- Regra de durabilidade local:
-  - alterações locais devem gravar slices por entidade imediatamente;
-  - o snapshot completo continua debounced, mas precisa fazer flush em `pagehide`, `beforeunload` e `visibilitychange`;
-  - writes vindos do remoto só podem notificar a UI depois de persistirem no banco local.
+  - `PersistenceSyncState`:
+    - `status`
+    - `accessMode`
+    - `lastSyncTimestamp`
+    - `errorMessage`
+    - `retryScheduledAt`
+    - `pendingWrites`
+    - `userEmail`
+    - `quota`
 - Regra de conflito:
-  - arrays de entidades com `id` usam merge `last write wins` por registro;
+  - arrays identificáveis usam merge `last write wins` por registro;
   - exclusões usam tombstones por domínio;
-  - config/preferências usam `last write wins` por chave/arquivo.
-- Regra de erro:
-  - `_meta.json` inválido ou corrompido é erro remoto explícito e não pode ser tratado como primeira sincronização.
-- Regra de limpeza:
-  - reset global zera os arquivos ativos remotos e preserva apenas `_backups`.
+  - valores escalares e preferências usam `last write wins` por timestamp.
+- Regra de binários:
+  - `DocumentSource.content` permanece apenas para links e fallback local;
+  - uploads permanentes devem usar `DocumentSource.storagePath` + `storageProvider: 'firebase-storage'`;
+  - `Client.avatarStoragePath` identifica o arquivo gerenciado do avatar;
+  - `AgendaEvent.attachments[].storagePath` identifica anexos persistidos no Storage.

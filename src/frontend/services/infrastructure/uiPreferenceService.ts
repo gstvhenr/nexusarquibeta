@@ -1,12 +1,12 @@
-import { createPersistenceAdapter } from './persistence';
+import { createPersistenceAdapter, isRealtimePersistencePort } from './persistence';
 
 const persistence = createPersistenceAdapter();
 
 const KEY_PREFIX = 'ui_pref:';
 
-export type PreferenceChangeSource = 'local' | 'remote' | 'system';
+type PreferenceChangeSource = 'local' | 'remote' | 'system';
 
-export interface PreferenceChangeEvent<T = unknown> {
+interface PreferenceChangeEvent<T = unknown> {
   key: string;
   value: T | null;
   source: PreferenceChangeSource;
@@ -19,6 +19,21 @@ const normalizeKey = (key: string): string => `${KEY_PREFIX}${key}`;
 
 function notifyListeners(event: PreferenceChangeEvent): void {
   listeners.forEach((listener) => listener(event));
+}
+
+if (isRealtimePersistencePort(persistence)) {
+  persistence.subscribeExternalChanges((event) => {
+    if (event.kind !== 'preference') {
+      return;
+    }
+
+    const key = event.key.startsWith(KEY_PREFIX) ? event.key.slice(KEY_PREFIX.length) : event.key;
+    notifyListeners({
+      key,
+      value: event.value,
+      source: 'remote',
+    });
+  });
 }
 
 async function getItem<T>(key: string, initialValue: T): Promise<T> {

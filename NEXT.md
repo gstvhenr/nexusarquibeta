@@ -2,261 +2,51 @@
 
 ## Último estado conhecido (2026-04-12)
 
-Estabilização estrutural da sincronização IndexedDB + Google Drive concluída no código. A persistência local passou a gravar slices por entidade imediatamente e a forçar flush do snapshot em `pagehide`, `beforeunload` e `visibilitychange`, eliminando a janela em que um `F5` rápido descartava alterações locais. O `pullFromRemote()` agora persiste os dados de forma durável antes de notificar a UI. O acesso ao Drive foi unificado em torno de uma raiz lógica única do app (`01. NexusArqui`, com compatibilidade para `NexusArqui` legado), evitando split-brain entre Google Drive Desktop e API. As ações manuais do engine agora devolvem `SyncOperationResult`, permitindo que a UI reporte sucesso ou falha real sem falso positivo quando não há acesso ou quando `_meta.json` está inválido/corrompido.
+Migração estrutural do runtime concluída para Firebase. O frontend agora usa:
+
+- `FirebasePersistenceAdapter` como adaptador primário de persistência remota;
+- `firebaseAuthService` para autenticação via Google no Firebase Auth;
+- `firebaseSyncEngine` para estado de sincronização em tempo real;
+- `firebaseFileService` para documentos, anexos, avatares e backups em Firebase Storage;
+- IndexedDB como cache/offline local e fallback explícito quando Firebase não estiver configurado.
+
+Todo o stack ativo de Google Drive foi removido de `src/frontend`.
 
 ### Checklist desta sessão
 
-- [x] Criação de `src/frontend/services/infrastructure/driveAppFolder.ts` para resolução unificada da pasta raiz do app no Drive.
-- [x] `localDriveService.ts` endurecido para resolver a pasta correta e evitar falha de escrita pós-reload com `cachedHandle` vazio.
-- [x] `googleDriveService.ts` ajustado para compartilhar o resolvedor de pasta e expor `ensureDriveAccess()` com silent reauth.
-- [x] `driveDataAdapter.ts` ajustado para recovery híbrido local/API e erro explícito de `_meta.json` inválido.
-- [x] `loadData.ts` ajustado com persistência imediata por entidade, flush de lifecycle e escrita remota durável antes do notify.
-- [x] `driveSyncEngine.ts` ajustado com `SyncOperationResult`, recovery híbrido, erro tipado e backup assíncrono sem race com destroy.
-- [x] `useDriveSync.ts`, `GoogleDriveSection.tsx` e `DriveSyncReconnector.tsx` alinhados ao novo contrato sem falso positivo de sucesso.
-- [x] Testes criados/atualizados: `driveAppFolder.test.ts`, `loadData.test.ts`, `driveSyncEngine.test.ts`, `googleDriveService.test.ts`.
+- [x] Criado `src/frontend/services/infrastructure/persistence/firebaseConfig.ts`.
+- [x] Criado `src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.ts`.
+- [x] Criado `src/frontend/services/infrastructure/firebaseAuthService.ts`.
+- [x] Criado `src/frontend/services/infrastructure/firebaseSyncEngine.ts`.
+- [x] Criado `src/frontend/services/infrastructure/firebaseFileService.ts`.
+- [x] Criados contratos neutros: `cloudSyncTypes.ts`, `cloudSyncPreferences.ts`, `cloudConflictMerge.ts`.
+- [x] `createPersistenceAdapter.ts` atualizado para default Firebase com fallback IndexedDB.
+- [x] `loadData.ts` integrado ao adaptador realtime.
+- [x] `AuthGuard.tsx`, `LoginPage.tsx`, `App.tsx`, `ConfiguracoesPage.tsx` migrados para Firebase.
+- [x] Uploads de documentos, anexos e avatares migrados para Firebase Storage.
+- [x] Stack legado de Google Drive removido do runtime (`src/frontend`).
+- [x] `.env.example`, `vite-env.d.ts`, `firebase.json`, `firestore.rules`, `storage.rules`, `firestore.indexes.json` adicionados/atualizados.
+- [x] `ARCHITECTURE.md`, `docs/data-contracts/types-contracts.md`, `DECISIONS-active.md` e ADR `0012` atualizados.
 - [x] `npm run typecheck` — PASS.
-- [x] `npx vitest run src/frontend/services/infrastructure/loadData.test.ts src/frontend/services/infrastructure/driveSyncEngine.test.ts src/frontend/services/infrastructure/driveAppFolder.test.ts src/frontend/services/infrastructure/googleDriveService.test.ts` — PASS.
-- [x] `npm run verify`
-
-### Concluído nesta sessão
-
-- `src/frontend/services/infrastructure/driveAppFolder.ts` — resolvedor determinístico da raiz do app no Drive.
-- `src/frontend/services/infrastructure/{localDriveService.ts,googleDriveService.ts,driveDataAdapter.ts}` — convergência entre Desktop client e API com recovery híbrido.
-- `src/frontend/services/infrastructure/{loadData.ts,driveSyncEngine.ts,driveSyncTypes.ts}` — durabilidade local imediata, flush de lifecycle, operações tipadas e erro remoto observável.
-- `src/frontend/hooks/useDriveSync.ts` — novo contrato tipado das ações manuais.
-- `src/frontend/components/configuracoes/GoogleDriveSection.tsx` — UI agora reage ao resultado real do engine.
-- `src/frontend/components/drive/DriveSyncReconnector.tsx` — banner de reconexão alinhado ao fallback local/API.
-- `src/frontend/services/infrastructure/*.test.ts` — cobertura de regressão para durabilidade, recovery e raiz lógica do Drive.
-
-## Evidências da sessão
-
-- `npm run typecheck` → PASS.
-- `npx vitest run src/frontend/services/infrastructure/loadData.test.ts src/frontend/services/infrastructure/driveSyncEngine.test.ts src/frontend/services/infrastructure/driveAppFolder.test.ts src/frontend/services/infrastructure/googleDriveService.test.ts` → PASS (`13` testes).
-- `npm run verify` → PASS (`[VERIFY][LOOP][PASS]`, 9 gates).
+- [x] `npm run lint` — PASS.
+- [x] `npx vitest run src/frontend/services/infrastructure/loadData.test.ts src/frontend/services/infrastructure/firebaseAuthService.test.ts src/frontend/services/infrastructure/firebaseFileService.test.ts src/frontend/services/infrastructure/firebaseSyncEngine.test.ts src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.test.ts` — PASS.
 
 ## Próximo passo exato
 
-1. Executar smoke real em duas máquinas/perfis:
-   - máquina A local/Desktop e máquina B API;
-   - criação, edição e exclusão com `F5` após cada operação;
-   - conflito offline simultâneo no mesmo registro;
-   - perda de permissão da pasta local com fallback pela API.
-2. Confirmar na UI que `Sincronizar`, `Forçar Flush da Fila` e `Reavaliar Conexão` nunca exibem sucesso quando o engine retorna erro tipado.
+1. Configurar as variáveis `VITE_FIREBASE_*` com um projeto Firebase real.
+2. Publicar `firestore.rules`, `storage.rules` e `firestore.indexes.json`.
+3. Executar smoke manual:
+   - login/logout;
+   - sync em duas abas;
+   - escrita offline seguida de reconciliação online;
+   - upload/download de avatar;
+   - upload/download de anexos de agenda;
+   - upload/abertura de documentos internos.
+4. Rodar `npm run verify:ci`.
 
 ## Bloqueios e dúvidas
 
-- A implementação e a suíte focada estão verdes. Falta apenas o gate canônico completo e a validação manual cross-device em ambiente real.
-
----
-
-## Último estado conhecido (2026-04-11)
-
-Ajuste do formulário de evento/tarefa (`EventFormModal.tsx` e `EventFormFields.tsx`) para introduzir uma distinção de domínio entre 'Evento' e 'Tarefa' com base nos pedidos do usuário. Foi incluído um seletor obrigatório de Categoria. Subtarefas e status do Kanban só aparecem visíveis e habilitados se a categoria for 'Tarefa', possuindo também validação estrita que previne que uma Tarefa seja salva sem pelo menos 1 item na "Subtarefa". Adicionalmente, itens salvos como 'Evento' não poluem o quadro Kanban. A largura da modal foi ampliada de `2xl` para `4xl` para melhor arranjo espacial dos dados adicionais.
-
-### Checklist desta sessão
-
-- [x] O tipo `AgendaEvent` recebeu a chave tipada `category?: 'Evento' | 'Tarefa'`.
-- [x] Expansão da prop `size` do `Modal` no pop-up de `EventFormModal.tsx` de "2xl" para "4xl".
-- [x] Adição do select de "Categoria" ladeando "Recorrência" (`EventFormFields.tsx`), tornando-o campo de bloqueio obrigatório.
-- [x] Lógica visual condicional: Seções de "Status da Tarefa" e "Subtarefas" atreladas à `editedEvent.category === 'Tarefa'`.
-- [x] Regra de bloqueio em _save_: Tarefas sem `subtasks` disparam alert impedindo sua gravação.
-- [x] Exclusão visual de "Eventos" da aba Kanban (`TarefasPage.tsx`) através da filtragem `.filter(event => event.category !== 'Evento')`.
-- [x] Executado `npm run typecheck` — aprovado (PASS) garantindo segurança da união ao Typescript.
-
-### Concluído nesta sessão
-
-- `src/frontend/types/agenda.ts` — tipagem restrita do model AgendaEvent com a _category_.
-- `src/frontend/components/agenda/EventFormFields.tsx` — renderização da _category_ interativa em layout Grid e seções engatilhadas de tarefas.
-- `src/frontend/components/agenda/EventFormModal.tsx` — alteração estrutural de tamanhos e injeção do gate/validator via `handleSave`.
-- `src/frontend/pages/agenda/tarefas/TarefasPage.tsx` — implementação de exclusão de dados do tipo Evento do Board principal e abas.
-
-## Evidências da sessão
-
-- `npm run typecheck` → PASS.
-
-## Próximo passo exato
-
-- Acesso a `Agenda > Calendário` por testes empíricos validando a submissão de ambas as categorias e visualizando as renderizações da Tarefa propagando condicionalmente em "Tarefas".
-
-## Bloqueios e dúvidas
-
-- Resolvido de forma definitiva, sem pendências.
-
----
-
-## Último estado conhecido (2026-04-11)
-
-Ajustes ergonômicos e responsivos na grid mensal da página de Agenda (Calendário). O modo de visualização padrão da Agenda passou de Semanal para Mensal. Em seguida, a funcionalidade de ajuste manual de altura das células via slider foi totalmente removida; em substituição, o container em grid foi modernizado com CSS nativo (`grid-template-rows`), calculando dinamicamente e distribuindo a altura exata entre semanas e preenchendo 100% da viewport vertical de forma responsiva sem causar rolagem excedente desnecessária, adaptando-se a meses que contêm 5 ou 6 semanas.
-
-### Checklist desta sessão
-
-- [x] Remoção do manipulador nativo de escala (`cellHeightScale`/`normalizedCellHeightScale`) do hook `useLocalStorage`.
-- [x] Deleção do controle de slider no header de página.
-- [x] O `viewMode` default foi passado para `'monthly'` em `AgendaPage.tsx`.
-- [x] Atualização da classe Grid e injeção do `gridTemplateRows` dinâmico baseado em semanas dentro de `MonthlyCalendarGrid.tsx`.
-- [x] Executado `npm run typecheck` — verde sem lints residuais e dependências resolvidas (removido exports `DEFAULT_CELL_HEIGHT_REM` em `agendaConstants.ts`).
-
-### Concluído nesta sessão
-
-- `src/frontend/pages/agenda/AgendaPage.tsx` — Padrão mensal e limpeza de inputs residuais.
-- `src/frontend/components/agenda/MonthlyCalendarGrid.tsx` — CSS Grid responsivo com altura elástica sem overflow Y.
-- `src/frontend/components/agenda/agendaConstants.ts` — expurgo de constantes zumbi da view obsoleta.
-
-## Evidências da sessão
-
-- `npm run typecheck` → PASS.
-
-## Próximo passo exato
-
-- Acesso a `Agenda > Calendário` por testes empíricos do usuário confirmando um comportamento fluido das alturas das células mês a mês em resoluções atípicas.
-
-## Bloqueios e dúvidas
-
-- Resolvido de forma definitiva, sem pendências.
-
----
-
-## Último estado conhecido (2026-04-11)
-
-Remoção do botão redundante de logout ("Encerrar Sessão") da seção de Google Drive nas Configurações, preservando a ação principal em "Conta Google" que já exerce a exata mesma função sob o capô (limpar a autenticação via Google e redirecionar a tela). Essa redundância de interface foi gerada na última refatoração de AuthGuard, sendo agora consolidada para evitar confusão no usuário.
-
-### Checklist desta sessão
-
-- [x] Deleção do bloco redundante de "System Logout" em `src/frontend/components/configuracoes/GoogleDriveSection.tsx`.
-- [x] O botão mestre de logout mantido limpo sob a header de "Conta Google" (`ConfiguracoesPage.tsx`).
-- [x] Executado parser Prettier/Format (`npm run format:write`, `verify:quick`). CI Validado.
-
-### Concluído nesta sessão
-
-- `src/frontend/components/configuracoes/GoogleDriveSection.tsx` — Bloco funcional redundante de "Sair do Sistema" foi extirpado.
-
-## Evidências da sessão
-
-- `npx prettier --write ...` → aplicado e aprovado.
-- `npm run verify:quick` → verificação estática preservada, confirmando ausência de regressão estrutural.
-
-## Próximo passo exato
-
-1. Teste de campo com o usuário final (como já mapeado) para atestar a fluidez da sessão persistente em browser vazio.
-2. Confirmar visualmente em `Configurações` se a clareza da UI atinge a expectativa predeterminada.
-
-## Bloqueios e dúvidas
-
-- Nenhum bloqueio. A higiene documental segue com budget alocado próximo ao teto, mas não impede desenvolvimento e submissões habituais.
-
----
-
-## Último estado conhecido (2026-04-11)
-
-Correção do popup em branco do Google Identity (`accounts.google.com/gsi/transform`) no ambiente local. O servidor Vite agora entrega `Cross-Origin-Opener-Policy: same-origin-allow-popups` e `Referrer-Policy: no-referrer-when-downgrade`, alinhando o frontend ao requisito do fluxo popup do GIS quando o navegador não conclui a jornada via FedCM.
-
-### Checklist desta sessão
-
-- [x] `vite.config.ts` atualizado com headers de `COOP` e `Referrer-Policy` em `server` e `preview`.
-- [x] `index.html` atualizado com `meta name="referrer"`.
-- [x] Dev server validado manualmente com `Invoke-WebRequest`, confirmando os headers no `localhost`.
-- [x] `googleDriveService.isSignedIn()` endurecido para não quebrar quando `gapi.client` ainda não está inicializado.
-- [x] `src/frontend/services/infrastructure/googleDriveService.test.ts` criado cobrindo o contrato de `isSignedIn()`.
-- [x] `npm run typecheck` — verde.
-- [x] `npx prettier --check vite.config.ts index.html` — verde.
-- [x] `npm run build` — verde.
-- [x] `npm run verify:quick` — verde.
-
-### Concluído nesta sessão
-
-- `vite.config.ts` — hardening do ambiente local para popup OAuth/Google Identity.
-- `index.html` — política de referrer explícita no shell HTML.
-- `src/frontend/services/infrastructure/googleDriveService.ts` — leitura segura do token atual, evitando crash em `Configurações` durante a inicialização do `gapi`.
-- `src/frontend/services/infrastructure/googleDriveService.test.ts` — teste do contrato de tolerância a `gapi.client` ausente.
-
-## Evidências da sessão
-
-- `Invoke-WebRequest http://localhost:3002/` → headers retornados: `Cross-Origin-Opener-Policy: same-origin-allow-popups`, `Referrer-Policy: no-referrer-when-downgrade`.
-- `npm run typecheck` → PASS.
-- `npm run build` → PASS.
-- `npx vitest run src/frontend/services/infrastructure/googleDriveService.test.ts` → PASS (`2` testes).
-- `npm run verify:quick` → PASS.
-
-## Próximo passo exato
-
-1. Reiniciar o `npm run dev` e repetir o login Google no navegador para confirmar que o popup não trava mais em `gsi/transform`.
-2. Abrir `Configurações` após o login e confirmar que a rota não cai mais no `RouteErrorBoundary`.
-3. Se o popup ainda ficar em branco, inspecionar a configuração do client OAuth no Google Cloud, principalmente `Authorized JavaScript origins` para `http://localhost:3001` e/ou a porta efetiva em uso.
-
-## Bloqueios e dúvidas
-
-- A correção de headers cobre o ambiente local Vite. Se o login continuar quebrado após reiniciar o servidor, o próximo suspeito forte passa a ser configuração de origem autorizada no client OAuth do Google.
-
-## Último estado conhecido (2026-04-11)
-
-Blindagem da persistência total no Google Drive para dados e preferências. O `driveSyncEngine` agora mantém fila persistida de alterações, retry com backoff, flush em `visibilitychange/pagehide`, reconexão automática por mudanças de autenticação/pasta local e limpeza remota pendente da árvore `files/`. Preferências de usuário (`theme`, `financial_password`, `financial_lock_enabled`) passaram a sincronizar em `preferences.json`, separado de `config.json`. Arrays identificáveis ganharam merge `last write wins` por registro com tombstones para exclusões, evitando ressuscitar itens apagados em outro dispositivo.
-
-### Checklist desta sessão
-
-- [x] `driveSyncEngine.ts` reescrito com fila persistida, retry, flush e reconexão automática.
-- [x] `loadData.ts` integrado a preferências sincronizadas, tombstones e reset global com cleanup remoto.
-- [x] `useLocalStorage.ts` e `uiPreferenceService.ts` adaptados para propagação cross-device sem loop de regravação.
-- [x] `driveDataAdapter.ts`, `googleDriveService.ts` e `localDriveService.ts` expandidos com `preferences.json` e limpeza de pasta remota/local.
-- [x] `driveFileService.ts` endurecido para substituição/remoção segura de binários gerenciados.
-- [x] `ClientesPage.tsx` atualizado para remover avatar antigo na troca/exclusão.
-- [x] `npx vitest run src/frontend/services/infrastructure/driveSyncMerge.test.ts` — verde (`5` testes).
-- [x] `npm run typecheck` — verde.
-- [x] `npx eslint ...` nos arquivos alterados — verde.
-- [x] `npx prettier --check ...` nos arquivos alterados — verde.
-
-### Concluído nesta sessão
-
-- `src/frontend/services/infrastructure/driveSyncEngine.ts` — fila persistida, retry, reconexão, flush e sync de preferências.
-- `src/frontend/services/infrastructure/loadData.ts` — bridge entre `AppData`, preferências sincronizadas e reset remoto.
-- `src/frontend/services/infrastructure/driveSyncPreferences.ts` / `driveSyncMerge.ts` — contratos de preferências sincronizadas e merge com tombstones.
-- `src/frontend/hooks/useLocalStorage.ts` / `src/frontend/services/infrastructure/uiPreferenceService.ts` — broadcast local de preferências sem loop.
-- `src/frontend/services/infrastructure/driveFileService.ts` / `src/frontend/pages/clientes/ClientesPage.tsx` — remoção/substituição segura de avatar no Drive.
-- `src/frontend/components/configuracoes/GoogleDriveSection.tsx` / `src/frontend/components/layout/SyncStatusIndicator.tsx` — UI de status com fila, retry e flush manual.
-
-## Evidências da sessão
-
-- `npm run typecheck` → PASS.
-- `npx eslint ...` nos arquivos alterados → PASS.
-- `npx prettier --check ...` nos arquivos alterados → PASS.
-- `npx vitest run src/frontend/services/infrastructure/driveSyncMerge.test.ts` → PASS (`5` testes).
-
-## Próximo passo exato
-
-1. Smoke test em 2 perfis do navegador: criar, editar e excluir dados em um perfil e validar convergência automática no outro.
-2. Validar conflito real no mesmo registro com política `last write wins` + tombstone de exclusão.
-3. Validar troca/exclusão de avatar e reset global confirmando limpeza remota de `files/` e preservação de `_backups`.
-4. Rodar `npm run verify` e, se necessário, ajustar quaisquer regressões remanescentes fora do escopo local já validado.
-
-## Bloqueios e dúvidas
-
-- Falta validação manual cross-device em ambiente real; a cobertura automatizada atual fecha merge/tombstones, mas não substitui o smoke de dois perfis/dispositivos.
-
----
-
-## Último estado conhecido (2026-04-11)
-
-Implementação do sistema de Login obrigatório com o Google (AuthGuard). A aplicação agora impede o carregamento das rotas caso o usuário não esteja autenticado. Criamos uma barreira estrutural via componente `AuthGuard`, uma `LoginPage` dedicada para sign-in, e implementamos persistência no `localStorage` (`nexus_authenticated`). O botão de Encerrar Sessão foi incluído dentro das configurações de "Integração Google Drive", permitindo deslogar e revogar o token, recarregando a página e forçando a tela de login.
-
-### Checklist desta sessão
-
-- [x] Construção do componente `LoginPage`.
-- [x] Criação do wrapper `AuthGuard` para interceptação de rota.
-- [x] Atualização no `App.tsx` para remover o interceptor isolado antigo e aplicar o `AuthGuard` na view master.
-- [x] Criação de botão de "Encerrar Sessão" dentro de `ConfiguracoesPage` (`GoogleDriveSection`).
-- [x] Resolução de erros e imports órfãos em `App.tsx` (`localDriveService` e ajuste da rota de `DocumentosPessoalPage`).
-- [x] Rodou gate `npm run verify` com os 9 gates OK (`typecheck`, `lint`, `format:check`, `build` etc).
-
-### Concluído nesta sessão
-
-- `src/frontend/components/auth/LoginPage.tsx` — view UI visual de login.
-- `src/frontend/components/auth/AuthGuard.tsx` — roteador condicional com loading state.
-- `src/frontend/components/auth/index.ts` — barrel imports.
-- `src/frontend/App.tsx` — orquestração ajustada.
-- `src/frontend/components/configuracoes/GoogleDriveSection.tsx` — inserção funcional de Sair do Sistema.
-
-## Evidências da sessão
-
-- `npm run verify` → PASS (`[VERIFY][LOOP][PASS] total_duration_ms=161324 gates_passed=9`). Exit code 0.
+- Falta validação manual com credenciais Firebase reais e publicação das regras no projeto remoto.
 
 ## Próximo passo exato
 

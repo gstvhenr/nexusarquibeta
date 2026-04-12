@@ -1,4 +1,5 @@
 import type { DocumentFile } from '../types';
+import { firebaseFileService } from '../services/infrastructure/firebaseFileService';
 
 export const fileToB64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -27,6 +28,34 @@ export const openDocument = async (file: DocumentFile) => {
   if (source.type === 'link') {
     console.warn('Links externos desativados no modo offline.');
     return;
+  }
+
+  if (source.type === 'upload' && source.storagePath) {
+    try {
+      const url = await firebaseFileService.getFileUrl(source.storagePath);
+      if (!url) {
+        return;
+      }
+
+      const a = document.createElement('a');
+      a.href = url;
+
+      const isViewable =
+        source.fileType?.startsWith('image/') || source.fileType === 'application/pdf';
+
+      if (isViewable) {
+        a.target = '_blank';
+      } else {
+        a.download = source.fileName || 'download';
+      }
+
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    } catch (error) {
+      console.error('Error opening Firebase document:', error);
+    }
   }
 
   if (source.type === 'upload' && source.content) {

@@ -5,7 +5,7 @@ import type { AgendaEvent, Subtask, KanbanStatus } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 import { getInitialEvent } from './agendaFormHelpers';
 import EventFormFields from './EventFormFields';
-import { driveFileService } from '../../services/infrastructure/driveFileService';
+import { firebaseFileService } from '../../services/infrastructure/firebaseFileService';
 
 export const EventFormModal: (props: {
   isOpen: boolean;
@@ -126,26 +126,30 @@ export const EventFormModal: (props: {
 
       // Delete removed attachments
       for (const path of filesToDelete) {
-        await driveFileService.deleteManagedFile(path);
+        await firebaseFileService.deleteManagedFile(path);
       }
 
       // Upload new attachments
       const uploadedAttachments = [];
       for (const file of newFiles) {
-        const drivePath = await driveFileService.uploadFeatureFile('agenda', finalId, file);
+        const storagePath = await firebaseFileService.uploadFeatureFile('agenda', finalId, file);
         uploadedAttachments.push({
           id: uuidv4(),
           name: file.name,
-          driveRelativePath: drivePath,
+          storagePath,
         });
       }
 
       const finalRecurrence = editedEvent.recurrence || 'none';
       const status = editedEvent.kanbanStatus || (editedEvent.completed ? 'done' : 'todo');
+      const retainedAttachments = (editedEvent.attachments || []).filter((attachment) => {
+        const path = attachment.storagePath ?? attachment.driveRelativePath;
+        return !path || !filesToDelete.includes(path);
+      });
       const finalEvent: AgendaEvent = {
         ...getInitialEvent(new Date(editedEvent.date || Date.now())),
         ...editedEvent,
-        attachments: [...(editedEvent.attachments || []), ...uploadedAttachments],
+        attachments: [...retainedAttachments, ...uploadedAttachments],
         recurrence: finalRecurrence,
         id: finalId,
         kanbanStatus: status,
@@ -154,7 +158,7 @@ export const EventFormModal: (props: {
     } catch (error) {
       console.error('Erro ao salvar evento/tarefa:', error);
       alert(
-        'Ocorreu um erro ao salvar o evento. Verifique a conexão com o Google Drive, caso tenha anexado arquivos.',
+        'Ocorreu um erro ao salvar o evento. Verifique a conexão com o Firebase, caso tenha anexado arquivos.',
       );
     } finally {
       setIsSaving(false);

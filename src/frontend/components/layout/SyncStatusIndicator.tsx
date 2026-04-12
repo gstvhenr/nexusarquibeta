@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDriveSync } from '../../hooks/useDriveSync';
+import { useCloudSync } from '../../hooks/useCloudSync';
 import { AlertIcon, CheckCircleIcon, UploadCloudIcon, XCircleIcon } from '../ui';
 
 const formatLastSync = (timestamp?: number | null) => {
@@ -30,7 +30,7 @@ export const SyncStatusIndicator: React.FC = () => {
     pendingChangesCount,
     forcePull,
     quota,
-  } = useDriveSync();
+  } = useCloudSync();
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();

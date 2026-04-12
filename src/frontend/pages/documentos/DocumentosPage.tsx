@@ -10,7 +10,6 @@ import { addItemToTree } from '../../utils/tree';
 import {
   AddModal,
   DocumentsBreadcrumb,
-  DocumentsGridView,
   DocumentsListView,
   DocumentsToolbar,
 } from '@/components/documentos';
@@ -19,7 +18,6 @@ const DocumentosPage: () => React.ReactNode = () => {
   const { documentStorage, setDocumentStorage } = useSystemData();
   const location = useLocation();
 
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const addModal = useDisclosure();
 
   const activeSection = useMemo(
@@ -33,7 +31,7 @@ const DocumentosPage: () => React.ReactNode = () => {
     setCurrentPath([activeSection === 'projects' ? 'projects-root' : 'personal-root']);
   }, [activeSection]);
 
-  const activeRoot = documentStorage[activeSection];
+  const activeRoot = documentStorage?.[activeSection];
   const currentFolderId = currentPath[currentPath.length - 1];
 
   const { currentFolder, breadcrumbPath } = useMemo(() => {
@@ -115,11 +113,7 @@ const DocumentosPage: () => React.ReactNode = () => {
   return (
     <div className="animate-fade-in-up h-full flex flex-col">
       <PageHeader title={pageTitle} icon={documentosIcon}>
-        <DocumentsToolbar
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          onAdd={addModal.open}
-        />
+        <DocumentsToolbar onAdd={addModal.open} />
       </PageHeader>
 
       <main className="flex-1 bg-surface rounded-xl shadow-soft p-6 flex flex-col overflow-hidden">
@@ -129,19 +123,11 @@ const DocumentosPage: () => React.ReactNode = () => {
         />
 
         <div className="flex-1 overflow-y-auto pt-4">
-          {viewMode === 'grid' ? (
-            <DocumentsGridView
-              items={sortedChildren}
-              onOpenFolder={(folderId) => setCurrentPath((path) => [...path, folderId])}
-              onOpenFile={openDocument}
-            />
-          ) : (
-            <DocumentsListView
-              items={sortedChildren}
-              onOpenFolder={(folderId) => setCurrentPath((path) => [...path, folderId])}
-              onOpenFile={openDocument}
-            />
-          )}
+          <DocumentsListView
+            items={sortedChildren}
+            onOpenFolder={(folderId) => setCurrentPath((path) => [...path, folderId])}
+            onOpenFile={openDocument}
+          />
 
           {currentFolder?.children.length === 0 && (
             <div className="text-center text-text-secondary py-16">

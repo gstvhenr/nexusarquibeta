@@ -2,14 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '@/components/layout';
 import { Button, FormField, Input, Section, Toggle } from '@/components/ui';
 import {
+  CloudSyncSection,
   ClearDataModal,
-  GoogleDriveSection,
   ImportDataModal,
   PasswordResetModal,
 } from '@/components/configuracoes';
 import { useSystemData } from '@/context/DataContext';
-import { googleDriveService } from '@/services/infrastructure/googleDriveService';
-import type { DriveState } from '@/services/infrastructure/googleDriveTypes';
+import { firebaseAuthService } from '@/services/infrastructure/firebaseAuthService';
 import { useFinancialSecurity } from '@/context/FinancialSecurityContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useAutoReset } from '@/hooks/useAutoReset';
@@ -24,17 +23,16 @@ function ConfiguracoesPage(): JSX.Element {
   const { isLockEnabled, toggleLock, changePassword, hasRegisteredPassword, registerPassword } =
     useFinancialSecurity();
 
-  const [googleAccount, setGoogleAccount] = useState<DriveState>(googleDriveService.getState());
-
+  const [firebaseAccount, setFirebaseAccount] = useState<
+    ReturnType<typeof firebaseAuthService.getState>
+  >(firebaseAuthService.getState());
   useEffect(() => {
-    return googleDriveService.subscribe((next) => setGoogleAccount(next));
+    return firebaseAuthService.subscribe((next) => setFirebaseAccount(next));
   }, []);
 
   const handleLogout = useCallback(() => {
-    if (window.confirm('Deseja realmente sair da conta Google?')) {
-      googleDriveService.signOut();
-      window.location.reload();
-    }
+    if (!window.confirm('Deseja realmente encerrar a sessão atual?')) return;
+    void firebaseAuthService.signOut().finally(() => window.location.reload());
   }, []);
 
   const importModal = useDisclosure();
@@ -217,10 +215,7 @@ function ConfiguracoesPage(): JSX.Element {
       <PageHeader title="Configurações" />
 
       <div className="divide-y divide-border-color">
-        <Section
-          title="Conta Google"
-          description="Conta utilizada para autenticação e sincronização."
-        >
+        <Section title="Conta Firebase" description="Conta Google conectada via Firebase Auth.">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-primary/10 text-accent-primary">
@@ -242,10 +237,12 @@ function ConfiguracoesPage(): JSX.Element {
               </div>
               <div>
                 <h4 className="font-semibold text-text-primary">
-                  {googleAccount.userEmail ?? 'Conta conectada'}
+                  {firebaseAccount.userEmail ?? 'Sessão não autenticada'}
                 </h4>
                 <p className="text-xs text-text-secondary">
-                  {googleAccount.status === 'connected' ? 'Autenticado via Google' : 'Sessão ativa'}
+                  {firebaseAccount.status === 'authenticated'
+                    ? 'Autenticado via Google no Firebase'
+                    : 'Autenticação não confirmada'}
                 </p>
               </div>
             </div>
@@ -470,7 +467,7 @@ function ConfiguracoesPage(): JSX.Element {
           </div>
         </Section>
 
-        <GoogleDriveSection />
+        <CloudSyncSection />
       </div>
 
       <ImportDataModal

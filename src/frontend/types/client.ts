@@ -40,6 +40,7 @@ export interface Client {
   id: string;
   name: string;
   avatarUrl?: string; // New: Profile Picture Base64
+  avatarStoragePath?: string;
   clientType?: 'PF' | 'PJ'; // New: Person Type
   birthDate?: string; // New: Date of Birth or Opening Date
   cpfCnpj?: string;

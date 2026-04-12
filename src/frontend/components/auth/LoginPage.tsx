@@ -1,54 +1,73 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { googleDriveService } from '../../services/infrastructure/googleDriveService';
+import { firebaseAuthService } from '../../services/infrastructure/firebaseAuthService';
 
 export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isButtonReady, setIsButtonReady] = useState(false);
-  const buttonContainerRef = useRef<HTMLDivElement | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    const unsubscribe = googleDriveService.subscribe((driveState) => {
-      if (driveState.status === 'disconnected') {
-        if (driveState.errorMessage) {
-          setError(driveState.errorMessage);
-        }
-      } else if (driveState.status === 'connected') {
+    mountedRef.current = true;
+
+    const unsubscribe = firebaseAuthService.subscribe((authState) => {
+      if (authState.status === 'error') {
+        setError(authState.errorMessage);
+      } else if (authState.status === 'authenticated') {
         setError(null);
       }
     });
 
-    return unsubscribe;
+    return () => {
+      mountedRef.current = false;
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
-    const container = buttonContainerRef.current;
-    if (!container) return;
-
-    let cancelled = false;
     setIsButtonReady(false);
-
-    void googleDriveService
-      .renderLoginButton(container)
+    void firebaseAuthService
+      .tryRestoreSession()
       .then(() => {
-        if (!cancelled) {
-          setIsButtonReady(true);
-          setError(null);
+        if (!mountedRef.current) {
+          return;
         }
+
+        setIsButtonReady(true);
+        setError(firebaseAuthService.getState().errorMessage);
       })
-      .catch((renderError) => {
-        if (cancelled) return;
-        setIsButtonReady(false);
+      .catch((restoreError) => {
+        if (!mountedRef.current) {
+          return;
+        }
+
+        setIsButtonReady(true);
         setError(
-          renderError instanceof Error
-            ? renderError.message
-            : 'Falha ao carregar o login do Google. Recarregue a pagina.',
+          restoreError instanceof Error
+            ? restoreError.message
+            : 'Falha ao carregar o login do Firebase. Recarregue a página.',
         );
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
+
+  const handleSignIn = async () => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      await firebaseAuthService.signIn();
+    } catch (signInError) {
+      setError(
+        signInError instanceof Error
+          ? signInError.message
+          : 'Falha ao autenticar com o Google via Firebase.',
+      );
+    } finally {
+      if (mountedRef.current) {
+        setIsSubmitting(false);
+      }
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 font-sans">
@@ -81,14 +100,18 @@ export function LoginPage() {
           </p>
 
           <div className="w-full">
-            <div
-              ref={buttonContainerRef}
-              className="flex min-h-11 w-full justify-center"
-              data-testid="google-login-button-container"
-            />
+            <button
+              type="button"
+              onClick={() => void handleSignIn()}
+              disabled={!isButtonReady || isSubmitting}
+              className="flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-content transition-colors hover:bg-primary-focus disabled:cursor-not-allowed disabled:opacity-60"
+              data-testid="firebase-login-button"
+            >
+              {isSubmitting ? 'Autenticando...' : 'Entrar com Google'}
+            </button>
             {!isButtonReady && !error && (
               <div className="mt-3 rounded-lg bg-surface-hover px-4 py-3 text-sm text-text-secondary">
-                Carregando login do Google...
+                Carregando autenticação do Firebase...
               </div>
             )}
           </div>
@@ -97,8 +120,8 @@ export function LoginPage() {
         </div>
         <div className="bg-surface-hover p-4 text-center">
           <p className="text-xs text-text-muted">
-            O acesso ao NexusArqui agora usa o fluxo oficial de login do Google. A permissao do
-            Drive e solicitada separadamente quando necessaria.
+            O acesso ao NexusArqui usa Firebase Auth com provedor Google e Firestore como
+            persistência principal.
           </p>
         </div>
       </div>

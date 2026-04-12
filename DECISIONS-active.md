@@ -10,6 +10,31 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-04-12 — Firebase/Firestore como persistência primária e remoção do runtime Google Drive
+
+- Contexto: o frontend mantinha IndexedDB local com sincronização e autenticação acopladas ao stack Google Drive. Isso criava múltiplos modos de acesso, código específico de provider espalhado na UI e uma camada de arquivos/binários dependente do Drive como fonte principal.
+- Decisão:
+  1. Tornar Firestore a fonte primária de verdade remota, com `FirebasePersistenceAdapter` como adaptador default via `VITE_PERSISTENCE_ADAPTER=firebase`.
+  2. Tornar Firebase Auth com provedor Google a única autenticação do app.
+  3. Tornar Firebase Storage a camada obrigatória para documentos internos, anexos de agenda, avatares de clientes e backups JSON grandes.
+  4. Manter IndexedDB como cache/offline local e fallback explícito quando Firebase não estiver configurado.
+  5. Remover do runtime todos os artefatos de Google Drive (`googleDriveService`, `driveSyncEngine`, `driveFileService`, componentes e hooks associados).
+- Consequência: o runtime do frontend passa a operar com uma única pilha de nuvem para auth, realtime e binários; a UI de sincronização fica neutra em relação ao provider; o código legado de Drive deixa de ser caminho ativo.
+- Reversão:
+  1. Restaurar o stack de Google Drive removido.
+  2. Reverter `createPersistenceAdapter.ts` para a seleção anterior.
+  3. Restaurar os componentes de auth/sync e contratos de Drive removidos nesta sessão.
+- Referências: `src/frontend/services/infrastructure/persistence/firebaseConfig.ts`, `src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.ts`, `src/frontend/services/infrastructure/firebaseAuthService.ts`, `src/frontend/services/infrastructure/firebaseFileService.ts`, `src/frontend/services/infrastructure/firebaseSyncEngine.ts`, `src/frontend/components/configuracoes/CloudSyncSection.tsx`, `docs/adr/0012-firebase-primary-persistence.md`, `NEXT.md`.
+
+### Session 8 — 2026-04-12
+
+**Objective:** migrar o runtime do Nexus-Arqui para Firebase como persistência primária, removendo o Google Drive da autenticação, sincronização e gestão de arquivos.
+**What was done:** foi criado o bootstrap seguro do Firebase (`firebaseConfig.ts`) e o novo `FirebasePersistenceAdapter` com sync em tempo real, cache local e backups em Storage. O app passou a usar `firebaseAuthService`, `firebaseSyncEngine`, `firebaseFileService`, `CloudSyncSection` e `CloudSyncStatusToast`. `loadData.ts` foi integrado ao adaptador realtime, os uploads de documentos/anexos/avatares foram migrados para Firebase Storage, o shell HTML deixou de carregar scripts GSI/GAPI, o barrel de infraestrutura foi limpo e o runtime de Google Drive foi removido do `src/frontend`.
+**Decisions made:** Firestore como fonte primária remota; Firebase Auth como autenticação única; Firebase Storage para binários; IndexedDB mantido como cache/offline e fallback controlado; remoção imediata do stack legado de Drive do runtime final.
+**Open/Pending:** executar `npm run verify:ci` completo com os artefatos documentais atualizados e validar smoke manual em ambiente real com credenciais Firebase válidas.
+**Immediate next step:** configurar as variáveis `VITE_FIREBASE_*`, publicar as regras/indexes no projeto Firebase e executar o smoke manual de login, sync em duas abas, offline/online e upload/download de binários.
+**Quality gate:** `npm run typecheck` PASS; `npm run lint` PASS; `npx vitest run src/frontend/services/infrastructure/loadData.test.ts src/frontend/services/infrastructure/firebaseAuthService.test.ts src/frontend/services/infrastructure/firebaseFileService.test.ts src/frontend/services/infrastructure/firebaseSyncEngine.test.ts src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.test.ts` PASS.
+
 ### 2026-04-12 — Sincronização Drive endurecida com durabilidade local imediata e resultado tipado
 
 - Contexto: a sincronização IndexedDB + Google Drive apresentava perda de dados após `F5`, fila pendente presa, split-brain entre pasta local/API e falso positivo de sucesso na UI. O estado da fila persistia antes do dado local, `pullFromRemote()` atualizava apenas RAM, `_meta.json` inválido podia ser tratado como primeira sincronização e os modos local/API podiam apontar para raízes diferentes (`01. NexusArqui` vs `NexusArqui`).

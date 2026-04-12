@@ -5,7 +5,9 @@ export type DocumentStatus = 'Em Revisão' | 'Aprovado' | 'Versão Final' | 'Obs
 export interface DocumentSource {
   id: string;
   type: DocumentSourceType;
-  content: string;
+  content?: string;
+  storagePath?: string;
+  storageProvider?: 'firebase-storage';
   fileName?: string;
   fileType?: string;
   fileSize?: number;

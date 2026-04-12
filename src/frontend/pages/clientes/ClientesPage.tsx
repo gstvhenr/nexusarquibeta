@@ -9,7 +9,7 @@ import type { Client, PaymentStatus } from '../../types';
 import { NAV_LINKS } from '../../constants';
 import { PlusIcon, ArchiveIcon, UnarchiveIcon } from '../../components/ui';
 import { getPaymentStatusByClientId, saveClientAndUpdateState } from '../../services/clientService';
-import { driveFileService } from '../../services/infrastructure/driveFileService';
+import { firebaseFileService } from '../../services/infrastructure/firebaseFileService';
 import { v4 as uuidv4 } from 'uuid';
 import type { ClientesFilterState } from '@/components/clientes/types';
 const ClientesPage: () => React.ReactNode = () => {
@@ -159,18 +159,25 @@ const ClientesPage: () => React.ReactNode = () => {
 
       if (pendingAvatar) {
         try {
-          // Provide a specific fallback name if file.name is empty/missing
-          const relativePath = await driveFileService.replaceFeatureFile(
-            'clientes',
+          const storagePath = await firebaseFileService.uploadAvatarFile(
             clientId,
             pendingAvatar,
-            originalClient?.avatarUrl,
             'avatar.jpg',
           );
-          finalClient.avatarUrl = relativePath;
+
+          if (
+            originalClient?.avatarStoragePath &&
+            originalClient.avatarStoragePath !== storagePath
+          ) {
+            await firebaseFileService.deleteManagedFile(originalClient.avatarStoragePath);
+          }
+
+          const avatarUrl = await firebaseFileService.getFileUrl(storagePath);
+          finalClient.avatarStoragePath = storagePath;
+          finalClient.avatarUrl = avatarUrl ?? finalClient.avatarUrl;
         } catch (error) {
           console.error('Erro ao fazer upload do avatar:', error);
-          alert('Não foi possível salvar o avatar, verifique o console para mais detalhes.');
+          alert('Não foi possível salvar o avatar no Firebase, verifique o console.');
         }
       }
 
@@ -190,7 +197,9 @@ const ClientesPage: () => React.ReactNode = () => {
   );
   const handleDeleteConfirm = useCallback(async () => {
     if (currentClient) {
-      await driveFileService.deleteManagedFile(currentClient.avatarUrl);
+      await firebaseFileService.deleteManagedFile(
+        currentClient.avatarStoragePath ?? currentClient.avatarUrl,
+      );
       setClients((prev) => prev.filter((c) => c.id !== currentClient.id));
     }
     closeDeleteModal();
@@ -257,7 +266,7 @@ const ClientesPage: () => React.ReactNode = () => {
       const clientsMarkedForDeletion = clients.filter((client) => selectedClientIds.has(client.id));
       await Promise.all(
         clientsMarkedForDeletion.map((client) =>
-          driveFileService.deleteManagedFile(client.avatarUrl),
+          firebaseFileService.deleteManagedFile(client.avatarStoragePath ?? client.avatarUrl),
         ),
       );
       setClients((prev) => prev.filter((c) => !selectedClientIds.has(c.id)));

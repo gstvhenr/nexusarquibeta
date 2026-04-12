@@ -2,9 +2,8 @@ import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Header, Sidebar, RouteErrorBoundary } from './components/layout';
 import LoadingFallback from './components/ui/LoadingFallback';
-import { DriveApiToast } from './components/drive/DriveApiToast';
-import { DriveSyncReconnector } from './components/drive/DriveSyncReconnector';
-import { googleDriveService } from './services/infrastructure/googleDriveService';
+import { CloudSyncStatusToast } from './components/cloud/CloudSyncStatusToast';
+import { firebaseAuthService } from './services/infrastructure/firebaseAuthService';
 
 import { AuthGuard } from './components/auth';
 
@@ -63,12 +62,12 @@ const App: () => React.ReactNode = () => {
     location.pathname.startsWith('/prestadores-freelancers') ||
     location.pathname.startsWith('/fornecedores');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [showDriveToast, setShowDriveToast] = useState(false);
+  const [showCloudToast, setShowCloudToast] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = googleDriveService.subscribe((driveState) => {
-      if (driveState.status === 'connected' && googleDriveService.isSignedIn()) {
-        setShowDriveToast(true);
+    const unsubscribe = firebaseAuthService.subscribe((authState) => {
+      if (authState.status === 'authenticated') {
+        setShowCloudToast(true);
       }
     });
     return unsubscribe;
@@ -86,7 +85,6 @@ const App: () => React.ReactNode = () => {
         <div
           className={`flex flex-col md:pl-64 lg:pl-80 ${isSpecialPage ? 'h-full' : 'min-h-screen'}`}
         >
-          <DriveSyncReconnector />
           <Header onMenuClick={() => setSidebarOpen(true)} />
 
           <main className={`flex-1 flex flex-col min-h-0 ${mainPaddingClass}`}>
@@ -184,7 +182,7 @@ const App: () => React.ReactNode = () => {
           </main>
         </div>
 
-        <DriveApiToast visible={showDriveToast} onDismiss={() => setShowDriveToast(false)} />
+        <CloudSyncStatusToast visible={showCloudToast} onDismiss={() => setShowCloudToast(false)} />
       </div>
     </AuthGuard>
   );

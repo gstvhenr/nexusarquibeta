@@ -1,16 +1,12 @@
-import { createPersistenceAdapter } from './persistence';
+import { createPersistenceAdapter, isRealtimePersistencePort } from './persistence';
 import { autoBackupService } from './autoBackupService';
 import { migrateClients, type LegacyClientRecord } from './migrations';
 import { applySeedReminders } from './seedReminders';
 import { applySeedAgendaEvents } from './seedAgendaEvents';
 import { applySeedProspects } from './seedProspects';
-import { driveSyncEngine } from './driveSyncEngine';
-import { ARRAY_DOMAIN_KEYS, SCALAR_CONFIG_KEYS } from './driveSyncTypes';
-import {
-  SYNCED_PREFERENCE_DEFAULTS,
-  SYNCED_PREFERENCE_KEYS,
-  type SyncedPreferenceKey,
-} from './driveSyncPreferences';
+import { firebaseSyncEngine } from './firebaseSyncEngine';
+import { ARRAY_DOMAIN_KEYS, SCALAR_CONFIG_KEYS } from './cloudSyncTypes';
+import { SYNCED_PREFERENCE_KEYS, SYNCED_PREFERENCE_DEFAULTS } from './cloudSyncPreferences';
 import { uiPreferenceService } from './uiPreferenceService';
 import { uiInteractionLockService } from '../uiInteractionLockService';
 import type {
@@ -254,6 +250,8 @@ let interactionLockBound = false;
 let persistenceLifecycleBound = false;
 let persistenceLifecycleUnsubscribers: Array<() => void> = [];
 let isFlushingDeferredExternalUpdates = false;
+let realtimePersistenceBound = false;
+let realtimePersistenceUnsubscribers: Array<() => void> = [];
 
 const hasWindow = (): boolean => typeof window !== 'undefined';
 const dataSyncChannel: BroadcastChannel | null =
@@ -467,6 +465,34 @@ const bindPersistenceLifecycleIfNeeded = (): void => {
   persistenceLifecycleBound = true;
 };
 
+const bindRealtimePersistenceIfNeeded = (): void => {
+  if (realtimePersistenceBound || !isRealtimePersistencePort(persistence)) {
+    return;
+  }
+
+  realtimePersistenceUnsubscribers.push(
+    persistence.subscribeExternalChanges((event) => {
+      if (event.kind !== 'domain') {
+        return;
+      }
+
+      if (uiInteractionLockService.isLocked()) {
+        pendingExternalDomainWrites.set(event.domainKey, event.value);
+        return;
+      }
+
+      if (!appData) {
+        appData = createDefaultAppData();
+      }
+
+      appData = { ...appData, [event.domainKey]: event.value } as AppData;
+      notifySyncListeners(event.domainKey);
+    }),
+  );
+
+  realtimePersistenceBound = true;
+};
+
 /**
  * Key map retained for event compatibility and legacy clear paths.
  */
@@ -507,6 +533,7 @@ export async function initializeDataStore(): Promise<void> {
   bindSyncChannelIfNeeded();
   bindInteractionLockIfNeeded();
   bindPersistenceLifecycleIfNeeded();
+  bindRealtimePersistenceIfNeeded();
 
   if (isInitialized) {
     return;
@@ -522,7 +549,7 @@ export async function initializeDataStore(): Promise<void> {
     if (persistedEntityState && Object.keys(persistedEntityState).length > 0) {
       appData = normalizePersistedSnapshot(persistedEntityState);
       isInitialized = true;
-      startDriveSyncInBackground();
+      startCloudSyncInBackground();
       return;
     }
 
@@ -533,14 +560,14 @@ export async function initializeDataStore(): Promise<void> {
         cloneSnapshot(appData) as unknown as Record<string, unknown>,
       );
       isInitialized = true;
-      startDriveSyncInBackground();
+      startCloudSyncInBackground();
       return;
     }
 
     appData = createDefaultAppData();
     await persistence.writeSnapshot(cloneSnapshot(appData));
     isInitialized = true;
-    startDriveSyncInBackground();
+    startCloudSyncInBackground();
   })()
     .catch((error) => {
       console.error('Failed to initialize data store:', error);
@@ -565,6 +592,7 @@ export function loadData(): AppData {
   bindSyncChannelIfNeeded();
   bindInteractionLockIfNeeded();
   bindPersistenceLifecycleIfNeeded();
+  bindRealtimePersistenceIfNeeded();
 
   if (appData) {
     return cloneSnapshot(appData);
@@ -592,7 +620,7 @@ export function updateData<K extends keyof AppData>(key: K, data: AppData[K]): v
   appData = { ...appData, [key]: data };
   void queuePersistEntityState({ [key]: data } as Record<string, unknown>);
   queuePersistSnapshot(appData);
-  driveSyncEngine.notifyDomainChanged(key, previousData, data);
+  firebaseSyncEngine.notifyDomainChanged(key, previousData, data);
 }
 
 /**
@@ -607,14 +635,14 @@ export function replaceData(snapshot: AppData): void {
 
   // Notify sync engine of all domains (undo/redo changes multiple keys)
   for (const key of ARRAY_DOMAIN_KEYS) {
-    driveSyncEngine.notifyDomainChanged(
+    firebaseSyncEngine.notifyDomainChanged(
       key,
       previousSnapshot[key as keyof AppData],
       appData[key as keyof AppData],
     );
   }
   for (const key of SCALAR_CONFIG_KEYS) {
-    driveSyncEngine.notifyDomainChanged(
+    firebaseSyncEngine.notifyDomainChanged(
       key,
       previousSnapshot[key as keyof AppData],
       appData[key as keyof AppData],
@@ -669,7 +697,7 @@ export function resetPersistentDataAndNotify(): void {
   const defaultSnapshot = createDefaultAppData();
   appData = defaultSnapshot;
   isInitialized = true;
-  driveSyncEngine.handleLocalReset();
+  firebaseSyncEngine.handleLocalReset();
   persistenceQueue = persistenceQueue
     .then(async () => {
       await persistence.clearSnapshot();
@@ -704,7 +732,7 @@ export function flushPersistence(): void {
   flushDebouncedPersist();
 }
 
-export async function flushPersistenceAsync(): Promise<void> {
+async function flushPersistenceAsync(): Promise<void> {
   await persistSnapshotNow();
   await persistenceQueue;
 }
@@ -736,52 +764,19 @@ export function resetForTest(): void {
   persistenceQueue = Promise.resolve();
   syncChannelBound = false;
   interactionLockBound = false;
+  realtimePersistenceBound = false;
   persistenceLifecycleBound = false;
+  realtimePersistenceUnsubscribers.forEach((unsubscribe) => unsubscribe());
+  realtimePersistenceUnsubscribers = [];
   persistenceLifecycleUnsubscribers.forEach((unsubscribe) => unsubscribe());
   persistenceLifecycleUnsubscribers = [];
   isFlushingDeferredExternalUpdates = false;
   uiInteractionLockService.resetForTest();
-  driveSyncEngine.destroy();
+  firebaseSyncEngine.destroy();
 }
 
-// ---------------------------------------------------------------------------
-// Drive Sync Engine integration
-// ---------------------------------------------------------------------------
-
-/**
- * Starts the Drive Sync Engine in a non-blocking background task.
- * Called after local data is loaded and the app is ready.
- */
-function startDriveSyncInBackground(): void {
-  const readLocal = async (domainKey: string): Promise<unknown> => {
-    if (!appData) return null;
-    return (appData as unknown as Record<string, unknown>)[domainKey] ?? null;
-  };
-
-  const writeLocal = async (domainKey: string, data: unknown): Promise<void> => {
-    if (uiInteractionLockService.isLocked()) {
-      pendingExternalDomainWrites.set(domainKey, data);
-      return;
-    }
-
-    if (!appData) appData = createDefaultAppData();
-    appData = { ...appData, [domainKey]: data } as AppData;
-    await queuePersistEntityState({ [domainKey]: data });
-    queuePersistSnapshot(appData);
-    notifySyncListeners(domainKey);
-  };
-
-  const readPreference = async (key: SyncedPreferenceKey): Promise<unknown> =>
-    uiPreferenceService.getItem(key, SYNCED_PREFERENCE_DEFAULTS[key]);
-
-  const writePreference = async (key: SyncedPreferenceKey, value: unknown): Promise<void> => {
-    await uiPreferenceService.setItem(key, value, { source: 'remote' });
-  };
-
-  // Fire and forget — sync errors are handled internally by the engine
-  driveSyncEngine
-    .initialize(readLocal, writeLocal, readPreference, writePreference, flushPersistenceAsync)
-    .catch((error) => {
-      console.warn('[loadData] Drive sync initialization failed (non-blocking):', error);
-    });
+function startCloudSyncInBackground(): void {
+  firebaseSyncEngine.initialize(flushPersistenceAsync).catch((error) => {
+    console.warn('[loadData] Firebase sync initialization failed (non-blocking):', error);
+  });
 }

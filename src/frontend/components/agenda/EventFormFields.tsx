@@ -10,6 +10,7 @@ import type {
 import { agendaEventTypes } from '../../types';
 import { PlusIcon, TrashIcon } from '../ui/icons';
 import { priorityConfig } from './agendaFormHelpers';
+import { EventAttachmentsField } from './EventAttachmentsField';
 
 const inputClass =
   'w-full bg-background p-2 rounded-md border border-border-color focus:border-accent text-text-primary transition';
@@ -389,75 +390,14 @@ function EventFormFields({
         </div>
       </div>
 
-      {/* Attachments Section */}
-      <div>
-        <label htmlFor="field-anexos" className={labelClass}>
-          Arquivos Anexos (Drive)
-        </label>
-        <div className="mb-3">
-          <input
-            type="file"
-            multiple
-            id="field-anexos"
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files && onNewFilesChange) {
-                onNewFilesChange([...(newFiles || []), ...Array.from(e.target.files)]);
-              }
-              e.target.value = '';
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => document.getElementById('field-anexos')?.click()}
-            className="px-4 py-2 border border-border-color rounded-md text-sm font-medium hover:bg-background/80 text-text-primary"
-          >
-            Selecionar Arquivos...
-          </button>
-        </div>
-        <div className="space-y-2">
-          {/* Existing files */}
-          {editedEvent.attachments
-            ?.filter((a) => !filesToDelete?.includes(a.driveRelativePath))
-            .map((att) => (
-              <div
-                key={att.id}
-                className="flex items-center justify-between p-2 bg-background/50 rounded-md border border-border-color/30"
-              >
-                <span className="text-sm text-text-primary truncate">{att.name}</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onFilesToDeleteChange?.([...(filesToDelete || []), att.driveRelativePath]);
-                  }}
-                  className="text-text-secondary hover:text-error"
-                  aria-label="Remover arquivo"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          {/* New files to upload */}
-          {newFiles?.map((file, idx) => (
-            <div
-              key={`new-${file.name}-${idx}`}
-              className="flex items-center justify-between p-2 bg-secondary/10 rounded-md border border-secondary/20"
-            >
-              <span className="text-sm text-text-primary truncate">{file.name}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  onNewFilesChange?.(newFiles.filter((_, i) => i !== idx));
-                }}
-                className="text-text-secondary hover:text-error"
-                aria-label="Remover arquivo selecionado"
-              >
-                <TrashIcon className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+      <EventAttachmentsField
+        inputId="field-anexos"
+        attachments={editedEvent.attachments}
+        newFiles={newFiles}
+        filesToDelete={filesToDelete}
+        onNewFilesChange={onNewFilesChange}
+        onFilesToDeleteChange={onFilesToDeleteChange}
+      />
 
       <div>
         <span className={labelClass}>Prioridade</span>

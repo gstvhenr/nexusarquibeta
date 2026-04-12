@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { LoginPage } from './LoginPage';
 import LoadingFallback from '../ui/LoadingFallback';
-import { googleDriveService } from '../../services/infrastructure/googleDriveService';
+import { firebaseAuthService } from '../../services/infrastructure/firebaseAuthService';
 
 /** Tempo máximo (ms) que o AuthGuard espera pela inicialização antes de mostrar LoginPage. */
 const INIT_TIMEOUT_MS = 10000;
@@ -38,7 +38,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
     async function initAuth() {
       try {
-        const restored = await googleDriveService.tryRestoreSession();
+        const restored = await firebaseAuthService.tryRestoreSession();
         if (!isMounted) return;
         completeInit(restored);
       } catch {
@@ -58,15 +58,15 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   // Escutar mudanças de estado para reagir ao login/logout via popup
   useEffect(() => {
-    const unsubscribe = googleDriveService.subscribe((driveState) => {
-      if (driveState.status === 'connected') {
+    const unsubscribe = firebaseAuthService.subscribe((authState) => {
+      if (authState.status === 'authenticated') {
         setIsAuthenticated(true);
         setIsInitializing(false);
-      } else if (driveState.status === 'disconnected') {
+      } else if (authState.status === 'unauthenticated' || authState.status === 'error') {
         setIsAuthenticated(false);
         setIsInitializing(false);
       }
-      // 'connecting' é transitório — não alterar estado React para evitar flickering
+      // Estados transitórios não alteram o guard para evitar flicker.
     });
 
     return unsubscribe;

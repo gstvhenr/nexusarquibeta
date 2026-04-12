@@ -1,5 +1,5 @@
 {
-  "src/frontend/components/agenda/EventFormFields.tsx": 487,
+  "src/frontend/components/agenda/EventFormFields.tsx": 427,
   "src/frontend/components/clientes/ClienteDetalhesSecondaryTabs.tsx": 428,
   "src/frontend/components/comercial/ProspectCard.tsx": 307,
   "src/frontend/components/finance/FinanceLineChart.tsx": 418,
@@ -10,7 +10,7 @@
   "src/frontend/components/projetos/tabs/project-gantt/GanttTimeline.tsx": 303,
   "src/frontend/components/relatorios/ReportComponents.tsx": 486,
   "src/frontend/pages/comercial/propostas/PropostaDetalhesPage.tsx": 536,
-  "src/frontend/pages/configuracoes/ConfiguracoesPage.tsx": 526,
+  "src/frontend/pages/configuracoes/ConfiguracoesPage.tsx": 523,
   "src/frontend/pages/prestadores-freelancers/servicos-contratados/ServicosContratadosPage.tsx": 668,
   "src/frontend/pages/suprimentos/cotacoes/CotacaoDetalhesPage.tsx": 763,
   "src/frontend/services/agendaService.ts": 451,

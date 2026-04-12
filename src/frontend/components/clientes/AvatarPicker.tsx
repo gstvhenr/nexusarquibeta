@@ -1,7 +1,7 @@
 import { type ChangeEvent, useRef, useState, useEffect } from 'react';
 import { getInitials } from '../../utils/supplierHelpers';
 import { CameraIcon } from '../ui/icons-common';
-import { driveFileService } from '../../services/infrastructure/driveFileService';
+import { firebaseFileService } from '../../services/infrastructure/firebaseFileService';
 
 interface AvatarPickerProps {
   name: string;
@@ -39,8 +39,7 @@ export function AvatarPicker({
       return;
     }
 
-    // Resolve relative path using driveFileService
-    driveFileService
+    firebaseFileService
       .getFileUrl(avatarUrl)
       .then((url) => {
         if (active && url) {

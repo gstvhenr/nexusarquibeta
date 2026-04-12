@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, FormField, Input, Modal, Select } from '../../components/ui';
 import { useCoreData, useSystemData } from '../../context/DataContext';
 import type { DocumentFolder, DocumentItem, DocumentFile, Project } from '../../types';
+import { firebaseFileService } from '../../services/infrastructure/firebaseFileService';
 import { fileToB64 } from '../../utils/documents';
 
 type AddModalProps = {
@@ -43,7 +44,12 @@ export const AddModal: (props: AddModalProps) => React.ReactNode = ({
   const [projectToLink, setProjectToLink] = useState('');
 
   const linkedProjectIds = useMemo(() => {
-    const linkedFolders = docs.projects.children.filter(
+    const projectsRoot = docs?.projects;
+    if (!projectsRoot?.children) {
+      return new Set<string>();
+    }
+
+    const linkedFolders = projectsRoot.children.filter(
       (child): child is DocumentFolder => child.type === 'folder',
     );
     return new Set(linkedFolders.map((folder) => folder.projectId));
@@ -100,10 +106,20 @@ export const AddModal: (props: AddModalProps) => React.ReactNode = ({
     } else if (addType === 'upload' && filesToUpload) {
       const newFiles: DocumentFile[] = await Promise.all(
         (Array.from(filesToUpload) as File[]).map(async (file) => {
-          const base64 = await fileToB64(file);
+          const fileId = getUniqueId('file');
           const sourceId = getUniqueId('src');
+          let storagePath: string | undefined;
+          let legacyContent: string | undefined;
+
+          try {
+            storagePath = await firebaseFileService.uploadDocumentFile(fileId, sourceId, file);
+          } catch {
+            // Local-only fallback when Firebase is unavailable during development/tests.
+            legacyContent = await fileToB64(file);
+          }
+
           return {
-            id: getUniqueId('file'),
+            id: fileId,
             name: file.name,
             type: 'file',
             dateAdded: now,
@@ -112,7 +128,9 @@ export const AddModal: (props: AddModalProps) => React.ReactNode = ({
               {
                 id: sourceId,
                 type: 'upload',
-                content: base64,
+                content: legacyContent,
+                storagePath,
+                storageProvider: storagePath ? 'firebase-storage' : undefined,
                 fileName: file.name,
                 fileType: file.type,
                 fileSize: file.size,

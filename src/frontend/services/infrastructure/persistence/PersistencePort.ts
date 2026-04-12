@@ -39,6 +39,34 @@ export interface CounterReservationResult {
   nextValue: number;
 }
 
+/** External remote/local-cache change propagated by realtime adapters. */
+export type PersistenceExternalChangeEvent =
+  | {
+      kind: 'domain';
+      domainKey: string;
+      value: unknown;
+    }
+  | {
+      kind: 'preference';
+      key: string;
+      value: unknown | null;
+    };
+
+/** Minimal sync state surfaced by realtime adapters. */
+export interface PersistenceSyncState {
+  status: 'initializing' | 'idle' | 'syncing' | 'offline' | 'error';
+  accessMode: 'firebase' | 'none';
+  lastSyncTimestamp: number | null;
+  errorMessage: string | null;
+  retryScheduledAt: number | null;
+  pendingWrites: number;
+  userEmail: string | null;
+  quota: {
+    limitBytes: number;
+    usageBytes: number;
+  } | null;
+}
+
 /**
  * Abstract persistence contract.
  *
@@ -111,4 +139,27 @@ export interface PersistencePort {
 
   /** Atomically reserve a global identifier and return the reserved + next value. */
   reserveGlobalIdentifier(defaultCounter?: number): Promise<CounterReservationResult>;
+}
+
+/**
+ * Optional realtime extension for remote-first backends such as Firebase.
+ *
+ * Consumers must feature-detect via `isRealtimePersistencePort()` before using it.
+ */
+export interface RealtimePersistencePort extends PersistencePort {
+  subscribeExternalChanges(listener: (event: PersistenceExternalChangeEvent) => void): () => void;
+  subscribeSyncState(listener: (state: PersistenceSyncState) => void): () => void;
+  forceReconnect(): Promise<void>;
+  dispose(): void;
+}
+
+export function isRealtimePersistencePort(
+  value: PersistencePort,
+): value is RealtimePersistencePort {
+  return (
+    typeof (value as RealtimePersistencePort).subscribeExternalChanges === 'function' &&
+    typeof (value as RealtimePersistencePort).subscribeSyncState === 'function' &&
+    typeof (value as RealtimePersistencePort).forceReconnect === 'function' &&
+    typeof (value as RealtimePersistencePort).dispose === 'function'
+  );
 }

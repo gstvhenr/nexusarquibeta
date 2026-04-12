@@ -67,7 +67,7 @@ export interface AgendaEvent {
   archived?: boolean;
   category?: 'Evento' | 'Tarefa'; // Nova tipagem obrigatória para criação/edição em UI
   subtasks?: Subtask[]; // Added subtasks for Kanban granularity
-  attachments?: { id: string; name: string; driveRelativePath: string }[];
+  attachments?: { id: string; name: string; storagePath?: string; driveRelativePath?: string }[];
   links?: string[];
 }
 

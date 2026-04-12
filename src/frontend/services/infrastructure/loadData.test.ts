@@ -4,11 +4,13 @@ import type {
   BackupMetadata,
   BackupRecord,
   CounterReservationResult,
-  PersistencePort,
+  PersistenceExternalChangeEvent,
+  PersistenceSyncState,
+  RealtimePersistencePort,
   WriteBackupOptions,
 } from './persistence/PersistencePort';
 
-const driveSyncEngineMock = {
+const firebaseSyncEngineMock = {
   initialize: vi.fn(async () => undefined),
   notifyDomainChanged: vi.fn(),
   notifyPreferenceChanged: vi.fn(),
@@ -16,8 +18,8 @@ const driveSyncEngineMock = {
   destroy: vi.fn(),
 };
 
-vi.mock('./driveSyncEngine', () => ({
-  driveSyncEngine: driveSyncEngineMock,
+vi.mock('./firebaseSyncEngine', () => ({
+  firebaseSyncEngine: firebaseSyncEngineMock,
 }));
 
 type LoadDataModule = typeof import('./loadData');
@@ -32,16 +34,19 @@ function cloneValue<T>(value: T): T {
 }
 
 function createMemoryPersistenceAdapter(): {
-  adapter: PersistencePort;
+  adapter: RealtimePersistencePort;
   stats: {
     snapshotWrites: number;
     entityWrites: number;
   };
+  emitExternalDomainChange: (domainKey: string, value: unknown) => void;
 } {
   let snapshot: unknown | null = null;
   let entityState: Record<string, unknown> = {};
   const preferences = new Map<string, unknown>();
   const backups = new Map<string, BackupRecord<unknown>>();
+  const externalChangeListeners = new Set<(event: PersistenceExternalChangeEvent) => void>();
+  const syncStateListeners = new Set<(state: PersistenceSyncState) => void>();
   const stats = {
     snapshotWrites: 0,
     entityWrites: 0,
@@ -55,7 +60,7 @@ function createMemoryPersistenceAdapter(): {
     reason: backup.reason,
   });
 
-  const adapter: PersistencePort = {
+  const adapter: RealtimePersistencePort = {
     isSupported: () => true,
     readSnapshot: async <T>() => (snapshot === null ? null : cloneValue(snapshot as T)),
     writeSnapshot: async <T>(nextSnapshot: T) => {
@@ -133,9 +138,58 @@ function createMemoryPersistenceAdapter(): {
         nextValue,
       };
     },
+    subscribeExternalChanges: (listener) => {
+      externalChangeListeners.add(listener);
+      return () => externalChangeListeners.delete(listener);
+    },
+    subscribeSyncState: (listener) => {
+      syncStateListeners.add(listener);
+      listener({
+        status: 'idle',
+        accessMode: 'firebase',
+        lastSyncTimestamp: null,
+        errorMessage: null,
+        retryScheduledAt: null,
+        pendingWrites: 0,
+        userEmail: 'teste@nexus-arqui.local',
+        quota: null,
+      });
+      return () => syncStateListeners.delete(listener);
+    },
+    forceReconnect: async () => {
+      syncStateListeners.forEach((listener) =>
+        listener({
+          status: 'idle',
+          accessMode: 'firebase',
+          lastSyncTimestamp: Date.now(),
+          errorMessage: null,
+          retryScheduledAt: null,
+          pendingWrites: 0,
+          userEmail: 'teste@nexus-arqui.local',
+          quota: null,
+        }),
+      );
+    },
+    dispose: () => {
+      externalChangeListeners.clear();
+      syncStateListeners.clear();
+    },
   };
 
-  return { adapter, stats };
+  return {
+    adapter,
+    stats,
+    emitExternalDomainChange: (domainKey, value) => {
+      entityState[domainKey] = cloneValue(value);
+      externalChangeListeners.forEach((listener) => {
+        listener({
+          kind: 'domain',
+          domainKey,
+          value,
+        });
+      });
+    },
+  };
 }
 
 async function importLoadDataWithMemoryAdapter(): Promise<{
@@ -196,23 +250,18 @@ describe('loadData persistence durability', () => {
   });
 
   it('should persist remote domain writes durably before the next refresh', async () => {
-    const { loadDataModule, persistenceModule } = await importLoadDataWithMemoryAdapter();
+    const { loadDataModule, persistenceModule, memoryAdapter } =
+      await importLoadDataWithMemoryAdapter();
     activeLoadDataModule = loadDataModule;
     activePersistenceModule = persistenceModule;
 
     await loadDataModule.initializeDataStore();
 
-    const initializeArgs = driveSyncEngineMock.initialize.mock.calls[0] as unknown[] | undefined;
-    const writeLocal = initializeArgs?.[1] as
-      | ((domainKey: string, data: unknown) => Promise<void>)
-      | undefined;
-
-    expect(writeLocal).toBeTypeOf('function');
-
     const remoteClients: AppData['clients'] = [
       { id: 'client-remote', name: 'Cliente Remoto' } as never,
     ];
-    await writeLocal?.('clients', remoteClients);
+    memoryAdapter.emitExternalDomainChange('clients', remoteClients);
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     loadDataModule.resetForTest();
     await loadDataModule.initializeDataStore();
