@@ -28,14 +28,13 @@ Para estabilizar o publish Git-based em Cloud Run, o repositório agora expõe:
 - [x] `npm run verify`.
 - [ ] `docker build` local (`docker` CLI presente, daemon indisponível na máquina).
 - [x] Smoke local do runtime com `PORT=8080 npm run start`.
-- [ ] Publicação do commit corrigido no GitHub.
+- [x] Publicação do commit corrigido no GitHub (`e4d5023`).
 
 ## Próximo passo exato
 
-1. Rodar `npm run verify`.
-2. Publicar o commit corrigido e confirmar o reprocessamento do check `cloudrun-nexusarqui-git-southamerica-east1-*`.
-3. Se o deploy concluir, configurar/confirmar as `VITE_FIREBASE_*` como build envs no provedor remoto e executar smoke manual.
-4. Com Docker Desktop ativo, validar também `docker build` local para fechar a trilha de container end-to-end.
+1. Confirmar no GitHub/Google Cloud o reprocessamento do check `cloudrun-nexusarqui-git-southamerica-east1-*` para o commit `e4d5023`.
+2. Se o deploy concluir, configurar/confirmar as `VITE_FIREBASE_*` como build envs no provedor remoto e executar smoke manual.
+3. Com Docker Desktop ativo, validar também `docker build` local para fechar a trilha de container end-to-end.
 
 ## Bloqueios e dúvidas
 
