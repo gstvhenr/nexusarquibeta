@@ -23,6 +23,7 @@ vi.mock('./persistence/firebaseConfig', () => ({
     },
     storage: {},
   })),
+  isFirebaseConfigured: vi.fn(() => true),
 }));
 
 describe('firebaseFileService', () => {

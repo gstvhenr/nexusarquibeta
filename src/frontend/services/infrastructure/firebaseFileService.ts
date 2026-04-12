@@ -1,5 +1,5 @@
 import { deleteObject, getDownloadURL, ref, uploadBytes, uploadString } from 'firebase/storage';
-import { ensureFirebaseReady } from './persistence/firebaseConfig';
+import { ensureFirebaseReady, isFirebaseConfigured } from './persistence/firebaseConfig';
 
 async function requireCurrentUserId(): Promise<string> {
   const { auth } = await ensureFirebaseReady();
@@ -22,6 +22,13 @@ async function uploadFeatureFile(
   file: File,
   filenameOverride?: string,
 ): Promise<string> {
+  if (!isFirebaseConfigured()) {
+    console.warn(
+      `[FirebaseFileService] Ignorando uploadFeatureFile pois o Firebase não está configurado.`,
+    );
+    return `local-fallback/attachments/${feature}/${entityId}/${file.name}`;
+  }
+
   const uid = await requireCurrentUserId();
   const { storage } = await ensureFirebaseReady();
   const fileName = filenameOverride || file.name || 'upload.bin';
@@ -39,6 +46,13 @@ async function uploadAvatarFile(
   file: File,
   filenameOverride = 'avatar.jpg',
 ): Promise<string> {
+  if (!isFirebaseConfigured()) {
+    console.warn(
+      `[FirebaseFileService] Ignorando uploadAvatarFile pois o Firebase não está configurado.`,
+    );
+    return `local-fallback/avatars/${clientId}/${filenameOverride}`;
+  }
+
   const uid = await requireCurrentUserId();
   const { storage } = await ensureFirebaseReady();
   const storagePath = normalizeStoragePath(uid, `avatars/${clientId}/${filenameOverride}`);
@@ -56,6 +70,13 @@ async function uploadDocumentFile(
   file: File,
   filenameOverride?: string,
 ): Promise<string> {
+  if (!isFirebaseConfigured()) {
+    console.warn(
+      `[FirebaseFileService] Ignorando uploadDocumentFile pois o Firebase não está configurado.`,
+    );
+    return `local-fallback/documents/${fileId}/${sourceId}/${filenameOverride || file.name}`;
+  }
+
   const uid = await requireCurrentUserId();
   const { storage } = await ensureFirebaseReady();
   const fileName = filenameOverride || file.name || 'document.bin';
@@ -73,6 +94,13 @@ async function uploadDataUrl(
   dataUrl: string,
   metadata?: { contentType?: string },
 ): Promise<string> {
+  if (!isFirebaseConfigured()) {
+    console.warn(
+      `[FirebaseFileService] Ignorando uploadDataUrl pois o Firebase não está configurado.`,
+    );
+    return `local-fallback/${storagePath}`;
+  }
+
   const uid = await requireCurrentUserId();
   const { storage } = await ensureFirebaseReady();
   const normalizedPath = normalizeStoragePath(uid, storagePath);
@@ -82,6 +110,13 @@ async function uploadDataUrl(
 }
 
 async function uploadJsonBackup(backupId: string, payload: unknown): Promise<string> {
+  if (!isFirebaseConfigured()) {
+    console.warn(
+      `[FirebaseFileService] Ignorando uploadJsonBackup pois o Firebase não está configurado.`,
+    );
+    return `local-fallback/backups/${backupId}.json`;
+  }
+
   const uid = await requireCurrentUserId();
   const { storage } = await ensureFirebaseReady();
   const storagePath = normalizeStoragePath(uid, `backups/${backupId}.json`);
@@ -95,6 +130,13 @@ async function uploadJsonBackup(backupId: string, payload: unknown): Promise<str
 
 async function getFileUrl(storagePath: string): Promise<string | null> {
   if (!storagePath) {
+    return null;
+  }
+
+  if (!isFirebaseConfigured() || storagePath.startsWith('local-fallback/')) {
+    console.warn(
+      `[FirebaseFileService] Firebase não configurado ou path local-fallback. getFileUrl retornando nulo.`,
+    );
     return null;
   }
 
@@ -117,7 +159,7 @@ async function downloadFile(storagePath: string): Promise<Blob | null> {
 }
 
 async function deleteFile(storagePath: string): Promise<void> {
-  if (!storagePath) {
+  if (!storagePath || !isFirebaseConfigured() || storagePath.startsWith('local-fallback/')) {
     return;
   }
 
