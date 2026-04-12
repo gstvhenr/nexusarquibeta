@@ -15,12 +15,18 @@ import type {
   GisTokenResponse,
   GoogleIdCredentialResponse,
 } from './googleDriveTypes';
+import {
+  APP_FOLDER_CANDIDATES,
+  CANONICAL_APP_FOLDER_NAME,
+  selectPreferredAppFolder,
+  type DriveAppFolderCandidate,
+  type DriveAppFolderName,
+} from './driveAppFolder';
 import { extractGoogleCredentialEmail } from '@/utils/googleIdentity';
 
 const SCOPES =
   'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-const APP_FOLDER_NAME = 'NexusArqui';
 const SNAPSHOT_FILE_NAME = 'nexus-data.json';
 
 /** In-memory cache of folder path -> folderId to avoid redundant API calls. */
@@ -34,6 +40,7 @@ let gapiInitialized = false;
 let gisInitialized = false;
 let googleIdentityInitialized = false;
 let appFolderId: string | null = null;
+let appFolderName: DriveAppFolderName | null = null;
 
 const TOKEN_STORAGE_KEY = 'nexus_google_token';
 const AUTH_FLAG_KEY = 'nexus_authenticated';
@@ -68,6 +75,10 @@ function getCurrentGapiToken(): { access_token: string } | null {
   } catch {
     return null;
   }
+}
+
+function hasStoredAuthenticatedUser(): boolean {
+  return Boolean(localStorage.getItem(USER_EMAIL_KEY) && localStorage.getItem(AUTH_FLAG_KEY));
 }
 
 // ---------------------------------------------------------------------------
@@ -475,6 +486,8 @@ function signOut(): void {
   }
   popupTokenClient = null;
   appFolderId = null;
+  appFolderName = null;
+  folderIdCache.clear();
   clearPersistedToken();
   updateState({
     status: 'disconnected',
@@ -485,6 +498,18 @@ function signOut(): void {
 
 function isSignedIn(): boolean {
   return getCurrentGapiToken() !== null;
+}
+
+async function ensureDriveAccess(): Promise<boolean> {
+  if (isSignedIn()) {
+    return true;
+  }
+
+  if (!hasStoredAuthenticatedUser()) {
+    return false;
+  }
+
+  return trySilentReauth();
 }
 
 async function fetchUserEmail(accessToken: string): Promise<string> {
@@ -499,6 +524,74 @@ async function fetchUserEmail(accessToken: string): Promise<string> {
 // Drive folder management
 // ---------------------------------------------------------------------------
 
+function clearFolderCacheIfRootChanged(
+  nextFolderId: string,
+  nextFolderName: DriveAppFolderName,
+): void {
+  if (appFolderId !== nextFolderId || appFolderName !== nextFolderName) {
+    folderIdCache.clear();
+  }
+
+  appFolderId = nextFolderId;
+  appFolderName = nextFolderName;
+}
+
+async function findFolderInParent(
+  folderName: string,
+  parentId: string,
+): Promise<DriveFileMetadata | null> {
+  const response = await window.gapi!.client.request({
+    path: '/drive/v3/files',
+    method: 'GET',
+    params: {
+      q: `name='${folderName}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id,name,modifiedTime)',
+      spaces: 'drive',
+    },
+  });
+
+  const files = (response.result.files as DriveFileMetadata[] | undefined) ?? [];
+  return files[0] ?? null;
+}
+
+async function findFolderByPathUnder(
+  parentId: string,
+  relativePath: string,
+): Promise<string | null> {
+  const segments = relativePath.split('/').filter((segment) => segment.length > 0);
+  let currentParentId = parentId;
+
+  for (const segment of segments) {
+    const childFolder = await findFolderInParent(segment, currentParentId);
+    if (!childFolder) {
+      return null;
+    }
+
+    currentParentId = childFolder.id;
+  }
+
+  return currentParentId;
+}
+
+async function getAppFolderCandidateState(
+  folder: DriveFileMetadata,
+): Promise<DriveAppFolderCandidate<DriveFileMetadata>> {
+  const dataFolderId = await findFolderByPathUnder(folder.id, 'data');
+  const metaFile = dataFolderId ? await findFileMetadataInFolder('_meta.json', dataFolderId) : null;
+  const legacyFile = await findFileMetadataInFolder(SNAPSHOT_FILE_NAME, folder.id);
+
+  return {
+    name: folder.name as DriveAppFolderName,
+    ref: folder,
+    hasSyncArtifacts: metaFile !== null,
+    hasLegacySnapshot: legacyFile !== null,
+    lastModified:
+      (metaFile?.modifiedTime ? new Date(metaFile.modifiedTime).getTime() : null) ??
+      (legacyFile?.modifiedTime ? new Date(legacyFile.modifiedTime).getTime() : null) ??
+      (folder.modifiedTime ? new Date(folder.modifiedTime).getTime() : null),
+  };
+}
+
 async function getOrCreateAppFolder(): Promise<string> {
   if (appFolderId) return appFolderId;
 
@@ -506,16 +599,24 @@ async function getOrCreateAppFolder(): Promise<string> {
     path: '/drive/v3/files',
     method: 'GET',
     params: {
-      q: `name='${APP_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-      fields: 'files(id,name)',
+      q: `(name='${APP_FOLDER_CANDIDATES[0]}' or name='${APP_FOLDER_CANDIDATES[1]}') and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id,name,modifiedTime)',
       spaces: 'drive',
     },
   });
 
   const files = (searchResponse.result.files as DriveFileMetadata[] | undefined) ?? [];
   if (files.length > 0) {
-    appFolderId = files[0].id;
-    return appFolderId;
+    const folderStates = await Promise.all(
+      files
+        .filter((file) => APP_FOLDER_CANDIDATES.includes(file.name as DriveAppFolderName))
+        .map((file) => getAppFolderCandidateState(file)),
+    );
+    const selectedFolder = selectPreferredAppFolder(folderStates);
+    if (selectedFolder) {
+      clearFolderCacheIfRootChanged(selectedFolder.ref.id, selectedFolder.name);
+      return selectedFolder.ref.id;
+    }
   }
 
   const createResponse = await window.gapi!.client.request({
@@ -523,13 +624,16 @@ async function getOrCreateAppFolder(): Promise<string> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      name: APP_FOLDER_NAME,
+      name: CANONICAL_APP_FOLDER_NAME,
       mimeType: 'application/vnd.google-apps.folder',
     }),
   });
 
-  appFolderId = (createResponse.result as unknown as DriveFileMetadata).id;
-  return appFolderId;
+  clearFolderCacheIfRootChanged(
+    (createResponse.result as unknown as DriveFileMetadata).id,
+    CANONICAL_APP_FOLDER_NAME,
+  );
+  return (createResponse.result as unknown as DriveFileMetadata).id;
 }
 
 // ---------------------------------------------------------------------------
@@ -537,6 +641,14 @@ async function getOrCreateAppFolder(): Promise<string> {
 // ---------------------------------------------------------------------------
 
 async function findFileInFolder(fileName: string, folderId: string): Promise<string | null> {
+  const metadata = await findFileMetadataInFolder(fileName, folderId);
+  return metadata?.id ?? null;
+}
+
+async function findFileMetadataInFolder(
+  fileName: string,
+  folderId: string,
+): Promise<DriveFileMetadata | null> {
   const response = await window.gapi!.client.request({
     path: '/drive/v3/files',
     method: 'GET',
@@ -548,7 +660,7 @@ async function findFileInFolder(fileName: string, folderId: string): Promise<str
   });
 
   const files = (response.result.files as DriveFileMetadata[] | undefined) ?? [];
-  return files.length > 0 ? files[0].id : null;
+  return files[0] ?? null;
 }
 
 async function listChildrenInFolder(folderId: string): Promise<DriveFileMetadata[]> {
@@ -817,8 +929,10 @@ async function downloadFileByPath(relativePath: string): Promise<string | null> 
   const fileName = parts.pop();
   if (!fileName) return null;
 
+  const rootFolderId = await getOrCreateAppFolder();
   const folderId =
-    parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+    parts.length > 0 ? await findFolderByPathUnder(rootFolderId, parts.join('/')) : rootFolderId;
+  if (!folderId) return null;
 
   const fileId = await findFileInFolder(fileName, folderId);
   if (!fileId) return null;
@@ -894,8 +1008,10 @@ async function downloadBinaryFileByPath(relativePath: string): Promise<Blob | nu
   const fileName = parts.pop();
   if (!fileName) return null;
 
+  const rootFolderId = await getOrCreateAppFolder();
   const folderId =
-    parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+    parts.length > 0 ? await findFolderByPathUnder(rootFolderId, parts.join('/')) : rootFolderId;
+  if (!folderId) return null;
 
   const fileId = await findFileInFolder(fileName, folderId);
   if (!fileId) return null;
@@ -918,8 +1034,10 @@ async function getFileModifiedTimeByPath(relativePath: string): Promise<number |
   const fileName = parts.pop();
   if (!fileName) return null;
 
+  const rootFolderId = await getOrCreateAppFolder();
   const folderId =
-    parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+    parts.length > 0 ? await findFolderByPathUnder(rootFolderId, parts.join('/')) : rootFolderId;
+  if (!folderId) return null;
 
   const response = await window.gapi!.client.request({
     path: '/drive/v3/files',
@@ -946,8 +1064,10 @@ async function fileExistsByPath(relativePath: string): Promise<boolean> {
   if (!fileName) return false;
 
   try {
+    const rootFolderId = await getOrCreateAppFolder();
     const folderId =
-      parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+      parts.length > 0 ? await findFolderByPathUnder(rootFolderId, parts.join('/')) : rootFolderId;
+    if (!folderId) return false;
 
     const fileId = await findFileInFolder(fileName, folderId);
     return fileId !== null;
@@ -965,8 +1085,10 @@ async function deleteFileByPath(relativePath: string): Promise<void> {
   if (!fileName) return;
 
   try {
+    const rootFolderId = await getOrCreateAppFolder();
     const folderId =
-      parts.length > 0 ? await getOrCreateSubFolder(parts.join('/')) : await getOrCreateAppFolder();
+      parts.length > 0 ? await findFolderByPathUnder(rootFolderId, parts.join('/')) : rootFolderId;
+    if (!folderId) return;
 
     const fileId = await findFileInFolder(fileName, folderId);
     if (!fileId) return;
@@ -1077,5 +1199,6 @@ export const googleDriveService = {
   deleteFolderByPath,
   getOrCreateSubFolder,
   ensureInitialized,
+  ensureDriveAccess,
   getStorageQuota,
 };

@@ -7,6 +7,25 @@
 /** Overall sync status of the engine. */
 export type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline' | 'initializing';
 
+/** User-triggered action executed by the sync engine. */
+export type SyncOperationAction =
+  | 'flushPendingWrites'
+  | 'forcePush'
+  | 'forcePull'
+  | 'reconnectWithRepermission';
+
+/** Machine-readable outcome for sync engine actions. */
+export type SyncOperationCause =
+  | 'success'
+  | 'no_changes'
+  | 'no_access'
+  | 'local_permission_required'
+  | 'api_auth_required'
+  | 'remote_meta_invalid'
+  | 'push_failed'
+  | 'pull_failed'
+  | 'reconnect_failed';
+
 /** Resolved direction for a single domain sync cycle. */
 export type SyncDirection = 'push' | 'pull' | 'none';
 
@@ -65,6 +84,20 @@ export interface SyncEngineState {
   errorMessage: string | null;
   quota: StorageQuota | null;
   retryScheduledAt: number | null;
+  pendingChangesCount: number;
+}
+
+/** Structured result returned by manual sync actions. */
+export interface SyncOperationResult {
+  ok: boolean;
+  action: SyncOperationAction;
+  cause: SyncOperationCause;
+  accessMode: DriveAccessMode;
+  message: string | null;
+  performedPush: boolean;
+  performedPull: boolean;
+  attemptedLocalRepermission: boolean;
+  attemptedApiReauth: boolean;
   pendingChangesCount: number;
 }
 

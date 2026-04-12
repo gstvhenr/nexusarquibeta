@@ -8,8 +8,16 @@
  *   const data = await localDriveService.readSnapshot();
  */
 
-const APP_FOLDER_NAME = '01. NexusArqui';
+import {
+  APP_FOLDER_CANDIDATES,
+  CANONICAL_APP_FOLDER_NAME,
+  selectPreferredAppFolder,
+  type DriveAppFolderCandidate,
+  type DriveAppFolderName,
+} from './driveAppFolder';
+
 const SNAPSHOT_FILE_NAME = 'nexus-data.json';
+const DATA_META_PATH_SEGMENTS = ['data', '_meta.json'];
 const IDB_NAME = 'nexus-drive-handle';
 const IDB_STORE = 'handles';
 const IDB_KEY = 'driveFolder';
@@ -111,10 +119,86 @@ async function verifyPermission(
 // App subfolder
 // ---------------------------------------------------------------------------
 
+async function getDirectoryIfExists(
+  parentHandle: FileSystemDirectoryHandle,
+  folderName: DriveAppFolderName,
+): Promise<FileSystemDirectoryHandle | null> {
+  try {
+    return await parentHandle.getDirectoryHandle(folderName);
+  } catch {
+    return null;
+  }
+}
+
+async function getFileModifiedTimeFromSegments(
+  folderHandle: FileSystemDirectoryHandle,
+  segments: string[],
+): Promise<number | null> {
+  try {
+    let currentHandle: FileSystemDirectoryHandle = folderHandle;
+    const nextSegments = [...segments];
+    const fileName = nextSegments.pop();
+    if (!fileName) {
+      return null;
+    }
+
+    for (const segment of nextSegments) {
+      currentHandle = await currentHandle.getDirectoryHandle(segment);
+    }
+
+    const fileHandle = await currentHandle.getFileHandle(fileName);
+    const file = await fileHandle.getFile();
+    return file.lastModified;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveExistingAppFolder(
+  rootHandle: FileSystemDirectoryHandle,
+): Promise<DriveAppFolderCandidate<FileSystemDirectoryHandle> | null> {
+  const candidates: DriveAppFolderCandidate<FileSystemDirectoryHandle>[] = [];
+
+  for (const folderName of APP_FOLDER_CANDIDATES) {
+    const folderHandle = await getDirectoryIfExists(rootHandle, folderName);
+    if (!folderHandle) {
+      continue;
+    }
+
+    const metaModifiedAt = await getFileModifiedTimeFromSegments(
+      folderHandle,
+      DATA_META_PATH_SEGMENTS,
+    );
+    const legacyModifiedAt = await getFileModifiedTimeFromSegments(folderHandle, [
+      SNAPSHOT_FILE_NAME,
+    ]);
+
+    candidates.push({
+      name: folderName,
+      ref: folderHandle,
+      hasSyncArtifacts: metaModifiedAt !== null,
+      hasLegacySnapshot: legacyModifiedAt !== null,
+      lastModified: metaModifiedAt ?? legacyModifiedAt,
+    });
+  }
+
+  return selectPreferredAppFolder(candidates);
+}
+
 async function getAppFolder(
   rootHandle: FileSystemDirectoryHandle,
-): Promise<FileSystemDirectoryHandle> {
-  return rootHandle.getDirectoryHandle(APP_FOLDER_NAME, { create: true });
+  options?: { create?: boolean },
+): Promise<FileSystemDirectoryHandle | null> {
+  const existing = await resolveExistingAppFolder(rootHandle);
+  if (existing) {
+    return existing.ref;
+  }
+
+  if (options?.create === false) {
+    return null;
+  }
+
+  return rootHandle.getDirectoryHandle(CANONICAL_APP_FOLDER_NAME, { create: true });
 }
 
 // ---------------------------------------------------------------------------
@@ -127,7 +211,7 @@ async function selectFolder(): Promise<string> {
   }
 
   const rootHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-  await getAppFolder(rootHandle);
+  await getAppFolder(rootHandle, { create: true });
   await saveHandle(rootHandle);
 
   cachedHandle = rootHandle;
@@ -151,6 +235,7 @@ async function verifyAccess(promptUser = false): Promise<boolean> {
     if (granted) {
       cachedHandle = handle;
       cachedFolderName = handle.name;
+      await getAppFolder(handle, { create: false });
     }
     return granted;
   } catch {
@@ -196,7 +281,10 @@ async function writeSnapshot(jsonString: string): Promise<void> {
     throw new Error('Permissão de escrita não concedida para a pasta.');
   }
 
-  const appFolder = await getAppFolder(rootHandle);
+  const appFolder = await getAppFolder(rootHandle, { create: true });
+  if (!appFolder) {
+    throw new Error('Pasta da aplicação não encontrada.');
+  }
   const fileHandle = await appFolder.getFileHandle(SNAPSHOT_FILE_NAME, {
     create: true,
   });
@@ -218,7 +306,8 @@ async function readSnapshot(): Promise<string | null> {
   if (!(await verifyPermission(rootHandle))) return null;
 
   try {
-    const appFolder = await getAppFolder(rootHandle);
+    const appFolder = await getAppFolder(rootHandle, { create: false });
+    if (!appFolder) return null;
     const fileHandle = await appFolder.getFileHandle(SNAPSHOT_FILE_NAME);
     const file = await fileHandle.getFile();
     cachedHandle = rootHandle;
@@ -246,6 +335,7 @@ async function initDisplayName(): Promise<string | null> {
   if (handle) {
     cachedFolderName = handle.name;
     cachedHandle = handle;
+    await getAppFolder(handle, { create: false });
   }
   return cachedFolderName;
 }
@@ -265,7 +355,12 @@ async function getSubFolder(relativePath: string): Promise<FileSystemDirectoryHa
     throw new Error('Permissão de escrita não concedida para a pasta.');
   }
 
-  let current = await getAppFolder(rootHandle);
+  const appFolder = await getAppFolder(rootHandle, { create: true });
+  if (!appFolder) {
+    throw new Error('Pasta da aplicação não encontrada.');
+  }
+
+  let current = appFolder;
   const segments = relativePath.split('/').filter((s) => s.length > 0);
 
   for (const segment of segments) {
@@ -286,8 +381,19 @@ async function writeFile(relativePath: string, content: string): Promise<void> {
   const fileName = parts.pop();
   if (!fileName) throw new Error('Caminho de arquivo inválido.');
 
+  const rootHandle = cachedHandle ?? (await loadHandle());
+  if (!rootHandle) throw new Error('Nenhuma pasta do Drive selecionada.');
+  if (!(await verifyPermission(rootHandle))) {
+    throw new Error('Permissão de escrita não concedida para a pasta.');
+  }
+
   const folder =
-    parts.length > 0 ? await getSubFolder(parts.join('/')) : await getAppFolder(cachedHandle!);
+    parts.length > 0
+      ? await getSubFolder(parts.join('/'))
+      : await getAppFolder(rootHandle, { create: true });
+  if (!folder) {
+    throw new Error('Pasta da aplicação não encontrada.');
+  }
   const fileHandle = await folder.getFileHandle(fileName, { create: true });
 
   const writable = await fileHandle.createWritable();
@@ -308,7 +414,10 @@ async function readFile(relativePath: string): Promise<string | null> {
     if (!rootHandle) return null;
     if (!(await verifyPermission(rootHandle))) return null;
 
-    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const appFolder = await getAppFolder(rootHandle, { create: false });
+    if (!appFolder) return null;
+
+    let current: FileSystemDirectoryHandle = appFolder;
     const parts = relativePath.split('/').filter((s) => s.length > 0);
     const fileName = parts.pop();
     if (!fileName) return null;
@@ -334,8 +443,19 @@ async function writeBinaryFile(relativePath: string, fileOrBlob: File | Blob): P
   const fileName = parts.pop();
   if (!fileName) throw new Error('Caminho de arquivo inválido.');
 
+  const rootHandle = cachedHandle ?? (await loadHandle());
+  if (!rootHandle) throw new Error('Nenhuma pasta do Drive selecionada.');
+  if (!(await verifyPermission(rootHandle))) {
+    throw new Error('Permissão de escrita não concedida para a pasta.');
+  }
+
   const folder =
-    parts.length > 0 ? await getSubFolder(parts.join('/')) : await getAppFolder(cachedHandle!);
+    parts.length > 0
+      ? await getSubFolder(parts.join('/'))
+      : await getAppFolder(rootHandle, { create: true });
+  if (!folder) {
+    throw new Error('Pasta da aplicação não encontrada.');
+  }
   const fileHandle = await folder.getFileHandle(fileName, { create: true });
 
   const writable = await fileHandle.createWritable();
@@ -355,7 +475,10 @@ async function readBinaryFile(relativePath: string): Promise<File | null> {
     if (!rootHandle) return null;
     if (!(await verifyPermission(rootHandle))) return null;
 
-    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const appFolder = await getAppFolder(rootHandle, { create: false });
+    if (!appFolder) return null;
+
+    let current: FileSystemDirectoryHandle = appFolder;
     const parts = relativePath.split('/').filter((s) => s.length > 0);
     const fileName = parts.pop();
     if (!fileName) return null;
@@ -382,7 +505,10 @@ async function fileExists(relativePath: string): Promise<boolean> {
     if (!rootHandle) return false;
     if (!(await verifyPermission(rootHandle))) return false;
 
-    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const appFolder = await getAppFolder(rootHandle, { create: false });
+    if (!appFolder) return false;
+
+    let current: FileSystemDirectoryHandle = appFolder;
     const parts = relativePath.split('/').filter((s) => s.length > 0);
     const fileName = parts.pop();
     if (!fileName) return false;
@@ -409,7 +535,10 @@ async function getFileModifiedTime(relativePath: string): Promise<number | null>
     if (!rootHandle) return null;
     if (!(await verifyPermission(rootHandle))) return null;
 
-    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const appFolder = await getAppFolder(rootHandle, { create: false });
+    if (!appFolder) return null;
+
+    let current: FileSystemDirectoryHandle = appFolder;
     const parts = relativePath.split('/').filter((s) => s.length > 0);
     const fileName = parts.pop();
     if (!fileName) return null;
@@ -436,7 +565,10 @@ async function deleteFile(relativePath: string): Promise<void> {
     if (!rootHandle) return;
     if (!(await verifyPermission(rootHandle))) return;
 
-    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const appFolder = await getAppFolder(rootHandle, { create: false });
+    if (!appFolder) return;
+
+    let current: FileSystemDirectoryHandle = appFolder;
     const parts = relativePath.split('/').filter((s) => s.length > 0);
     const fileName = parts.pop();
     if (!fileName) return;
@@ -458,7 +590,10 @@ async function clearFolder(relativePath: string, preserveNames: string[] = []): 
     if (!rootHandle) return;
     if (!(await verifyPermission(rootHandle))) return;
 
-    let current: FileSystemDirectoryHandle = await getAppFolder(rootHandle);
+    const appFolder = await getAppFolder(rootHandle, { create: false });
+    if (!appFolder) return;
+
+    let current: FileSystemDirectoryHandle = appFolder;
     const parts = relativePath.split('/').filter((segment) => segment.length > 0);
 
     for (const segment of parts) {

@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { driveSyncEngine } from '../services/infrastructure/driveSyncEngine';
-import type { SyncEngineState } from '../services/infrastructure/driveSyncTypes';
+import type {
+  SyncEngineState,
+  SyncOperationResult,
+} from '../services/infrastructure/driveSyncTypes';
 
 export function useDriveSync(): SyncEngineState & {
-  forcePush: () => Promise<void>;
-  forcePull: () => Promise<void>;
-  flushPendingWrites: () => Promise<void>;
+  forcePush: () => Promise<SyncOperationResult>;
+  forcePull: () => Promise<SyncOperationResult>;
+  flushPendingWrites: () => Promise<SyncOperationResult>;
   reconnect: () => Promise<void>;
-  reconnectWithRepermission: () => Promise<boolean>;
+  reconnectWithRepermission: () => Promise<SyncOperationResult>;
 } {
   const [state, setState] = useState<SyncEngineState>(driveSyncEngine.getState());
 

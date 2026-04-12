@@ -251,6 +251,8 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingExternalSnapshotRefresh = false;
 const pendingExternalDomainWrites = new Map<string, unknown>();
 let interactionLockBound = false;
+let persistenceLifecycleBound = false;
+let persistenceLifecycleUnsubscribers: Array<() => void> = [];
 let isFlushingDeferredExternalUpdates = false;
 
 const hasWindow = (): boolean => typeof window !== 'undefined';
@@ -265,25 +267,47 @@ const notifySyncListeners = (key: string | null): void => {
   window.dispatchEvent(new StorageEvent('storage', { key }));
 };
 
-const flushDebouncedPersist = (): void => {
+const queuePersistenceTask = (task: () => Promise<void>): Promise<void> => {
+  const scheduledTask = persistenceQueue.then(task);
+  persistenceQueue = scheduledTask.catch(() => undefined);
+  return scheduledTask;
+};
+
+const queuePersistEntityState = (state: Record<string, unknown>): Promise<void> => {
+  if (Object.keys(state).length === 0) {
+    return Promise.resolve();
+  }
+
+  return queuePersistenceTask(async () => {
+    await persistence.writeEntityState(state);
+  }).catch((error) => {
+    console.error('Failed to persist partial AppData state:', error);
+  });
+};
+
+const persistSnapshotNow = async (snapshotOverride?: AppData): Promise<void> => {
   if (debounceTimer !== null) {
     clearTimeout(debounceTimer);
     debounceTimer = null;
   }
-  if (pendingSnapshot === null) return;
-  const snapshotClone = cloneSnapshot(pendingSnapshot);
+
+  const snapshotSource = snapshotOverride ?? pendingSnapshot ?? appData ?? createDefaultAppData();
+  const snapshotClone = cloneSnapshot(snapshotSource);
   pendingSnapshot = null;
-  persistenceQueue = persistenceQueue
-    .then(async () => {
-      await persistence.writeSnapshot(snapshotClone);
-      await autoBackupService.maybeCreateAutomaticBackup(snapshotClone);
-      if (dataSyncChannel) {
-        dataSyncChannel.postMessage({ type: 'snapshot-updated' });
-      }
-    })
-    .catch((error) => {
-      console.error('Failed to persist AppData snapshot:', error);
-    });
+
+  await queuePersistenceTask(async () => {
+    await persistence.writeSnapshot(snapshotClone);
+    await autoBackupService.maybeCreateAutomaticBackup(snapshotClone);
+    if (dataSyncChannel) {
+      dataSyncChannel.postMessage({ type: 'snapshot-updated' });
+    }
+  }).catch((error) => {
+    console.error('Failed to persist AppData snapshot:', error);
+  });
+};
+
+const flushDebouncedPersist = (): void => {
+  void persistSnapshotNow();
 };
 
 const queuePersistSnapshot = (snapshot: AppData): void => {
@@ -297,7 +321,7 @@ const queuePersistSnapshot = (snapshot: AppData): void => {
 const hasQueuedExternalUpdates = (): boolean =>
   pendingExternalSnapshotRefresh || pendingExternalDomainWrites.size > 0;
 
-const applyQueuedExternalDomainWrites = (): void => {
+const applyQueuedExternalDomainWrites = async (): Promise<void> => {
   if (pendingExternalDomainWrites.size === 0) {
     return;
   }
@@ -311,8 +335,11 @@ const applyQueuedExternalDomainWrites = (): void => {
     nextSnapshot = { ...nextSnapshot, [domainKey]: data } as AppData;
   }
 
+  const persistedDomainState = Object.fromEntries(pendingExternalDomainWrites.entries());
   pendingExternalDomainWrites.clear();
   appData = nextSnapshot;
+  await queuePersistEntityState(persistedDomainState);
+  queuePersistSnapshot(nextSnapshot);
   notifySyncListeners(null);
 };
 
@@ -354,7 +381,7 @@ const flushDeferredExternalUpdates = async (): Promise<void> => {
       return;
     }
 
-    applyQueuedExternalDomainWrites();
+    await applyQueuedExternalDomainWrites();
   } finally {
     isFlushingDeferredExternalUpdates = false;
 
@@ -402,6 +429,44 @@ const bindInteractionLockIfNeeded = (): void => {
   interactionLockBound = true;
 };
 
+const bindPersistenceLifecycleIfNeeded = (): void => {
+  if (!hasWindow() || persistenceLifecycleBound) {
+    return;
+  }
+
+  const flushOnPageHide = () => {
+    void flushPersistenceAsync();
+  };
+
+  const flushOnBeforeUnload = () => {
+    void flushPersistenceAsync();
+  };
+
+  const flushOnVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') {
+      void flushPersistenceAsync();
+    }
+  };
+
+  window.addEventListener('pagehide', flushOnPageHide);
+  window.addEventListener('beforeunload', flushOnBeforeUnload);
+  persistenceLifecycleUnsubscribers.push(() =>
+    window.removeEventListener('pagehide', flushOnPageHide),
+  );
+  persistenceLifecycleUnsubscribers.push(() =>
+    window.removeEventListener('beforeunload', flushOnBeforeUnload),
+  );
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', flushOnVisibilityChange);
+    persistenceLifecycleUnsubscribers.push(() =>
+      document.removeEventListener('visibilitychange', flushOnVisibilityChange),
+    );
+  }
+
+  persistenceLifecycleBound = true;
+};
+
 /**
  * Key map retained for event compatibility and legacy clear paths.
  */
@@ -441,6 +506,7 @@ const storageKeyMap: { [P in keyof AppData]: string } = {
 export async function initializeDataStore(): Promise<void> {
   bindSyncChannelIfNeeded();
   bindInteractionLockIfNeeded();
+  bindPersistenceLifecycleIfNeeded();
 
   if (isInitialized) {
     return;
@@ -498,6 +564,7 @@ export async function initializeDataStore(): Promise<void> {
 export function loadData(): AppData {
   bindSyncChannelIfNeeded();
   bindInteractionLockIfNeeded();
+  bindPersistenceLifecycleIfNeeded();
 
   if (appData) {
     return cloneSnapshot(appData);
@@ -523,6 +590,7 @@ export function updateData<K extends keyof AppData>(key: K, data: AppData[K]): v
   }
   const previousData = appData[key];
   appData = { ...appData, [key]: data };
+  void queuePersistEntityState({ [key]: data } as Record<string, unknown>);
   queuePersistSnapshot(appData);
   driveSyncEngine.notifyDomainChanged(key, previousData, data);
 }
@@ -534,6 +602,7 @@ export function updateData<K extends keyof AppData>(key: K, data: AppData[K]): v
 export function replaceData(snapshot: AppData): void {
   const previousSnapshot = appData ? cloneSnapshot(appData) : createDefaultAppData();
   appData = cloneSnapshot(snapshot);
+  void queuePersistEntityState(cloneSnapshot(appData) as unknown as Record<string, unknown>);
   queuePersistSnapshot(appData);
 
   // Notify sync engine of all domains (undo/redo changes multiple keys)
@@ -635,6 +704,11 @@ export function flushPersistence(): void {
   flushDebouncedPersist();
 }
 
+export async function flushPersistenceAsync(): Promise<void> {
+  await persistSnapshotNow();
+  await persistenceQueue;
+}
+
 /**
  * Emits a sync notification without dropping in-memory cache.
  */
@@ -662,6 +736,9 @@ export function resetForTest(): void {
   persistenceQueue = Promise.resolve();
   syncChannelBound = false;
   interactionLockBound = false;
+  persistenceLifecycleBound = false;
+  persistenceLifecycleUnsubscribers.forEach((unsubscribe) => unsubscribe());
+  persistenceLifecycleUnsubscribers = [];
   isFlushingDeferredExternalUpdates = false;
   uiInteractionLockService.resetForTest();
   driveSyncEngine.destroy();
@@ -689,6 +766,8 @@ function startDriveSyncInBackground(): void {
 
     if (!appData) appData = createDefaultAppData();
     appData = { ...appData, [domainKey]: data } as AppData;
+    await queuePersistEntityState({ [domainKey]: data });
+    queuePersistSnapshot(appData);
     notifySyncListeners(domainKey);
   };
 
@@ -701,7 +780,7 @@ function startDriveSyncInBackground(): void {
 
   // Fire and forget — sync errors are handled internally by the engine
   driveSyncEngine
-    .initialize(readLocal, writeLocal, readPreference, writePreference)
+    .initialize(readLocal, writeLocal, readPreference, writePreference, flushPersistenceAsync)
     .catch((error) => {
       console.warn('[loadData] Drive sync initialization failed (non-blocking):', error);
     });

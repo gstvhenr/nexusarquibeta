@@ -30,6 +30,9 @@ import {
   type DriveAccessMode,
   type PreferenceSyncMeta,
   type SyncEngineListener,
+  type SyncOperationAction,
+  type SyncOperationCause,
+  type SyncOperationResult,
   type SyncEngineState,
   type SyncMetaFile,
 } from './driveSyncTypes';
@@ -44,6 +47,7 @@ type ReadLocalDomainFn = (domainKey: string) => Promise<unknown>;
 type WriteLocalDomainFn = (domainKey: string, data: unknown) => Promise<void>;
 type ReadLocalPreferenceFn = (key: SyncedPreferenceKey) => Promise<unknown>;
 type WriteLocalPreferenceFn = (key: SyncedPreferenceKey, value: unknown) => Promise<void>;
+type FlushLocalPersistenceFn = () => Promise<void>;
 
 interface PersistedSyncState {
   dirtyDomains: string[];
@@ -75,6 +79,7 @@ let readLocalDomain: ReadLocalDomainFn | null = null;
 let writeLocalDomain: WriteLocalDomainFn | null = null;
 let readLocalPreference: ReadLocalPreferenceFn | null = null;
 let writeLocalPreference: WriteLocalPreferenceFn | null = null;
+let flushLocalPersistence: FlushLocalPersistenceFn | null = null;
 
 const engineState: SyncEngineState = {
   status: 'idle',
@@ -225,6 +230,110 @@ async function refreshQuota(): Promise<void> {
   }
 }
 
+function mapErrorToCause(
+  error: unknown,
+  fallback: SyncOperationCause,
+): { cause: SyncOperationCause; message: string } {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes('_meta.json')) {
+    return {
+      cause: 'remote_meta_invalid',
+      message,
+    };
+  }
+
+  return {
+    cause: fallback,
+    message,
+  };
+}
+
+function buildOperationResult(
+  action: SyncOperationAction,
+  options: Partial<SyncOperationResult> = {},
+): SyncOperationResult {
+  return {
+    ok: options.ok ?? true,
+    action,
+    cause: options.cause ?? 'success',
+    accessMode: options.accessMode ?? accessMode,
+    message: options.message ?? null,
+    performedPush: options.performedPush ?? false,
+    performedPull: options.performedPull ?? false,
+    attemptedLocalRepermission: options.attemptedLocalRepermission ?? false,
+    attemptedApiReauth: options.attemptedApiReauth ?? false,
+    pendingChangesCount: options.pendingChangesCount ?? getPendingChangesCount(),
+  };
+}
+
+async function ensureLocalDurability(): Promise<void> {
+  if (flushLocalPersistence) {
+    await flushLocalPersistence();
+  }
+}
+
+async function attemptAccessRecovery(): Promise<{
+  accessMode: DriveAccessMode;
+  attemptedLocalRepermission: boolean;
+  attemptedApiReauth: boolean;
+  cause: SyncOperationCause | null;
+  message: string | null;
+}> {
+  let attemptedLocalRepermission = false;
+  let attemptedApiReauth = false;
+
+  try {
+    const hasLocalFolder = await localDriveService.hasSavedFolder();
+    if (hasLocalFolder) {
+      attemptedLocalRepermission = true;
+      const granted = await localDriveService.requestRepermission();
+      if (granted) {
+        return {
+          accessMode: 'local',
+          attemptedLocalRepermission,
+          attemptedApiReauth,
+          cause: null,
+          message: null,
+        };
+      }
+    }
+  } catch {
+    // Ignore local permission failures and continue to API fallback.
+  }
+
+  attemptedApiReauth = true;
+  try {
+    if (await googleDriveService.ensureDriveAccess()) {
+      return {
+        accessMode: 'api',
+        attemptedLocalRepermission,
+        attemptedApiReauth,
+        cause: null,
+        message: null,
+      };
+    }
+  } catch (error) {
+    const failure = mapErrorToCause(error, 'reconnect_failed');
+    return {
+      accessMode: 'none',
+      attemptedLocalRepermission,
+      attemptedApiReauth,
+      cause: failure.cause,
+      message: failure.message,
+    };
+  }
+
+  return {
+    accessMode: 'none',
+    attemptedLocalRepermission,
+    attemptedApiReauth,
+    cause: attemptedLocalRepermission ? 'no_access' : 'api_auth_required',
+    message: attemptedLocalRepermission
+      ? 'Sem acesso local ao Google Drive e sem autorização ativa da API.'
+      : 'Google Drive API não autorizada ou indisponível.',
+  };
+}
+
 function schedulePush(): void {
   if (debounceTimer) {
     clearTimeout(debounceTimer);
@@ -238,7 +347,7 @@ function schedulePush(): void {
 
   debounceTimer = setTimeout(() => {
     debounceTimer = null;
-    void pushDirtyItems();
+    void pushDirtyItems().catch(() => undefined);
   }, PUSH_DEBOUNCE_MS);
 }
 
@@ -264,12 +373,14 @@ async function performDailyBackupIfNeeded(): Promise<void> {
   const LAST_BACKUP_KEY = 'nexus_last_drive_backup';
   const todayDate = new Date().toISOString().split('T')[0];
   const lastBackupDate = hasWindow() ? window.localStorage.getItem(LAST_BACKUP_KEY) : null;
+  const currentReadLocalDomain = readLocalDomain;
+  const currentReadLocalPreference = readLocalPreference;
 
   if (
     lastBackupDate === todayDate ||
     accessMode === 'none' ||
-    !readLocalDomain ||
-    !readLocalPreference
+    !currentReadLocalDomain ||
+    !currentReadLocalPreference
   ) {
     return;
   }
@@ -278,21 +389,21 @@ async function performDailyBackupIfNeeded(): Promise<void> {
     const backupObj: Record<string, unknown> = {};
 
     for (const key of ARRAY_DOMAIN_KEYS) {
-      const data = await readLocalDomain(key);
+      const data = await currentReadLocalDomain(key);
       if (data !== undefined && data !== null) {
         backupObj[key] = data;
       }
     }
 
     for (const key of SCALAR_CONFIG_KEYS) {
-      const data = await readLocalDomain(key);
+      const data = await currentReadLocalDomain(key);
       if (data !== undefined && data !== null) {
         backupObj[key] = data;
       }
     }
 
     for (const key of SYNCED_PREFERENCE_KEYS) {
-      backupObj[key] = await readLocalPreference(key);
+      backupObj[key] = await currentReadLocalPreference(key);
     }
 
     const backupContent = JSON.stringify(backupObj, null, 2);
@@ -455,19 +566,21 @@ async function pullFromRemote(remoteMeta: SyncMetaFile): Promise<void> {
   persistSyncState();
 }
 
-async function pushDirtyItems(): Promise<void> {
-  if (!readLocalDomain || !readLocalPreference) return;
-  if (getPendingChangesCount() === 0) return;
+async function pushDirtyItems(): Promise<boolean> {
+  if (!readLocalDomain || !readLocalPreference) return false;
+  if (getPendingChangesCount() === 0) return false;
 
   if (accessMode === 'none') {
     updateState({ status: 'offline' });
     scheduleRetry();
-    return;
+    throw new Error('Nenhum modo de acesso ao Google Drive disponível.');
   }
 
   updateState({ status: 'syncing', errorMessage: null });
 
   try {
+    await ensureLocalDurability();
+
     const nextMeta = normalizeMeta(localMeta ?? createEmptyMeta());
     const domainsToPush = [...dirtyDomains];
     const preferencesToPush = [...dirtyPreferences];
@@ -526,6 +639,7 @@ async function pushDirtyItems(): Promise<void> {
 
     void performDailyBackupIfNeeded();
     await refreshQuota();
+    return true;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('[DriveSyncEngine] Push failed:', message);
@@ -535,6 +649,7 @@ async function pushDirtyItems(): Promise<void> {
     });
     persistSyncState();
     scheduleRetry();
+    throw error;
   }
 }
 
@@ -724,11 +839,13 @@ async function initialize(
   writeLocal: WriteLocalDomainFn,
   readPreference: ReadLocalPreferenceFn,
   writePreference: WriteLocalPreferenceFn,
+  flushLocal: FlushLocalPersistenceFn,
 ): Promise<void> {
   readLocalDomain = readLocal;
   writeLocalDomain = writeLocal;
   readLocalPreference = readPreference;
   writeLocalPreference = writePreference;
+  flushLocalPersistence = flushLocal;
 
   hydratePersistedSyncState();
   bindExternalObservers();
@@ -802,36 +919,89 @@ function handleLocalReset(): void {
   schedulePush();
 }
 
-async function flushPendingWrites(): Promise<void> {
+async function flushPendingWrites(): Promise<SyncOperationResult> {
   if (debounceTimer) {
     clearTimeout(debounceTimer);
     debounceTimer = null;
   }
 
-  if (accessMode === 'none' && getPendingChangesCount() > 0) {
-    await reconnectWithRepermission();
-    if (accessMode === 'none') return;
+  if (getPendingChangesCount() === 0) {
+    await ensureLocalDurability();
+    return buildOperationResult('flushPendingWrites', {
+      cause: 'no_changes',
+      message: 'Nenhuma alteração pendente na fila.',
+    });
   }
 
-  await pushDirtyItems();
-}
-
-async function forcePush(): Promise<void> {
   if (accessMode === 'none') {
-    await reconnectWithRepermission();
-    if (accessMode === 'none') return;
+    const recovery = await attemptAccessRecovery();
+    if (recovery.accessMode === 'none') {
+      updateState({ status: 'offline', accessMode: 'none', errorMessage: recovery.message });
+      scheduleRetry();
+      return buildOperationResult('flushPendingWrites', {
+        ok: false,
+        cause: recovery.cause ?? 'no_access',
+        accessMode: 'none',
+        message: recovery.message,
+        attemptedLocalRepermission: recovery.attemptedLocalRepermission,
+        attemptedApiReauth: recovery.attemptedApiReauth,
+      });
+    }
+
+    accessMode = recovery.accessMode;
+    updateState({ accessMode });
   }
-  await flushPendingWrites();
+
+  try {
+    const performedPush = await pushDirtyItems();
+    return buildOperationResult('flushPendingWrites', {
+      cause: performedPush ? 'success' : 'no_changes',
+      message: performedPush
+        ? 'Fila local enviada com sucesso.'
+        : 'Nenhuma alteração pendente na fila.',
+      performedPush,
+    });
+  } catch (error) {
+    const failure = mapErrorToCause(error, 'push_failed');
+    return buildOperationResult('flushPendingWrites', {
+      ok: false,
+      cause: failure.cause,
+      message: failure.message,
+      performedPush: false,
+    });
+  }
 }
 
-async function forcePull(): Promise<void> {
+async function forcePush(): Promise<SyncOperationResult> {
+  return flushPendingWrites().then((result) => ({
+    ...result,
+    action: 'forcePush',
+  }));
+}
+
+async function forcePull(): Promise<SyncOperationResult> {
   if (accessMode === 'none') {
-    await reconnectWithRepermission();
-    if (accessMode === 'none') return;
+    const recovery = await attemptAccessRecovery();
+    if (recovery.accessMode === 'none') {
+      updateState({ status: 'offline', accessMode: 'none', errorMessage: recovery.message });
+      scheduleRetry();
+      return buildOperationResult('forcePull', {
+        ok: false,
+        cause: recovery.cause ?? 'no_access',
+        accessMode: 'none',
+        message: recovery.message,
+        attemptedLocalRepermission: recovery.attemptedLocalRepermission,
+        attemptedApiReauth: recovery.attemptedApiReauth,
+      });
+    }
+
+    accessMode = recovery.accessMode;
+    updateState({ accessMode });
   }
 
   updateState({ status: 'syncing', errorMessage: null });
   try {
+    await ensureLocalDurability();
     const remoteMetaRaw = await driveDataAdapter.readMeta(accessMode);
     if (remoteMetaRaw) {
       await pullFromRemote(normalizeMeta(remoteMetaRaw));
@@ -841,10 +1011,23 @@ async function forcePull(): Promise<void> {
       schedulePush();
     }
     await refreshQuota();
+    return buildOperationResult('forcePull', {
+      performedPull: Boolean(remoteMetaRaw),
+      message: remoteMetaRaw
+        ? 'Dados remotos aplicados com sucesso.'
+        : 'Nenhum snapshot remoto inicializado para restaurar.',
+      cause: remoteMetaRaw ? 'success' : 'no_changes',
+    });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    updateState({ status: 'error', errorMessage: message });
+    const failure = mapErrorToCause(error, 'pull_failed');
+    updateState({ status: 'error', errorMessage: failure.message });
     scheduleRetry();
+    return buildOperationResult('forcePull', {
+      ok: false,
+      cause: failure.cause,
+      message: failure.message,
+      performedPull: false,
+    });
   }
 }
 
@@ -852,31 +1035,50 @@ function getAccessMode(): DriveAccessMode {
   return accessMode;
 }
 
-async function reconnectWithRepermission(): Promise<boolean> {
+async function reconnectWithRepermission(): Promise<SyncOperationResult> {
   updateState({ status: 'initializing', errorMessage: null });
 
   try {
-    const newMode = await driveDataAdapter.tryReacquireLocalAccess();
+    const recovery = await attemptAccessRecovery();
 
-    if (newMode === 'none') {
-      updateState({ status: 'offline', accessMode: 'none' });
+    if (recovery.accessMode === 'none') {
+      updateState({ status: 'offline', accessMode: 'none', errorMessage: recovery.message });
       scheduleRetry();
-      return false;
+      return buildOperationResult('reconnectWithRepermission', {
+        ok: false,
+        cause: recovery.cause ?? 'no_access',
+        accessMode: 'none',
+        message: recovery.message,
+        attemptedLocalRepermission: recovery.attemptedLocalRepermission,
+        attemptedApiReauth: recovery.attemptedApiReauth,
+      });
     }
 
-    accessMode = newMode;
+    accessMode = recovery.accessMode;
     updateState({ accessMode });
     await reconnect();
-    return true;
+    return buildOperationResult('reconnectWithRepermission', {
+      accessMode,
+      message:
+        accessMode === 'local'
+          ? 'Permissão da pasta local restabelecida.'
+          : 'Acesso via API do Google Drive restabelecido.',
+      attemptedLocalRepermission: recovery.attemptedLocalRepermission,
+      attemptedApiReauth: recovery.attemptedApiReauth,
+    });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[DriveSyncEngine] Reconnection failed:', message);
+    const failure = mapErrorToCause(error, 'reconnect_failed');
+    console.error('[DriveSyncEngine] Reconnection failed:', failure.message);
     updateState({
       status: 'error',
-      errorMessage: message,
+      errorMessage: failure.message,
     });
     scheduleRetry();
-    return false;
+    return buildOperationResult('reconnectWithRepermission', {
+      ok: false,
+      cause: failure.cause,
+      message: failure.message,
+    });
   }
 }
 
@@ -903,6 +1105,31 @@ function destroy(): void {
   externalUnsubscribers.forEach((unsubscribe) => unsubscribe());
   externalUnsubscribers = [];
   externalBindingsInitialized = false;
+
+  dirtyDomains.clear();
+  dirtyPreferences.clear();
+  accessMode = 'none';
+  localMeta = null;
+  preferenceUpdatedAt = {};
+  pendingRemoteFilesCleanup = false;
+  retryAttempt = 0;
+  readLocalDomain = null;
+  writeLocalDomain = null;
+  readLocalPreference = null;
+  writeLocalPreference = null;
+  flushLocalPersistence = null;
+
+  Object.assign(engineState, {
+    status: 'idle',
+    accessMode: 'none',
+    lastSyncTimestamp: null,
+    dirtyDomains: [],
+    dirtyPreferences: [],
+    errorMessage: null,
+    quota: null,
+    retryScheduledAt: null,
+    pendingChangesCount: 0,
+  } satisfies SyncEngineState);
 }
 
 export const driveSyncEngine = {

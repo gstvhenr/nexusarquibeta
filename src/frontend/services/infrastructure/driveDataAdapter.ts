@@ -38,7 +38,7 @@ import {
  */
 async function detectAccessMode(): Promise<DriveAccessMode> {
   try {
-    if (googleDriveService.isSignedIn()) return 'api';
+    if (await googleDriveService.ensureDriveAccess()) return 'api';
   } catch {
     // Drive API not available
   }
@@ -61,15 +61,18 @@ async function detectAccessMode(): Promise<DriveAccessMode> {
  * Retorna o novo modo de acesso após a tentativa.
  */
 async function tryReacquireLocalAccess(): Promise<DriveAccessMode> {
-  const hasLocal = await localDriveService.hasSavedFolder();
-  if (!hasLocal) return 'none';
-
-  const granted = await localDriveService.requestRepermission();
-  if (granted) return 'local';
-
-  // Se usuário negou permissão, tentar API REST como fallback
   try {
-    if (googleDriveService.isSignedIn()) return 'api';
+    const hasLocal = await localDriveService.hasSavedFolder();
+    if (hasLocal) {
+      const granted = await localDriveService.requestRepermission();
+      if (granted) return 'local';
+    }
+  } catch {
+    // Ignore local FS permission failures and attempt API recovery below.
+  }
+
+  try {
+    if (await googleDriveService.ensureDriveAccess()) return 'api';
   } catch {
     // Drive API not available
   }
@@ -358,8 +361,7 @@ async function readMeta(mode: DriveAccessMode): Promise<SyncMetaFile | null> {
   try {
     return JSON.parse(content) as SyncMetaFile;
   } catch {
-    console.error('[DriveDataAdapter] Failed to parse _meta.json');
-    return null;
+    throw new Error('Arquivo _meta.json inválido ou corrompido no Google Drive.');
   }
 }
 

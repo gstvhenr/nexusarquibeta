@@ -1,49 +1,60 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button, AlertIcon } from '@/components/ui';
-import { driveSyncEngine } from '@/services/infrastructure/driveSyncEngine';
+import { googleDriveService } from '@/services/infrastructure/googleDriveService';
 import { localDriveService } from '@/services/infrastructure/localDriveService';
 import { useDriveSync } from '@/hooks/useDriveSync';
 
 export const DriveSyncReconnector: React.FC = () => {
-  const { status, accessMode } = useDriveSync();
+  const { status, accessMode, reconnectWithRepermission } = useDriveSync();
   const [needsLocalReconnect, setNeedsLocalReconnect] = useState(false);
-  const [isApiActive, setIsApiActive] = useState(false);
+  const [isApiActive, setIsApiActive] = useState(accessMode === 'api');
+
+  const refreshReconnectState = useCallback(async () => {
+    const hasFolder = await localDriveService.hasSavedFolder();
+    const apiConnected =
+      googleDriveService.getState().status === 'connected' || accessMode === 'api';
+    setIsApiActive(apiConnected);
+
+    if (!hasFolder) {
+      setNeedsLocalReconnect(false);
+      return;
+    }
+
+    const hasAccess = await localDriveService.hasActivePermission();
+    setNeedsLocalReconnect(!hasAccess);
+  }, [accessMode]);
 
   useEffect(() => {
-    // Verificar se há pasta local salva sem permissão ativa
-    if (accessMode === 'none' || accessMode === 'api') {
-      localDriveService.hasSavedFolder().then((hasFolder: boolean) => {
-        if (hasFolder) {
-          localDriveService.hasActivePermission().then((hasAccess: boolean) => {
-            setNeedsLocalReconnect(!hasAccess);
-            setIsApiActive(accessMode === 'api');
-          });
-        } else {
-          setNeedsLocalReconnect(false);
-        }
-      });
-    } else {
-      setNeedsLocalReconnect(false);
-    }
-  }, [accessMode, status]);
+    void refreshReconnectState();
+  }, [refreshReconnectState, status]);
 
-  const handleReconnect = async () => {
+  useEffect(() => {
+    const unsubscribeLocal = localDriveService.subscribe(() => {
+      void refreshReconnectState();
+    });
+
+    const unsubscribeApi = googleDriveService.subscribe(() => {
+      void refreshReconnectState();
+    });
+
+    return () => {
+      unsubscribeLocal();
+      unsubscribeApi();
+    };
+  }, [refreshReconnectState]);
+
+  const handleReconnect = useCallback(async () => {
     try {
-      const success = await driveSyncEngine.reconnectWithRepermission();
-      if (success) {
-        setNeedsLocalReconnect(false);
-      }
+      await reconnectWithRepermission();
+      await refreshReconnectState();
     } catch {
-      // Ignore error if user cancels prompt
+      // Ignore prompt cancellation from the browser permission flow.
     }
-  };
+  }, [reconnectWithRepermission, refreshReconnectState]);
 
   useEffect(() => {
     if (!needsLocalReconnect) return;
 
-    // Tentativa automática e invisível de re-adquirir permissão no primeiro clique do usuário.
-    // A File System Access API exige um "user gesture". Ao interceptar o primeiro clique,
-    // o navegador exibe o prompt nativo sem exigir que o usuário vá nas configurações.
     const handleFirstUserInteraction = async () => {
       await handleReconnect();
     };
@@ -53,43 +64,42 @@ export const DriveSyncReconnector: React.FC = () => {
     return () => {
       document.removeEventListener('click', handleFirstUserInteraction, { capture: true });
     };
-  }, [needsLocalReconnect]);
+  }, [handleReconnect, needsLocalReconnect]);
 
   if (!needsLocalReconnect) return null;
 
-  // API ativa → banner informativo (opcional); sem acesso → banner de alerta
   const bannerColorClass = isApiActive
     ? 'bg-info/10 border-info/20'
     : 'bg-warning/10 border-warning/20';
   const iconColorClass = isApiActive ? 'text-info' : 'text-warning';
   const iconBgClass = isApiActive ? 'bg-info/20' : 'bg-warning/20';
 
-  const title = isApiActive ? 'Pasta local desconectada' : 'Sincronização Pausada';
+  const title = isApiActive ? 'Pasta local desconectada' : 'Sincronização pausada';
 
   const description = isApiActive
-    ? 'Seus dados estão sincronizando via API. Reconecte a pasta local para melhor performance.'
-    : 'Sua conta Google Drive precisa de permissão para retomar a sincronia.';
+    ? 'A sincronização segue pela API. Reconecte a pasta local para restaurar o cache offline do Google Drive Desktop.'
+    : 'A pasta local perdeu permissão e não há fallback ativo. Reavalie a conexão para retomar a sincronia.';
 
-  const buttonLabel = isApiActive ? 'Conectar Pasta' : 'Reconectar Conta';
+  const buttonLabel = isApiActive ? 'Reconectar Pasta' : 'Reavaliar Conexão';
 
   return (
     <div
-      className={`${bannerColorClass} border-b p-2 md:p-3 flex flex-col md:flex-row items-center justify-between gap-4 z-50`}
+      className={`${bannerColorClass} z-50 flex flex-col items-center justify-between gap-4 border-b p-2 md:flex-row md:p-3`}
     >
       <div className="flex items-center gap-3">
-        <div className={`${iconBgClass} p-1.5 rounded-full flex-shrink-0`}>
+        <div className={`${iconBgClass} flex-shrink-0 rounded-full p-1.5`}>
           <AlertIcon className={`${iconColorClass} h-5 w-5`} />
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-text-primary m-0">{title}</h4>
-          <p className="text-xs text-text-secondary m-0 mt-0.5">{description}</p>
+          <h4 className="m-0 text-sm font-semibold text-text-primary">{title}</h4>
+          <p className="m-0 mt-0.5 text-xs text-text-secondary">{description}</p>
         </div>
       </div>
       <Button
-        onClick={handleReconnect}
+        onClick={() => void handleReconnect()}
         variant="primary"
         size="sm"
-        className="w-full md:w-auto flex-shrink-0"
+        className="w-full flex-shrink-0 md:w-auto"
       >
         {buttonLabel}
       </Button>

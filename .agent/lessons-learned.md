@@ -19,6 +19,22 @@
 
 ---
 
+### [2026-04-12] - [SYNC] - Fila remota nunca pode avançar sem durabilidade local confirmada
+
+**Erro encontrado:** Alterações locais podiam sumir após `F5`, enquanto a fila pendente continuava marcada no Google Drive. Além disso, dados puxados do remoto podiam aparecer na UI e desaparecer no refresh seguinte.
+**Arquivo(s) afetado(s):** `src/frontend/services/infrastructure/loadData.ts`, `src/frontend/services/infrastructure/driveSyncEngine.ts`, `src/frontend/services/infrastructure/driveDataAdapter.ts`.
+**Causa raiz:** A fila/meta do sync era persistida antes do snapshot local debounced, e `writeLocal()` no pull remoto atualizava apenas a RAM. Isso criava divergência entre “estado marcado para sincronizar” e “estado realmente durável no banco local”.
+**Correcao aplicada:** Persistência imediata por entidade em `loadData.ts`, flush explícito em lifecycle do browser, writes remotos duráveis antes de notificar a UI, e `SyncOperationResult` para impedir falso positivo de sucesso na camada visual.
+**Regra negativa derivada:** Nunca marcar alteração como sincronizável nem exibir sucesso de sync antes de confirmar a persistência local durável; mudanças remotas aplicadas à UI devem ser gravadas primeiro no storage local.
+
+### [2026-04-12] - [SYNC] - Corrupcao de `_meta.json` nao pode cair no caminho de primeira sincronizacao
+
+**Erro encontrado:** `_meta.json` inválido podia ser convertido para `null`, fazendo o motor tratar corrupção remota como se fosse um bootstrap vazio e abrindo risco de overwrite indevido.
+**Arquivo(s) afetado(s):** `src/frontend/services/infrastructure/driveDataAdapter.ts`, `src/frontend/services/infrastructure/driveSyncEngine.ts`.
+**Causa raiz:** O parser de metadados engolia erro estrutural e reclassificava um estado corrompido como “primeira sincronização”.
+**Correcao aplicada:** `readMeta()` passou a lançar erro explícito para `_meta.json` inválido; o engine traduz isso para `remote_meta_invalid` e entra em estado de erro sem fazer `pushAllDomains()`.
+**Regra negativa derivada:** Nunca degradar corrupção de artefato remoto para ausência legítima de arquivo; metadado inválido deve interromper o fluxo com erro observável.
+
 ### [2026-04-11] - [SYNC] - Atualizacao externa nao deve desmontar modal durante interacao
 
 **Erro encontrado:** Pop-ups podiam fechar ou perder contexto mesmo sem `window.location.reload()`, porque atualizações externas em background (BroadcastChannel, `storage` sintético e Drive Sync) substituíam o snapshot da aplicação enquanto o usuário estava digitando em um modal.

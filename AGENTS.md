@@ -2,7 +2,7 @@
 
 ## Produto
 
-Nexus-Arqui é um ERP web para escritório de arquitetura (clientes, propostas, projetos, financeiro e documentos), construído em React + TypeScript.
+Nexus-Arqui é um ERP web exclusivo para a operação do profissional autônomo Rafael Munaro (clientes, propostas, projetos, financeiro e documentos), construído em React + TypeScript.
 
 ## Prioridade de regras
 

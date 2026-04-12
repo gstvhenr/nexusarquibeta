@@ -1,5 +1,54 @@
 # NEXT.md
 
+## Último estado conhecido (2026-04-12)
+
+Estabilização estrutural da sincronização IndexedDB + Google Drive concluída no código. A persistência local passou a gravar slices por entidade imediatamente e a forçar flush do snapshot em `pagehide`, `beforeunload` e `visibilitychange`, eliminando a janela em que um `F5` rápido descartava alterações locais. O `pullFromRemote()` agora persiste os dados de forma durável antes de notificar a UI. O acesso ao Drive foi unificado em torno de uma raiz lógica única do app (`01. NexusArqui`, com compatibilidade para `NexusArqui` legado), evitando split-brain entre Google Drive Desktop e API. As ações manuais do engine agora devolvem `SyncOperationResult`, permitindo que a UI reporte sucesso ou falha real sem falso positivo quando não há acesso ou quando `_meta.json` está inválido/corrompido.
+
+### Checklist desta sessão
+
+- [x] Criação de `src/frontend/services/infrastructure/driveAppFolder.ts` para resolução unificada da pasta raiz do app no Drive.
+- [x] `localDriveService.ts` endurecido para resolver a pasta correta e evitar falha de escrita pós-reload com `cachedHandle` vazio.
+- [x] `googleDriveService.ts` ajustado para compartilhar o resolvedor de pasta e expor `ensureDriveAccess()` com silent reauth.
+- [x] `driveDataAdapter.ts` ajustado para recovery híbrido local/API e erro explícito de `_meta.json` inválido.
+- [x] `loadData.ts` ajustado com persistência imediata por entidade, flush de lifecycle e escrita remota durável antes do notify.
+- [x] `driveSyncEngine.ts` ajustado com `SyncOperationResult`, recovery híbrido, erro tipado e backup assíncrono sem race com destroy.
+- [x] `useDriveSync.ts`, `GoogleDriveSection.tsx` e `DriveSyncReconnector.tsx` alinhados ao novo contrato sem falso positivo de sucesso.
+- [x] Testes criados/atualizados: `driveAppFolder.test.ts`, `loadData.test.ts`, `driveSyncEngine.test.ts`, `googleDriveService.test.ts`.
+- [x] `npm run typecheck` — PASS.
+- [x] `npx vitest run src/frontend/services/infrastructure/loadData.test.ts src/frontend/services/infrastructure/driveSyncEngine.test.ts src/frontend/services/infrastructure/driveAppFolder.test.ts src/frontend/services/infrastructure/googleDriveService.test.ts` — PASS.
+- [x] `npm run verify`
+
+### Concluído nesta sessão
+
+- `src/frontend/services/infrastructure/driveAppFolder.ts` — resolvedor determinístico da raiz do app no Drive.
+- `src/frontend/services/infrastructure/{localDriveService.ts,googleDriveService.ts,driveDataAdapter.ts}` — convergência entre Desktop client e API com recovery híbrido.
+- `src/frontend/services/infrastructure/{loadData.ts,driveSyncEngine.ts,driveSyncTypes.ts}` — durabilidade local imediata, flush de lifecycle, operações tipadas e erro remoto observável.
+- `src/frontend/hooks/useDriveSync.ts` — novo contrato tipado das ações manuais.
+- `src/frontend/components/configuracoes/GoogleDriveSection.tsx` — UI agora reage ao resultado real do engine.
+- `src/frontend/components/drive/DriveSyncReconnector.tsx` — banner de reconexão alinhado ao fallback local/API.
+- `src/frontend/services/infrastructure/*.test.ts` — cobertura de regressão para durabilidade, recovery e raiz lógica do Drive.
+
+## Evidências da sessão
+
+- `npm run typecheck` → PASS.
+- `npx vitest run src/frontend/services/infrastructure/loadData.test.ts src/frontend/services/infrastructure/driveSyncEngine.test.ts src/frontend/services/infrastructure/driveAppFolder.test.ts src/frontend/services/infrastructure/googleDriveService.test.ts` → PASS (`13` testes).
+- `npm run verify` → PASS (`[VERIFY][LOOP][PASS]`, 9 gates).
+
+## Próximo passo exato
+
+1. Executar smoke real em duas máquinas/perfis:
+   - máquina A local/Desktop e máquina B API;
+   - criação, edição e exclusão com `F5` após cada operação;
+   - conflito offline simultâneo no mesmo registro;
+   - perda de permissão da pasta local com fallback pela API.
+2. Confirmar na UI que `Sincronizar`, `Forçar Flush da Fila` e `Reavaliar Conexão` nunca exibem sucesso quando o engine retorna erro tipado.
+
+## Bloqueios e dúvidas
+
+- A implementação e a suíte focada estão verdes. Falta apenas o gate canônico completo e a validação manual cross-device em ambiente real.
+
+---
+
 ## Último estado conhecido (2026-04-11)
 
 Ajuste do formulário de evento/tarefa (`EventFormModal.tsx` e `EventFormFields.tsx`) para introduzir uma distinção de domínio entre 'Evento' e 'Tarefa' com base nos pedidos do usuário. Foi incluído um seletor obrigatório de Categoria. Subtarefas e status do Kanban só aparecem visíveis e habilitados se a categoria for 'Tarefa', possuindo também validação estrita que previne que uma Tarefa seja salva sem pelo menos 1 item na "Subtarefa". Adicionalmente, itens salvos como 'Evento' não poluem o quadro Kanban. A largura da modal foi ampliada de `2xl` para `4xl` para melhor arranjo espacial dos dados adicionais.

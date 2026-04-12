@@ -10,6 +10,32 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-04-12 — Sincronização Drive endurecida com durabilidade local imediata e resultado tipado
+
+- Contexto: a sincronização IndexedDB + Google Drive apresentava perda de dados após `F5`, fila pendente presa, split-brain entre pasta local/API e falso positivo de sucesso na UI. O estado da fila persistia antes do dado local, `pullFromRemote()` atualizava apenas RAM, `_meta.json` inválido podia ser tratado como primeira sincronização e os modos local/API podiam apontar para raízes diferentes (`01. NexusArqui` vs `NexusArqui`).
+- Decisão:
+  1. Introduzir `driveAppFolder.ts` como resolvedor único da raiz do app no Drive, adotando `01. NexusArqui` como nome canônico e `NexusArqui` como alias legado compatível.
+  2. Tornar a persistência local durável antes da sync remota: `loadData.ts` agora grava estado por entidade imediatamente, faz flush explícito em `pagehide`/`beforeunload`/`visibilitychange` e persiste writes vindos do remoto antes de notificar a UI.
+  3. Endurecer o `driveSyncEngine` para devolver `SyncOperationResult` em ações manuais (`forcePush`, `forcePull`, `flushPendingWrites`, `reconnectWithRepermission`), permitindo que a UI só mostre sucesso com confirmação real do motor.
+  4. Tratar `_meta.json` inválido como erro remoto explícito (`remote_meta_invalid`), nunca como sincronização inicial.
+  5. Permitir recuperação de acesso híbrida: primeiro repermission local, depois `ensureDriveAccess()` com silent reauth da API quando a identidade do app já existir.
+- Consequência: refresh rápido não perde mais alteração local, o dado puxado do Drive sobrevive ao reload, Desktop/API convergem para a mesma árvore lógica, a UI deixa de reportar sync bem-sucedido em falha silenciosa e corrupção de `_meta.json` passa a bloquear overwrite indevido.
+- Reversão:
+  1. Remover `driveAppFolder.ts` e restaurar nomes de pasta hardcoded em `localDriveService.ts` e `googleDriveService.ts`.
+  2. Reverter `loadData.ts` para persistência baseada apenas em snapshot debounced.
+  3. Voltar ações manuais do engine para `void/boolean` sem resultado estruturado.
+  4. Restaurar `readMeta()` para retornar `null` em `_meta.json` inválido.
+- Referências: `src/frontend/services/infrastructure/driveAppFolder.ts`, `src/frontend/services/infrastructure/loadData.ts`, `src/frontend/services/infrastructure/driveSyncEngine.ts`, `src/frontend/services/infrastructure/driveDataAdapter.ts`, `src/frontend/services/infrastructure/googleDriveService.ts`, `src/frontend/services/infrastructure/localDriveService.ts`, `src/frontend/components/configuracoes/GoogleDriveSection.tsx`, `src/frontend/components/drive/DriveSyncReconnector.tsx`, `NEXT.md`.
+
+### Session 7 — 2026-04-12
+
+**Objective:** eliminar a perda de dados e o travamento de fila na sincronização IndexedDB + Google Drive, fechando o ciclo local → Drive → outro dispositivo com recuperação previsível de acesso.
+**What was done:** foi criado um resolvedor compartilhado da pasta raiz do app no Drive, unificando `01. NexusArqui` e `NexusArqui`. `loadData.ts` passou a gravar slices locais imediatamente, fazer flush de snapshot em eventos de lifecycle e persistir de forma durável os dados vindos de `pullFromRemote()`. `driveSyncEngine.ts` ganhou resultados tipados para operações manuais, recuperação híbrida local/API, erro explícito para `_meta.json` inválido e hardening do backup assíncrono. A UI de Configurações/Reconnector foi alinhada ao novo contrato, sem falso positivo de sucesso. Foram adicionados testes para resolvedor de pasta, persistência local, recovery do engine e silent reauth da API.
+**Decisions made:** tratar durabilidade local como pré-condição do push; adotar `01. NexusArqui` como raiz canônica com compatibilidade retroativa; promover erros de `_meta.json` a falhas observáveis; expor resultado tipado do motor para a UI.
+**Open/Pending:** executar smoke real em duas máquinas/perfis cobrindo local→API, conflito offline simultâneo e recuperação de permissão expirada do Desktop client.
+**Immediate next step:** rodar `npm run verify` e, com gate verde, validar em ambiente real os cenários de dois dispositivos definidos no plano de estabilização.
+**Quality gate:** `npm run typecheck` PASS; `npx vitest run src/frontend/services/infrastructure/loadData.test.ts src/frontend/services/infrastructure/driveSyncEngine.test.ts src/frontend/services/infrastructure/driveAppFolder.test.ts src/frontend/services/infrastructure/googleDriveService.test.ts` PASS; `npm run verify` PASS (`[VERIFY][LOOP][PASS]`).
+
 ### 2026-04-11 — Autenticação do app separada da autorização do Google Drive
 
 - Contexto: o login obrigatório do NexusArqui estava usando diretamente o fluxo OAuth de token do Google Drive (`initTokenClient`) como se ele fosse a autenticação primária do app. Quando o popup de autorização fechava sem entregar o callback esperado, o `AuthGuard` não consolidava sessão e o usuário retornava para a `LoginPage`, mesmo após selecionar a conta Google.

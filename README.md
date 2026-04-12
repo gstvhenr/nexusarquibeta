@@ -1,6 +1,6 @@
 # Nexus-Arqui
 
-ERP web para operação de escritório de arquitetura (clientes, propostas, projetos, financeiro e documentos).
+ERP web exclusivo para operação do profissional autônomo Rafael Munaro (clientes, propostas, projetos, financeiro e documentos).
 
 ## Setup rápido (humano)
 
