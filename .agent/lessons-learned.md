@@ -19,6 +19,14 @@
 
 ---
 
+### [2026-04-12] - [RUNTIME] - Frontend publicado nao pode depender so de `import.meta.env`
+
+**Erro encontrado:** O site publicado abriu com erro de configuracao do app e, no console, caiu para o fallback de persistencia porque o runtime remoto nao conseguia inicializar Firebase e ainda tentava subir SQLite WASM.
+**Arquivo(s) afetado(s):** `server.mjs`, `src/frontend/services/infrastructure/persistence/firebaseConfig.ts`, `src/frontend/services/infrastructure/persistence/createPersistenceAdapter.ts`, `src/frontend/services/infrastructure/persistence/sqlite/sqliteSchema.ts`.
+**Causa raiz:** As envs publicas do Firebase eram lidas apenas via `import.meta.env`, ou seja, dependiam do build. No host publicado, o browser nao recebia mais esse contrato em runtime. Em paralelo, o mapa SQLite ainda expunha `documentStorage` como tabela, embora `schema.sql` nao a crie.
+**Correcao aplicada:** Injecao de `window.__NEXUS_ARQUI_RUNTIME_CONFIG` em `server.mjs`, leitura prioritaria dessa configuracao no bootstrap Firebase/adaptador de persistencia, bloqueio de `sqlite` em host publicado e remocao de `documentStorage` do mapa de tabelas.
+**Regra negativa derivada:** Nao depender apenas de `import.meta.env` para frontend servido por container quando as envs publicas precisam existir no runtime do browser; e nao anunciar tabela SQLite que nao exista no `schema.sql` real.
+
 ### [2026-04-12] - [DEPLOY] - SPA Vite nao pode depender de heuristica implicita do Cloud Run
 
 **Erro encontrado:** O check externo do Google Cloud Developer Connect/Cloud Run falhava logo após o push, apesar do `CI / verify` do GitHub estar verde.

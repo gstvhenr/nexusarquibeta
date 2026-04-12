@@ -2,44 +2,39 @@
 
 ## Último estado conhecido (2026-04-12)
 
-Falha do check externo do Google Cloud Developer Connect/Cloud Run diagnosticada e corrigida no contrato de deploy do repositório. O problema não estava no workflow `CI / verify`, mas no fato de o projeto Vite não expor runtime HTTP de produção nem artefatos explícitos de container. A reprodução local mostrou:
+Erro publicado de configuração do app e falha do SQLite WASM diagnosticados e corrigidos. O problema combinava duas causas: o browser publicado dependia apenas de envs embutidas no build para inicializar Firebase, e o caminho SQLite ainda tentava acessar a tabela inexistente `document_storage`. A correção aplicada nesta sessão foi:
 
-- `npm run start` inexistente;
-- install produção-only quebrando em `prepare` (`husky`);
-- `npm run build` quebrando sem `vite`, pois ele existe apenas em `devDependencies`.
+- `server.mjs` agora injeta `window.__NEXUS_ARQUI_RUNTIME_CONFIG` com `VITE_PERSISTENCE_ADAPTER` e `VITE_FIREBASE_*` no HTML servido em produção;
+- `firebaseConfig.ts` e `createPersistenceAdapter.ts` passaram a priorizar a configuração pública de runtime antes de usar `import.meta.env`;
+- `sqlite` foi bloqueado em host publicado, com fallback automático para Firebase ou IndexedDB;
+- `documentStorage` foi removido do `ENTITY_TABLE_MAP` do SQLite, encerrando a consulta inválida a `document_storage`.
 
-Para estabilizar o publish Git-based em Cloud Run, o repositório agora expõe:
-
-- `Dockerfile` multi-stage com build explícito;
-- `server.mjs` para servir `dist/` com fallback SPA e bind em `PORT`;
-- `.dockerignore` para reduzir o contexto do container e blindar `.env`;
-- `gcp-build`, `start` e `engines.node = 22.x` em `package.json`.
+O contrato anterior de deploy para Cloud Run/Developer Connect continua válido: `Dockerfile` multi-stage, `server.mjs` como runtime HTTP, `.dockerignore`, `gcp-build`, `start` e `engines.node = 22.x`.
 
 ### Checklist desta sessão
 
-- [x] Reproduzido localmente `npm run start` ausente.
-- [x] Reproduzido localmente `npm ci --omit=dev` falhando em `prepare` (`husky`) e `build` (`vite` ausente).
-- [x] Criado `server.mjs` como servidor HTTP de produção para a SPA.
-- [x] Criado `Dockerfile` multi-stage para Cloud Run/Developer Connect.
-- [x] Criado `.dockerignore` excluindo artefatos locais, docs pesados e `.env`.
-- [x] `package.json` atualizado com `gcp-build`, `start` e `engines.node`.
-- [x] `README.md`, `.agent/lessons-learned.md` e `DECISIONS-active.md` atualizados com o novo contrato de deploy.
-- [x] `npm install` para restaurar o ambiente local antes do verify.
+- [x] Mapeado o erro remoto de configuração do app e a falha do SQLite WASM.
+- [x] Criado `runtimePublicEnv.ts` para leitura de env pública injetada no `window`.
+- [x] `server.mjs` atualizado para injetar `window.__NEXUS_ARQUI_RUNTIME_CONFIG` no HTML servido.
+- [x] `firebaseConfig.ts` atualizado para priorizar a env pública de runtime.
+- [x] `createPersistenceAdapter.ts` atualizado para bloquear `sqlite` em host publicado e fazer fallback automático.
+- [x] `sqliteSchema.ts` corrigido removendo `documentStorage` do mapa de tabelas.
+- [x] Testes direcionados criados/atualizados para runtime env e seleção do adaptador.
+- [x] `README.md`, `.agent/lessons-learned.md` e `DECISIONS-active.md` atualizados com o novo contrato de runtime publicado.
 - [x] `npm run verify`.
-- [ ] `docker build` local (`docker` CLI presente, daemon indisponível na máquina).
 - [x] Smoke local do runtime com `PORT=8080 npm run start`.
-- [x] Publicação do commit corrigido no GitHub (`e4d5023`).
+- [ ] Publicação do commit corrigido no GitHub.
 
 ## Próximo passo exato
 
-1. Confirmar no GitHub/Google Cloud o reprocessamento do check `cloudrun-nexusarqui-git-southamerica-east1-*` para o commit `e4d5023`.
-2. Se o deploy concluir, configurar/confirmar as `VITE_FIREBASE_*` como build envs no provedor remoto e executar smoke manual.
-3. Com Docker Desktop ativo, validar também `docker build` local para fechar a trilha de container end-to-end.
+1. Publicar o commit com a correção de runtime em `upstream/main`.
+2. Confirmar no ambiente remoto que as `VITE_FIREBASE_*` estão definidas no serviço publicado.
+3. Validar no navegador publicado que o app inicia sem o erro de configuração e sem tentativas de `sqlite/document_storage`.
 
 ## Bloqueios e dúvidas
 
-- Ainda falta a confirmação externa do novo ciclo de deploy no Google Cloud, porque a falha original veio do provedor e não do workflow local do GitHub.
-- O `docker build` local não pôde ser executado porque o daemon do Docker Desktop não estava ativo nesta máquina durante a sessão.
+- A correção de código resolve a leitura de env pública em runtime, mas o app remoto ainda depende de o serviço publicado expor `VITE_FIREBASE_*`; se o provedor não estiver com essas variáveis definidas, o Firebase continuará indisponível.
+- A confirmação final do resultado exige o redeploy externo após o push.
 
 ---
 

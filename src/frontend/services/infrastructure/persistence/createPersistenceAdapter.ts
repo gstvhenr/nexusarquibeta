@@ -19,13 +19,16 @@ import { isFirebaseConfigured } from './firebaseConfig';
 import { FirebasePersistenceAdapter } from './firebasePersistenceAdapter';
 import { IndexedDbPersistenceAdapter } from './IndexedDbPersistenceAdapter';
 import { SqlitePersistenceAdapter } from './SqlitePersistenceAdapter';
+import { isPublishedBrowserRuntime, readPublicRuntimeEnv } from './runtimePublicEnv';
 
 let cachedAdapter: PersistencePort | null = null;
 
 type AdapterSelection = 'firebase' | 'indexeddb' | 'sqlite';
 
 function getRequestedAdapter(): AdapterSelection {
-  const raw = import.meta.env.VITE_PERSISTENCE_ADAPTER?.trim().toLowerCase();
+  const raw =
+    readPublicRuntimeEnv('VITE_PERSISTENCE_ADAPTER') ||
+    import.meta.env.VITE_PERSISTENCE_ADAPTER?.trim().toLowerCase();
 
   if (raw === 'indexeddb' || raw === 'sqlite' || raw === 'firebase') {
     return raw;
@@ -37,10 +40,18 @@ function getRequestedAdapter(): AdapterSelection {
 export function createPersistenceAdapter(): PersistencePort {
   if (!cachedAdapter) {
     const requestedAdapter = getRequestedAdapter();
+    const sqliteBlockedInPublishedRuntime =
+      requestedAdapter === 'sqlite' && isPublishedBrowserRuntime();
 
-    if (requestedAdapter === 'sqlite') {
+    if (requestedAdapter === 'sqlite' && !sqliteBlockedInPublishedRuntime) {
       cachedAdapter = new SqlitePersistenceAdapter();
       return cachedAdapter;
+    }
+
+    if (sqliteBlockedInPublishedRuntime) {
+      console.warn(
+        '[Persistence] SQLite está desabilitado no runtime publicado. Fazendo fallback automático para Firebase/IndexedDB.',
+      );
     }
 
     if (requestedAdapter === 'firebase' && isFirebaseConfigured()) {
@@ -48,9 +59,20 @@ export function createPersistenceAdapter(): PersistencePort {
       return cachedAdapter;
     }
 
+    if (sqliteBlockedInPublishedRuntime && isFirebaseConfigured()) {
+      cachedAdapter = new FirebasePersistenceAdapter();
+      return cachedAdapter;
+    }
+
     if (requestedAdapter === 'firebase' && !isFirebaseConfigured()) {
       console.warn(
         '[Persistence] Firebase não configurado. Fazendo fallback automático para IndexedDB.',
+      );
+    }
+
+    if (sqliteBlockedInPublishedRuntime && !isFirebaseConfigured()) {
+      console.warn(
+        '[Persistence] Runtime publicado sem Firebase configurado. Fazendo fallback automático para IndexedDB.',
       );
     }
 

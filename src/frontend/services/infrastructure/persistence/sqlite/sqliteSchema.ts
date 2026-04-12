@@ -17,7 +17,6 @@ export const ENTITY_TABLE_MAP: Record<string, string> = {
   projects: 'projects',
   proposals: 'proposals',
   clients: 'clients',
-  documentStorage: 'document_storage',
   suppliers: 'suppliers',
   products: 'products',
   supplierProductPrices: 'supplier_product_prices',

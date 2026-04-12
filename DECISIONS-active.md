@@ -10,6 +10,31 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-04-12 — Runtime público injetado no servidor e SQLite bloqueado em host publicado
+
+- Contexto: após a migração para Firebase, o site publicado passou a abrir com erro de configuração (`CLIENT_ID não configurado. Verifique .env.`) e o console mostrava falha do SQLite WASM com `no such table: document_storage`. O problema combinava duas causas: o frontend dependia apenas de `import.meta.env` embutido no build e o schema SQLite ainda anunciava uma tabela escalar que não existe em `schema.sql`.
+- Decisão:
+  1. Fazer `server.mjs` injetar no HTML uma configuração pública de runtime (`window.__NEXUS_ARQUI_RUNTIME_CONFIG`) com `VITE_PERSISTENCE_ADAPTER` e `VITE_FIREBASE_*`, permitindo que o browser publicado leia variáveis públicas diretamente do ambiente do container.
+  2. Fazer `firebaseConfig.ts` e `createPersistenceAdapter.ts` priorizarem essa configuração de runtime antes de cair para `import.meta.env`.
+  3. Bloquear o adaptador `sqlite` em host publicado e forçar fallback automático para Firebase, ou IndexedDB quando Firebase não estiver configurado.
+  4. Remover `documentStorage` do `ENTITY_TABLE_MAP` do SQLite, porque ele é chave escalar e não tabela persistida.
+- Consequência: o deploy publicado deixa de depender exclusivamente de variáveis embutidas no build para inicializar Firebase; o runtime remoto não tenta mais abrir SQLite WASM como caminho ativo; a consulta inválida a `document_storage` deixa de existir.
+- Reversão:
+  1. Remover a injeção `window.__NEXUS_ARQUI_RUNTIME_CONFIG` de `server.mjs`.
+  2. Restaurar leitura exclusiva por `import.meta.env` em `firebaseConfig.ts` e `createPersistenceAdapter.ts`.
+  3. Permitir novamente `sqlite` em host publicado.
+  4. Recolocar `documentStorage` no `ENTITY_TABLE_MAP`.
+- Referências: `server.mjs`, `src/frontend/services/infrastructure/persistence/runtimePublicEnv.ts`, `src/frontend/services/infrastructure/persistence/firebaseConfig.ts`, `src/frontend/services/infrastructure/persistence/createPersistenceAdapter.ts`, `src/frontend/services/infrastructure/persistence/sqlite/sqliteSchema.ts`, `README.md`, `NEXT.md`.
+
+### Session 10 — 2026-04-12
+
+**Objective:** corrigir o erro publicado de configuração do app (`CLIENT_ID/.env`) e as falhas do SQLite WASM no runtime remoto, finalizando com novo push para o GitHub.
+**What was done:** foi identificado que o frontend publicado ainda dependia apenas de envs embutidas no build, enquanto o runtime de produção precisava ler as variáveis públicas do Firebase a partir do ambiente do servidor. Foi adicionada a injeção de `window.__NEXUS_ARQUI_RUNTIME_CONFIG` em `server.mjs`, com leitura priorizada em `firebaseConfig.ts` e `createPersistenceAdapter.ts`. Também foi bloqueado o uso de `sqlite` em host publicado, com fallback automático para Firebase/IndexedDB, e removido `documentStorage` do mapa de tabelas do SQLite para eliminar a consulta inválida a `document_storage`. Entraram testes direcionados para runtime config e seleção do adaptador.
+**Decisions made:** usar injeção de env pública em runtime como contrato do container publicado; tratar SQLite WASM como modo local/opt-in, nunca como caminho ativo em host remoto; alinhar o mapa de schema SQLite ao `schema.sql` real.
+**Open/Pending:** confirmar no ambiente remoto que as variáveis `VITE_FIREBASE_*` estão definidas no serviço publicado; se estiverem ausentes no provedor, o app continuará sem inicializar Firebase mesmo com a correção de código.
+**Immediate next step:** publicar o commit em `upstream/main` e acompanhar o redeploy remoto para verificar inicialização do Firebase e ausência dos erros `document_storage`/SQLite no navegador.
+**Quality gate:** `npx vitest run src/frontend/services/infrastructure/persistence/runtimePublicEnv.test.ts src/frontend/services/infrastructure/persistence/createPersistenceAdapter.test.ts src/frontend/services/infrastructure/firebaseAuthService.test.ts src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.test.ts` PASS; `npm run verify` PASS (`[VERIFY][LOOP][PASS]`); `PORT=8080 npm run start` PASS; `Invoke-WebRequest http://127.0.0.1:8080` PASS; `Invoke-WebRequest http://127.0.0.1:8080/clientes` PASS.
+
 ### 2026-04-12 — Contrato explícito de deploy para Cloud Run/Developer Connect
 
 - Contexto: o push em `main` disparava o check externo `cloudrun-nexusarqui-git-southamerica-east1-*`, enquanto o repositório continha apenas o build Vite do frontend. Não havia `Dockerfile`, `start` script nem servidor HTTP de produção. Na reprodução local, `npm run start` falhou por ausência do script e um install produção-only (`npm ci --omit=dev`) quebrou em `prepare` (`husky`) e `build` (`vite` não instalado).
@@ -76,15 +101,6 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
   4. Restaurar `readMeta()` para retornar `null` em `_meta.json` inválido.
 - Referências: `src/frontend/services/infrastructure/driveAppFolder.ts`, `src/frontend/services/infrastructure/loadData.ts`, `src/frontend/services/infrastructure/driveSyncEngine.ts`, `src/frontend/services/infrastructure/driveDataAdapter.ts`, `src/frontend/services/infrastructure/googleDriveService.ts`, `src/frontend/services/infrastructure/localDriveService.ts`, `src/frontend/components/configuracoes/GoogleDriveSection.tsx`, `src/frontend/components/drive/DriveSyncReconnector.tsx`, `NEXT.md`.
 
-### Session 7 — 2026-04-12
-
-**Objective:** eliminar a perda de dados e o travamento de fila na sincronização IndexedDB + Google Drive, fechando o ciclo local → Drive → outro dispositivo com recuperação previsível de acesso.
-**What was done:** foi criado um resolvedor compartilhado da pasta raiz do app no Drive, unificando `01. NexusArqui` e `NexusArqui`. `loadData.ts` passou a gravar slices locais imediatamente, fazer flush de snapshot em eventos de lifecycle e persistir de forma durável os dados vindos de `pullFromRemote()`. `driveSyncEngine.ts` ganhou resultados tipados para operações manuais, recuperação híbrida local/API, erro explícito para `_meta.json` inválido e hardening do backup assíncrono. A UI de Configurações/Reconnector foi alinhada ao novo contrato, sem falso positivo de sucesso. Foram adicionados testes para resolvedor de pasta, persistência local, recovery do engine e silent reauth da API.
-**Decisions made:** tratar durabilidade local como pré-condição do push; adotar `01. NexusArqui` como raiz canônica com compatibilidade retroativa; promover erros de `_meta.json` a falhas observáveis; expor resultado tipado do motor para a UI.
-**Open/Pending:** executar smoke real em duas máquinas/perfis cobrindo local→API, conflito offline simultâneo e recuperação de permissão expirada do Desktop client.
-**Immediate next step:** rodar `npm run verify` e, com gate verde, validar em ambiente real os cenários de dois dispositivos definidos no plano de estabilização.
-**Quality gate:** `npm run typecheck` PASS; `npx vitest run src/frontend/services/infrastructure/loadData.test.ts src/frontend/services/infrastructure/driveSyncEngine.test.ts src/frontend/services/infrastructure/driveAppFolder.test.ts src/frontend/services/infrastructure/googleDriveService.test.ts` PASS; `npm run verify` PASS (`[VERIFY][LOOP][PASS]`).
-
 ### 2026-04-11 — Autenticação do app separada da autorização do Google Drive
 
 - Contexto: o login obrigatório do NexusArqui estava usando diretamente o fluxo OAuth de token do Google Drive (`initTokenClient`) como se ele fosse a autenticação primária do app. Quando o popup de autorização fechava sem entregar o callback esperado, o `AuthGuard` não consolidava sessão e o usuário retornava para a `LoginPage`, mesmo após selecionar a conta Google.
@@ -98,15 +114,6 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
   2. Voltar a depender exclusivamente do token OAuth do Drive para liberar o `AuthGuard`.
   3. Restaurar os indicadores de UI para interpretar `state.status === connected` como “Drive API conectada”.
 - Referências: `src/frontend/components/auth/LoginPage.tsx`, `src/frontend/services/infrastructure/googleDriveService.ts`, `src/frontend/components/configuracoes/GoogleDriveSection.tsx`, `src/frontend/App.tsx`, `NEXT.md`.
-
-### Session 6 — 2026-04-11
-
-**Objective:** corrigir o fluxo em que o popup do Google fechava após a escolha de conta e devolvia o usuário para a tela de login, sem abrir o NexusArqui.
-**What was done:** o login do app foi desacoplado da autorização do Drive. A tela de login passou a usar o fluxo oficial de identidade do Google para estabelecer a sessão do NexusArqui, enquanto a autorização do Drive continuou separada e pode ser tentada silenciosamente ou acionada manualmente em Configurações. Também foram ajustados os indicadores para não tratar “usuário autenticado” como sinônimo de “Drive API conectada”.
-**Decisions made:** usar `google.accounts.id` para bootstrap da sessão frontend; preservar `oauth2.initTokenClient` apenas para escopo do Drive; manter o app acessível mesmo sem token imediato do Drive.
-**Open/Pending:** validar manualmente em navegador real o fluxo de login após clique no botão Google, confirmar abertura do app e testar a reconexão manual do Drive na área de Configurações.
-**Immediate next step:** executar o fluxo real no navegador: entrar pela `LoginPage`, confirmar transição para o app e validar o botão “Conectar Google Drive” quando a API ainda não estiver autorizada.
-**Quality gate:** `npx vitest run src/frontend/utils/googleIdentity.test.ts` PASS; `npx eslint` nos arquivos alterados PASS; `npx prettier --check` nos arquivos alterados PASS; `npm run verify` pendente nesta sessão.
 
 ### 2026-04-11 — Persistência total no Google Drive com fila resiliente, preferências sincronizadas e tombstones
 
@@ -124,15 +131,6 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
   3. Remover tombstones e retornar ao overwrite por arquivo inteiro para arrays.
   4. Reverter a substituição/remoção automática de arquivos binários gerenciados.
 - Referências: `src/frontend/services/infrastructure/driveSyncEngine.ts`, `src/frontend/services/infrastructure/loadData.ts`, `src/frontend/services/infrastructure/driveSyncPreferences.ts`, `src/frontend/services/infrastructure/driveSyncMerge.ts`, `src/frontend/hooks/useLocalStorage.ts`, `src/frontend/services/infrastructure/driveFileService.ts`, `NEXT.md`.
-
-### Session 5 — 2026-04-11
-
-**Objective:** garantir persistência total no Google Drive para dados e preferências, com sync resiliente para inclusão, alteração e exclusão entre dispositivos.
-**What was done:** o motor de sync foi endurecido com fila persistida, retry com backoff, flush em lifecycle do browser e reconexão automática por mudanças de acesso. Preferências (`theme`, `financial_password`, `financial_lock_enabled`) passaram a sincronizar em `preferences.json`. Foi introduzido merge `last write wins` por registro com tombstones para arrays identificáveis e cleanup remoto de `files/` no reset global. Também entrou remoção/substituição segura do avatar de cliente no Drive.
-**Decisions made:** manter Google Drive como fonte remota canônica; usar `last write wins` por registro quando houver `id`; preservar `_backups`; manter tokens/sessão OAuth fora do sync de negócio.
-**Open/Pending:** validar manualmente cenários de dois dispositivos, conflito simultâneo no mesmo registro, reset global com limpeza remota de `files/` e propagação cross-device das preferências.
-**Immediate next step:** executar smoke em dois perfis do navegador cobrindo criação, edição, exclusão, troca de avatar, reset global e sincronização de preferências sem reload manual.
-**Quality gate:** `npm run typecheck` PASS; `npx eslint` nos arquivos alterados PASS; `npx prettier --check` nos arquivos alterados PASS; `npx vitest run src/frontend/services/infrastructure/driveSyncMerge.test.ts` PASS.
 
 ### 2026-04-11 — Google Drive API como fonte canônica de verdade
 
@@ -155,24 +153,6 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
   2. Retirar a integração do lock em `src/frontend/components/ui/Modal.tsx`.
   3. Restaurar em `src/frontend/services/infrastructure/loadData.ts` a aplicação imediata de `refreshFromPersistentSnapshot()` e `writeLocal()`.
 - Referências: `src/frontend/services/uiInteractionLockService.ts`, `src/frontend/components/ui/Modal.tsx`, `src/frontend/services/infrastructure/loadData.ts`, `NEXT.md`.
-
-### Session 3 — 2026-04-11
-
-**Objective:** impedir que pop-ups do projeto inteiro fechem ou percam contexto por atualizações externas em background enquanto o usuário está interagindo com um modal.
-**What was done:** foi criado um lock global de interação, integrado ao `Modal` compartilhado, e `loadData.ts` passou a adiar refreshes externos de snapshot/Drive Sync até o fechamento do último modal. Também foram adicionados testes unitários do serviço de lock e revalidadas as suítes direcionadas do modal.
-**Decisions made:** centralizar a proteção no `Modal` compartilhado em vez de espalhar flags por tela; tratar snapshot persistido como fonte mais forte que writes de domínio enfileirados; manter o sync ativo, mas aplicar o merge somente após o unlock.
-**Open/Pending:** confirmar manualmente nos fluxos mais críticos que o modal permanece aberto mesmo após ciclos de sync em background, especialmente em telas fora de `Agenda`.
-**Immediate next step:** executar smoke manual em pop-ups de `Clientes`, `Projetos`, `Suprimentos`, `Configurações` e `Agenda`, deixando um modal aberto por mais de 60 segundos para validar que o polling não desmonta a UI.
-**Quality gate:** `npm run typecheck` PASS; `npx vitest run src/frontend/services/uiInteractionLockService.test.ts` PASS; `npx vitest run src/frontend/components/ui/Modal.test.tsx` PASS; `npx eslint` nos arquivos alterados PASS; `npx prettier --check` nos arquivos alterados PASS.
-
-### Session 4 — 2026-04-11
-
-**Objective:** reproduzir a falha do commit `48bd409` no GitHub, corrigir o gate quebrado e subir o estado vigente do projeto com o pipeline novamente verde.
-**What was done:** a falha foi reproduzida localmente em `npm run verify`, que caía em `format:check` por `src/frontend/components/projetos/tabs/project-finance/ProjectFinanceKpiRow.tsx`. O arquivo foi formatado com Prettier; também foi saneado `ProjectFinanceTab.tsx`, removendo imports órfãos (`formatCurrency`, `CashIcon`). Depois disso, `npm run verify` e `npm run security:check` passaram.
-**Decisions made:** tratar o problema como falha real de CI reproduzida localmente antes de qualquer push; limitar a correção ao módulo efetivamente apontado pelo gate e ao lint órfão do mesmo domínio, sem refactor adicional.
-**Open/Pending:** consolidar commit/push em `main` e confirmar no GitHub que o workflow `CI` reprocessou em verde.
-**Immediate next step:** criar o commit com as correções desta sessão e fazer `git push` para atualizar `upstream/main`.
-**Quality gate:** `npx eslint src/frontend/components/projetos/tabs/ProjectFinanceTab.tsx` PASS; `npx prettier --check src/frontend/components/projetos/tabs/ProjectFinanceTab.tsx` PASS; `npm run security:check` PASS; `npm run verify` PASS (`[VERIFY][LOOP][PASS]`).
 
 ### 2026-04-10 — Hardening de dependências: fechamento de `security:check` e `verify:ci`
 
@@ -204,15 +184,6 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
   2. Restaurar os imports locais nas pages afetadas.
   3. Remover os primitives novos de `components/ui` e desfazer o endurecimento documental.
 - Referências: `src/frontend/components/ui/index.ts`, `src/frontend/components/documentos/index.ts`, `src/frontend/components/marketing/index.ts`, `src/frontend/components/agenda/index.ts`, `src/frontend/components/finance/index.ts`, `src/frontend/components/projetos/ProjetoDetalhesPageContent.tsx`, `src/frontend/hooks/useProjectLifecycleActions.ts`, `src/frontend/hooks/useDomain.ts`, `.agent/rules/architecture-decisions.md`, `.agent/rules/code-hygiene.md`, `docs/PLACEMENT_RULES.md`, `NEXT.md`.
-
-### Session 2 — 2026-04-10
-
-**Objective:** fechar a trilha de dependências remanescente para liberar `security:check` e concluir `verify:ci`.
-**What was done:** `jspdf`, `vite` e `dependency-cruiser` foram atualizados para versões corrigidas; `handlebars` foi fixado em `4.7.9` via `overrides`; `npm audit fix` limpou as vulnerabilidades transitivas restantes e o lockfile foi regenerado sem findings.
-**Decisions made:** priorizar correções patch e override transitivo antes de aceitar major em `eslint-plugin-boundaries`; manter `eslint.config.mjs` intacto enquanto o gate pudesse fechar sem breaking change.
-**Open/Pending:** smoke manual das telas migradas na sanção estrutural e eventual revisão posterior de cobertura, fora do escopo desta trilha.
-**Immediate next step:** validar manualmente os módulos críticos migrados (`Configurações`, `Documentos`, `Gestão de Caixa`, `Gestão de Marketing`, `Agenda`, `Clientes`, `Projetos > Detalhes`, `Suprimentos > Comissões`) com o build já saneado.
-**Quality gate:** `npm run security:check` PASS; `npm run verify:ci` PASS; `npm audit` sem vulnerabilidades.
 
 ### 2026-03-11 — Suspensão de testes: remoção de 70 arquivos `.test.*` na fase beta
 

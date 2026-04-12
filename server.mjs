@@ -3,11 +3,21 @@ import { stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readFile } from 'node:fs/promises';
 
 const ROOT_DIR = fileURLToPath(new URL('.', import.meta.url));
 const DIST_DIR = join(ROOT_DIR, 'dist');
 const INDEX_FILE = join(DIST_DIR, 'index.html');
 const PORT = Number.parseInt(process.env.PORT ?? '8080', 10);
+const PUBLIC_RUNTIME_ENV_KEYS = [
+  'VITE_PERSISTENCE_ADAPTER',
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_AUTH_DOMAIN',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_STORAGE_BUCKET',
+  'VITE_FIREBASE_MESSAGING_SENDER_ID',
+  'VITE_FIREBASE_APP_ID',
+];
 
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -54,6 +64,33 @@ function sendFile(response, path, method, cacheControl) {
   createReadStream(path).pipe(response);
 }
 
+function buildRuntimeConfigScript() {
+  const runtimeConfig = Object.fromEntries(
+    PUBLIC_RUNTIME_ENV_KEYS.map((key) => [key, process.env[key]?.trim() ?? '']),
+  );
+  const serializedConfig = JSON.stringify(runtimeConfig).replace(/</g, '\\u003c');
+  return `<script>window.__NEXUS_ARQUI_RUNTIME_CONFIG=${serializedConfig};</script>`;
+}
+
+async function sendIndexHtml(response, method) {
+  const html = await readFile(INDEX_FILE, 'utf8');
+  const injectedHtml = html.includes('</head>')
+    ? html.replace('</head>', `${buildRuntimeConfigScript()}</head>`)
+    : `${buildRuntimeConfigScript()}${html}`;
+
+  response.writeHead(200, {
+    'Cache-Control': 'no-cache',
+    'Content-Type': MIME_TYPES['.html'],
+  });
+
+  if (method === 'HEAD') {
+    response.end();
+    return;
+  }
+
+  response.end(injectedHtml);
+}
+
 const server = createServer(async (request, response) => {
   const method = request.method ?? 'GET';
   if (method !== 'GET' && method !== 'HEAD') {
@@ -67,6 +104,11 @@ const server = createServer(async (request, response) => {
   const requestedPath = toFilePath(pathname);
   const extension = extname(pathname).toLowerCase();
 
+  if (requestedPath === INDEX_FILE) {
+    await sendIndexHtml(response, method);
+    return;
+  }
+
   if (extension) {
     if (await hasFile(requestedPath)) {
       sendFile(response, requestedPath, method, 'public, max-age=31536000, immutable');
@@ -78,7 +120,7 @@ const server = createServer(async (request, response) => {
     return;
   }
 
-  sendFile(response, INDEX_FILE, method, 'no-cache');
+  await sendIndexHtml(response, method);
 });
 
 server.listen(PORT, '0.0.0.0', () => {

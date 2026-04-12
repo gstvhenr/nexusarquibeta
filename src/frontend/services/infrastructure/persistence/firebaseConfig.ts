@@ -7,6 +7,7 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
+import { readPublicRuntimeEnv } from './runtimePublicEnv';
 
 interface FirebaseRuntimeConfig {
   apiKey: string;
@@ -37,6 +38,11 @@ let cachedServices: FirebaseServices | null = null;
 let authPersistencePromise: Promise<void> | null = null;
 
 function readEnv(key: (typeof REQUIRED_ENV_KEYS)[number]): string {
+  const runtimeValue = readPublicRuntimeEnv(key);
+  if (runtimeValue) {
+    return runtimeValue;
+  }
+
   const value = import.meta.env[key];
   return typeof value === 'string' ? value.trim() : '';
 }

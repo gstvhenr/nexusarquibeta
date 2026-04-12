@@ -52,3 +52,4 @@ Documentação de arquitetura:
 - O repositório expõe `Dockerfile` multi-stage para ambientes que fazem deploy por Git/Cloud Run.
 - O runtime de produção usa `node server.mjs` para servir `dist/` com fallback SPA e respeitar `PORT`.
 - Para compatibilidade com buildpacks Node, `package.json` também expõe `gcp-build` e `start`.
+- O `server.mjs` injeta no HTML as envs públicas `VITE_PERSISTENCE_ADAPTER` e `VITE_FIREBASE_*`, permitindo que o frontend publicado leia a configuração do container em runtime.
