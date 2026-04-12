@@ -19,6 +19,14 @@
 
 ---
 
+### [2026-04-12] - [VITE] - Host estatico nao executa `server.mjs` nem suporta `import.meta.env[key]`
+
+**Erro encontrado:** Mesmo apos o runtime injetado por `server.mjs`, o deploy estatico do Vercel ainda podia abrir com Firebase indisponivel, porque o browser final continuava dependente do bundle do Vite e a versao commitada de `firebaseConfig.ts` lia `import.meta.env` por chave dinamica.
+**Arquivo(s) afetado(s):** `src/frontend/services/infrastructure/persistence/firebaseConfig.ts`, `src/frontend/services/infrastructure/persistence/firebaseConfig.test.ts`, `README.md`, `.gitignore`.
+**Causa raiz:** O fix anterior resolveu o caminho containerizado (Cloud Run/Node runtime), mas nao cobriu o provider estatico. No Vercel, apenas o `dist/` do `vite build` e servido; `server.mjs` nao injeta env no browser. Alem disso, o Vite nao substitui corretamente `import.meta.env[key]` no build final.
+**Correcao aplicada:** Troca do acesso dinamico por mapa explicito de `import.meta.env.VITE_*`, adicao de teste de regressao para impedir retorno do padrao invalido, documentacao do split Cloud Run vs Vercel e blindagem de `.env.production` no `.gitignore`.
+**Regra negativa derivada:** Em frontend Vite publicado em host estatico, nunca assumir que um runtime Node vai injetar env no browser e nunca acessar `import.meta.env` com chave computada; usar propriedades `VITE_*` explicitas ou um mapa literal.
+
 ### [2026-04-12] - [RUNTIME] - Frontend publicado nao pode depender so de `import.meta.env`
 
 **Erro encontrado:** O site publicado abriu com erro de configuracao do app e, no console, caiu para o fallback de persistencia porque o runtime remoto nao conseguia inicializar Firebase e ainda tentava subir SQLite WASM.

@@ -6,23 +6,29 @@
 
 ## Último estado conhecido (2026-04-12)
 
-Sincronização com o repositório remoto concluída e limpeza do log de sessão (`NEXT.md`). As métricas de governança estavam quebrando pipelines anteriores pelo limite de tamanho total de documento, então as sessões de março/abril anteriores foram arquivadas em `docs/changelog/session-log-2026-04.md`.
+Validação local em `http://localhost:3001` confirmou que o app já consegue inicializar Firebase e abrir o fluxo Google com as `VITE_FIREBASE_*` corretas. A revisão do lote anterior encontrou um ponto cego específico do Vercel: a versão commitada de `firebaseConfig.ts` ainda usava `import.meta.env[key]`, o que quebra o build estático do Vite mesmo quando as envs existem no provider. O estado atual agora é:
+
+- `firebaseConfig.ts` foi corrigido para usar um mapa explícito de `import.meta.env.VITE_*`, preservando compatibilidade com Vercel estático e com o runtime injetado por `server.mjs`;
+- entrou um teste de regressão (`firebaseConfig.test.ts`) para impedir retorno do acesso dinâmico inválido;
+- `README.md` passou a separar claramente o contrato de Cloud Run/container do contrato de Vercel estático;
+- `.gitignore` passou a cobrir `.env.*`, mantendo `!.env.example`, para evitar commit acidental de `.env.production`.
 
 ### Checklist desta sessão
 
-- [x] Sincronizado repositório local com remotos (`git push origin main`, `git push upstream main`).
-- [x] Arquivado log histórico para enxugar o orçamento de governança de documentos (`check:docs:governance`).
-- [x] Constatada árvore limpa ("working tree clean") e pronta para entrega externa.
+- [x] Confirmado `localhost:3001` como host válido para o fluxo de autenticação Google.
+- [x] Reproduzido bootstrap Firebase funcional no browser local autorizado.
+- [x] Identificado e corrigido o ponto cego do build estático do Vite/Vercel em `firebaseConfig.ts`.
+- [x] Atualizada a documentação operacional do split Cloud Run vs Vercel.
 
 ### Próximo passo exato
 
-1. Aguardar o redeploy automático do provedor (Vercel) conectado ao GitHub para que levante a nova revisão.
-2. Confirmar no ambiente remoto que as `VITE_FIREBASE_*` estão perfeitamente definidas no painel de configurações do ambiente.
-3. Validar no navegador publicado que o app inicia de forma estável, autenticação ocorre como devido, e que as imagens/avatares funcionam atreladas ao Firebase Storage sem falhas de persistência legadas.
+1. Publicar no GitHub o diff que corrige `firebaseConfig.ts` e adiciona o teste de regressão.
+2. Confirmar no Vercel que `VITE_PERSISTENCE_ADAPTER` e todas as `VITE_FIREBASE_*` estão definidas em `Production` e `Preview`.
+3. Forçar novo deploy no Vercel e validar no ambiente publicado a ausência da mensagem “Firebase indisponível”, além do fluxo de login Google e dos assets/binários em Firebase Storage.
 
 ### Bloqueios e dúvidas
 
-- Temos um ponto pendente exclusivamente **externo** ao repositório: se as variáveis `VITE_FIREBASE_*` não estiverem expostas pelo provedor (Vercel), a aplicação não reativará o Firebase apropriadamente no ambiente remoto.
+- O ponto pendente agora é principalmente **externo** ao repositório: o Vercel precisa rebuildar com as envs corretas. Sem isso, o código novo não chega a ser materializado no bundle publicado.
 
 ---
 

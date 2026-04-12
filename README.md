@@ -52,4 +52,5 @@ Documentação de arquitetura:
 - O repositório expõe `Dockerfile` multi-stage para ambientes que fazem deploy por Git/Cloud Run.
 - O runtime de produção usa `node server.mjs` para servir `dist/` com fallback SPA e respeitar `PORT`.
 - Para compatibilidade com buildpacks Node, `package.json` também expõe `gcp-build` e `start`.
-- O `server.mjs` injeta no HTML as envs públicas `VITE_PERSISTENCE_ADAPTER` e `VITE_FIREBASE_*`, permitindo que o frontend publicado leia a configuração do container em runtime.
+- Em hosts com runtime Node/container, o `server.mjs` injeta no HTML as envs públicas `VITE_PERSISTENCE_ADAPTER` e `VITE_FIREBASE_*`, permitindo que o browser leia a configuração em runtime.
+- Em host estático no Vercel, apenas o `dist/` gerado pelo `vite build` é servido; portanto, `VITE_PERSISTENCE_ADAPTER` e `VITE_FIREBASE_*` precisam estar configuradas nas Environment Variables do projeto para o build, e o frontend deve manter acesso explícito a `import.meta.env.VITE_*`.

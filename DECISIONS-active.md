@@ -10,21 +10,31 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
-### 2026-04-12 — Runtime público injetado no servidor e SQLite bloqueado em host publicado
+### 2026-04-12 — Bootstrap Firebase precisa suportar runtime injetado e build-time estático
 
-- Contexto: após a migração para Firebase, o site publicado passou a abrir com erro de configuração (`CLIENT_ID não configurado. Verifique .env.`) e o console mostrava falha do SQLite WASM com `no such table: document_storage`. O problema combinava duas causas: o frontend dependia apenas de `import.meta.env` embutido no build e o schema SQLite ainda anunciava uma tabela escalar que não existe em `schema.sql`.
+- Contexto: após a migração para Firebase, o site publicado passou a abrir com erro de configuração (`CLIENT_ID não configurado. Verifique .env.`) e o console mostrava falha do SQLite WASM com `no such table: document_storage`. O problema combinava duas causas: o frontend dependia só de `import.meta.env` embutido no build e o schema SQLite ainda anunciava uma tabela escalar que não existe em `schema.sql`. Na revisão seguinte ficou claro que o contrato também precisava diferenciar providers: Cloud Run/container executa `server.mjs`, mas Vercel estático serve apenas o `dist/` gerado pelo Vite.
 - Decisão:
   1. Fazer `server.mjs` injetar no HTML uma configuração pública de runtime (`window.__NEXUS_ARQUI_RUNTIME_CONFIG`) com `VITE_PERSISTENCE_ADAPTER` e `VITE_FIREBASE_*`, permitindo que o browser publicado leia variáveis públicas diretamente do ambiente do container.
   2. Fazer `firebaseConfig.ts` e `createPersistenceAdapter.ts` priorizarem essa configuração de runtime antes de cair para `import.meta.env`.
-  3. Bloquear o adaptador `sqlite` em host publicado e forçar fallback automático para Firebase, ou IndexedDB quando Firebase não estiver configurado.
-  4. Remover `documentStorage` do `ENTITY_TABLE_MAP` do SQLite, porque ele é chave escalar e não tabela persistida.
-- Consequência: o deploy publicado deixa de depender exclusivamente de variáveis embutidas no build para inicializar Firebase; o runtime remoto não tenta mais abrir SQLite WASM como caminho ativo; a consulta inválida a `document_storage` deixa de existir.
+  3. Em `firebaseConfig.ts`, substituir qualquer acesso dinâmico `import.meta.env[key]` por um mapa explícito de propriedades `import.meta.env.VITE_*`, porque hosts estáticos como o Vercel dependem exclusivamente da substituição estática do Vite no build.
+  4. Bloquear o adaptador `sqlite` em host publicado e forçar fallback automático para Firebase, ou IndexedDB quando Firebase não estiver configurado.
+  5. Remover `documentStorage` do `ENTITY_TABLE_MAP` do SQLite, porque ele é chave escalar e não tabela persistida.
+- Consequência: o frontend passa a funcionar tanto em providers com runtime Node/container quanto em hosts estáticos como o Vercel; o runtime remoto não tenta mais abrir SQLite WASM como caminho ativo; a consulta inválida a `document_storage` deixa de existir.
 - Reversão:
   1. Remover a injeção `window.__NEXUS_ARQUI_RUNTIME_CONFIG` de `server.mjs`.
   2. Restaurar leitura exclusiva por `import.meta.env` em `firebaseConfig.ts` e `createPersistenceAdapter.ts`.
   3. Permitir novamente `sqlite` em host publicado.
   4. Recolocar `documentStorage` no `ENTITY_TABLE_MAP`.
-- Referências: `server.mjs`, `src/frontend/services/infrastructure/persistence/runtimePublicEnv.ts`, `src/frontend/services/infrastructure/persistence/firebaseConfig.ts`, `src/frontend/services/infrastructure/persistence/createPersistenceAdapter.ts`, `src/frontend/services/infrastructure/persistence/sqlite/sqliteSchema.ts`, `README.md`, `NEXT.md`.
+- Referências: `server.mjs`, `src/frontend/services/infrastructure/persistence/runtimePublicEnv.ts`, `src/frontend/services/infrastructure/persistence/firebaseConfig.ts`, `src/frontend/services/infrastructure/persistence/createPersistenceAdapter.ts`, `src/frontend/services/infrastructure/persistence/sqlite/sqliteSchema.ts`, `README.md`, `NEXT.md`, `.gitignore`.
+
+### Session 12 — 2026-04-12
+
+**Objective:** fechar o ponto cego que ainda podia quebrar o deploy estático do Vercel mesmo com o runtime Firebase funcionando em `localhost:3001`.
+**What was done:** foi revisado o lote anterior e confirmado que o browser local autorizado (`http://localhost:3001`) já conseguia inicializar Firebase e abrir o fluxo Google, mas o bootstrap ainda tinha um risco real para hosts estáticos: a versão commitada de `firebaseConfig.ts` acessava `import.meta.env` por chave dinâmica, o que o Vite não substitui corretamente no build. O arquivo foi corrigido para usar um mapa explícito de `import.meta.env.VITE_*`, foi adicionado um teste de regressão em `firebaseConfig.test.ts`, a documentação de deploy foi ajustada para separar claramente Cloud Run/container de Vercel estático, e `.env.production` passou a ficar coberto pelo ignore de segredos.
+**Decisions made:** manter `server.mjs` como contrato para providers com runtime Node, mas não tratá-lo como solução universal; no Vercel estático, o frontend deve continuar funcional apenas com envs de build e acesso explícito a `import.meta.env.VITE_*`.
+**Open/Pending:** confirmar no projeto Vercel que `VITE_PERSISTENCE_ADAPTER` e todas as `VITE_FIREBASE_*` estão configuradas pelo menos em `Production` e `Preview`, e forçar um novo deploy após o push.
+**Immediate next step:** publicar este diff no GitHub conectado ao Vercel, redeployar, e validar no site publicado a ausência da mensagem “Firebase indisponível” e o fluxo de login Google.
+**Quality gate:** `npx vitest related --run src/frontend/services/infrastructure/persistence/firebaseConfig.ts src/frontend/services/infrastructure/persistence/firebaseConfig.test.ts` PASS; `npm run build` PASS; `npm run verify` PASS (`[VERIFY][LOOP][PASS]`); smoke browser em `http://localhost:3001` PASS (Firebase inicializado e popup Google aberto).
 
 ### Session 10 — 2026-04-12
 
@@ -59,15 +69,6 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
   3. Restaurar o fluxo anterior de deploy implícito por buildpack.
 - Referências: `Dockerfile`, `.dockerignore`, `server.mjs`, `package.json`, `README.md`, `NEXT.md`.
 
-### Session 9 — 2026-04-12
-
-**Objective:** diagnosticar a falha do check externo do Google Cloud Developer Connect/Cloud Run após o push do frontend Vite migrado para Firebase e restabelecer o publish para o GitHub com contrato de deploy válido.
-**What was done:** foi reproduzido localmente que `npm run start` não existia e que um install produção-only falhava em `prepare` (`husky`) e `build` (`vite` em `devDependencies`). Para estabilizar o deploy, foram adicionados `server.mjs` como runtime HTTP da SPA, `Dockerfile` multi-stage com build explícito, `.dockerignore` e os scripts `gcp-build`/`start` com `engines.node` em `package.json`. O `README.md` e o `NEXT.md` foram atualizados com o novo contrato operacional.
-**Decisions made:** preferir contrato explícito de container para Cloud Run; manter compatibilidade com buildpacks Node sem introduzir nova dependência de runtime.
-**Open/Pending:** confirmar no GitHub/Google Cloud que o commit `e4d5023` reprocessa o check `cloudrun-nexusarqui-git-southamerica-east1-*` com sucesso; se o deploy chegar a runtime, configurar `VITE_FIREBASE_*` como build envs do deploy remoto. O `docker build` local ficou bloqueado porque o daemon do Docker Desktop não estava ativo nesta máquina.
-**Immediate next step:** acompanhar o novo ciclo de checks externos e, com Docker Desktop ativo, validar também o build do container localmente.
-**Quality gate:** `npm run verify` PASS (`[VERIFY][LOOP][PASS]`); `npx vitest run --coverage src/frontend/services/infrastructure/loadData.test.ts` PASS; `PORT=8080 npm run start` PASS; `Invoke-WebRequest http://127.0.0.1:8080` PASS; `Invoke-WebRequest http://127.0.0.1:8080/clientes` PASS; `git push upstream main` PASS; `docker build` bloqueado por daemon indisponível.
-
 ### 2026-04-12 — Firebase/Firestore como persistência primária e remoção do runtime Google Drive
 
 - Contexto: o frontend mantinha IndexedDB local com sincronização e autenticação acopladas ao stack Google Drive. Isso criava múltiplos modos de acesso, código específico de provider espalhado na UI e uma camada de arquivos/binários dependente do Drive como fonte principal.
@@ -83,15 +84,6 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
   2. Reverter `createPersistenceAdapter.ts` para a seleção anterior.
   3. Restaurar os componentes de auth/sync e contratos de Drive removidos nesta sessão.
 - Referências: `src/frontend/services/infrastructure/persistence/firebaseConfig.ts`, `src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.ts`, `src/frontend/services/infrastructure/firebaseAuthService.ts`, `src/frontend/services/infrastructure/firebaseFileService.ts`, `src/frontend/services/infrastructure/firebaseSyncEngine.ts`, `src/frontend/components/configuracoes/CloudSyncSection.tsx`, `docs/adr/0012-firebase-primary-persistence.md`, `NEXT.md`.
-
-### Session 8 — 2026-04-12
-
-**Objective:** migrar o runtime do Nexus-Arqui para Firebase como persistência primária, removendo o Google Drive da autenticação, sincronização e gestão de arquivos.
-**What was done:** foi criado o bootstrap seguro do Firebase (`firebaseConfig.ts`) e o novo `FirebasePersistenceAdapter` com sync em tempo real, cache local e backups em Storage. O app passou a usar `firebaseAuthService`, `firebaseSyncEngine`, `firebaseFileService`, `CloudSyncSection` e `CloudSyncStatusToast`. `loadData.ts` foi integrado ao adaptador realtime, os uploads de documentos/anexos/avatares foram migrados para Firebase Storage, o shell HTML deixou de carregar scripts GSI/GAPI, o barrel de infraestrutura foi limpo e o runtime de Google Drive foi removido do `src/frontend`.
-**Decisions made:** Firestore como fonte primária remota; Firebase Auth como autenticação única; Firebase Storage para binários; IndexedDB mantido como cache/offline e fallback controlado; remoção imediata do stack legado de Drive do runtime final.
-**Open/Pending:** executar `npm run verify:ci` completo com os artefatos documentais atualizados e validar smoke manual em ambiente real com credenciais Firebase válidas.
-**Immediate next step:** configurar as variáveis `VITE_FIREBASE_*`, publicar as regras/indexes no projeto Firebase e executar o smoke manual de login, sync em duas abas, offline/online e upload/download de binários.
-**Quality gate:** `npm run typecheck` PASS; `npm run lint` PASS; `npx vitest run src/frontend/services/infrastructure/loadData.test.ts src/frontend/services/infrastructure/firebaseAuthService.test.ts src/frontend/services/infrastructure/firebaseFileService.test.ts src/frontend/services/infrastructure/firebaseSyncEngine.test.ts src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.test.ts` PASS.
 
 ### 2026-04-12 — Sincronização Drive endurecida com durabilidade local imediata e resultado tipado
 
