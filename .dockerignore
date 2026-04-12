@@ -1,0 +1,17 @@
+.agent
+.agents
+.claude
+.git
+.github
+.qwen
+.trae
+.vscode
+.windsurf
+coverage
+dist
+docs
+node_modules
+skills
+.env
+.env.local
+npm-debug.log*

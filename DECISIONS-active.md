@@ -10,6 +10,30 @@ Decisões arquiteturais/processuais vigentes. Para histórico completo, consulte
 
 ## Entradas
 
+### 2026-04-12 — Contrato explícito de deploy para Cloud Run/Developer Connect
+
+- Contexto: o push em `main` disparava o check externo `cloudrun-nexusarqui-git-southamerica-east1-*`, enquanto o repositório continha apenas o build Vite do frontend. Não havia `Dockerfile`, `start` script nem servidor HTTP de produção. Na reprodução local, `npm run start` falhou por ausência do script e um install produção-only (`npm ci --omit=dev`) quebrou em `prepare` (`husky`) e `build` (`vite` não instalado).
+- Decisão:
+  1. Adicionar `server.mjs` como servidor HTTP mínimo de produção, servindo `dist/` com fallback para SPA e bind em `PORT`.
+  2. Adicionar `Dockerfile` multi-stage com `HUSKY=0` no build para tornar o deploy determinístico em Cloud Run/Developer Connect.
+  3. Adicionar `.dockerignore` para impedir envio de artefatos locais, docs pesados, `node_modules` e `.env` ao contexto do container.
+  4. Explicitar em `package.json` os scripts `gcp-build` e `start`, além de `engines.node = 22.x`, para compatibilidade também com fluxos Node buildpack.
+- Consequência: o deploy externo deixa de depender de heurísticas frágeis do provider e passa a ter contrato explícito de build e runtime HTTP; o repositório continua sem dependência nova.
+- Reversão:
+  1. Remover `Dockerfile`, `.dockerignore` e `server.mjs`.
+  2. Reverter os scripts `gcp-build`/`start` e `engines.node` em `package.json`.
+  3. Restaurar o fluxo anterior de deploy implícito por buildpack.
+- Referências: `Dockerfile`, `.dockerignore`, `server.mjs`, `package.json`, `README.md`, `NEXT.md`.
+
+### Session 9 — 2026-04-12
+
+**Objective:** diagnosticar a falha do check externo do Google Cloud Developer Connect/Cloud Run após o push do frontend Vite migrado para Firebase e restabelecer o publish para o GitHub com contrato de deploy válido.
+**What was done:** foi reproduzido localmente que `npm run start` não existia e que um install produção-only falhava em `prepare` (`husky`) e `build` (`vite` em `devDependencies`). Para estabilizar o deploy, foram adicionados `server.mjs` como runtime HTTP da SPA, `Dockerfile` multi-stage com build explícito, `.dockerignore` e os scripts `gcp-build`/`start` com `engines.node` em `package.json`. O `README.md` e o `NEXT.md` foram atualizados com o novo contrato operacional.
+**Decisions made:** preferir contrato explícito de container para Cloud Run; manter compatibilidade com buildpacks Node sem introduzir nova dependência de runtime.
+**Open/Pending:** confirmar no GitHub/Google Cloud que o novo commit reprocessa o check `cloudrun-nexusarqui-git-southamerica-east1-*` com sucesso; se o deploy chegar a runtime, configurar `VITE_FIREBASE_*` como build envs do deploy remoto. O `docker build` local ficou bloqueado porque o daemon do Docker Desktop não estava ativo nesta máquina.
+**Immediate next step:** publicar o commit em `main`, acompanhar o novo ciclo de checks externos e, com Docker Desktop ativo, validar também o build do container localmente.
+**Quality gate:** `npm run verify` PASS (`[VERIFY][LOOP][PASS]`); `npx vitest run --coverage src/frontend/services/infrastructure/loadData.test.ts` PASS; `PORT=8080 npm run start` PASS; `Invoke-WebRequest http://127.0.0.1:8080` PASS; `Invoke-WebRequest http://127.0.0.1:8080/clientes` PASS; `docker build` bloqueado por daemon indisponível.
+
 ### 2026-04-12 — Firebase/Firestore como persistência primária e remoção do runtime Google Drive
 
 - Contexto: o frontend mantinha IndexedDB local com sincronização e autenticação acopladas ao stack Google Drive. Isso criava múltiplos modos de acesso, código específico de provider espalhado na UI e uma camada de arquivos/binários dependente do Drive como fonte principal.

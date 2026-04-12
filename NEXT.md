@@ -2,60 +2,45 @@
 
 ## Último estado conhecido (2026-04-12)
 
-Migração estrutural do runtime concluída para Firebase. O frontend agora usa:
+Falha do check externo do Google Cloud Developer Connect/Cloud Run diagnosticada e corrigida no contrato de deploy do repositório. O problema não estava no workflow `CI / verify`, mas no fato de o projeto Vite não expor runtime HTTP de produção nem artefatos explícitos de container. A reprodução local mostrou:
 
-- `FirebasePersistenceAdapter` como adaptador primário de persistência remota;
-- `firebaseAuthService` para autenticação via Google no Firebase Auth;
-- `firebaseSyncEngine` para estado de sincronização em tempo real;
-- `firebaseFileService` para documentos, anexos, avatares e backups em Firebase Storage;
-- IndexedDB como cache/offline local e fallback explícito quando Firebase não estiver configurado.
+- `npm run start` inexistente;
+- install produção-only quebrando em `prepare` (`husky`);
+- `npm run build` quebrando sem `vite`, pois ele existe apenas em `devDependencies`.
 
-Todo o stack ativo de Google Drive foi removido de `src/frontend`.
+Para estabilizar o publish Git-based em Cloud Run, o repositório agora expõe:
+
+- `Dockerfile` multi-stage com build explícito;
+- `server.mjs` para servir `dist/` com fallback SPA e bind em `PORT`;
+- `.dockerignore` para reduzir o contexto do container e blindar `.env`;
+- `gcp-build`, `start` e `engines.node = 22.x` em `package.json`.
 
 ### Checklist desta sessão
 
-- [x] Criado `src/frontend/services/infrastructure/persistence/firebaseConfig.ts`.
-- [x] Criado `src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.ts`.
-- [x] Criado `src/frontend/services/infrastructure/firebaseAuthService.ts`.
-- [x] Criado `src/frontend/services/infrastructure/firebaseSyncEngine.ts`.
-- [x] Criado `src/frontend/services/infrastructure/firebaseFileService.ts`.
-- [x] Criados contratos neutros: `cloudSyncTypes.ts`, `cloudSyncPreferences.ts`, `cloudConflictMerge.ts`.
-- [x] `createPersistenceAdapter.ts` atualizado para default Firebase com fallback IndexedDB.
-- [x] `loadData.ts` integrado ao adaptador realtime.
-- [x] `AuthGuard.tsx`, `LoginPage.tsx`, `App.tsx`, `ConfiguracoesPage.tsx` migrados para Firebase.
-- [x] Uploads de documentos, anexos e avatares migrados para Firebase Storage.
-- [x] Stack legado de Google Drive removido do runtime (`src/frontend`).
-- [x] `.env.example`, `vite-env.d.ts`, `firebase.json`, `firestore.rules`, `storage.rules`, `firestore.indexes.json` adicionados/atualizados.
-- [x] `ARCHITECTURE.md`, `docs/data-contracts/types-contracts.md`, `DECISIONS-active.md` e ADR `0012` atualizados.
-- [x] `npm run typecheck` — PASS.
-- [x] `npm run lint` — PASS.
-- [x] `npx vitest run src/frontend/services/infrastructure/loadData.test.ts src/frontend/services/infrastructure/firebaseAuthService.test.ts src/frontend/services/infrastructure/firebaseFileService.test.ts src/frontend/services/infrastructure/firebaseSyncEngine.test.ts src/frontend/services/infrastructure/persistence/firebasePersistenceAdapter.test.ts` — PASS.
+- [x] Reproduzido localmente `npm run start` ausente.
+- [x] Reproduzido localmente `npm ci --omit=dev` falhando em `prepare` (`husky`) e `build` (`vite` ausente).
+- [x] Criado `server.mjs` como servidor HTTP de produção para a SPA.
+- [x] Criado `Dockerfile` multi-stage para Cloud Run/Developer Connect.
+- [x] Criado `.dockerignore` excluindo artefatos locais, docs pesados e `.env`.
+- [x] `package.json` atualizado com `gcp-build`, `start` e `engines.node`.
+- [x] `README.md`, `.agent/lessons-learned.md` e `DECISIONS-active.md` atualizados com o novo contrato de deploy.
+- [x] `npm install` para restaurar o ambiente local antes do verify.
+- [x] `npm run verify`.
+- [ ] `docker build` local (`docker` CLI presente, daemon indisponível na máquina).
+- [x] Smoke local do runtime com `PORT=8080 npm run start`.
+- [ ] Publicação do commit corrigido no GitHub.
 
 ## Próximo passo exato
 
-1. Configurar as variáveis `VITE_FIREBASE_*` com um projeto Firebase real.
-2. Publicar `firestore.rules`, `storage.rules` e `firestore.indexes.json`.
-3. Executar smoke manual:
-   - login/logout;
-   - sync em duas abas;
-   - escrita offline seguida de reconciliação online;
-   - upload/download de avatar;
-   - upload/download de anexos de agenda;
-   - upload/abertura de documentos internos.
-4. Rodar `npm run verify:ci`.
+1. Rodar `npm run verify`.
+2. Publicar o commit corrigido e confirmar o reprocessamento do check `cloudrun-nexusarqui-git-southamerica-east1-*`.
+3. Se o deploy concluir, configurar/confirmar as `VITE_FIREBASE_*` como build envs no provedor remoto e executar smoke manual.
+4. Com Docker Desktop ativo, validar também `docker build` local para fechar a trilha de container end-to-end.
 
 ## Bloqueios e dúvidas
 
-- Falta validação manual com credenciais Firebase reais e publicação das regras no projeto remoto.
-
-## Próximo passo exato
-
-1. Teste de campo com o usuário final: abrir a aplicação do zero em aba anônima, validar a persistência da flag no `localStorage` após a autenticação OAuth, e garantir que a re-abertura do navegador acessa o App sem tela de splash desnecessária.
-2. Validar se o botão de logout exibe o recarregamento com a tela de login vazia.
-
-## Bloqueios e dúvidas
-
-- Nenhum. O sistema está perfeitamente seguro e condicionado, o workflow segue limpo no verify loop.
+- Ainda falta a confirmação externa do novo ciclo de deploy no Google Cloud, porque a falha original veio do provedor e não do workflow local do GitHub.
+- O `docker build` local não pôde ser executado porque o daemon do Docker Desktop não estava ativo nesta máquina durante a sessão.
 
 ---
 

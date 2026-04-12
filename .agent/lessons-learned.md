@@ -19,6 +19,14 @@
 
 ---
 
+### [2026-04-12] - [DEPLOY] - SPA Vite nao pode depender de heuristica implicita do Cloud Run
+
+**Erro encontrado:** O check externo do Google Cloud Developer Connect/Cloud Run falhava logo após o push, apesar do `CI / verify` do GitHub estar verde.
+**Arquivo(s) afetado(s):** `package.json`, `Dockerfile`, `server.mjs`, `.dockerignore`.
+**Causa raiz:** O repositório expunha apenas `vite build`; nao havia `start` script, servidor HTTP de producao nem contrato explicito de container. Em install producao-only, o fluxo ainda quebrava em `prepare` (`husky`) e no build (`vite` apenas em `devDependencies`).
+**Correcao aplicada:** Adicao de `server.mjs` para servir `dist/` com fallback SPA, `Dockerfile` multi-stage com build explicito, `.dockerignore` e scripts `gcp-build`/`start` com `engines.node` no `package.json`.
+**Regra negativa derivada:** Nao publicar SPA Vite em pipeline Git-based de Cloud Run sem explicitar runtime HTTP e build de producao; se o provider nao for puramente estatico, o repositório deve declarar container ou entrypoint de servidor.
+
 ### [2026-04-12] - [SYNC] - Fila remota nunca pode avançar sem durabilidade local confirmada
 
 **Erro encontrado:** Alterações locais podiam sumir após `F5`, enquanto a fila pendente continuava marcada no Google Drive. Além disso, dados puxados do remoto podiam aparecer na UI e desaparecer no refresh seguinte.

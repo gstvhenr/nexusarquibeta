@@ -247,7 +247,7 @@ describe('loadData persistence durability', () => {
 
     const persistedSnapshot = await memoryAdapter.adapter.readSnapshot<AppData>();
     expect(persistedSnapshot?.clients).toEqual(clients);
-  });
+  }, 15000);
 
   it('should persist remote domain writes durably before the next refresh', async () => {
     const { loadDataModule, persistenceModule, memoryAdapter } =

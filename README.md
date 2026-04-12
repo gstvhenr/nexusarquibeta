@@ -46,3 +46,9 @@ Documentação de arquitetura:
 - Segurança crítica: execute o comando de segurança definido em `AGENTS.md`.
 - Porta de dev divergente: verifique `vite.config.ts` (`server.port`).
 - Mudança estrutural sem registro: atualize `DECISIONS-active.md`/ADR e `NEXT.md`.
+
+## Deploy contínuo
+
+- O repositório expõe `Dockerfile` multi-stage para ambientes que fazem deploy por Git/Cloud Run.
+- O runtime de produção usa `node server.mjs` para servir `dist/` com fallback SPA e respeitar `PORT`.
+- Para compatibilidade com buildpacks Node, `package.json` também expõe `gcp-build` e `start`.

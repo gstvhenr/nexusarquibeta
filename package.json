@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "vite --port 3001",
     "prepare": "husky",
@@ -37,7 +40,9 @@
     "security:check": "npm audit --audit-level=critical",
     "verify:ci": "npm run verify && npm run self-review:auto && npm run security:check",
     "build": "vite build",
-    "preview": "vite preview"
+    "gcp-build": "npm run build",
+    "preview": "vite preview",
+    "start": "node server.mjs"
   },
   "dependencies": {
     "docx": "8.5.0",
