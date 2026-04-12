@@ -14,6 +14,7 @@ function GoogleDriveSection(): JSX.Element {
     forcePull,
     flushPendingWrites,
     reconnect,
+    reconnectWithRepermission,
     lastSyncTimestamp,
     pendingChangesCount,
     retryScheduledAt,
@@ -237,7 +238,7 @@ function GoogleDriveSection(): JSX.Element {
             onSync={handleSync}
             onRestore={handleRestore}
             onFlush={() => void flushPendingWrites()}
-            onReconnect={() => void reconnect()}
+            onReconnect={() => void reconnectWithRepermission()}
           />
         )}
 

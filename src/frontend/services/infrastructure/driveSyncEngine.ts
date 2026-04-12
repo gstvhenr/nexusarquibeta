@@ -808,16 +808,25 @@ async function flushPendingWrites(): Promise<void> {
     debounceTimer = null;
   }
 
+  if (accessMode === 'none' && getPendingChangesCount() > 0) {
+    await reconnectWithRepermission();
+    if (accessMode === 'none') return;
+  }
+
   await pushDirtyItems();
 }
 
 async function forcePush(): Promise<void> {
+  if (accessMode === 'none') {
+    await reconnectWithRepermission();
+    if (accessMode === 'none') return;
+  }
   await flushPendingWrites();
 }
 
 async function forcePull(): Promise<void> {
   if (accessMode === 'none') {
-    await reconnect();
+    await reconnectWithRepermission();
     if (accessMode === 'none') return;
   }
 

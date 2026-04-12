@@ -27,8 +27,6 @@ export const DriveSyncReconnector: React.FC = () => {
     }
   }, [accessMode, status]);
 
-  if (!needsLocalReconnect) return null;
-
   const handleReconnect = async () => {
     try {
       const success = await driveSyncEngine.reconnectWithRepermission();
@@ -39,6 +37,25 @@ export const DriveSyncReconnector: React.FC = () => {
       // Ignore error if user cancels prompt
     }
   };
+
+  useEffect(() => {
+    if (!needsLocalReconnect) return;
+
+    // Tentativa automática e invisível de re-adquirir permissão no primeiro clique do usuário.
+    // A File System Access API exige um "user gesture". Ao interceptar o primeiro clique,
+    // o navegador exibe o prompt nativo sem exigir que o usuário vá nas configurações.
+    const handleFirstUserInteraction = async () => {
+      await handleReconnect();
+    };
+
+    document.addEventListener('click', handleFirstUserInteraction, { once: true, capture: true });
+
+    return () => {
+      document.removeEventListener('click', handleFirstUserInteraction, { capture: true });
+    };
+  }, [needsLocalReconnect]);
+
+  if (!needsLocalReconnect) return null;
 
   // API ativa → banner informativo (opcional); sem acesso → banner de alerta
   const bannerColorClass = isApiActive
