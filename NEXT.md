@@ -6,6 +6,32 @@
 
 ## Último estado conhecido (2026-04-12)
 
+Foi gerado um commit neutro adicional apenas para forçar um novo ciclo de deploy no GitHub/Vercel, sem alteração funcional do app. A mudança aplicada no código foi um comentário HTML inofensivo em `index.html`, mantendo o estado técnico igual ao da sessão anterior. O estado atual agora é:
+
+- o branch `main` continua alinhado com os remotos GitHub conectados;
+- o código funcional segue inalterado em relação ao diagnóstico anterior de Firebase/Vercel;
+- existe um novo diff mínimo apenas para disparar um redeploy limpo do projeto publicado.
+
+### Checklist desta sessão
+
+- [x] Criado diff mínimo e neutro em `index.html`.
+- [x] Mantido o escopo estritamente não funcional.
+- [ ] Commitar e publicar o novo snapshot no GitHub para disparar o redeploy.
+
+### Próximo passo exato
+
+1. Criar commit do diff neutro.
+2. Publicar em `upstream/main` e `origin/main`.
+3. Acompanhar o novo deploy no Vercel.
+
+### Bloqueios e dúvidas
+
+- Nenhum bloqueio local. O efeito esperado desta sessão é apenas operacional: produzir um novo deployment.
+
+---
+
+## Último estado conhecido (2026-04-12)
+
 Validação local em `http://localhost:3001` confirmou que o app já consegue inicializar Firebase e abrir o fluxo Google com as `VITE_FIREBASE_*` corretas. A revisão do lote anterior encontrou um ponto cego específico do Vercel: a versão commitada de `firebaseConfig.ts` ainda usava `import.meta.env[key]`, o que quebra o build estático do Vite mesmo quando as envs existem no provider. Na sequência desta sessão, o erro persistente em produção foi rastreado até um problema operacional adicional: o commit corrigido (`b093ce1`) tinha sido publicado apenas em `upstream/main`, enquanto `origin/main` ainda estava atrás em `e8a9f0b`. Como o Vercel pode estar vinculado ao fork `gstvhenr/nexusarquibeta`, o deploy continuava servindo um bundle antigo. O estado atual agora é:
 
 - `firebaseConfig.ts` foi corrigido para usar um mapa explícito de `import.meta.env.VITE_*`, preservando compatibilidade com Vercel estático e com o runtime injetado por `server.mjs`;
