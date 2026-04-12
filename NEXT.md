@@ -6,12 +6,13 @@
 
 ## Último estado conhecido (2026-04-12)
 
-Validação local em `http://localhost:3001` confirmou que o app já consegue inicializar Firebase e abrir o fluxo Google com as `VITE_FIREBASE_*` corretas. A revisão do lote anterior encontrou um ponto cego específico do Vercel: a versão commitada de `firebaseConfig.ts` ainda usava `import.meta.env[key]`, o que quebra o build estático do Vite mesmo quando as envs existem no provider. O estado atual agora é:
+Validação local em `http://localhost:3001` confirmou que o app já consegue inicializar Firebase e abrir o fluxo Google com as `VITE_FIREBASE_*` corretas. A revisão do lote anterior encontrou um ponto cego específico do Vercel: a versão commitada de `firebaseConfig.ts` ainda usava `import.meta.env[key]`, o que quebra o build estático do Vite mesmo quando as envs existem no provider. Na sequência desta sessão, o erro persistente em produção foi rastreado até um problema operacional adicional: o commit corrigido (`b093ce1`) tinha sido publicado apenas em `upstream/main`, enquanto `origin/main` ainda estava atrás em `e8a9f0b`. Como o Vercel pode estar vinculado ao fork `gstvhenr/nexusarquibeta`, o deploy continuava servindo um bundle antigo. O estado atual agora é:
 
 - `firebaseConfig.ts` foi corrigido para usar um mapa explícito de `import.meta.env.VITE_*`, preservando compatibilidade com Vercel estático e com o runtime injetado por `server.mjs`;
 - entrou um teste de regressão (`firebaseConfig.test.ts`) para impedir retorno do acesso dinâmico inválido;
 - `README.md` passou a separar claramente o contrato de Cloud Run/container do contrato de Vercel estático;
-- `.gitignore` passou a cobrir `.env.*`, mantendo `!.env.example`, para evitar commit acidental de `.env.production`.
+- `.gitignore` passou a cobrir `.env.*`, mantendo `!.env.example`, para evitar commit acidental de `.env.production`;
+- `origin/main` e `upstream/main` agora estão alinhados no mesmo commit `b093ce1`, eliminando a divergência entre os dois repositórios GitHub candidatos a alimentar o Vercel.
 
 ### Checklist desta sessão
 
@@ -19,16 +20,17 @@ Validação local em `http://localhost:3001` confirmou que o app já consegue in
 - [x] Reproduzido bootstrap Firebase funcional no browser local autorizado.
 - [x] Identificado e corrigido o ponto cego do build estático do Vite/Vercel em `firebaseConfig.ts`.
 - [x] Atualizada a documentação operacional do split Cloud Run vs Vercel.
+- [x] Confirmado que `origin/main` ainda estava sem `b093ce1` e publicado o mesmo commit também no fork `gstvhenr/nexusarquibeta`.
 
 ### Próximo passo exato
 
-1. Publicar no GitHub o diff que corrige `firebaseConfig.ts` e adiciona o teste de regressão.
+1. Confirmar no Vercel qual repositório GitHub está vinculado ao projeto (`gstvhenr/nexusarquibeta` ou `rafaelmunaroarquitetura/nexusarqui`) e verificar se o último deploy já aponta para `b093ce1`.
 2. Confirmar no Vercel que `VITE_PERSISTENCE_ADAPTER` e todas as `VITE_FIREBASE_*` estão definidas em `Production` e `Preview`.
 3. Forçar novo deploy no Vercel e validar no ambiente publicado a ausência da mensagem “Firebase indisponível”, além do fluxo de login Google e dos assets/binários em Firebase Storage.
 
 ### Bloqueios e dúvidas
 
-- O ponto pendente agora é principalmente **externo** ao repositório: o Vercel precisa rebuildar com as envs corretas. Sem isso, o código novo não chega a ser materializado no bundle publicado.
+- O ponto pendente agora é exclusivamente **externo** ao repositório: o Vercel precisa rebuildar o projeto correto com as envs corretas. Sem isso, o site pode continuar servindo um bundle antigo ou um build sem `VITE_FIREBASE_*`.
 
 ---
 
