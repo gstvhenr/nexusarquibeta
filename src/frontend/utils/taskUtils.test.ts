@@ -47,13 +47,14 @@ describe('taskUtils semantic contracts', () => {
       archived: false,
     } as AgendaEvent;
 
-    expect(archiveCompletedTask(task)).toEqual({
+    const archived = archiveCompletedTask(task);
+    expect(archived).toEqual({
       ...task,
       archived: true,
       completed: true,
       kanbanStatus: 'done',
     });
-    expect(isArchivedTask(task)).toBe(true);
+    expect(isArchivedTask(archived)).toBe(true);
   });
 
   it('reactivates archived tasks back into the active board', () => {
