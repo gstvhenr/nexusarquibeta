@@ -16,7 +16,7 @@ const createProjectDocumentFolder = (project: Project): DocumentFolder => {
   const { id: projectId, code: projectCode, name: projectName } = project;
   const now = new Date().toISOString();
 
-  // Check if projectName already starts with projectCode to avoid duplication (e.g. "#2500 - #2500 - Name")
+  // Check if projectName already starts with projectCode to avoid duplication (e.g. "#741 - #741 - Name")
   const folderName = projectName.startsWith(projectCode)
     ? projectName
     : `${projectCode} - ${projectName}`;

@@ -286,7 +286,7 @@ export class SqlitePersistenceAdapter implements PersistencePort {
 
   // ── Counter Reservation ────────────────────────────────────────────
 
-  async reserveGlobalIdentifier(defaultCounter = 2500): Promise<CounterReservationResult> {
+  async reserveGlobalIdentifier(defaultCounter = 741): Promise<CounterReservationResult> {
     await this.ensureReady();
 
     const rows = await this.rpc.getAll<{ value: string }>(

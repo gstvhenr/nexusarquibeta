@@ -134,7 +134,7 @@ const createDefaultAppData = (): AppData => ({
   manualExpenses: [],
   manualIncomes: [],
   customBudgetTemplate: null,
-  globalIdentifierCounter: 2500,
+  globalIdentifierCounter: 741,
   dismissedFocusItems: [],
   acceptedPaymentMethods: [...PAYMENT_METHODS],
   hiredServices: [],
@@ -658,7 +658,7 @@ export async function reserveGlobalIdentifierCounter(): Promise<number> {
   await initializeDataStore();
 
   const reservationTask = persistenceQueue.then(async () => {
-    const { reservedValue, nextValue } = await persistence.reserveGlobalIdentifier(2500);
+    const { reservedValue, nextValue } = await persistence.reserveGlobalIdentifier(741);
     if (!appData) {
       appData = createDefaultAppData();
     }

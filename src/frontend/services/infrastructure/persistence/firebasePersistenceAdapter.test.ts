@@ -21,8 +21,8 @@ const localAdapterMock = {
   readBackup: vi.fn(async () => null),
   clearBackups: vi.fn(async () => undefined),
   reserveGlobalIdentifier: vi.fn(async () => ({
-    reservedValue: 2500,
-    nextValue: 2501,
+    reservedValue: 741,
+    nextValue: 742,
   })),
 };
 
@@ -61,8 +61,8 @@ describe('FirebasePersistenceAdapter', () => {
     const adapter = new FirebasePersistenceAdapter();
 
     await expect(adapter.reserveGlobalIdentifier(3000)).resolves.toEqual({
-      reservedValue: 2500,
-      nextValue: 2501,
+      reservedValue: 741,
+      nextValue: 742,
     });
     expect(localAdapterMock.reserveGlobalIdentifier).toHaveBeenCalledWith(3000);
   });

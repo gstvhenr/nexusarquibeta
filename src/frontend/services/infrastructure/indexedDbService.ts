@@ -685,7 +685,7 @@ export const indexedDbService = {
     }
   },
 
-  async reserveGlobalIdentifier(defaultCounter = 2500): Promise<CounterReservationResult> {
+  async reserveGlobalIdentifier(defaultCounter = 741): Promise<CounterReservationResult> {
     if (!hasIndexedDb()) {
       const persistedCounter = volatileEntityStateFallback[GLOBAL_IDENTIFIER_ENTITY_KEY];
       const reservedValue =

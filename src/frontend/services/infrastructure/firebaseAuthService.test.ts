@@ -39,7 +39,7 @@ describe('firebaseAuthService', () => {
   it('should restore an authenticated session from the Firebase auth observer', async () => {
     onAuthStateChangedMock.mockImplementation((_auth, next) => {
       next({
-        email: 'rafael@nexus-arqui.test',
+        email: 'rafaelmunaroarquitetura@gmail.com',
         displayName: 'Rafael',
       });
       return vi.fn();
@@ -50,7 +50,7 @@ describe('firebaseAuthService', () => {
     await expect(firebaseAuthService.tryRestoreSession()).resolves.toBe(true);
     expect(firebaseAuthService.getState()).toMatchObject({
       status: 'authenticated',
-      userEmail: 'rafael@nexus-arqui.test',
+      userEmail: 'rafaelmunaroarquitetura@gmail.com',
       userName: 'Rafael',
     });
   });
@@ -60,7 +60,12 @@ describe('firebaseAuthService', () => {
       next(null);
       return vi.fn();
     });
-    signInWithPopupMock.mockResolvedValue(undefined);
+    signInWithPopupMock.mockResolvedValue({
+      user: {
+        email: 'rafaelmunaroarquitetura@gmail.com',
+        displayName: 'Rafael',
+      },
+    });
 
     const { firebaseAuthService } = await import('./firebaseAuthService');
 

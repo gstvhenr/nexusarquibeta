@@ -25,8 +25,8 @@ const realtimeAdapter: RealtimePersistencePort = {
   readBackup: async () => null,
   clearBackups: async () => undefined,
   reserveGlobalIdentifier: async () => ({
-    reservedValue: 2500,
-    nextValue: 2501,
+    reservedValue: 741,
+    nextValue: 742,
   }),
   subscribeExternalChanges: () => () => undefined,
   subscribeSyncState: subscribeSyncStateMock,

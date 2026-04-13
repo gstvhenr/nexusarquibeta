@@ -330,7 +330,7 @@ export class FirebasePersistenceAdapter implements RealtimePersistencePort {
     );
   }
 
-  async reserveGlobalIdentifier(defaultCounter = 2500): Promise<CounterReservationResult> {
+  async reserveGlobalIdentifier(defaultCounter = 741): Promise<CounterReservationResult> {
     const user = this.safeCurrentUser();
     if (!user) {
       return this.localAdapter.reserveGlobalIdentifier(defaultCounter);

@@ -159,11 +159,11 @@ type RunStorageSchemaMigrationsInput = {
 };
 
 const migrateToV1 = ({ storage, keys }: { storage: StorageLike; keys: SchemaMigrationKeys }) => {
-  const rawCounter = storage.getItem<number>(keys.GLOBALIDENTIFIERCOUNTER, 2500);
+  const rawCounter = storage.getItem<number>(keys.GLOBALIDENTIFIERCOUNTER, 741);
   const safeCounter =
     typeof rawCounter === 'number' && Number.isFinite(rawCounter) && rawCounter >= 0
       ? rawCounter
-      : 2500;
+      : 741;
   storage.setItem(keys.GLOBALIDENTIFIERCOUNTER, safeCounter);
 
   const rawPaymentMethods = storage.getItem<unknown>(keys.ACCEPTEDPAYMENTMETHODS, []);

@@ -124,7 +124,7 @@ function createMemoryPersistenceAdapter(): {
     clearBackups: async () => {
       backups.clear();
     },
-    reserveGlobalIdentifier: async (defaultCounter = 2500): Promise<CounterReservationResult> => {
+    reserveGlobalIdentifier: async (defaultCounter = 741): Promise<CounterReservationResult> => {
       const currentValue =
         typeof entityState.globalIdentifierCounter === 'number'
           ? (entityState.globalIdentifierCounter as number)

@@ -11,6 +11,21 @@ import {
   isFirebaseConfigured,
 } from './persistence/firebaseConfig';
 
+/**
+ * E-mails autorizados a acessar o NexusArqui.
+ * Qualquer outro e-mail será rejeitado após autenticação Google.
+ * Segurança real: Firestore/Storage rules replicam esta lista server-side.
+ */
+const ALLOWED_EMAILS: ReadonlySet<string> = new Set([
+  'rafaelmunaroarquitetura@gmail.com',
+  'gustavohenrique.dlr@gmail.com',
+  'gustavohenrique.adb@gmail.com',
+]);
+
+function isEmailAllowed(email: string | null): boolean {
+  return email !== null && ALLOWED_EMAILS.has(email.toLowerCase());
+}
+
 type FirebaseAuthStatus =
   | 'initializing'
   | 'authenticating'
@@ -52,12 +67,36 @@ function setState(nextState: Partial<FirebaseAuthState>): void {
 }
 
 function applyUserState(user: User | null): void {
+  if (user && !isEmailAllowed(user.email)) {
+    currentUser = null;
+    void rejectUnauthorizedUser(user);
+    return;
+  }
+
   currentUser = user;
   setState({
     status: user ? 'authenticated' : 'unauthenticated',
     userEmail: user?.email ?? null,
     userName: user?.displayName ?? null,
     errorMessage: null,
+  });
+}
+
+async function rejectUnauthorizedUser(user: User): Promise<void> {
+  const rejectedEmail = user.email ?? 'desconhecido';
+
+  try {
+    const { auth } = await ensureFirebaseReady();
+    await firebaseSignOut(auth);
+  } catch {
+    // Sign-out failure is non-critical here; the user is already rejected client-side.
+  }
+
+  setState({
+    status: 'error',
+    userEmail: null,
+    userName: null,
+    errorMessage: `Acesso negado: o e-mail ${rejectedEmail} não está autorizado a usar o NexusArqui.`,
   });
 }
 
@@ -143,7 +182,14 @@ async function signIn(): Promise<void> {
   });
 
   try {
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+
+    if (!isEmailAllowed(result.user.email)) {
+      await rejectUnauthorizedUser(result.user);
+      throw new Error(
+        `Acesso negado: o e-mail ${result.user.email ?? 'desconhecido'} não está autorizado a usar o NexusArqui.`,
+      );
+    }
   } catch (error) {
     setState({
       status: currentUser ? 'authenticated' : 'error',
